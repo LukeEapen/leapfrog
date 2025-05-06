@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>[Legacy to Requirement]</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(to bottom, #f0f8ff, #e6f7ff);
+        }
+        .page-title {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        .section-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .section-table td {
+            vertical-align: top;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .section-1 {
+            background: #ffebcc; /* Light orange */
+        }
+        .section-2 {
+            background: #d4edda; /* Light green */
+        }
+        .section-3 {
+            background: #cce5ff; /* Light blue */
+        }
+        h2 {
+            margin-top: 0;
+            text-align: center;
+            color: #333;
+        }
+        .response {
+            white-space: pre-wrap;
+            background: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table th {
+            background: #007bff;
+            color: white;
+        }
+        table td {
+            background: #f9f9f9;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .hero-image-container {
+            margin: 40px auto 20px auto;
+            max-width: 900px;
+            text-align: center;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+            background: white;
+            padding: 16px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+          }
+      
+          .hero-image-container:hover {
+            position: relative; /* Ensure the container is positioned for absolute positioning of the image */
+            
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+          }
+      
+          .hero-image {
+            width: 100%;
+            height: auto;
+            max-height: 380px;
+            object-fit: contain;
+            border-radius: 10px;
+          }
+      
+          .hero-caption {
+            font-weight: 600;
+            font-size: 18px;
+            color: #444;
+            margin-top: 10px;
+          }
+          /* Add this CSS for the enlarged image */
+          .hero-image.enlarged {
+            position: absolute; /* Make the image overlay other content */
+            top: 50%; /* Center the image vertically */
+            left: 50%; /* Center the image horizontally */
+            transform: translate(-50%, -50%) scale(1.5); /* Enlarge and center the image */
+            z-index: 1000; /* Ensure the image appears above other elements */
+            transition: transform 0.3s ease; /* Smooth transition */
+            cursor: zoom-out; /* Change cursor to indicate zoom-out */
+          }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 class="page-title">⚙️ GPT Multi-Agent Response UI [Legacy to Requirement]</h1>
+    </header>
+  <!-- Hero Image Section -->
+  <div class="hero-image-container">
+    <img src="{{ url_for('static', filename='processflow1.png') }}" alt="Process Flow" class="hero-image">
+    <div class="hero-caption">Modern Core Platform Process Flow</div>
+  </div>
+    <!-- Horizontal Layout for Sections -->
+    <table class="section-table">
+        <tr>
+            <!-- Section 1: File Upload and Display Content -->
+            <td class="section-1">
+                <h2>Section 1: Uploaded File Content</h2>
+                <form id="uploadForm">
+                    <table>
+                        <tr>
+                            <td><strong>Select File:</strong></td>
+                            <td><input type="file" id="fileInput" name="file" required></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="text-align: center;">
+                                <button type="submit">Submit</button>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+                <h3 style="color: #007bff; margin-top: 20px;">File Content:</h3>
+                <div id="fileContent" class="response"></div>
+            </td>
+
+            <!-- Section 2: Assistant Response -->
+            <td class="section-2">
+                <h2>Section 2: Assistant Response</h2>
+                <h3 style="color: #007bff;">Response:</h3>
+                <div id="uploadResponse" class="response"></div>
+            </td>
+
+            <!-- Section 3: Placeholder -->
+            <td class="section-3">
+                <h2>Section 3: Placeholder</h2>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Feature 1</td>
+                        <td>Details about Feature 1</td>
+                    </tr>
+                    <tr>
+                        <td>Feature 2</td>
+                        <td>Details about Feature 2</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            // Read and display the content of the uploaded file
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const fileContent = document.getElementById('fileContent');
+                fileContent.textContent = event.target.result;
+            };
+            reader.readAsText(file);
+
+            // Send the file to the backend
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            const uploadResponse = document.getElementById('uploadResponse');
+            if (response.ok) {
+                uploadResponse.textContent = result.response;
+            } else {
+                uploadResponse.textContent = `Error: ${result.error}`;
+            }
+        });
+    </script>
+</body>
+</html>

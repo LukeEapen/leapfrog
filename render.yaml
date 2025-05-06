@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: openai-assistant-ui
+    runtime: python
+    buildCommand: ""
+    startCommand: python app.py
