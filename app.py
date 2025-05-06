@@ -110,7 +110,8 @@ def query_agents():
         logging.info("Starting Agent 4")
         combined_response = f"Agent 2 Response: {agent_2_response}\nAgent 3 Response: {agent_3_response}"
         start_time_agent_4 = time.time()
-        agent_4_response = call_agent(assistant_id_agent_4, combined_response)
+        #agent_4_response = call_agent(assistant_id_agent_4, combined_response)
+        agent_4_response = "COMING SOON WITH PRD FORMAT"
         end_time_agent_4 = time.time()
         logging.info(f"Agent 4 completed in {end_time_agent_4 - start_time_agent_4:.2f} seconds")
 
