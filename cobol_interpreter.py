@@ -3,7 +3,6 @@ import openai
 from flask import Flask, request, jsonify, render_template
 import time
 import logging
-import os
 from dotenv import load_dotenv
 
 app = Flask(__name__)
@@ -11,33 +10,13 @@ app = Flask(__name__)
 # Set the upload folder path
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
 
-#Personal platform.openai.com
+# Load environment variables
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Assistant IDs
 assistant_id_agent_1 = "asst_P2HdYTBuZtBZqHGZizbsii1P"
-
-def read_cobol_file(file_path):
-    with open(file_path, 'r') as f:
-        return f.read()
-
-
-def split_by_paragraphs(cobol_code):
-    # Simple heuristic: paragraphs usually start at column 8 with a label
-    lines = cobol_code.splitlines()
-    blocks = []
-    block = []
-    for line in lines:
-        if line.strip() == "":
-            continue
-        if line[:6].strip().endswith("."):
-            if block:
-                blocks.append("\n".join(block))
-                block = []
-        block.append(line)
-    if block:
-        blocks.append("\n".join(block))
-    return blocks
+assistant_id_agent_3 = "asst_bHzpgDT7IB6Bb80GpDmhOxcW"  # Replace with Agent 3's ID
 
 def call_agent(assistant_id, message):
     logging.info(f"Calling assistant with ID: {assistant_id} and message: {message}")
@@ -93,11 +72,6 @@ logging.basicConfig(level=logging.INFO)
 def index():
     return render_template('legacy.html')
 
-@app.route('/agenticAI')
-def agentic_ai():
-    return render_template('legacy.html')
-
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -119,29 +93,23 @@ def upload_file():
         with open(file_path, 'r') as f:
             cobol_code = f.read()
 
-        # Call the assistant
         try:
-            response = call_agent("asst_P2HdYTBuZtBZqHGZizbsii1P", cobol_code)
-            return jsonify({'response': response})
+            # Call Agent 1
+            response_agent_1 = call_agent(assistant_id_agent_1, cobol_code)
+
+            # Call Agent 3 with the response of Agent 1
+            response_agent_3 = call_agent(assistant_id_agent_3, response_agent_1)
+
+            # Return both responses
+            return jsonify({
+                'response_agent_1': response_agent_1,
+                'response_agent_3': response_agent_3
+            })
         except Exception as e:
             logging.error(f"Error calling assistant: {str(e)}")
             return jsonify({'error': 'Failed to process the file'}), 500
-        
-def main(cobol_folder):
-    for root, _, files in os.walk(cobol_folder):  # Use os.walk to traverse subfolders
-        for file in files:
-            if file.endswith(".cbl"):
-                path = os.path.join(root, file)
-                print(f"\n📄 File: {path}")
-                cobol_code = read_cobol_file(path)
-                blocks = split_by_paragraphs(cobol_code)
-                for i, block in enumerate(blocks, start=1):
-                    print(f"\n--- Paragraph {i} ---")
-                    explanation = call_agent(assistant_id_agent_1 , block)
-                    print(explanation)
-                    
+
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8081)
-    #folder = "C:\\Users\\LukeLallu\\OneDrive - Enterprise Blueprints Limited\\Documents\\EB\\python"
-    #main(folder)
+    port = int(os.environ.get("PORT", 5001))  # Use Render's port or default
+    app.run(host="0.0.0.0", port=port)

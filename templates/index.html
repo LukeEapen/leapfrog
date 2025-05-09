@@ -31,13 +31,6 @@
       color: #0077cc;
     }
 
-    .section-title {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 20px;
-      color: #2c3e50;
-    }
-
     .form-container {
       background: white;
       padding: 25px;
@@ -58,48 +51,21 @@
       flex-direction: column;
     }
 
-    .input-small {
-      flex: 0 0 240px;
-    }
-
-    .input-large {
-      flex: 1 1 auto;
-      min-width: 300px;
-    }
-
-    .input-button {
-      flex: 0 0 auto;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-    }
-
-    label {
-      font-weight: 600;
-      font-size: 14px;
-      color: #444;
-      margin-bottom: 6px;
-    }
-
     .form-input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 14px;
-      min-height: 80px;
-      font-family: inherit;
-      transition: border 0.2s ease;
+    width: 100%;
+    padding: 6px 10px; /* Adjust padding for thinner height */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    min-height: auto; /* Remove minimum height */
+    font-family: inherit;
+    transition: border 0.2s ease;
     }
 
     .form-input:focus {
       border-color: #0077cc;
       outline: none;
       box-shadow: 0 0 0 2px rgba(0,119,204,0.2);
-    }
-
-    textarea.form-input {
-      resize: vertical;
     }
 
     .btn {
@@ -155,131 +121,92 @@
       border: 1px solid #ddd;
       box-shadow: inset 0 1px 4px rgba(0,0,0,0.03);
     }
-
+    .hero-image-container {
+            margin: 40px auto 20px auto;
+            max-width: 900px;
+            text-align: center;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+            background: white;
+            padding: 16px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+          }
+      
+          .hero-image-container:hover {
+            position: relative; /* Ensure the container is positioned for absolute positioning of the image */
+            
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+          }
+      
+          .hero-image {
+            width: 100%;
+            height: auto;
+            max-height: 380px;
+            object-fit: contain;
+            border-radius: 10px;
+          }
+      
+          .hero-caption {
+            font-weight: 600;
+            font-size: 18px;
+            color: #444;
+            margin-top: 10px;
+          }
+          /* Add this CSS for the enlarged image */
+          .hero-image.enlarged {
+            position: absolute; /* Make the image overlay other content */
+            top: 50%; /* Center the image vertically */
+            left: 50%; /* Center the image horizontally */
+            transform: translate(-50%, -50%) scale(1.5); /* Enlarge and center the image */
+            z-index: 1000; /* Ensure the image appears above other elements */
+            transition: transform 0.3s ease; /* Smooth transition */
+            cursor: zoom-out; /* Change cursor to indicate zoom-out */
+          }
     .agent-1 { background-color: #e0f7fa; }
     .agent-2 { background-color: #f1f8e9; }
     .agent-3 { background-color: #fff3e0; }
+    .agent-4 { background-color: #fff9c4; color: #000; }
 
-    .th-1 { background-color: #ff5722; } /* Bright orange */
-    .th-2 { background-color: #4caf50; } /* Bright green */
-    .th-3 { background-color: #2196f3; } /* Bright blue */
-    .th-4 { background-color: #ffeb3b; color: #000; } 
-  
-    .agent-4 {
-      background-color: #fff9c4; /* Light yellow background for Agent 4 responses */
-      color: #000; /* Black text for better readability */
-    }
-    .hero-image-container {
-      margin: 40px auto 20px auto;
-      max-width: 900px;
-      text-align: center;
-      border-radius: 14px;
-      overflow: hidden;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-      background: white;
-      padding: 16px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .hero-image-container:hover {
-      position: relative; /* Ensure the container is positioned for absolute positioning of the image */
-      
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
-    }
-
-    .hero-image {
-      width: 100%;
-      height: auto;
-      max-height: 380px;
-      object-fit: contain;
-      border-radius: 10px;
-    }
-
-    .hero-caption {
-      font-weight: 600;
-      font-size: 18px;
-      color: #444;
-      margin-top: 10px;
-    }
-    /* Add this CSS for the enlarged image */
-    .hero-image.enlarged {
-      position: absolute; /* Make the image overlay other content */
-      top: 50%; /* Center the image vertically */
-      left: 50%; /* Center the image horizontally */
-      transform: translate(-50%, -50%) scale(1.5); /* Enlarge and center the image */
-      z-index: 1000; /* Ensure the image appears above other elements */
-      transition: transform 0.3s ease; /* Smooth transition */
-      cursor: zoom-out; /* Change cursor to indicate zoom-out */
-    }
-    /* Additional style for markdown tables inside agent responses */
-    .agent-response table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    
-    .agent-response th {
-      background-color: #d32f2f; /* Red */
-      color: white;
-      font-weight: 600;
-      font-size: 13px;
-      text-transform: none;
-    } 
-    .agent-response td {
-      border: 1px solid #ccc;
-      padding: 8px 10px;
-      text-align: left;
-    }
-
-    .agent-response thead th {
-      background-color: #d32f2f; /* Red background for table headers */
-      color: white;
-      font-weight: 600;
-      font-size: 13px;
-      text-transform: none;
-    }
-    
-    .agent-response td {
-      font-size: 13px;
-    }
+    .th-1 { background-color: #ff5722; }
+    .th-2 { background-color: #4caf50; }
+    .th-3 { background-color: #2196f3; }
+    .th-4 { background-color: #ffeb3b; color: #000; }
   </style>
 </head>
 
 <body>
-
   <header>
-    <h1 class="page-title">⚙️ GPT Multi-Agent Response UI</h1>
-  </header>
-
+    <h4 class="page-title">⚙️ GPT Multi-Agent Response UI</h4>
+  
   <!-- Hero Image Section -->
   <div class="hero-image-container">
     <img src="{{ url_for('static', filename='processflow.png') }}" alt="Process Flow" class="hero-image">
     <div class="hero-caption">Modern Core Platform Process Flow</div>
   </div>
-
+</header>
   <!-- Form Section -->
   <div class="form-container">
-    <h3 class="section-title">Define the Use Case</h3>
+    <h3>Define the Use Case</h3>
     <div class="input-row">
-      <div class="input-block input-small">
+      <!-- Capability and Use Case in one line -->
+      <div class="input-block" style="flex: 1;">
         <label for="capability">Capability</label>
         <input type="text" id="capability" class="form-input" placeholder="e.g., Post other fees/credits">
       </div>
-
-      <div class="input-block input-small">
+      <div class="input-block" style="flex: 1;">
         <label for="useCase">Use Case</label>
         <input type="text" id="useCase" class="form-input" placeholder="e.g., Post a balance adjustment">
       </div>
-
-      <div class="input-block input-large">
-        <label for="description">Description</label>
-        <textarea id="description" rows="3" class="form-input" placeholder="e.g., Describe the adjustment in context...">....</textarea>
-      </div>
-
-      <div class="input-block input-button">
-        <label style="visibility: hidden;">Submit</label>
-        <button class="btn" onclick="buildPrompt()">Submit to Agentic AI</button>
-      </div>
+    </div>
+    <!-- Description fills the width -->
+    <div class="input-block" style="margin-top: 16px;">
+      <label for="description">Description</label>
+      <textarea id="description" rows="3" class="form-input" placeholder="e.g., Describe the adjustment in context..."></textarea>
+    </div>
+    <!-- Button below -->
+    <div class="input-block" style="margin-top: 16px; text-align: center;">
+      <button class="btn" onclick="buildPrompt()">Submit to Agentic AI</button>
     </div>
   </div>
 
@@ -290,7 +217,6 @@
         <th class="th-1">Agent 1 Output</th>
         <th class="th-2">Agent 2 Output</th>
         <th class="th-3">Agent 3 Output</th>
-        <th class="th-4">Agent 4 Output</th> <!-- New column for Agent 4 -->
       </tr>
     </thead>
     <tbody>
@@ -298,96 +224,47 @@
         <td id="agent1" class="agent-response agent-1"></td>
         <td id="agent2" class="agent-response agent-2"></td>
         <td id="agent3" class="agent-response agent-3"></td>
-        <td id="agent4" class="agent-response agent-4"></td> <!-- New cell for Agent 4 -->
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Separate Table for Agent 4 -->
+  <table>
+    <thead>
+      <tr>
+        <th class="th-4">Agent 4 Output</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="agent4" class="agent-response agent-4"></td>
       </tr>
     </tbody>
   </table>
 
   <script>
-    // Add this JavaScript to toggle the enlarged class
-    document.addEventListener("DOMContentLoaded", () => {
-      const heroImage = document.querySelector(".hero-image");
-  
-      heroImage.addEventListener("click", () => {
-        heroImage.classList.toggle("enlarged");
-      });
-    });
-  
     async function buildPrompt() {
       const capability = document.getElementById("capability").value;
       const useCase = document.getElementById("useCase").value;
       const description = document.getElementById("description").value;
-  
-      const prompt = `Create a prompt to ask Agent 2: details on 
-  · I’m working with the Capital One Product Team on defining requirements as part of legacy core decommissioning and building out our modern Core platform.
-  
-  Capability = '${capability}'
-  Use Case = '${useCase}'
-  Description = '${description}'
-  `;
-  
-      console.log("Prompt built successfully:", prompt);
-  
+
+      const prompt = `Capability = '${capability}', Use Case = '${useCase}', Description = '${description}'`;
+
       try {
-        console.log("Sending request to /api/query_agents...");
-        const startTime = performance.now();
-  
         const response = await fetch("/api/query_agents", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ question: prompt }),
         });
-  
-        const endTime = performance.now();
-        console.log(`Request completed in ${(endTime - startTime).toFixed(2)} ms`);
-  
-        if (!response.ok) {
-          console.error("Error in response:", response.status, response.statusText);
-          return;
-        }
-  
+
         const data = await response.json();
-        console.log("Response received:", data);
-  
-        const agentStartTimes = {};
-        const agentEndTimes = {};
-  
-        // Log and measure time for each agent's response
-        agentStartTimes.agent1 = performance.now();
+
         document.getElementById("agent1").innerHTML = marked.parse(data.agent_1);
-        agentEndTimes.agent1 = performance.now();
-        console.log(
-          `Agent 1 response rendered in ${(agentEndTimes.agent1 - agentStartTimes.agent1).toFixed(2)} ms`
-        );
-  
-        agentStartTimes.agent2 = performance.now();
         document.getElementById("agent2").innerHTML = marked.parse(data.agent_2);
-        agentEndTimes.agent2 = performance.now();
-        console.log(
-          `Agent 2 response rendered in ${(agentEndTimes.agent2 - agentStartTimes.agent2).toFixed(2)} ms`
-        );
-  
-        agentStartTimes.agent3 = performance.now();
         document.getElementById("agent3").innerHTML = marked.parse(data.agent_3);
-        agentEndTimes.agent3 = performance.now();
-        console.log(
-          `Agent 3 response rendered in ${(agentEndTimes.agent3 - agentStartTimes.agent3).toFixed(2)} ms`
-        );
-  
-        agentStartTimes.agent4 = performance.now();
         document.getElementById("agent4").innerHTML = marked.parse(data.agent_4);
-        agentEndTimes.agent4 = performance.now();
-        console.log(
-          `Agent 4 response rendered in ${(agentEndTimes.agent4 - agentStartTimes.agent4).toFixed(2)} ms`
-        );
-  
-        // Highlight code blocks
-        document.querySelectorAll("pre code").forEach((el) => {
-          hljs.highlightElement(el);
-        });
-        console.log("Code highlighting completed.");
       } catch (error) {
-        console.error("Error during fetch or rendering:", error);
+        console.error("Error:", error);
       }
     }
   </script>

@@ -1,182 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>[Legacy to Requirement]</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            background: linear-gradient(to bottom, #f0f8ff, #e6f7ff);
+            background-color: #f4f4f9;
         }
-        .page-title {
+
+        header {
             text-align: center;
-            color: #007bff;
             margin-bottom: 20px;
         }
-        .section-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
+
+        .page-title {
+            font-size: 24px;
+            color: #333;
         }
-        .section-table td {
-            vertical-align: top;
+
+        .form-container {
+            background-color: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
-        .section-1 {
-            background: #ffebcc; /* Light orange */
-        }
-        .section-2 {
-            background: #d4edda; /* Light green */
-        }
-        .section-3 {
-            background: #cce5ff; /* Light blue */
-        }
-        h2 {
-            margin-top: 0;
+
+        .form-container h2 {
             text-align: center;
             color: #333;
+            margin-bottom: 20px;
         }
-        .response {
-            white-space: pre-wrap;
-            background: #f9f9f9;
+
+        .form-container label {
+            font-size: 16px;
+            color: #555;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .form-container input[type="file"] {
+            display: block;
+            width: 100%;
             padding: 10px;
+            font-size: 14px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            font-family: monospace;
-            color: #333;
+            margin-bottom: 20px;
         }
+
+        .form-container button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
         }
-        table th, table td {
+
+        th {
+            padding: 12px;
+            text-align: center;
+            font-size: 16px;
+            color: white;
+        }
+
+        td {
+            padding: 12px;
+            vertical-align: top;
             border: 1px solid #ddd;
-            padding: 8px;
             text-align: left;
         }
-        table th {
-            background: #007bff;
-            color: white;
+
+        .section-1-header {
+            background-color: #ff5722; /* Orange */
         }
-        table td {
-            background: #f9f9f9;
+
+        .section-2-header {
+            background-color: #4caf50; /* Green */
         }
-        button {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
+
+        .section-3-header {
+            background-color: #2196f3; /* Blue */
         }
-        button:hover {
-            background: #218838;
-        }
-        .hero-image-container {
-            margin: 40px auto 20px auto;
-            max-width: 900px;
-            text-align: center;
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-            background: white;
-            padding: 16px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-          }
-      
-          .hero-image-container:hover {
-            position: relative; /* Ensure the container is positioned for absolute positioning of the image */
-            
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
-          }
-      
-          .hero-image {
-            width: 100%;
-            height: auto;
-            max-height: 380px;
-            object-fit: contain;
-            border-radius: 10px;
-          }
-      
-          .hero-caption {
-            font-weight: 600;
-            font-size: 18px;
-            color: #444;
+
+        .response {
             margin-top: 10px;
-          }
-          /* Add this CSS for the enlarged image */
-          .hero-image.enlarged {
-            position: absolute; /* Make the image overlay other content */
-            top: 50%; /* Center the image vertically */
-            left: 50%; /* Center the image horizontally */
-            transform: translate(-50%, -50%) scale(1.5); /* Enlarge and center the image */
-            z-index: 1000; /* Ensure the image appears above other elements */
-            transition: transform 0.3s ease; /* Smooth transition */
-            cursor: zoom-out; /* Change cursor to indicate zoom-out */
-          }
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            font-family: Consolas, monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .markdown-content {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <header>
-        <h1 class="page-title">⚙️ GPT Multi-Agent Response UI [Legacy to Requirement]</h1>
+        <h1 class="page-title">⚙️ GPT Multi-Agent Response UI</h1>
     </header>
-  <!-- Hero Image Section -->
-  <div class="hero-image-container">
-    <img src="{{ url_for('static', filename='processflow1.png') }}" alt="Process Flow" class="hero-image">
-    <div class="hero-caption">Modern Core Platform Process Flow</div>
-  </div>
-    <!-- Horizontal Layout for Sections -->
-    <table class="section-table">
-        <tr>
-            <!-- Section 1: File Upload and Display Content -->
-            <td class="section-1">
-                <h2>Section 1: Uploaded File Content</h2>
-                <form id="uploadForm">
-                    <table>
-                        <tr>
-                            <td><strong>Select File:</strong></td>
-                            <td><input type="file" id="fileInput" name="file" required></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" style="text-align: center;">
-                                <button type="submit">Submit</button>
-                            </td>
-                        </tr>
-                    </table>
-                </form>
-                <h3 style="color: #007bff; margin-top: 20px;">File Content:</h3>
-                <div id="fileContent" class="response"></div>
-            </td>
 
-            <!-- Section 2: Assistant Response -->
-            <td class="section-2">
-                <h2>Section 2: Assistant Response</h2>
-                <h3 style="color: #007bff;">Response:</h3>
-                <div id="uploadResponse" class="response"></div>
-            </td>
+    <!-- File Upload Section -->
+    <div class="form-container">
+        <h2>Upload Your File</h2>
+        <form id="uploadForm">
+            <label for="fileInput">Select a File:</label>
+            <input type="file" id="fileInput" name="file" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
 
-            <!-- Section 3: Placeholder -->
-            <td class="section-3">
-                <h2>Section 3: Placeholder</h2>
-                <table>
-                    <tr>
-                        <th>Feature</th>
-                        <th>Description</th>
-                    </tr>
-                    <tr>
-                        <td>Feature 1</td>
-                        <td>Details about Feature 1</td>
-                    </tr>
-                    <tr>
-                        <td>Feature 2</td>
-                        <td>Details about Feature 2</td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
+    <!-- Three-Column Table -->
+    <table>
+        <thead>
+            <tr>
+                <th class="section-1-header">Section 1: File Content</th>
+                <th class="section-2-header">Section 2: Agent 1 Response</th>
+                <th class="section-3-header">Section 3: Agent 3 Response</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td id="fileContent" class="response"></td>
+                <td id="uploadResponse" class="response markdown-content"></td>
+                <td id="assistant3Response" class="response markdown-content"></td>
+            </tr>
+        </tbody>
     </table>
 
     <script>
@@ -186,27 +161,35 @@
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
 
-            // Read and display the content of the uploaded file
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const fileContent = document.getElementById('fileContent');
-                fileContent.textContent = event.target.result;
-            };
-            reader.readAsText(file);
+            try {
+                // Read the file content and display it in Section 1
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const fileContent = document.getElementById('fileContent');
+                    fileContent.textContent = event.target.result || 'No content in the file.';
+                };
+                reader.readAsText(file);
 
-            // Send the file to the backend
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
+                // Send the file to the backend
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
 
-            const result = await response.json();
-            const uploadResponse = document.getElementById('uploadResponse');
-            if (response.ok) {
-                uploadResponse.textContent = result.response;
-            } else {
-                uploadResponse.textContent = `Error: ${result.error}`;
+                const result = await response.json();
+
+                // Update Section 2 with Agent 1's response (Markdown to HTML)
+                const uploadResponse = document.getElementById('uploadResponse');
+                uploadResponse.innerHTML = marked.parse(result.response_agent_1 || 'No response from Agent 1.');
+
+                // Update Section 3 with Agent 3's response (Markdown to HTML)
+                const assistant3Response = document.getElementById('assistant3Response');
+                assistant3Response.innerHTML = marked.parse(result.response_agent_3 || 'No response from Agent 3.');
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                const uploadResponse = document.getElementById('uploadResponse');
+                uploadResponse.textContent = 'Error processing the file.';
             }
         });
     </script>
