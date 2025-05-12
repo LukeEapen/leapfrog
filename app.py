@@ -5,143 +5,154 @@ import logging
 import os
 from dotenv import load_dotenv
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging for INFO level
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('agent_responses.log')
+    ]
+)
 
 app = Flask(__name__)
 
-# Personal platform.openai.com
+# Load environment variables
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Assistant IDs
-assistant_id_agent_1 = "asst_EvIwemZYiG4cCmYc7GnTZoQZ"
-assistant_id_agent_2 = "asst_EkihtJQe9qFiztRdRXPhiy2G"
-assistant_id_agent_3 = "asst_Si7JAfL2Ov80wvcly6GKLJcN"
-assistant_id_agent_5 = "asst_SBfAJLv7rEmYfpaiZNeo4M4R"
-assistant_id_agent_6 = "asst_mhK4I0m573exEx1bEeU7R5rO"
-assistant_id_agent_7 = "asst_kPNCCx49PI7pVaTT7dQR1196"
-assistant_id_agent_8 = "asst_HrrIeoEnSklSIB04MIWXFoCy"
+# Assistant IDs with descriptions
+ASSISTANTS = {
+    'agent_1': ("asst_EvIwemZYiG4cCmYc7GnTZoQZ", "Prompt Structuring Agent"),
+    'agent_2': ("asst_EkihtJQe9qFiztRdRXPhiy2G", "Requirements Generator"),
+    'agent_3': ("asst_Si7JAfL2Ov80wvcly6GKLJcN", "Validator Agent"),
+    'agent_5': ("asst_r29PjUzVwfd6XiiYH3ueV41P", "Legal & Compliance Analyst"),
+    'agent_6': ("asst_WG96Jp4VMrLJfUE4RMkGFMjf", "NFR Specialist"),
+    'agent_7': ("asst_VWzoRLWbeZJS8I2IwtOcsLMp", "Platform Architect"),
+    'agent_8': ("asst_sufR6Spw8EBDDoAzqQJN9iJt", "Requirement Functional - Legacy Parity Agent")
+}
 
+def print_agent_response(agent_name: str, response: str, elapsed_time: float = None):
+    """Print agent response with clear formatting"""
+    separator = "=" * 80
+    logging.info(f"\n{separator}")
+    logging.info(f"🤖 {agent_name} Response:")
+    if elapsed_time:
+        logging.info(f"⏱️ Time taken: {elapsed_time:.2f} seconds")
+    logging.info(f"📝 Response:\n{response}")
+    logging.info(f"{separator}\n")
 
-def call_agent(assistant_id, message):
-    logging.info(f"Calling agent {assistant_id} with message: {message}")
+def call_agent(assistant_id: str, message: str, agent_name: str):
+    """Call OpenAI assistant with enhanced logging"""
     start_time = time.time()
+    logging.info(f"Starting {agent_name} with assistant ID: {assistant_id}")
 
     try:
-        # Create a thread and send the message
+        # Create thread and send message
         thread = openai.beta.threads.create()
-        logging.debug(f"Thread created with ID: {thread.id}")
-        
         openai.beta.threads.messages.create(
             thread_id=thread.id,
             role="user",
             content=message
         )
-        logging.debug(f"Message sent to thread {thread.id}")
 
-        # Start the run
-        run = openai.beta.threads.runs.create(thread_id=thread.id, assistant_id=assistant_id)
-        logging.debug(f"Run started for agent {assistant_id} with run ID: {run.id}")
+        # Run the assistant
+        run = openai.beta.threads.runs.create(
+            thread_id=thread.id,
+            assistant_id=assistant_id
+        )
 
-        # Poll for the run status
+        # Poll for completion
         while True:
-            run_status = openai.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
-            logging.debug(f"Run status for agent {assistant_id}: {run_status.status}")
-            
+            run_status = openai.beta.threads.runs.retrieve(
+                thread_id=thread.id,
+                run_id=run.id
+            )
             if run_status.status == "completed":
-                logging.info(f"Run completed for agent {assistant_id}")
                 break
             elif run_status.status == "failed":
-                logging.error(f"Run failed for agent {assistant_id}")
-    
-                # Log more detail if available
-                if hasattr(run_status, 'last_error') and run_status.last_error:
-                    logging.error(f"Last error for agent {assistant_id}: {run_status.last_error}")
-                else:
-                    logging.debug(f"Full run status object: {run_status}")
-
-                raise Exception(f"Run failed for agent {assistant_id}")
+                raise Exception(f"Run failed for {agent_name}")
             time.sleep(1)
 
-        # Retrieve messages from the thread
+        # Get response
         messages = openai.beta.threads.messages.list(thread_id=thread.id)
-        for msg in messages.data:
-            if msg.role == "assistant":
-                end_time = time.time()
-                elapsed_time = end_time - start_time
-                logging.info(f"Agent {assistant_id} completed in {elapsed_time:.2f} seconds")
-                return msg.content[0].text.value
-
-        logging.error(f"No assistant response found for agent {assistant_id}")
-        raise Exception(f"No response from agent {assistant_id}")
+        response = messages.data[0].content[0].text.value
+        elapsed_time = time.time() - start_time
+        
+        # Print formatted response
+        print_agent_response(agent_name, response, elapsed_time)
+        
+        return response
 
     except Exception as e:
-        logging.error(f"Error in call_agent for agent {assistant_id}: {str(e)}")
+        logging.error(f"Error in {agent_name}: {str(e)}")
         raise
 
 @app.route('/api/query_agents', methods=['POST'])
 def query_agents():
-    data = request.json
-    question = data.get('question')
-    logging.info("Received question for agents: %s", question)
-
+    """Handle agent pipeline with sequential and parallel processing"""
     try:
-        # Call Agent 1
-        logging.info("Starting Agent 1")
-        start_time_agent_1 = time.time()
-        agent_1_response = call_agent(assistant_id_agent_1, question)
-        end_time_agent_1 = time.time()
-        logging.info(f"Agent 1 completed in {end_time_agent_1 - start_time_agent_1:.2f} seconds")
+        data = request.json
+        question = data.get('question', '').strip()
+        if not question:
+            return jsonify({'error': 'No question provided'}), 400
 
-        # Call Agent 2 with Agent 1's response
-        logging.info("Starting Agent 2")
-        start_time_agent_2 = time.time()
-        agent_2_response = call_agent(assistant_id_agent_2, agent_1_response)
-        end_time_agent_2 = time.time()
-        logging.info(f"Agent 2 completed in {end_time_agent_2 - start_time_agent_2:.2f} seconds")
+        logging.info("\n📋 Starting new query processing")
+        logging.info(f"Input question: {question}")
 
-        # Call Agent 3 with Agent 2's response
-        logging.info("Starting Agent 3")
-        start_time_agent_3 = time.time()
-        agent_3_response = call_agent(assistant_id_agent_3, agent_2_response)
-        end_time_agent_3 = time.time()
-        logging.info(f"Agent 3 completed in {end_time_agent_3 - start_time_agent_3:.2f} seconds")
-
-        # Call Agents 5, 6, 7, and 8 with Agent 2's response
-        logging.info("Starting Agent 5")
-        agent_5_response = call_agent(assistant_id_agent_5, agent_2_response)
-
-        logging.info("Starting Agent 6")
-        agent_6_response = call_agent(assistant_id_agent_6, agent_2_response)
-
-        logging.info("Starting Agent 7")
-        agent_7_response = call_agent(assistant_id_agent_7, agent_2_response)
-
-        logging.info("Starting Agent 8")
-        agent_8_response = call_agent(assistant_id_agent_8, agent_2_response)
-
-        # Consolidate responses from Agents 5, 6, 7, and 8
-        agent_4_response = (
-            f"**Agent 5 Response:** {agent_5_response}\n\n"
-            f"**Agent 6 Response:** {agent_6_response}\n\n"
-            f"**Agent 7 Response:** {agent_7_response}\n\n"
-            f"**Agent 8 Response:** {agent_8_response}"
+        # Sequential processing
+        agent_1_response = call_agent(
+            ASSISTANTS['agent_1'][0], 
+            question, 
+            "Prompt Structuring Agent"
         )
+        
+        agent_2_response = call_agent(
+            ASSISTANTS['agent_2'][0], 
+            agent_1_response, 
+            "Requirements Generator"
+        )
+        
+        agent_3_response = call_agent(
+            ASSISTANTS['agent_3'][0], 
+            agent_2_response, 
+            "Validator Agent"
+        )
+
+        # Parallel processing
+        parallel_responses = {}
+        for agent_key in ['agent_5', 'agent_6', 'agent_7', 'agent_8']:
+            assistant_id, agent_desc = ASSISTANTS[agent_key]
+            parallel_responses[agent_key] = call_agent(
+                assistant_id,
+                agent_2_response,
+                agent_desc
+            )
+
+        # Combine parallel responses
+        agent_4_response = "\n\n".join([
+            f"**{ASSISTANTS[agent][1]} Response:**\n{response}"
+            for agent, response in parallel_responses.items()
+        ])
+
+        logging.info("✅ Query processing completed")
+        
         return jsonify({
             'agent_1': agent_1_response,
             'agent_2': agent_2_response,
             'agent_3': agent_3_response,
             'agent_4': agent_4_response
         })
+
     except Exception as e:
-        logging.error("Error during agent processing: %s", str(e))
+        logging.error(f"❌ Error during processing: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/agenticAI')
 def index():
-    return render_template('index.html')
+    return render_template('index-new.html')
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))  # Use Render's port or default
+    port = int(os.environ.get("PORT", 5000))
+    logging.info(f"🚀 Starting server on port {port}")
     app.run(host="0.0.0.0", port=port)
