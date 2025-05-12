@@ -134,17 +134,16 @@ def query_agents():
     )
 
     # Final consolidation
-    task4 = Task(
-        description="Consolidate reviews from Agents 5–8 into a unified summary.",
-        expected_output="A synthesized summary of risks, gaps, and enhancements from all domain reviewers.",
-        agent=agent_4,
-        context=[task5, task6, task7, task8]
-    )
-
-    # Execute the full Crew
+    agent_4_output = "\n\n".join([
+        str(task5.output) if task5.output else "",
+        str(task6.output) if task6.output else "",
+        str(task7.output) if task7.output else "",
+        str(task8.output) if task8.output else ""
+    ])
+        # Execute the full Crew
     crew = Crew(
-        agents=[agent_1, agent_2, agent_3, agent_4, agent_5, agent_6, agent_7, agent_8],
-        tasks=[task1, task2, task3, task5, task6, task7, task8, task4]
+        agents=[agent_1, agent_2, agent_3, agent_5, agent_6, agent_7, agent_8],
+        tasks=[task1, task2, task3, task5, task6, task7, task8]
     )
 
     crew.kickoff()
@@ -153,7 +152,7 @@ def query_agents():
         "agent_1": str(task1.output) if task1.output else "No output",
         "agent_2": str(task2.output) if task2.output else "No output",
         "agent_3": str(task3.output) if task3.output else "No output",
-        "agent_4": str(task4.output) if task4.output else "No output"
+        "agent_4": agent_4_output or "No output"
     })
 
 @app.route('/agenticAI')
