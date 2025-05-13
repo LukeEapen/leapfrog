@@ -1,8 +1,9 @@
 flask==3.0.0
+colorama==0.4.6
 flask[async]==3.0.0
-openai==1.3.0
+openai>=1.10.0,<2.0.0
 python-dotenv==1.0.0
 langgraph==0.0.21
 langchain-core==0.1.17
 langchain-openai==0.0.5
-marked==11.1.1
+markdown==3.5.2

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Agentic AI - Stepwise Approval</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .step {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        .step h3 {
+            margin-top: 0;
+        }
+        .readonly {
+            background-color: #eee;
+        }
+    </style>
+</head>
+<body>
+    <h2>Agentic AI Orchestrator (Stepwise Approval)</h2>
+
+    <div class="step">
+        <h3>Step 1: User Question</h3>
+        <textarea id="question" placeholder="Enter your capability, use case, and description..."></textarea>
+        <button onclick="runAgent1()">Submit to Agent 1</button>
+    </div>
+
+    <div class="step">
+        <h3>Agent 1 Output (Intent Clarifier)</h3>
+        <textarea id="agent1_output" class="readonly" readonly></textarea>
+        <button onclick="runAgent2()" id="approve1" disabled>Approve & Run Agent 2</button>
+    </div>
+
+    <div class="step">
+        <h3>Agent 2 Output (Requirement Generator)</h3>
+        <textarea id="agent2_output" class="readonly" readonly></textarea>
+        <button onclick="runAgent3()" id="approve2" disabled>Approve & Run Agent 3</button>
+    </div>
+
+    <div class="step">
+        <h3>Agent 3 Output (Validator)</h3>
+        <textarea id="agent3_output" class="readonly" readonly></textarea>
+        <button onclick="runAgent4()" id="approve3" disabled>Approve & Run Agents 5–8</button>
+    </div>
+
+    <div class="step">
+        <h3>Agent 4 Output (LRC, NFR, Architecture, Functional)</h3>
+        <textarea id="agent4_output" class="readonly" readonly></textarea>
+    </div>
+
+    <script>
+        async function runAgent1() {
+            const question = document.getElementById("question").value;
+            const res = await fetch('/api/agent_1', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question })
+            });
+            const data = await res.json();
+            document.getElementById("agent1_output").value = data.output;
+            document.getElementById("approve1").disabled = false;
+        }
+
+        async function runAgent2() {
+            const input = document.getElementById("agent1_output").value;
+            const res = await fetch('/api/agent_2', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ input })
+            });
+            const data = await res.json();
+            document.getElementById("agent2_output").value = data.output;
+            document.getElementById("approve2").disabled = false;
+        }
+
+        async function runAgent3() {
+            const input = document.getElementById("agent2_output").value;
+            const res = await fetch('/api/agent_3', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ input })
+            });
+            const data = await res.json();
+            document.getElementById("agent3_output").value = data.output;
+            document.getElementById("approve3").disabled = false;
+        }
+
+        async function runAgent4() {
+            const input = document.getElementById("agent2_output").value;
+            const res = await fetch('/api/agent_4', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ input })
+            });
+            const data = await res.json();
+            document.getElementById("agent4_output").value = data.output;
+        }
+    </script>
+</body>
+</html>

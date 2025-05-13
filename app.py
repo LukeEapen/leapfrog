@@ -3,15 +3,22 @@ from flask import Flask, request, jsonify, render_template
 import time
 import logging
 import os
+import sys
+import codecs
 from dotenv import load_dotenv
 
-# Configure logging for INFO level
+# Force UTF-8 encoding for Windows console
+if sys.platform.startswith('win'):
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('agent_responses.log')
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('agent_responses.log', encoding='utf-8')
     ]
 )
 
@@ -33,19 +40,19 @@ ASSISTANTS = {
 }
 
 def print_agent_response(agent_name: str, response: str, elapsed_time: float = None):
-    """Print agent response with clear formatting"""
+    """Print agent response with ASCII-safe formatting"""
     separator = "=" * 80
     logging.info(f"\n{separator}")
-    logging.info(f"🤖 {agent_name} Response:")
+    logging.info(f"[AGENT] {agent_name}")
     if elapsed_time:
-        logging.info(f"⏱️ Time taken: {elapsed_time:.2f} seconds")
-    logging.info(f"📝 Response:\n{response}")
+        logging.info(f"[TIME] {elapsed_time:.2f} seconds")
+    logging.info(f"[RESPONSE]\n{response}")
     logging.info(f"{separator}\n")
 
 def call_agent(assistant_id: str, message: str, agent_name: str):
     """Call OpenAI assistant with enhanced logging"""
     start_time = time.time()
-    logging.info(f"Starting {agent_name} with assistant ID: {assistant_id}")
+    logging.info(f"[START] {agent_name} (ID: {assistant_id})")
 
     try:
         # Create thread and send message
@@ -79,13 +86,11 @@ def call_agent(assistant_id: str, message: str, agent_name: str):
         response = messages.data[0].content[0].text.value
         elapsed_time = time.time() - start_time
         
-        # Print formatted response
         print_agent_response(agent_name, response, elapsed_time)
-        
         return response
 
     except Exception as e:
-        logging.error(f"Error in {agent_name}: {str(e)}")
+        logging.error(f"[ERROR] {agent_name}: {str(e)}")
         raise
 
 @app.route('/api/query_agents', methods=['POST'])
@@ -97,8 +102,8 @@ def query_agents():
         if not question:
             return jsonify({'error': 'No question provided'}), 400
 
-        logging.info("\n📋 Starting new query processing")
-        logging.info(f"Input question: {question}")
+        logging.info("[START] New query processing")
+        logging.info(f"[INPUT] {question}")
 
         # Sequential processing
         agent_1_response = call_agent(
@@ -135,7 +140,7 @@ def query_agents():
             for agent, response in parallel_responses.items()
         ])
 
-        logging.info("✅ Query processing completed")
+        logging.info("[COMPLETE] Query processing finished")
         
         return jsonify({
             'agent_1': agent_1_response,
@@ -145,14 +150,15 @@ def query_agents():
         })
 
     except Exception as e:
-        logging.error(f"❌ Error during processing: {str(e)}")
+        logging.error(f"[ERROR] Processing failed: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/agenticAI')
 def index():
+    """Render the main UI template."""
     return render_template('index-new.html')
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    logging.info(f"🚀 Starting server on port {port}")
+    logging.info("[SERVER] Starting on port %d", port)
     app.run(host="0.0.0.0", port=port)

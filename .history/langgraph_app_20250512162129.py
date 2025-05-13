@@ -94,11 +94,11 @@ def build_graph() -> StateGraph:
     
     # Add nodes
     for agent_key in ["agent_1", "agent_2", "agent_3"]:
-        builder.add_node(agent_key, lambda x, key=agent_key: _invoke(key, x))
+        builder.add_node(agent_key, lambda x, key=agent_key: asyncio.run(_invoke(key, x)))
     
     # Add parallel processing nodes
     for agent_key in ["agent_5", "agent_6", "agent_7", "agent_8"]:
-        builder.add_node(agent_key, lambda x, key=agent_key: _invoke(key, x))
+        builder.add_node(agent_key, lambda x, key=agent_key: asyncio.run(_invoke(key, x)))
 
     # Define graph structure
     builder.set_entry_point("agent_1")

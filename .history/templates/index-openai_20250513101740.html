@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Agentic AI Workflow</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <style>
+    body {
+      background-color: #e8f0ff;
+      padding: 20px;
+    }
+
+    .output-section {
+      height: 60vh;
+      overflow-y: auto;
+      background: white;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .output-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    .fixed-height {
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    th {
+      background-color: red;
+      color: white;
+    }
+
+    #timer {
+      font-size: 14px;
+      font-style: italic;
+      color: #333;
+      display: none;
+    }
+
+    .loading {
+      background-color: #0d6efd !important;
+      color: white !important;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h4 class="mb-3 text-center fw-bold">Agentic AI Workflow (OpenAI Assistants)</h4>
+
+  <!-- Step 1 -->
+  <div class="p-3 bg-white rounded shadow-sm mb-4 border">
+    <h5><strong>Step 1: Enter Business Intent</strong></h5>
+    <textarea class="form-control mb-2" id="question" rows="4">
+Capability: Create an account
+Use Case: Create a frontbook account as a new customer
+Description: Create a Frontbook Account as a New Customer enables full lifecycle account setup — from intake, underwriting, account and partner provisioning, card issuance, downstream enablement, lifecycle servicing, to resilience and compliance — ensuring legacy core parity with enhanced security, integration, and customer experience.
+    </textarea>
+    <button class="btn btn-success" id="submitBtn" onclick="submitAgent1()">Submit to Agent 1</button>
+    <span id="timer"></span>
+  </div>
+
+  <!-- Agent Outputs -->
+  <div class="row">
+    <!-- Agent 1 -->
+    <div class="col-md-4 mb-3">
+      <div class="output-section">
+        <div class="output-title">Agent 1: Intent Clarifier</div>
+        <textarea id="agent1_output" class="form-control mb-2" readonly></textarea>
+        <button class="btn btn-success btn-sm" id="btnAgent2" onclick="approveAgent2()">Approve & Run Agent 2</button>
+      </div>
+    </div>
+
+    <!-- Agent 2 -->
+    <div class="col-md-4 mb-3">
+      <div class="output-section fixed-height">
+        <div class="output-title">Agent 2: Requirement Generator</div>
+        <div id="agent2_output" class="table-scroll"></div>
+        <button class="btn btn-success btn-sm mt-2" id="btnAgent3" onclick="approveAgent3()">Approve & Run Agent 3</button>
+      </div>
+    </div>
+
+    <!-- Agent 3 -->
+    <div class="col-md-4 mb-3">
+      <div class="output-section">
+        <div class="output-title">Agent 3: Validator</div>
+        <textarea id="agent3_output" class="form-control mb-2" readonly></textarea>
+        <button class="btn btn-success btn-sm" id="btnAgent4" onclick="approveAgent4()">Approve & Run Agents 5–8</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent 4 -->
+  <div class="output-section mt-3">
+    <div class="output-title">Agent 4: LRC, NFR, Architecture, Functional (Agents 5–8)</div>
+    <textarea id="agent4_output" class="form-control" rows="5" readonly></textarea>
+  </div>
+</div>
+
+<script>
+  let timerInterval;
+
+  function startTimer(label) {
+    let seconds = 0;
+    const timer = document.getElementById("timer");
+    timer.style.display = "inline";
+    timer.innerText = `⏳ Waiting... 0s`;
+    timerInterval = setInterval(() => {
+      seconds++;
+      timer.innerText = `⏳ Waiting... ${seconds}s`;
+    }, 1000);
+    label.classList.add("loading");
+    label.disabled = true;
+  }
+
+  function stopTimer(label) {
+    clearInterval(timerInterval);
+    const timer = document.getElementById("timer");
+    timer.innerText = "";
+    timer.style.display = "none";
+    label.classList.remove("loading");
+    label.disabled = false;
+  }
+
+  async function postQuery(payload) {
+    const res = await fetch("/api/query_agents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    return res.json();
+  }
+
+  async function submitAgent1() {
+    const btn = document.getElementById("submitBtn");
+    startTimer(btn);
+    const question = document.getElementById("question").value;
+    const response = await postQuery({ question });
+
+    document.getElementById("agent1_output").value = response.agent_1;
+    document.getElementById("agent2_output").innerHTML = formatAgent2Table(response.agent_2);
+    document.getElementById("agent3_output").value = response.agent_3;
+    document.getElementById("agent4_output").value = response.agent_4;
+
+    stopTimer(btn);
+  }
+
+  function approveAgent2() {
+    const btn = document.getElementById("btnAgent2");
+    btn.classList.add("loading");
+    setTimeout(() => btn.classList.remove("loading"), 500);
+    alert("Agent 1 approved. Proceed to Agent 2.");
+  }
+
+  function approveAgent3() {
+    const btn = document.getElementById("btnAgent3");
+    btn.classList.add("loading");
+    setTimeout(() => btn.classList.remove("loading"), 500);
+    alert("Agent 2 approved. Proceed to Agent 3.");
+  }
+
+  function approveAgent4() {
+    const btn = document.getElementById("btnAgent4");
+    btn.classList.add("loading");
+    setTimeout(() => btn.classList.remove("loading"), 500);
+    alert("Agent 3 approved. Proceeding to Agents 5–8.");
+  }
+
+  function formatAgent2Table(rawText) {
+    const lines = rawText.trim().split("\n");
+    const rows = lines.map(line => {
+      const cols = line.split("|").map(c => c.trim()).filter(c => c.length);
+      return cols.length ? `<tr>${cols.map(c => `<td>${c}</td>`).join("")}</tr>` : "";
+    }).filter(row => row);
+
+    if (!rows.length) return "<p>No table content.</p>";
+
+    return `
+      <table class="table table-bordered table-striped table-sm">
+        <thead>
+          <tr>
+            <th>Requirement Category</th>
+            <th>Requirement Sub-Category</th>
+            <th>Requirement</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>${rows.join("")}</tbody>
+      </table>`;
+  }
+</script>
+</body>
+</html>
