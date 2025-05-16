@@ -82,10 +82,33 @@
     </div>
   </div>
 
-  <!-- Agent 4 -->
-  <div class="output-section mt-3">
-    <div class="output-title">Agent 4: LRC, NFR, Architecture, Functional (Agents 5–8)</div>
-    <textarea id="agent4_output" class="form-control" rows="8" readonly></textarea>
+  <!-- Agent 4 outputs: 4-column layout -->
+  <div class="output-title mt-4">Agent 4: LRC, NFR, Architecture, Functional (Agents 5–8)</div>
+  <div class="row g-3">
+    <div class="col-md-3">
+      <div class="output-section">
+        <div class="output-title">Agent 8: Legacy Parity</div>
+        <textarea id="agent8_output" class="form-control" rows="12" readonly></textarea>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="output-section">
+        <div class="output-title">Agent 5: Legal & Compliance</div>
+        <textarea id="agent5_output" class="form-control" rows="12" readonly></textarea>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="output-section">
+        <div class="output-title">Agent 6: NFR Specialist</div>
+        <textarea id="agent6_output" class="form-control" rows="12" readonly></textarea>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="output-section">
+        <div class="output-title">Agent 7: Platform Architect</div>
+        <textarea id="agent7_output" class="form-control" rows="12" readonly></textarea>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -115,7 +138,6 @@
   }
 
   async function postQuery(endpoint, input) {
-    console.info(`POSTing to ${endpoint} with input:`, input);
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -160,7 +182,31 @@
     const btn = document.getElementById("btnAgent4");
     startTimer(btn);
     const res = await postQuery("/api/agent_4", input);
-    document.getElementById("agent4_output").value = res.output;
+    
+    const outputText = res.output;
+    const agentMap = {
+      "Requirement Functional - Legacy Parity Agent": "agent8_output",
+      "Legal & Compliance Analyst": "agent5_output",
+      "NFR Specialist": "agent6_output",
+      "Platform Architect": "agent7_output"
+    };
+
+    // Clear previous outputs
+    Object.values(agentMap).forEach(id => {
+      document.getElementById(id).value = "";
+    });
+
+    const segments = outputText.split(/\*\*(.*?)\*\*/g).filter(s => s.trim());
+
+    for (let i = 0; i < segments.length; i += 2) {
+      const agentTitle = segments[i].trim();
+      const agentBody = segments[i + 1]?.trim() || "";
+      const targetId = agentMap[agentTitle];
+      if (targetId) {
+        document.getElementById(targetId).value = agentBody;
+      }
+    }
+
     stopTimer(btn);
   }
 

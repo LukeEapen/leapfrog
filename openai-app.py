@@ -1,5 +1,6 @@
 import openai
 from flask import Flask, request, jsonify, render_template
+from concurrent.futures import ThreadPoolExecutor
 import time
 import logging
 import os
@@ -61,7 +62,7 @@ def call_agent(assistant_id: str, message: str, agent_name: str):
                 break
             elif status.status == "failed":
                 raise Exception(f"Run failed for {agent_name}")
-            time.sleep(1)
+            time.sleep(0.25)
 
         messages = openai.beta.threads.messages.list(thread_id=thread.id)
         response = messages.data[0].content[0].text.value
@@ -94,17 +95,25 @@ def run_agent_3():
 
 @app.route('/api/agent_4', methods=['POST'])
 def run_agent_4():
+    """Call agents 5–8 in parallel"""
     input_text = request.json.get('input', '').strip()
-    results = {}
-    for agent_key in ['agent_5', 'agent_6', 'agent_7', 'agent_8']:
+
+    def run(agent_key):
         assistant_id, name = ASSISTANTS[agent_key]
-        results[agent_key] = f"**{name}**\n" + call_agent(assistant_id, input_text, name)
-    return jsonify({'output': "\n\n".join(results.values())})
+        result = call_agent(assistant_id, input_text, name)
+        return f"**{name}**\n{result}"
+
+    agent_keys = ['agent_8', 'agent_5', 'agent_6', 'agent_7']
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        results = list(executor.map(run, agent_keys))
+
+    return jsonify({'output': "\n\n".join(results)})
 
 @app.route('/agenticAI')
 def index():
     return render_template('index-openai.html')
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 5001))
     app.run(host="0.0.0.0", port=port)

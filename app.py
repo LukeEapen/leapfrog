@@ -124,9 +124,19 @@ def query_agents():
             "Validator Agent"
         )
 
-        # Parallel processing
+        # Process Agent 8 first, then other parallel agents
         parallel_responses = {}
-        for agent_key in ['agent_5', 'agent_6', 'agent_7', 'agent_8']:
+        
+        # Process Agent 8 first
+        assistant_id_8, agent_desc_8 = ASSISTANTS['agent_8']
+        parallel_responses['agent_8'] = call_agent(
+            assistant_id_8,
+            agent_2_response,
+            agent_desc_8
+        )
+
+        # Process remaining agents
+        for agent_key in ['agent_5', 'agent_6', 'agent_7']:
             assistant_id, agent_desc = ASSISTANTS[agent_key]
             parallel_responses[agent_key] = call_agent(
                 assistant_id,
@@ -134,10 +144,12 @@ def query_agents():
                 agent_desc
             )
 
-        # Combine parallel responses
+        # Combine parallel responses with Agent 8 first
         agent_4_response = "\n\n".join([
-            f"**{ASSISTANTS[agent][1]} Response:**\n{response}"
-            for agent, response in parallel_responses.items()
+            f"**{ASSISTANTS['agent_8'][1]} Response:**\n{parallel_responses['agent_8']}",
+            *[f"**{ASSISTANTS[agent][1]} Response:**\n{response}"
+              for agent, response in parallel_responses.items()
+              if agent != 'agent_8']
         ])
 
         logging.info("[COMPLETE] Query processing finished")
