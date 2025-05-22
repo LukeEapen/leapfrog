@@ -221,10 +221,11 @@ function formatAgent4Table(res) {
     <table class="table table-bordered table-striped align-middle text-center">
       <thead class="table-primary">
         <tr>
-          <th style="width:25%; color:#fff;">🧑‍⚖️<br>Legal & Compliance Analyst<br><span class="text-secondary">(Agent 5)</span></th>
-          <th style="width:25%; color:#fff;">🔒<br>NFR Specialist<br><span class="text-secondary">(Agent 6)</span></th>
-          <th style="width:25%; color:#fff;">🏗️<br>Platform Architect<br><span class="text-secondary">(Agent 7)</span></th>
-          <th style="width:25%; color:#fff;">📋<br>Requirement Functional - Legacy Parity<br><span class="text-secondary">(Agent 8)</span></th>
+          <th style="width:20%; color:#fff;">🧑‍⚖️<br>Legal & Compliance Analyst<br><span class="text-secondary">(Agent 5)</span></th>
+          <th style="width:20%; color:#fff;">🔒<br>NFR Specialist<br><span class="text-secondary">(Agent 6)</span></th>
+          <th style="width:20%; color:#fff;">🏗️<br>Platform Architect<br><span class="text-secondary">(Agent 7)</span></th>
+          <th style="width:20%; color:#fff;">📋<br>Requirement Functional - Legacy Parity<br><span class="text-secondary">(Agent 8)</span></th>
+          <th style="width:20%; color:#fff;">🧮<br>Data Attribute Generator<br><span class="text-secondary">(Agent 9)</span></th>
         </tr>
       </thead>
       <tbody>
@@ -233,6 +234,7 @@ function formatAgent4Table(res) {
           <td>${(res.agent_6 || "").replace(/\n/g, "<br>")}</td>
           <td>${(res.agent_7 || "").replace(/\n/g, "<br>")}</td>
           <td>${(res.agent_8 || "").replace(/\n/g, "<br>")}</td>
+          <td>${(res.agent_9 || "").replace(/\n/g, "<br>")}</td>
         </tr>
       </tbody>
     </table>
