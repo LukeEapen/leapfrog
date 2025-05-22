@@ -7,6 +7,10 @@ import os
 import sys
 import codecs
 from dotenv import load_dotenv
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
+from docx import Document
+from flask import send_file
+from io import BytesIO
 
 if sys.platform.startswith('win'):
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
@@ -22,6 +26,7 @@ logging.basicConfig(
 )
 
 app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "your_default_fallback_secret_here")
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -122,7 +127,50 @@ def run_agents_5_to_9():
 
 @app.route('/agenticAI')
 def index():
+    if not session.get("logged_in"):
+        return redirect(url_for('login'))
     return render_template('index-openai-v2.html')
+
+@app.route('/')
+def login():
+    if session.get("logged_in"):
+        return redirect(url_for('index'))
+    return render_template('login.html')
+
+@app.route('/login', methods=['POST'])
+def do_login():
+    username = request.form.get("username")
+    password = request.form.get("password")
+    if username == "admin" and password == "secure123":  # Change to your values
+        session["logged_in"] = True
+        return redirect(url_for('index'))
+    return "Invalid credentials", 401
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+@app.route('/download_doc', methods=['POST'])
+def download_doc():
+    data = request.json  # expects keys: agent_5, agent_6, agent_7, agent_8, agent_9
+    doc = Document()
+    doc.add_heading("Agentic AI Output Report", 0)
+
+    for key, title in {
+        "agent_5": "Agent 5 – Legal & Compliance",
+        "agent_6": "Agent 6 – NFR Specialist",
+        "agent_7": "Agent 7 – Platform Architect",
+        "agent_8": "Agent 8 – Functional Parity",
+        "agent_9": "Agent 9 – Data Attribute Generator"
+    }.items():
+        doc.add_heading(title, level=1)
+        doc.add_paragraph(data.get(key, "No response"))
+
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return send_file(buffer, as_attachment=True, download_name="agent_report.docx")
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))

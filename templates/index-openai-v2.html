@@ -115,7 +115,9 @@
   </div>
   <div id="agent4_table" class="table-responsive mt-2"></div>
 </div>
-
+<div class="text-end mt-2">
+  <button class="btn btn-outline-primary btn-sm" onclick="downloadAsDoc()">📄 Download as Word</button>
+</div>
 <script>
   let timerInterval;
 
@@ -239,6 +241,28 @@ function formatAgent4Table(res) {
       </tbody>
     </table>
   `;
+}
+function downloadAsDoc() {
+  const content = {
+    agent_5: document.querySelector("#agent4_table td:nth-child(1)")?.innerText || "",
+    agent_6: document.querySelector("#agent4_table td:nth-child(2)")?.innerText || "",
+    agent_7: document.querySelector("#agent4_table td:nth-child(3)")?.innerText || "",
+    agent_8: document.querySelector("#agent4_table td:nth-child(4)")?.innerText || "",
+    agent_9: document.querySelector("#agent4_table td:nth-child(5)")?.innerText || ""
+  };
+
+  fetch("/download_doc", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(content)
+  })
+  .then(res => res.blob())
+  .then(blob => {
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = "agent_report.docx";
+    link.click();
+  });
 }
 </script>
 </body>
