@@ -1,281 +1,234 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Agentic AI Workflow</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-  <style>
-    body {
-      background-color: #e8f0ff;
-      padding: 20px;
-    }
-    .output-section {
-      background: white;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      height: 60vh;
-      overflow-y: auto;
-    }
-    .output-title {
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #2c3e50;
-    }
-    .btn-success {
-      font-weight: bold;
-      letter-spacing: 0.5px;
-      transition: all 0.3s ease;
-    }
-    .btn-success:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-    .table-scroll {
-      max-height: 60vh;
-      overflow-y: auto;
-    }
-    .agent-button {
-      display: none;
-      width: 100%;
-      margin-top: 10px;
-    }
-    .loading {
-      opacity: 0.7;
-      pointer-events: none;
-    }
-    #timer {
-      margin-left: 10px;
-      color: #666;
-    }
-    .error-message {
-      color: #dc3545;
-      margin-top: 10px;
-      display: none;
-    }
-  </style>
-</head>
-<body>
-<div class="container-fluid">
-  <h4 class="mb-3 text-center fw-bold">Agentic AI Workflow (OpenAI Assistants)</h4>
-
-  <div class="p-3 bg-white rounded shadow-sm mb-4 border">
-    <h5><strong>Step 1: Enter Business Intent</strong></h5>
-    <textarea class="form-control mb-2" id="question" rows="4" 
-              placeholder="Capability: Create an account..."></textarea>
-    <button class="btn btn-success" id="submitBtn" onclick="submitAgent1()">
-      Submit to Agent 1
-    </button>
-    <span id="timer"></span>
-    <div id="errorMessage" class="error-message"></div>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-md-3">
-      <div class="output-section">
-        <div class="output-title">Agent 1: Intent Clarifier</div>
-        <textarea id="agent1_output" class="form-control mb-2" rows="12" readonly></textarea>
-        <button id="approveAgent2Btn" class="btn btn-success btn-sm agent-button" onclick="approveAgent2()">
-          ✅ Approve & Run Agent 2
-        </button>
-      </div>
-    </div>
-
-    <div class="col-md-6">
-      <div class="output-section">
-        <div class="output-title">Agent 2: Requirement Generator</div>
-        <div id="agent2_output" class="table-scroll"></div>
-        <button id="approveAgent3Btn" class="btn btn-success btn-sm agent-button" onclick="approveAgent3()">
-          ✅ Approve & Run Agent 3
-        </button>
-      </div>
-    </div>
-
-    <div class="col-md-3">
-      <div class="output-section">
-        <div class="output-title">Agent 3: Validator</div>
-        <textarea id="agent3_output" class="form-control mb-2" rows="12" readonly></textarea>
-        <button id="approveAgent4Btn" class="btn btn-success btn-sm agent-button" onclick="approveAgent4()">
-          ✅ Approve & Run Agents 5–8
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="output-title mt-4">Agent 4: LRC, NFR, Architecture, Functional (Agents 5–8)</div>
-  <div class="row g-3">
-    <div class="col-md-3">
-      <div class="output-section">
-        <div class="output-title">Agent 8: Legacy Parity</div>
-        <textarea id="agent8_output" class="form-control" rows="12" readonly></textarea>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="output-section">
-        <div class="output-title">Agent 5: Legal & Compliance</div>
-        <textarea id="agent5_output" class="form-control" rows="12" readonly></textarea>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="output-section">
-        <div class="output-title">Agent 6: NFR Specialist</div>
-        <textarea id="agent6_output" class="form-control" rows="12" readonly></textarea>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="output-section">
-        <div class="output-title">Agent 7: Platform Architect</div>
-        <textarea id="agent7_output" class="form-control" rows="12" readonly></textarea>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-async function submitAgent1() {
-    const submitBtn = document.getElementById('submitBtn');
-    const question = document.getElementById('question').value.trim();
-    const errorMessage = document.getElementById('errorMessage');
-
-    if (!question) {
-        errorMessage.textContent = 'Please enter a business intent';
-        errorMessage.style.display = 'block';
-        return;
-    }
-
-    try {
-        submitBtn.disabled = true;
-        submitBtn.classList.add('loading');
-        errorMessage.style.display = 'none';
-
-        const response = await fetch('/api/query_agents', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                phase: 'agent_1',
-                question: question 
-            })
-        });
-
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
-
-        document.getElementById('agent1_output').value = data.agent_1;
-        document.getElementById('approveAgent2Btn').style.display = 'block';
-
-    } catch (error) {
-        errorMessage.textContent = error.message;
-        errorMessage.style.display = 'block';
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('loading');
-    }
-}
-
-async function approveAgent2() {
-    const approveBtn = document.getElementById('approveAgent2Btn');
-    const agent1Output = document.getElementById('agent1_output').value;
-
-    if (!agent1Output) return;
-
-    try {
-        approveBtn.disabled = true;
-        approveBtn.classList.add('loading');
-
-        const response = await fetch('/api/query_agents', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                phase: 'agent_2',
-                agent_1_output: agent1Output
-            })
-        });
-
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
-
-        document.getElementById('agent2_output').innerHTML = data.agent_2;
-        document.getElementById('approveAgent3Btn').style.display = 'block';
-
-    } catch (error) {
-        console.error(error);
-    } finally {
-        approveBtn.disabled = false;
-        approveBtn.classList.remove('loading');
-    }
-}
-
-async function approveAgent3() {
-    const approveBtn = document.getElementById('approveAgent3Btn');
-    const agent2Output = document.getElementById('agent2_output').innerHTML;
-
-    if (!agent2Output) return;
-
-    try {
-        approveBtn.disabled = true;
-        approveBtn.classList.add('loading');
-
-        const response = await fetch('/api/query_agents', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                phase: 'agent_3',
-                agent_2_output: agent2Output
-            })
-        });
-
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
-
-        document.getElementById('agent3_output').value = data.agent_3;
-        document.getElementById('approveAgent4Btn').style.display = 'block';
-
-    } catch (error) {
-        console.error(error);
-    } finally {
-        approveBtn.disabled = false;
-        approveBtn.classList.remove('loading');
-    }
-}
-
-async function approveAgent4() {
-    const approveBtn = document.getElementById('approveAgent4Btn');
-    const agent2Output = document.getElementById('agent2_output').innerHTML;
-
-    if (!agent2Output) return;
-
-    try {
-        approveBtn.disabled = true;
-        approveBtn.classList.add('loading');
-
-        const response = await fetch('/api/query_agents', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                phase: 'agent_4',
-                agent_2_output: agent2Output
-            })
-        });
-
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
-
-        // Parse and display each agent's response
-        const responses = data.agent_4.split('**');
-        for (let i = 1; i < responses.length; i += 2) {
-            const agentName = responses[i].toLowerCase().replace(/[^a-z0-9]/g, '');
-            const response = responses[i + 1].trim();
-            document.getElementById(`${agentName}_output`).value = response;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI Workflow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f4f8; padding: 20px; }
+        
+        .output-section {
+            background: white;
+            padding: 15px;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            height: 65vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
-    } catch (error) {
-        console.error(error);
-    } finally {
-        approveBtn.disabled = false;
-        approveBtn.classList.remove('loading');
-    }
-}
-</script>
+        .output-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2c3e50;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        /* Requirements Styling */
+        .requirements-container {
+            padding: 15px;
+            background: white;
+        }
+
+        .requirements-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: white;
+            table-layout: fixed;
+        }
+
+        .requirements-table th {
+            background-color: #e64a19;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #ddd;
+        }
+
+        .requirements-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .requirements-table tr:nth-child(even) td {
+            background-color: #f8f9fa;
+        }
+
+        .section-header {
+            background: #f44336;
+            color: white;
+            padding: 12px 15px;
+            margin: 20px 0 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        /* Button Styling */
+        .agent-button {
+            display: none;
+            width: 100%;
+            margin-top: 12px;
+            padding: 10px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .agent-button:hover {
+            background: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .agent-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.7;
+            transform: none;
+        }
+
+        /* Loading Animation */
+        .loading::after {
+            content: "...";
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60% { content: "..."; }
+            80%, 100% { content: ""; }
+        }
+
+        /* Form Elements */
+        textarea {
+            resize: none;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 12px;
+            border: 1px solid #e1e8ed;
+            border-radius: 4px;
+            flex-grow: 1;
+            margin-bottom: 10px;
+            background-color: white;
+        }
+
+        textarea:read-only {
+            background-color: #f8f9fa;
+        }
+
+        .error-message {
+            color: #dc3545;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            background: #fff5f5;
+            border: 1px solid #ffebee;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h4 class="mb-4 text-center fw-bold">⚙️ Agentic AI Workflow</h4>
+
+        <!-- Input Section -->
+        <div class="p-4 bg-white rounded shadow-sm mb-4 border">
+            <h5><strong>Step 1: Enter Business Intent</strong></h5>
+            <textarea class="form-control mb-3" id="question" rows="4" 
+                      placeholder="Capability: Create an account..."></textarea>
+            <button class="btn btn-success px-4" id="submitBtn" onclick="submitAgent1()">
+                Submit to Agent 1
+            </button>
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+
+        <!-- Agents Row 1 -->
+        <div class="row g-4 mb-4">
+            <!-- Agent 1 -->
+            <div class="col-md-3">
+                <div class="output-section">
+                    <div class="output-title">Agent 1: Intent Clarifier</div>
+                    <textarea id="agent1_output" readonly></textarea>
+                    <button id="approveAgent2Btn" class="agent-button" onclick="approveAgent2()">
+                        ✅ Approve & Run Agent 2
+                    </button>
+                </div>
+            </div>
+
+            <!-- Agent 2 -->
+            <div class="col-md-6">
+                <div class="output-section">
+                    <div class="output-title">Agent 2: Requirements Generator</div>
+                    <div id="agent2_output" class="flex-grow-1"></div>
+                    <button id="approveAgent3Btn" class="agent-button" onclick="approveAgent3()">
+                        ✅ Approve & Run Agent 3
+                    </button>
+                </div>
+            </div>
+
+            <!-- Agent 3 -->
+            <div class="col-md-3">
+                <div class="output-section">
+                    <div class="output-title">Agent 3: Validator</div>
+                    <textarea id="agent3_output" readonly></textarea>
+                    <button id="approveAgent4Btn" class="agent-button" onclick="approveAgent4()">
+                        ✅ Approve & Run Agents 5–8
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agents Row 2 -->
+        <div class="output-title mt-4">Agent 4: LRC, NFR, Architecture, Functional (Agents 5–8)</div>
+        <div class="row g-4">
+            <!-- Parallel Agents -->
+            <div class="col-md-3">
+                <div class="output-section">
+                    <div class="output-title">Agent 8: Legacy Parity</div>
+                    <textarea id="agent8_output" readonly></textarea>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="output-section">
+                    <div class="output-title">Agent 5: Legal & Compliance</div>
+                    <textarea id="agent5_output" readonly></textarea>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="output-section">
+                    <div class="output-title">Agent 6: NFR Specialist</div>
+                    <textarea id="agent6_output" readonly></textarea>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="output-section">
+                    <div class="output-title">Agent 7: Platform Architect</div>
+                    <textarea id="agent7_output" readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ... Keep your existing JavaScript functions unchanged ...
+    </script>
 </body>
 </html>

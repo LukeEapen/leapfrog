@@ -22,8 +22,8 @@
       margin-bottom: 10px;
     }
     th {
-      background-color: red;
-      color: white;
+      background-color: #0d6efd !important;
+      color: white !important;
     }
     #timer {
       font-size: 14px;
@@ -38,6 +38,19 @@
     .table-scroll {
       max-height: 60vh;
       overflow-y: auto;
+    }
+    .table td {
+      vertical-align: top;
+      font-size: 1rem;
+      white-space: pre-line;
+      text-align: left;
+    }
+    .table th {
+      text-align: center;
+      vertical-align: middle;
+    }
+    .table-primary th {
+      color: #fff !important;
     }
   </style>
 </head>
@@ -56,37 +69,51 @@
   <div class="row g-3">
     <!-- Agent 1 -->
     <div class="col-md-3">
-      <div class="output-section">
-        <div class="output-title">Agent 1: Intent Clarifier</div>
-        <textarea id="agent1_output" class="form-control mb-2" rows="12" readonly></textarea>
+    <div class="output-section shadow-sm border border-primary rounded-3" style="background: #f8fafd;">
+        <div class="output-title d-flex align-items-center" style="background: #0d6efd; color: #fff; border-radius: .3rem .3rem 0 0; padding: 8px 12px;">
+        <span class="me-2" style="font-size:1.3em;">🧑‍💼</span>
+        Agent 1: Intent Clarifier
+        <span class="badge bg-light text-primary ms-auto" style="font-size:0.9em;">Step 1</span>
+        </div>
+        <textarea id="agent1_output" class="form-control mb-2 mt-2" rows="12" readonly style="background:#fff; border:1px solid #b6d4fe;"></textarea>
         <button class="btn btn-success btn-sm" id="btnAgent2" onclick="approveAgent2()">Approve & Run Agent 2</button>
-      </div>
+    </div>
     </div>
 
-    <!-- Agent 2 -->
-    <div class="col-md-6">
-      <div class="output-section">
-        <div class="output-title">Agent 2: Requirement Generator</div>
-        <div id="agent2_output" class="table-scroll"></div>
-        <button class="btn btn-success btn-sm mt-2" id="btnAgent3" onclick="approveAgent3()">Approve & Run Agent 3</button>
-      </div>
+   <!-- Agent 2 -->
+<div class="col-md-6">
+  <div class="output-section shadow-sm border border-success rounded-3" style="background: #f6fff8;">
+    <div class="output-title d-flex align-items-center" style="background: #198754; color: #fff; border-radius: .3rem .3rem 0 0; padding: 8px 12px;">
+      <span class="me-2" style="font-size:1.3em;">📝</span>
+      Agent 2: Requirement Generator
+      <span class="badge bg-light text-success ms-auto" style="font-size:0.9em;">Step 2</span>
     </div>
-
-    <!-- Agent 3 -->
-    <div class="col-md-3">
-      <div class="output-section">
-        <div class="output-title">Agent 3: Validator</div>
-        <textarea id="agent3_output" class="form-control mb-2" rows="12" readonly></textarea>
-        <button class="btn btn-success btn-sm" id="btnAgent4" onclick="approveAgent4()">Approve & Run Agents 5–8</button>
-      </div>
-    </div>
+    <div id="agent2_output" class="table-scroll mt-2"></div>
+    <button class="btn btn-success btn-sm mt-2" id="btnAgent3" onclick="approveAgent3()">Approve & Run Agent 3</button>
   </div>
+</div>
 
-  <!-- Agent 4 -->
-  <div class="output-section mt-3">
-    <div class="output-title">Agent 4: Legal & Compliance Analyst, NFR Specialist, Platform Architect, Requirement Functional - Legacy Parity Agent (Agents 5–8)</div>
-    <textarea id="agent4_output" class="form-control" rows="8" readonly></textarea>
+<!-- Agent 3 -->
+<div class="col-md-3">
+  <div class="output-section shadow-sm border border-warning rounded-3" style="background: #fffbe6;">
+    <div class="output-title d-flex align-items-center" style="background: #ffc107; color: #333; border-radius: .3rem .3rem 0 0; padding: 8px 12px;">
+      <span class="me-2" style="font-size:1.3em;">✅</span>
+      Agent 3: Validator
+      <span class="badge bg-light text-warning ms-auto" style="font-size:0.9em;">Step 3</span>
+    </div>
+    <textarea id="agent3_output" class="form-control mb-2 mt-2" rows="12" readonly style="background:#fff; border:1px solid #ffe066;"></textarea>
+    <button class="btn btn-warning btn-sm" id="btnAgent4" onclick="approveAgent4()">Approve & Run Agents 5–8</button>
   </div>
+</div>
+
+<!-- Agent 4 (Agents 5–8 as columns) -->
+<div class="output-section mt-3 shadow-sm border border-info rounded-3" style="background: #f0f8ff;">
+  <div class="output-title d-flex align-items-center" style="background: #0dcaf0; color: #fff; border-radius: .3rem .3rem 0 0; padding: 8px 12px;">
+    <span class="me-2" style="font-size:1.3em;">🧑‍⚖️</span>
+    Agent 4: LRC, NFR, Architecture, Functional (Agents 5–8)
+    <span class="badge bg-light text-info ms-auto" style="font-size:0.9em;">Step 4</span>
+  </div>
+  <div id="agent4_table" class="table-responsive mt-2"></div>
 </div>
 
 <script>
@@ -119,7 +146,7 @@
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ input })
+      body: JSON.stringify({ question: input })
     });
     return res.json();
   }
@@ -159,8 +186,8 @@
     const input = document.getElementById("agent3_output").value;
     const btn = document.getElementById("btnAgent4");
     startTimer(btn);
-    const res = await postQuery("/api/agent_4", input);
-    document.getElementById("agent4_output").value = res.output;
+    const res = await postQuery("/api/query_agents", input);
+    document.getElementById("agent4_table").innerHTML = formatAgent4Table(res);
     stopTimer(btn);
   }
 
@@ -186,6 +213,29 @@
         <tbody>${rows.join("")}</tbody>
       </table>`;
   }
+
+function formatAgent4Table(res) {
+  return `
+    <table class="table table-bordered table-striped align-middle text-center">
+      <thead class="table-primary">
+        <tr>
+          <th style="width:25%; color:#fff;">🧑‍⚖️<br>Legal & Compliance Analyst<br><span class="text-secondary">(Agent 5)</span></th>
+          <th style="width:25%; color:#fff;">🔒<br>NFR Specialist<br><span class="text-secondary">(Agent 6)</span></th>
+          <th style="width:25%; color:#fff;">🏗️<br>Platform Architect<br><span class="text-secondary">(Agent 7)</span></th>
+          <th style="width:25%; color:#fff;">📋<br>Requirement Functional - Legacy Parity<br><span class="text-secondary">(Agent 8)</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${(res.agent_5 || "").replace(/\n/g, "<br>")}</td>
+          <td>${(res.agent_6 || "").replace(/\n/g, "<br>")}</td>
+          <td>${(res.agent_7 || "").replace(/\n/g, "<br>")}</td>
+          <td>${(res.agent_8 || "").replace(/\n/g, "<br>")}</td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+}
 </script>
 </body>
 </html>
