@@ -182,14 +182,16 @@
     stopTimer(btn);
   }
 
-  async function approveAgent4() {
-    const input = document.getElementById("agent3_output").value;
-    const btn = document.getElementById("btnAgent4");
-    startTimer(btn);
-    const res = await postQuery("/api/query_agents", input);
-    document.getElementById("agent4_table").innerHTML = formatAgent4Table(res);
-    stopTimer(btn);
-  }
+async function approveAgent4() {
+  const agent2 = document.getElementById("agent2_output").innerText || "";
+  const agent3 = document.getElementById("agent3_output").value || "";
+  const combinedInput = `=== Agent 2 Output ===\n${agent2}\n\n=== Agent 3 Output ===\n${agent3}`;
+  const btn = document.getElementById("btnAgent4");
+  startTimer(btn);
+  const res = await postQuery("/api/query_agents", combinedInput);
+  document.getElementById("agent4_table").innerHTML = formatAgent4Table(res);
+  stopTimer(btn);
+}
 
   function formatAgent2Table(rawText) {
     const lines = rawText.trim().split("\n");

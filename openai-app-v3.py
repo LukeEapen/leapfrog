@@ -33,7 +33,8 @@ ASSISTANTS = {
     'agent_5': ("asst_r29PjUzVwfd6XiiYH3ueV41P", "Legal & Compliance Analyst"),
     'agent_6': ("asst_WG96Jp4VMrLJfUE4RMkGFMjf", "NFR Specialist"),
     'agent_7': ("asst_VWzoRLWbeZJS8I2IwtOcsLMp", "Platform Architect"),
-    'agent_8': ("asst_sufR6Spw8EBDDoAzqQJN9iJt", "Requirement Functional - Legacy Parity Agent")
+    'agent_8': ("asst_sufR6Spw8EBDDoAzqQJN9iJt", "Requirement Functional - Legacy Parity Agent"),
+    'agent_9': ("asst_7BC8vPshg3NSCGnay9iHl6hu", "Data Attribute Generator")
 }
 
 def call_agent(assistant_id: str, message: str, agent_name: str):
@@ -94,8 +95,8 @@ def run_agent_3():
     return jsonify({'output': output})
 
 @app.route('/api/query_agents', methods=['POST'])
-def run_agents_5_to_8():
-    """Call agents 5–8 in parallel and return each as a separate field."""
+def run_agents_5_to_9():
+    """Call agents 5–9 in parallel and return each as a separate field."""
     input_text = request.json.get('question', '').strip()
 
     def run(agent_key):
@@ -103,10 +104,10 @@ def run_agents_5_to_8():
         result = call_agent(assistant_id, input_text, name)
         return agent_key, result
 
-    agent_keys = ['agent_5', 'agent_6', 'agent_7', 'agent_8']
+    agent_keys = ['agent_5', 'agent_6', 'agent_7', 'agent_8', 'agent_9']
 
     results = {}
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    with ThreadPoolExecutor(max_workers=5) as executor:
         for key, output in executor.map(run, agent_keys):
             results[key] = output
 
@@ -115,7 +116,8 @@ def run_agents_5_to_8():
         "agent_5": results.get("agent_5", "No response"),
         "agent_6": results.get("agent_6", "No response"),
         "agent_7": results.get("agent_7", "No response"),
-        "agent_8": results.get("agent_8", "No response")
+        "agent_8": results.get("agent_8", "No response"),
+        "agent_9": results.get("agent_9", "No response")
     })
 
 @app.route('/agenticAI')
