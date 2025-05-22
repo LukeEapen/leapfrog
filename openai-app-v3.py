@@ -26,7 +26,7 @@ logging.basicConfig(
 )
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "your_default_fallback_secret_here")
+app.secret_key = os.urandom(24)
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")

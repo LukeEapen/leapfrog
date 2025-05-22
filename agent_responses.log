@@ -10673,3 +10673,32 @@ RuntimeError: The session is unavailable because no secret key was set.  Set the
  * Running on http://127.0.0.1:5001
  * Running on http://192.168.1.154:5001
 2025-05-22 14:48:59,733 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-22 14:52:25,129 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.154:5001
+2025-05-22 14:52:25,130 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-22 14:52:28,570 - INFO - 127.0.0.1 - - [22/May/2025 14:52:28] "GET /agenticAI HTTP/1.1" 200 -
+2025-05-22 14:52:33,212 - INFO - 127.0.0.1 - - [22/May/2025 14:52:33] "GET /agenticAI HTTP/1.1" 200 -
+2025-05-22 14:52:36,660 - INFO - 127.0.0.1 - - [22/May/2025 14:52:36] "[32mGET / HTTP/1.1[0m" 302 -
+2025-05-22 14:52:36,666 - INFO - 127.0.0.1 - - [22/May/2025 14:52:36] "GET /agenticAI HTTP/1.1" 200 -
+2025-05-22 14:52:55,290 - INFO - 127.0.0.1 - - [22/May/2025 14:52:55] "[32mGET / HTTP/1.1[0m" 302 -
+2025-05-22 14:52:55,297 - INFO - 127.0.0.1 - - [22/May/2025 14:52:55] "GET /agenticAI HTTP/1.1" 200 -
+2025-05-22 14:53:29,869 - INFO - 127.0.0.1 - - [22/May/2025 14:53:29] "[31m[1mGET /login HTTP/1.1[0m" 405 -
+2025-05-22 14:53:48,486 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.154:5001
+2025-05-22 14:53:48,487 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-22 14:53:57,287 - INFO - 127.0.0.1 - - [22/May/2025 14:53:57] "[32mGET / HTTP/1.1[0m" 302 -
+2025-05-22 14:53:57,298 - INFO - 127.0.0.1 - - [22/May/2025 14:53:57] "GET /agenticAI HTTP/1.1" 200 -
+2025-05-22 14:54:25,629 - INFO - 127.0.0.1 - - [22/May/2025 14:54:25] "[31m[1mGET /login HTTP/1.1[0m" 405 -
+2025-05-22 14:56:27,685 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.154:5001
+2025-05-22 14:56:27,686 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-22 14:56:33,842 - INFO - 127.0.0.1 - - [22/May/2025 14:56:33] "[32mGET /agenticAI HTTP/1.1[0m" 302 -
+2025-05-22 14:56:33,868 - INFO - 127.0.0.1 - - [22/May/2025 14:56:33] "GET / HTTP/1.1" 200 -
+2025-05-22 14:56:36,024 - INFO - 127.0.0.1 - - [22/May/2025 14:56:36] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-05-22 14:56:36,034 - INFO - 127.0.0.1 - - [22/May/2025 14:56:36] "GET /agenticAI HTTP/1.1" 200 -
