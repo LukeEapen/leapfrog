@@ -185,16 +185,22 @@ function formatAgent4Table(res) {
       </thead>
       <tbody>
         <tr>
-          <td>${renderMarkdownToHTML(res.agent_4_1 || "") + `<h5 class='mt-4'>High Level Flow Diagram</h5><div class='mermaid'>graph TD
-  Agent1 --> Agent2
-  Agent2 --> Agent3
-  Agent3 -->|Combined Input| Agent4_1
-  Agent3 --> Agent4_2
-  Agent3 --> Agent4_3
-  Agent3 --> Agent4_4</div>`}</td>
-          <td>${renderMarkdownToHTML(res.agent_4_2 || "")}</td>
-          <td>${renderMarkdownToHTML(res.agent_4_3 || "")}</td>
-          <td>${renderMarkdownToHTML(res.agent_4_4 || "")}</td>
+          <td>${
+            renderMarkdownToHTML(
+              (res.agent_4_1 || "").replace(/```mermaid([\s\S]*?)```/g, function(match, g1) {
+                return `<h5 class='mt-4'>High Level Flow Diagram</h5><div class='mermaid'>${g1.trim()}</div>`;
+              })
+            )
+          }</td>
+          <td>${
+            renderMarkdownToHTML(res.agent_4_2 || "")
+          }</td>
+          <td>${
+            renderMarkdownToHTML(res.agent_4_3 || "")
+          }</td>
+          <td>${
+            renderMarkdownToHTML(res.agent_4_4 || "")
+          }</td>
         </tr>
       </tbody>
     </table>`;

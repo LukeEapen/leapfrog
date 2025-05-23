@@ -112,7 +112,6 @@ Coverage Heatmap (lifecycle stage × product variant × region)
 SLA Compliance Matrix
 
 Edge Case Taxonomy
-
 Quality Scorecard Results
 
 📌 Principles to Enforce
