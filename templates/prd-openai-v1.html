@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Agentic AI Workflow</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true });
+</script>
+</head>
+<body>
+<div class="container-fluid">
+  <h4 class="mb-3 text-center fw-bold">Agentic AI Workflow (OpenAI Assistants)</h4>
+
+  <!-- Business Intent Input -->
+  <div class="p-3 bg-white rounded shadow-sm mb-4 border">
+    <h5><strong>Step 1: Enter Business Intent</strong></h5>
+    <textarea class="form-control mb-2" id="question" rows="4">Capability: Create an account...</textarea>
+    <button class="btn btn-success" id="submitBtn" onclick="submitAgent1()">Submit to Agent 1</button>
+    <span id="timer"></span>
+  </div>
+
+  <div class="row g-3">
+    <!-- Agent 1 Output -->
+    <div class="col-md-3">
+      <div class="output-section border rounded p-2">
+        <div class="output-title bg-primary text-white p-2">Agent 1: Intent Clarifier</div>
+        <textarea id="agent1_output" class="form-control mt-2" rows="12" readonly></textarea>
+        <button class="btn btn-success btn-sm mt-2" id="btnAgent2" onclick="approveAgent2()">Approve & Run Agent 2</button>
+      </div>
+    </div>
+
+    <!-- Agent 2 Output -->
+    <div class="col-md-6">
+      <div class="output-section border rounded p-2">
+        <div class="output-title bg-success text-white p-2">Agent 2: Requirement Generator</div>
+        <div id="agent2_output" class="mt-2"></div>
+        <button class="btn btn-success btn-sm mt-2" id="btnAgent3" onclick="approveAgent3()">Approve & Run Agent 3</button>
+      </div>
+    </div>
+
+    <!-- Agent 3 Output -->
+    <div class="col-md-3">
+      <div class="output-section border rounded p-2">
+        <div class="output-title bg-warning text-dark p-2">Agent 3: Validator</div>
+        <textarea id="agent3_output" class="form-control mt-2" rows="12" readonly></textarea>
+        <button class="btn btn-warning btn-sm mt-2" id="btnAgent4" onclick="approveAgent4()">Approve & Run Agent 4</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-start mt-2">
+    <button class="btn btn-primary btn-lg" id="downloadBtn" onclick="downloadAsDoc()" disabled>📄 Download as Word</button>
+  </div>
+
+  <!-- Agent 4 Outputs -->
+  <div class="output-section border rounded mt-3 p-2">
+    <div class="output-title bg-info text-white p-2">Agent 4: PRD Agents</div>
+    <div id="agent4_table"></div>
+  </div>
+</div>
+
+<script>
+let timerInterval;
+
+function startTimer(label) {
+  let seconds = 0;
+  const timer = document.getElementById("timer");
+  timer.style.display = "inline";
+  timer.innerText = `⏳ Waiting... 0s`;
+  timerInterval = setInterval(() => {
+    seconds++;
+    timer.innerText = `⏳ Waiting... ${seconds}s`;
+  }, 1000);
+  label.classList.add("loading");
+  label.disabled = true;
+}
+
+function stopTimer(label) {
+  clearInterval(timerInterval);
+  const timer = document.getElementById("timer");
+  timer.innerText = "";
+  timer.style.display = "none";
+  label.classList.remove("loading");
+  label.disabled = false;
+}
+
+async function postQuery(endpoint, input) {
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question: input })
+  });
+  return res.json();
+}
+
+async function submitAgent1() {
+  const question = document.getElementById("question").value;
+  const btn = document.getElementById("submitBtn");
+  startTimer(btn);
+  const res = await fetch("/api/agent_1", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question })
+  }).then(r => r.json());
+  document.getElementById("agent1_output").value = res.output;
+  stopTimer(btn);
+}
+
+async function approveAgent2() {
+  const input = document.getElementById("agent1_output").value;
+  const btn = document.getElementById("btnAgent2");
+  startTimer(btn);
+  const res = await postQuery("/api/agent_2", input);
+  document.getElementById("agent2_output").innerHTML = formatAgent2Table(res.output);
+  stopTimer(btn);
+}
+
+async function approveAgent3() {
+  const input = document.getElementById("agent2_output").innerText;
+  const btn = document.getElementById("btnAgent3");
+  startTimer(btn);
+  const res = await postQuery("/api/agent_3", input);
+  document.getElementById("agent3_output").value = res.output;
+  stopTimer(btn);
+}
+
+async function approveAgent4() {
+  const agent2 = document.getElementById("agent2_output").innerText || "";
+  const agent3 = document.getElementById("agent3_output").value || "";
+  const combinedInput = `=== Agent 2 Output ===\n${agent2}\n\n=== Agent 3 Output ===\n${agent3}`;
+  const btn = document.getElementById("btnAgent4");
+  startTimer(btn);
+  const res = await postQuery("/api/query_agents", combinedInput);
+  document.getElementById("agent4_table").innerHTML = formatAgent4Table(res);
+  stopTimer(btn);
+  document.getElementById("downloadBtn").disabled = false;
+}
+
+function formatAgent2Table(rawText) {
+  const lines = rawText.trim().split("\n");
+  const rows = lines.map(line => {
+    const cols = line.split("|").map(c => c.trim()).filter(c => c.length);
+    return cols.length ? `<tr>${cols.map(c => `<td>${c}</td>`).join("")}</tr>` : "";
+  }).filter(row => row);
+
+  if (!rows.length) return "<p>No table content.</p>";
+
+  return `
+    <table class="table table-bordered table-sm table-striped">
+      <thead class="table-dark">
+        <tr>
+          <th>Category</th>
+          <th>Sub-Category</th>
+          <th>Requirement</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>${rows.join("")}</tbody>
+    </table>`;
+}
+
+function formatAgent4Table(res) {
+  function renderMarkdownToHTML(mdText) {
+    return mdText
+      .replace(/^### (.*?)$/gm, '<h4>$1</h4>')
+      .replace(/^## (.*?)$/gm, '<h3>$1</h3>')
+      .replace(/^# (.*?)$/gm, '<h2>$1</h2>')
+      .replace(/^- \*\*(.*?)\*\*: (.*?)$/gm, '<strong>$1:</strong> $2')
+    .replace(/^- (.*?)$/gm, '<li>$1</li>')
+    .replace(/\n{2,}/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+  return `
+    <table class="table table-bordered table-striped align-top text-start">
+      <thead class="table-primary">
+        <tr>
+          <th>🛠️<br>PRD Requirement Generator</th>
+          <th>🔒<br>PRD NFR Generator</th>
+          <th>📊<br>PRD Data Requirement Generator</th>
+          <th>📋<br>PRD LRC Generator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${renderMarkdownToHTML(res.agent_4_1 || "") + `<h5 class='mt-4'>High Level Flow Diagram</h5><div class='mermaid'>graph TD
+  Agent1 --> Agent2
+  Agent2 --> Agent3
+  Agent3 -->|Combined Input| Agent4_1
+  Agent3 --> Agent4_2
+  Agent3 --> Agent4_3
+  Agent3 --> Agent4_4</div>`}</td>
+          <td>${renderMarkdownToHTML(res.agent_4_2 || "")}</td>
+          <td>${renderMarkdownToHTML(res.agent_4_3 || "")}</td>
+          <td>${renderMarkdownToHTML(res.agent_4_4 || "")}</td>
+        </tr>
+      </tbody>
+    </table>`;
+}
+
+function downloadAsDoc() {
+  const content = {
+    agent_4_1: document.querySelector("#agent4_table td:nth-child(1)")?.innerText || "",
+    agent_4_2: document.querySelector("#agent4_table td:nth-child(2)")?.innerText || "",
+    agent_4_3: document.querySelector("#agent4_table td:nth-child(3)")?.innerText || "",
+    agent_4_4: document.querySelector("#agent4_table td:nth-child(4)")?.innerText || ""
+  };
+
+  fetch("/download_doc", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(content)
+  })
+  .then(res => res.blob())
+  .then(blob => {
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = "agent_report.docx";
+    link.click();
+  });
+}
+</script>
+</body>
+</html>
