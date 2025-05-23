@@ -264,6 +264,13 @@ function downloadAsDoc() {
     link.click();
   });
 }
+
+window.onload = function () {
+  const agent1SessionOutput = "{{ session.get('agent1_output', '') }}";
+  if (agent1SessionOutput) {
+    document.getElementById("agent1_output").value = agent1SessionOutput;
+  }
+};
 </script>
 </body>
 </html>

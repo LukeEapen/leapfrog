@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PRD Drafting Solution</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #f0f4f8, #dfe7ef);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .form-wrapper {
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 0 20px rgba(0,0,0,0.08);
+    }
+    .input-label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    textarea.form-control {
+      resize: vertical;
+    }
+    .section-title {
+      font-weight: 700;
+      color: #333;
+    }
+    .instruction-box {
+      background-color: #f8f9fa;
+      border-left: 4px solid #0d6efd;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .btn-submit {
+      font-size: 1.1rem;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-5">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold text-primary">✨ PRD Drafting Solution</h2>
+      <p class="text-muted">Streamline your product requirement documentation with AI assistance</p>
+    </div>
+
+    <div class="instruction-box">
+      <h5 class="fw-bold mb-2">How to Use:</h5>
+      <ul class="mb-0">
+        <li>Fill in the form with detailed project information</li>
+        <li>Upload supporting documentation for context</li>
+        <li>Submit to start generating your PRD draft</li>
+      </ul>
+    </div>
+
+    <form method="POST" action="/submit_intermediate" enctype="multipart/form-data" class="form-wrapper">
+      <div class="row g-4">
+        <!-- Left Column -->
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label class="input-label">Industry</label>
+            <input type="text" class="form-control" name="industry" value="Banking" required>
+          </div>
+          <div class="mb-3">
+            <label class="input-label">Sub-industry</label>
+            <input type="text" class="form-control" name="sub_industry" value="Credit Card">
+          </div>
+          <div class="mb-3">
+            <label class="input-label">Additional Context</label>
+            <input type="file" class="form-control" name="context_file">
+            <div class="form-text">e.g. documentation, diagrams, draft PRDs</div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label class="input-label">What are you trying to build?</label>
+            <textarea class="form-control" name="intent" rows="4" required>Create PRD Documentation</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="input-label">What specific features will this PRD cover?</label>
+            <textarea class="form-control" name="features" rows="6">Capability: Create an account
+Use Case: Create a frontbook account as a new customer
+Description: Create a Frontbook Account as a New Customer enables full lifecycle account setup — from intake, underwriting, account and partner provisioning, card issuance, downstream enablement, lifecycle servicing, to resilience and compliance — ensuring legacy core parity with enhanced security, integration, and customer experience.</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary w-100 btn-submit">🚀 Submit to Agent 1</button>
+      </div>
+    </form>
+  </div>
+  <div id="timerDisplay" class="text-center mt-3 text-muted" style="display:none;">
+  Processing... Please wait <span id="countdown">5</span> seconds.
+</div>
+
+<script>
+  document.querySelector('.btn-submit').addEventListener('click', function(e) {
+    const timerDisplay = document.getElementById('timerDisplay');
+    const countdown = document.getElementById('countdown');
+    let timeLeft = 5;
+
+    timerDisplay.style.display = 'block';
+
+    const timer = setInterval(() => {
+      timeLeft--;
+      countdown.textContent = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        timerDisplay.textContent = 'Submission in progress...';
+      }
+    }, 1000);
+  });
+</script>
+</body>
+</html>

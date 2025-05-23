@@ -138,8 +138,51 @@ def do_login():
     password = request.form.get("password")
     if username == "admin" and password == "secure123":
         session["logged_in"] = True
-        return redirect(url_for('index'))
+        return redirect(url_for('intermediate'))
     return "Invalid credentials", 401
+
+@app.route('/intermediate', methods=['GET'])
+def intermediate():
+    if not session.get("logged_in"):
+        return redirect(url_for('login'))
+    return render_template('intermediate.html')
+
+@app.route('/submit_intermediate', methods=['POST'])
+def submit_intermediate():
+    if not session.get("logged_in"):
+        return redirect(url_for('login'))
+
+    # Extract form fields
+    industry = request.form.get("industry")
+    sub_industry = request.form.get("sub_industry")
+    intent = request.form.get("intent")
+    features = request.form.get("features")
+
+    # Handle file upload
+    context_file = request.files.get('context_file')
+    if context_file and context_file.filename:
+        file_content = context_file.read().decode('utf-8', errors='ignore')
+    else:
+        file_content = ""
+
+    # Prepare input for Agent 1
+    agent_input = f"""Industry: {industry}
+                Sub-industry: {sub_industry}
+                Intent: {intent}
+                Features: {features}
+                Supporting Material:
+                {file_content}"""
+
+    # Store for use in session
+    session['agent_input'] = agent_input
+
+    # Call Agent 1
+    output = call_agent(ASSISTANTS['agent_1'][0], agent_input, ASSISTANTS['agent_1'][1])
+    session['agent1_output'] = output
+
+    return redirect(url_for('index'))
+
+
 
 @app.route('/logout')
 def logout():

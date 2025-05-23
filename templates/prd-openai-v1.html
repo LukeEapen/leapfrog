@@ -16,7 +16,7 @@
   <!-- Business Intent Input -->
   <div class="p-3 bg-white rounded shadow-sm mb-4 border">
     <h5><strong>Step 1: Enter Business Intent</strong></h5>
-    <textarea class="form-control mb-2" id="question" rows="4">Capability: Create an account...</textarea>
+    <textarea class="form-control mb-2" id="question" rows="4">{{ session.get('agent_input', '') }}</textarea>
     <button class="btn btn-success" id="submitBtn" onclick="submitAgent1()">Submit to Agent 1</button>
     <span id="timer"></span>
   </div>
@@ -26,7 +26,7 @@
     <div class="col-md-3">
       <div class="output-section border rounded p-2">
         <div class="output-title bg-primary text-white p-2">Agent 1: Intent Clarifier</div>
-        <textarea id="agent1_output" class="form-control mt-2" rows="12" readonly></textarea>
+        <textarea id="agent1_output" class="form-control mt-2" rows="12" readonly>{{ session.get('agent1_output', '') }}</textarea>
         <button class="btn btn-success btn-sm mt-2" id="btnAgent2" onclick="approveAgent2()">Approve & Run Agent 2</button>
       </div>
     </div>
@@ -185,25 +185,15 @@ function formatAgent4Table(res) {
       </thead>
       <tbody>
         <tr>
-          <td>${
-            renderMarkdownToHTML(
-              (res.agent_4_1 || "").replace(/```mermaid([\s\S]*?)```/g, function(match, g1) {
-                return `<h5 class='mt-4'>High Level Flow Diagram</h5><div class='mermaid'>${g1.trim()}</div>`;
-              })
-            )
-          }</td>
-          <td>${
-            renderMarkdownToHTML(res.agent_4_2 || "")
-          }</td>
-          <td>${
-            renderMarkdownToHTML(res.agent_4_3 || "")
-          }</td>
-          <td>${
-            renderMarkdownToHTML(res.agent_4_4 || "")
-          }</td>
-        </tr>
-      </tbody>
-    </table>`;
+      <td>${renderMarkdownToHTML((res.agent_4_1 || "").replace(/```mermaid([\s\S]*?)```/g, function(match, g1) {
+        return `<h5 class='mt-4'>High Level Flow Diagram</h5><div class='mermaid'>${g1.trim()}</div>`;
+      }))}</td>
+      <td>${renderMarkdownToHTML(res.agent_4_2 || "")}</td>
+      <td>${renderMarkdownToHTML(res.agent_4_3 || "")}</td>
+      <td>${renderMarkdownToHTML(res.agent_4_4 || "")}</td>
+    </tr>
+  </tbody>
+</table>`;
 }
 
 function downloadAsDoc() {
