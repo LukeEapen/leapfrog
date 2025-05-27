@@ -2,59 +2,106 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PRD Input Form</title>
+  <title>PRD Assistant Input</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 2rem;
+    }
+    .input-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 0 2rem rgba(0, 0, 0, 0.05);
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .form-label {
+      font-weight: 500;
+    }
+    .section-title {
+      background: #d3d3d3;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      margin-bottom: 1rem;
+    }
+    .instructions-box {
+      background: #f1f1f1;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      margin-bottom: 2rem;
+    }
     #loadingSpinner {
       display: none;
+      margin-top: 1.5rem;
       justify-content: center;
       align-items: center;
       gap: 1rem;
+    }
+    .btn-align-end {
+      display: flex;
+      justify-content: flex-end;
       margin-top: 1rem;
     }
   </style>
-  <script>
-    function showLoading() {
-      const spinner = document.getElementById('loadingSpinner');
-      if (spinner) spinner.style.display = 'flex';
-      let seconds = 0;
-      const label = document.getElementById('loadingTimer');
-      window.loadingInterval = setInterval(() => {
-        seconds++;
-        if (label) label.textContent = `⏳ ${seconds}s`;
-      }, 1000);
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', showLoading);
-      });
-    });
-  </script>
 </head>
-<body class="bg-light">
-  <div class="container my-5">
-    <h3 class="mb-4 text-primary">Step 1: Enter Project Details</h3>
-    <form method="post">
-      <div class="row mb-3">
-        <div class="col">
-          <label>Industry</label>
-          <input type="text" class="form-control" name="industry" required>
+<body>
+  <div class="input-card">
+    <h4 class="mb-4">Wireframes: UI for generic PRD drafting solution – first page (uploading key inputs and providing context)</h4>
+    <div class="section-title">Instructions: Using the PRD drafting solution</div>
+    <div class="instructions-box">
+      <p>This agentic AI assistant accelerates the creation of a first-draft Product Requirements Document (PRD) based on the product and features you define. By guiding you through a structured input process, it delivers a clear and actionable draft – freeing you to focus on refinement, alignment, and execution.</p>
+      <ul>
+        <li>Provide relevant context, including industry, product details, + documentation that define the product’s functionality – <strong>provide as much detail & context as possible</strong></li>
+        <li>Upload any supporting materials to strengthen the tool’s understanding and improve the quality of the output</li>
+        <li>Review and refine the tool’s understanding of the product & features</li>
+        <li>Select the components of the PRD that you would like to have included in your PRD draft</li>
+        <li>View initial PRD draft, selecting components to regenerate if necessary</li>
+        <li>Once all sections are complete, download your initial PRD draft, ready for refinement and stakeholder feedback</li>
+      </ul>
+    </div>
+
+    <div class="section-title">Inputs</div>
+    <form method="post" action="/page1" enctype="multipart/form-data">
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label class="form-label">Industry</label>
+          <input type="text" class="form-control" name="industry" placeholder="Write industry name here (e.g., Financial Services)" required>
         </div>
-        <div class="col">
-          <label>Sub-industry</label>
-          <input type="text" class="form-control" name="sub_industry">
+        <div class="col-md-6">
+          <label class="form-label">Sub-industry</label>
+          <input type="text" class="form-control" name="sub_industry" placeholder="Write sector name here (e.g., Payments)" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Sector</label>
+          <input type="text" class="form-control" name="sector" placeholder="Enter sector details" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Geography</label>
+          <input type="text" class="form-control" name="geography" placeholder="Write countries that this product will be used in (e.g., USA, Canada)" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Additional context</label>
+          <input type="file" class="form-control" name="context_file" accept=".txt,.doc,.docx">
+          <small class="text-muted">(e.g., documentation, <u>existing requirements, etc.</u>)</small>
         </div>
       </div>
-      <div class="mb-3">
-        <label>What are you trying to build?</label>
-        <textarea name="intent" class="form-control" rows="3" required></textarea>
+
+      <div class="mb-4">
+        <label class="form-label">What is the product / platform that you are trying to build?</label>
+        <textarea name="intent" class="form-control" rows="4" placeholder="Insert product description here. Include purpose, target audience, platform (web/mobile/etc.), and any relevant context – provide as much detail for your product as possible to give the tool sufficient context to write the PRD." required></textarea>
       </div>
-      <div class="mb-3">
-        <label>What specific features will this PRD cover?</label>
-        <textarea name="features" class="form-control" rows="5" required></textarea>
+      <div class="mb-4">
+        <label class="form-label">What specific features will this PRD cover?</label>
+        <textarea name="features" class="form-control" rows="4" placeholder="Insert detailed description of the feature here. Be sure to describe what the feature does, how users interact with it, what it must integrate with or support technically, what data it requires or generates, and any important performance, security, or UX constraints." required></textarea>
       </div>
-      <button type="submit" class="btn btn-primary">Submit & Continue</button>
+      <div class="btn-align-end">
+        <button type="submit" class="btn btn-primary" onclick="startSpinner()">Submit</button>
+      </div>
     </form>
 
     <div id="loadingSpinner" class="d-flex text-muted">
@@ -64,5 +111,18 @@
       <span id="loadingTimer">⏳ 0s</span>
     </div>
   </div>
+
+  <script>
+    function startSpinner() {
+      const spinner = document.getElementById('loadingSpinner');
+      spinner.style.display = 'flex';
+      let seconds = 0;
+      const label = document.getElementById('loadingTimer');
+      window.loadingInterval = setInterval(() => {
+        seconds++;
+        label.textContent = `⏳ ${seconds}s`;
+      }, 1000);
+    }
+  </script>
 </body>
 </html>

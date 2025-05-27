@@ -12,6 +12,14 @@
       gap: 1rem;
       margin-top: 1rem;
     }
+    .table th {
+      background-color: #0d6efd;
+      color: white;
+      text-align: center;
+    }
+    .table td {
+      vertical-align: top;
+    }
   </style>
   <script>
     function showLoading() {
@@ -43,6 +51,24 @@
       <div class="mb-4">
         <h5>Feature Overview (Agent 2)</h5>
         <textarea name="feature_overview" class="form-control" rows="8">{{ agent2_output }}</textarea>
+      </div>
+      <div class="mb-4">
+        <h5>Highest Order Requirement (Agent 3)</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead>
+              <tr><th colspan="2">Highest Order Requirements</th></tr>
+            </thead>
+            <tbody>
+              {% for line in agent3_output.split('\n') if ':' in line %}
+              <tr>
+                <td><strong>{{ line.split(':')[0] }}</strong></td>
+                <td>{{ line.split(':', 1)[1] }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="text-end">
         <button type="submit" class="btn btn-primary">Proceed to Prompt Selection</button>

@@ -7,13 +7,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/6.1.0/docx.min.js"></script>
   <style>
-    pre {
+    .formatted-content {
       white-space: pre-wrap;
       word-break: break-word;
-      background-color: #f8f9fa;
-      padding: 1rem;
-      border-radius: 0.5rem;
+      background-color: #fff;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
       border: 1px solid #dee2e6;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      margin-bottom: 2rem;
     }
     #loadingSpinner {
       display: none;
@@ -43,11 +45,11 @@
       <span id="loadingTimer">⏳ 0s</span>
     </div>
 
-    <div class="card shadow" id="docContent">
+    <div class="card shadow-sm" id="docContent">
       <div class="card-body">
         {% for key, output in outputs.items() %}
-          <h5 class="text-primary">{{ key.replace('_', ' ').title() }}</h5>
-          <pre>{{ output }}</pre>
+          <h5 class="text-primary mt-4">{{ key.replace('_', ' ').title() }}</h5>
+          <div class="formatted-content">{{ output | safe }}</div>
         {% endfor %}
       </div>
     </div>
@@ -66,22 +68,24 @@
     }
 
     function downloadDoc() {
-      const doc = new window.docx.Document();
-      const sections = [];
-      const elements = document.querySelectorAll('#docContent h5');
-
-      elements.forEach(h => {
-        const title = h.textContent.trim();
-        const content = h.nextElementSibling.textContent.trim();
-        sections.push(
-          new window.docx.Paragraph({ text: title, heading: window.docx.HeadingLevel.HEADING_2 }),
-          new window.docx.Paragraph({ text: content, spacing: { after: 300 } })
-        );
+      const sections = {};
+      document.querySelectorAll('#docContent h5').forEach(h => {
+        const key = h.textContent.trim();
+        const value = h.nextElementSibling?.innerText.trim() || "";
+        sections[key] = value;
       });
 
-      doc.addSection({ properties: {}, children: sections });
-      window.docx.Packer.toBlob(doc).then(blob => {
-        window.saveAs(blob, "PRD_Draft.docx");
+      fetch("/download_doc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sections)
+      })
+      .then(res => res.blob())
+      .then(blob => {
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.download = "PRD_Draft.docx";
+        link.click();
       });
     }
 

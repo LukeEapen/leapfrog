@@ -1,6 +1,9 @@
 # --- main.py ---
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from dotenv import load_dotenv
+from flask import send_file
+from docx import Document
+from io import BytesIO
 import openai, os, logging, time
 
 load_dotenv()
@@ -17,6 +20,7 @@ ASSISTANTS = {
     'agent_1': 'asst_EvIwemZYiG4cCmYc7GnTZoQZ',
     'agent_1_1': 'asst_sW7IMhE5tQ78Ylx0zQkh6YnZ', # Agent 1.1: Product Overview Generator – System Instructions
       'agent_2': 'asst_t5hnaKy1wPvD48jTbn8Mx45z',
+      'agent_3': 'asst_EkihtJQe9qFiztRdRXPhiy2G', # Agent 2 : Requirement Generator
     'agent_4_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator – System Instructions
     'agent_4_2': 'asst_CLBdcKGduMvSBM06MC1OJ7bF', # Agent 4.2: Operational Business Requirements Generator – System Instructions
     'agent_4_3': 'asst_61ITzgJTPqkQf4OFnnMnndNb', # Agent 4.3: Capability-Scoped Non-Functional Requirements Generator – System Instructions
@@ -69,32 +73,74 @@ def login():
 @app.route('/page1', methods=['GET', 'POST'])
 def page1():
     if not session.get('logged_in'): return redirect(url_for('login'))
+
     if request.method == 'POST':
-        session['industry'] = request.form['industry']
-        session['sub_industry'] = request.form['sub_industry']
-        session['intent'] = request.form['intent']
-        session['features'] = request.form['features']
+        # Collect and store input fields
+        industry = request.form['industry']
+        sub_industry = request.form['sub_industry']
+        sector = request.form['sector']
+        geography = request.form['geography']
+        intent = request.form['intent']
+        features = request.form['features']
+
+        session['industry'] = industry
+        session['sub_industry'] = sub_industry
+        session['sector'] = sector
+        session['geography'] = geography
+        session['intent'] = intent
+        session['features'] = features
+
+        context = f"""Industry: {industry}
+Sub-Industry: {sub_industry}
+Sector: {sector}
+Geography: {geography}
+Product Intent: {intent}
+Features: {features}
+"""
+
+        # Call Agent 1 with the full context
+        agent1_response = call_agent(ASSISTANTS['agent_1'], context)
+
+        # Use Agent 1 output to call 1.1, 2, 3
+        agent11_output = call_agent(ASSISTANTS['agent_1_1'], agent1_response)
+        agent2_output = call_agent(ASSISTANTS['agent_2'], agent1_response)
+        agent3_output = call_agent(ASSISTANTS['agent_3'], agent1_response)
+
+        # Store agent outputs for page 2
+        session['product_overview'] = agent11_output
+        session['feature_overview'] = agent2_output
+        session['highest_order'] = agent3_output
+
         return redirect(url_for('page2'))
+
     return render_template('page1_input.html')
+
 
 # --- Page 2: Agent 1 & Agent 2 Interaction ---
 @app.route('/page2', methods=['GET', 'POST'])
 def page2():
     if not session.get('logged_in'): return redirect(url_for('login'))
 
-    if request.method == 'POST':
-        product_overview = request.form['product_overview']
-        feature_overview = request.form['feature_overview']
-        session['product_overview'] = product_overview
-        session['feature_overview'] = feature_overview
-        return redirect(url_for('page3'))
+    if request.method == "POST":
+        session["product_overview"] = request.form["product_overview"]
+        session["feature_overview"] = request.form["feature_overview"]
+        session["highest_order"] = request.form["highest_order"]
+        return redirect("/page3")
 
-    agent1_input = f"Industry: {session['industry']}\nSub-industry: {session['sub_industry']}\nIntent: {session['intent']}\nFeatures: {session['features']}"
-    agent1_output = call_agent(ASSISTANTS['agent_1'], agent1_input)
-    agent11_output = call_agent(ASSISTANTS['agent_1_1'], agent1_output)
-    agent2_output = call_agent(ASSISTANTS['agent_2'], agent1_output)
-    return render_template('page2_agents.html', agent11_output=agent11_output, agent2_output=agent2_output)
+    # Use Agent 1 output as input to Agent 3
+    agent1_output = session.get("product_overview")
+    agent2_output = call_agent(ASSISTANTS["agent_2"], agent1_output)
+    agent3_output = call_agent(ASSISTANTS["agent_3"], agent1_output)
 
+    session["feature_overview"] = agent2_output
+    session["highest_order"] = agent3_output
+
+    return render_template(
+        "page2_agents.html",
+        agent11_output=agent1_output,
+        agent2_output=agent2_output,
+        agent3_output=agent3_output,
+    )
 # --- Page 3: Prompt Selector ---
 @app.route('/page3', methods=['GET', 'POST'])
 def page3():
@@ -109,11 +155,32 @@ def page3():
 def page4():
     if not session.get('logged_in'): return redirect(url_for('login'))
     combined_outputs = {}
-    for i in range(1, 7):
-        key = f'agent_4_{i}'
-        combined_outputs[key] = call_agent(ASSISTANTS[key], session['feature_overview'])
+    feature_overview = session.get('feature_overview', '')
+    if not feature_overview:
+        app.logger.warning("Missing 'feature_overview' in session during /page4")
+
+    for key in ASSISTANTS:
+        combined_outputs[key] = call_agent(ASSISTANTS[key], feature_overview)
+
     return render_template('page4_final_output.html', outputs=combined_outputs)
 
+@app.route("/download_doc", methods=["POST"])
+def download_doc():
+    data = request.get_json()
+    doc = Document()
+    for title, content in data.items():
+        doc.add_heading(title, level=2)
+        doc.add_paragraph(content)
+
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="PRD_Draft.docx",
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
 if __name__ == '__main__':
     ort = int(os.environ.get("PORT", 7007))
     app.run(host="0.0.0.0", port=ort, debug=True)
