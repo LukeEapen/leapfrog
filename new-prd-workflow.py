@@ -15,15 +15,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Define assistant IDs for agents
 ASSISTANTS = {
     'agent_1': 'asst_EvIwemZYiG4cCmYc7GnTZoQZ',
-    'agent_1_1': 'asst_t5hnaKy1wPvD48jTbn8Mx45z',
-    'agent_2': 'asst_t5hnaKy1wPvD48jTbn8Mx45z',
+    'agent_1_1': 'asst_sW7IMhE5tQ78Ylx0zQkh6YnZ', # Agent 1.1: Product Overview Generator – System Instructions
+      'agent_2': 'asst_t5hnaKy1wPvD48jTbn8Mx45z',
     'agent_4_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator – System Instructions
     'agent_4_2': 'asst_CLBdcKGduMvSBM06MC1OJ7bF', # Agent 4.2: Operational Business Requirements Generator – System Instructions
     'agent_4_3': 'asst_61ITzgJTPqkQf4OFnnMnndNb', # Agent 4.3: Capability-Scoped Non-Functional Requirements Generator – System Instructions
     'agent_4_4': 'asst_pPFGsMMqWg04OSHNmyQ5oaAy', # Agent 4.4: Data Attribute Requirement Generator – System Instructions
     'agent_4_5': 'asst_wwgc1Zbl5iknlDtcFLOuTIjd', # Agent L: Legal Requirements Generator – System Instructions
     'agent_4_6': 'asst_qEfqPFiWiXDDCNPNwP7n0r0B', # Agent R: Regulatory Rules Translator – System Instructions
-    'agent_4_7': 'asst_dJIQFP63GIjc2F04rTA3Vj3g' # Agent C: Compliance Enforcer Definition Generator – System Instructions
+    'agent_4_7': 'asst_dJIQFP63GIjc2F04rTA3Vj3g'  # Agent C: Compliance Enforcer Definition Generator – System Instructions
 }
 
 # --- Helper to call assistant ---
@@ -93,7 +93,7 @@ def page2():
     agent1_output = call_agent(ASSISTANTS['agent_1'], agent1_input)
     agent11_output = call_agent(ASSISTANTS['agent_1_1'], agent1_output)
     agent2_output = call_agent(ASSISTANTS['agent_2'], agent1_output)
-    return render_template('page2_agents.html', agent1_output=agent1_output, agent11_output=agent11_output, agent2_output=agent2_output)
+    return render_template('page2_agents.html', agent11_output=agent11_output, agent2_output=agent2_output)
 
 # --- Page 3: Prompt Selector ---
 @app.route('/page3', methods=['GET', 'POST'])

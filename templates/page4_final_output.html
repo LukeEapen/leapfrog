@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>PRD Draft Output</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/6.1.0/docx.min.js"></script>
   <style>
     pre {
       white-space: pre-wrap;
@@ -21,6 +23,36 @@
       margin-top: 1rem;
     }
   </style>
+</head>
+<body class="bg-light">
+  <div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3 class="mb-0">Final PRD Draft Output</h3>
+      <div>
+        <form method="get" class="d-inline">
+          <button type="submit" formaction="/page4" class="btn btn-success" onclick="showLoading()">Generate PRD (4.1 - 4.7)</button>
+        </form>
+        <button class="btn btn-outline-primary ms-2" onclick="downloadDoc()">Download as Word</button>
+      </div>
+    </div>
+
+    <div id="loadingSpinner" class="d-flex text-muted">
+      <div class="spinner-border text-success" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <span id="loadingTimer">⏳ 0s</span>
+    </div>
+
+    <div class="card shadow" id="docContent">
+      <div class="card-body">
+        {% for key, output in outputs.items() %}
+          <h5 class="text-primary">{{ key.replace('_', ' ').title() }}</h5>
+          <pre>{{ output }}</pre>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
   <script>
     function showLoading() {
       const spinner = document.getElementById('loadingSpinner');
@@ -32,41 +64,27 @@
         if (label) label.textContent = `⏳ ${seconds}s`;
       }, 1000);
     }
-  </script>
-</head>
-<body class="bg-light">
-  <div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h3 class="mb-0">Final PRD Draft Output</h3>
-      <form method="get">
-        <button type="submit" formaction="/page4" class="btn btn-success" onclick="showLoading()">Generate PRD (4.1 - 4.6)</button>
-      </form>
-    </div>
 
-    <div id="loadingSpinner" class="d-flex text-muted">
-      <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <span id="loadingTimer">⏳ 0s</span>
-    </div>
+    function downloadDoc() {
+      const doc = new window.docx.Document();
+      const sections = [];
+      const elements = document.querySelectorAll('#docContent h5');
 
-    <div class="row g-4 mt-3">
-      {% for key, output in outputs.items() %}
-        <div class="col-md-6">
-          <div class="card h-100 shadow-sm">
-            <div class="card-header bg-primary text-white fw-semibold">
-              {{ key.replace('_', ' ').title() }}
-            </div>
-            <div class="card-body">
-              <pre>{{ output }}</pre>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-  </div>
+      elements.forEach(h => {
+        const title = h.textContent.trim();
+        const content = h.nextElementSibling.textContent.trim();
+        sections.push(
+          new window.docx.Paragraph({ text: title, heading: window.docx.HeadingLevel.HEADING_2 }),
+          new window.docx.Paragraph({ text: content, spacing: { after: 300 } })
+        );
+      });
 
-  <script>
+      doc.addSection({ properties: {}, children: sections });
+      window.docx.Packer.toBlob(doc).then(blob => {
+        window.saveAs(blob, "PRD_Draft.docx");
+      });
+    }
+
     document.querySelectorAll('form[method="post"], form[method="get"]').forEach(form => {
       form.addEventListener('submit', () => showLoading());
     });
