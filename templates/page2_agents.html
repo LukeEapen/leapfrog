@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Review PRD Outputs</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    #loadingSpinner {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+  </style>
+  <script>
+    function showLoading() {
+      const spinner = document.getElementById('loadingSpinner');
+      if (spinner) spinner.style.display = 'flex';
+      let seconds = 0;
+      const label = document.getElementById('loadingTimer');
+      window.loadingInterval = setInterval(() => {
+        seconds++;
+        if (label) label.textContent = `⏳ ${seconds}s`;
+      }, 1000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', showLoading);
+      });
+    });
+  </script>
+</head>
+<body class="bg-light">
+  <div class="container my-5">
+    <h3 class="text-center mb-4">Step 2: Review Agent Outputs</h3>
+    <form method="post">
+      <div class="mb-4">
+        <h5>Product Overview (Agent 1)</h5>
+        <textarea name="product_overview" class="form-control" rows="6">{{ agent11_output }}</textarea>
+      </div>
+      <div class="mb-4">
+        <h5>Feature Overview (Agent 2)</h5>
+        <textarea name="feature_overview" class="form-control" rows="8">{{ agent2_output }}</textarea>
+      </div>
+      <div class="text-end">
+        <button type="submit" class="btn btn-primary">Proceed to Prompt Selection</button>
+      </div>
+    </form>
+
+    <div id="loadingSpinner" class="d-flex text-muted">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <span id="loadingTimer">⏳ 0s</span>
+    </div>
+  </div>
+</body>
+</html>

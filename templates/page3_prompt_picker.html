@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Select Prompts</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    #loadingSpinner {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+  </style>
+  <script>
+    function showLoading() {
+      const spinner = document.getElementById('loadingSpinner');
+      if (spinner) spinner.style.display = 'flex';
+      let seconds = 0;
+      const label = document.getElementById('loadingTimer');
+      window.loadingInterval = setInterval(() => {
+        seconds++;
+        if (label) label.textContent = `⏳ ${seconds}s`;
+      }, 1000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', showLoading);
+      });
+    });
+  </script>
+</head>
+<body class="bg-light">
+  <div class="container my-5">
+    <h3 class="text-center mb-4">Step 3: Choose Prompts for PRD</h3>
+    <form method="post">
+      <div class="row">
+        <div class="col-md-6">
+          <h5>Available Prompts</h5>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="selected_prompts" value="Functional Requirements">
+            <label class="form-check-label">Functional Requirements</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="selected_prompts" value="Data Requirements">
+            <label class="form-check-label">Data Requirements</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="selected_prompts" value="External Users">
+            <label class="form-check-label">External Users</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="selected_prompts" value="Servicing">
+            <label class="form-check-label">Servicing</label>
+          </div>
+        </div>
+      </div>
+      <div class="text-end mt-4">
+        <button type="submit" class="btn btn-primary">Generate Initial PRD Draft</button>
+      </div>
+    </form>
+
+    <div id="loadingSpinner" class="d-flex text-muted">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <span id="loadingTimer">⏳ 0s</span>
+    </div>
+  </div>
+</body>
+</html>

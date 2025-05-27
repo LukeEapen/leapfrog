@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PRD Input Form</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    #loadingSpinner {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+  </style>
+  <script>
+    function showLoading() {
+      const spinner = document.getElementById('loadingSpinner');
+      if (spinner) spinner.style.display = 'flex';
+      let seconds = 0;
+      const label = document.getElementById('loadingTimer');
+      window.loadingInterval = setInterval(() => {
+        seconds++;
+        if (label) label.textContent = `⏳ ${seconds}s`;
+      }, 1000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', showLoading);
+      });
+    });
+  </script>
+</head>
+<body class="bg-light">
+  <div class="container my-5">
+    <h3 class="mb-4 text-primary">Step 1: Enter Project Details</h3>
+    <form method="post">
+      <div class="row mb-3">
+        <div class="col">
+          <label>Industry</label>
+          <input type="text" class="form-control" name="industry" required>
+        </div>
+        <div class="col">
+          <label>Sub-industry</label>
+          <input type="text" class="form-control" name="sub_industry">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label>What are you trying to build?</label>
+        <textarea name="intent" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="mb-3">
+        <label>What specific features will this PRD cover?</label>
+        <textarea name="features" class="form-control" rows="5" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit & Continue</button>
+    </form>
+
+    <div id="loadingSpinner" class="d-flex text-muted">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <span id="loadingTimer">⏳ 0s</span>
+    </div>
+  </div>
+</body>
+</html>
