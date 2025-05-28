@@ -177,6 +177,9 @@ def page4():
 def download_doc():
     doc = Document()
 
+    data = get_data(session["data_key"]) or {}
+    combined_outputs = session.get("combined_outputs", {})
+
     # Add product and feature overviews
     doc.add_heading("Product Overview (Agent 1.1)", level=2)
     doc.add_paragraph(get_data(session["data_key"]).get("product_overview", ""))
@@ -184,11 +187,21 @@ def download_doc():
     doc.add_heading("Feature Overview (Agent 2)", level=2)
     doc.add_paragraph(get_data(session["data_key"]).get("feature_overview", ""))
 
-    # Add selective outputs from agents 4.1 to 4.5
-    for key in ["agent_4_1", "agent_4_2", "agent_4_3", "agent_4_4", "agent_4_5"]:
-        content = session.get("combined_outputs", {}).get(key, "")
-        doc.add_heading(key.replace("_", " ").title(), level=2)
-        doc.add_paragraph(content)
+    # Add outputs from agents 4.1 to 4.5 with better formatting
+    agent_titles = {
+        "agent_4_1": "Product Requirements / User Stories",
+        "agent_4_2": "Operational Business Requirements",
+        "agent_4_3": "Non-Functional Requirements",
+        "agent_4_4": "Data Attribute Requirements",
+        "agent_4_5": "Legal, Regulatory, and Compliance Requirements"
+    }
+
+
+    for key, title in agent_titles.items():
+        content = combined_outputs.get(key, "")
+        if content:
+            doc.add_heading(title, level=2)
+            doc.add_paragraph(content)
 
     buffer = BytesIO()
     doc.save(buffer)
