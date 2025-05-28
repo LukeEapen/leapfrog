@@ -1,24 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>PRD Draft Output</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+  <!-- Remove duplicate script references -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/6.1.0/docx.min.js"></script>
   <script src="{{ url_for('static', filename='js/global.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- ... rest of head content ... -->
+
   <style>
-    .formatted-content {
-      white-space: pre-wrap;
-      word-break: break-word;
-      background-color: #fff;
-      padding: 1.5rem;
-      border-radius: 0.75rem;
-      border: 1px solid #dee2e6;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-      margin-bottom: 2rem;
-    }
     #loadingSpinner {
       display: none;
       justify-content: center;
@@ -26,15 +21,54 @@
       gap: 1rem;
       margin-top: 1rem;
     }
+
+    .formatted-content {
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: calc(1.5rem * 10);
+      max-height: calc(1.5rem * 30);
+      height: calc(1.5rem * 10);
+      overflow-y: auto;
+      padding: 1.5rem;
+      border: 1px solid #dee2e6;
+      border-radius: 0.75rem;
+      resize: vertical;
+      background-color: white;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+
+    /* Scrollbar styling */
+    .formatted-content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .formatted-content::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    .formatted-content::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    .formatted-content::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  </style>
+
   </style>
 </head>
+
 <body class="bg-light">
   <div class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h3 class="mb-0">Final PRD Draft Output</h3>
       <div>
 
-        <button type="submit" class="btn btn-danger btn-lg w-100" onclick="downloadDoc()">Download as Word</button>
+        <button type="button" class="btn btn-danger btn-lg w-100" onclick="downloadDoc()">Download as Word</button>
       </div>
     </div>
 
@@ -45,17 +79,68 @@
       <span id="loadingTimer">⏳ 0s</span>
     </div>
 
+    <!-- Replace the existing card-body content with this -->
     <div class="card shadow-sm" id="docContent">
       <div class="card-body">
         {% for key, output in outputs.items() %}
-          <h5 class="text-primary mt-4">{{ key.replace('_', ' ').title() }}</h5>
-          <div class="formatted-content">{{ output | safe }}</div>
+        <h5 class="text-primary mt-4">{{ key.replace('_', ' ').title() }}</h5>
+        <div class="formatted-content" id="{{ key }}_render"></div>
+        <input type="hidden" id="{{ key }}_input" value="{{ output | tojson | safe }}" data-raw="{{ output }}">
         {% endfor %}
       </div>
     </div>
   </div>
 
   <script>
+
+    // Add this before the existing script content
+    document.addEventListener('DOMContentLoaded', function () {
+      // Helper function to render markdown content
+      function renderMarkdownContent(inputId, renderId) {
+        try {
+          if (typeof marked === 'undefined') {
+            console.error('Marked library not loaded');
+            document.getElementById(renderId).innerHTML =
+              '<div class="alert alert-danger">Markdown library not available</div>';
+            return;
+          }
+
+          const input = document.getElementById(inputId);
+          const renderDiv = document.getElementById(renderId);
+
+          if (!input || !renderDiv) {
+            console.error(`Required elements not found for ${inputId}`);
+            return;
+          }
+
+          let content = input.getAttribute('data-raw');
+          console.log(`Raw data for ${inputId}:`, content);
+
+          if (content) {
+            const renderedContent = marked.parse(content);
+            console.log(`Rendered content for ${inputId}:`, renderedContent);
+            renderDiv.innerHTML = renderedContent;
+          } else {
+            renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
+          }
+        } catch (error) {
+          console.error(`Error rendering ${inputId}:`, error);
+          document.getElementById(renderId).innerHTML =
+            '<div class="alert alert-danger">' +
+            '<h6>Error Details:</h6>' +
+            '<pre>' + error.toString() + '</pre>' +
+            '</div>';
+        }
+      }
+
+      // Render all sections
+      document.querySelectorAll('[id$="_input"]').forEach(input => {
+        const key = input.id.replace('_input', '');
+        renderMarkdownContent(`${key}_input`, `${key}_render`);
+      });
+    });
+
+    // ...existing script content...
     function showLoading() {
       const spinner = document.getElementById('loadingSpinner');
       if (spinner) spinner.style.display = 'flex';
@@ -68,30 +153,79 @@
     }
 
     function downloadDoc() {
-      const sections = {};
-      document.querySelectorAll('#docContent h5').forEach(h => {
-        const key = h.textContent.trim();
-        const value = h.nextElementSibling?.innerText.trim() || "";
-        sections[key] = value;
-      });
+      try {
+        const sections = {};
+        // First, get all input elements to ensure we have all sections
+        document.querySelectorAll('[id$="_input"]').forEach(input => {
+          const key = input.id.replace('_input', '');
+          const renderDiv = document.getElementById(`${key}_render`);
 
-      fetch("/download_doc", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sections)
-      })
-      .then(res => res.blob())
-      .then(blob => {
-        const link = document.createElement("a");
-        link.href = window.URL.createObjectURL(blob);
-        link.download = "PRD_Draft.docx";
-        link.click();
-      });
+          if (renderDiv) {
+            // Convert the section name to title case for consistency
+            const sectionTitle = key.split('_')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+
+            // Get the raw content from data-raw attribute first
+            const rawContent = input.getAttribute('data-raw');
+            if (rawContent) {
+              // Use marked to parse the raw content
+              sections[sectionTitle] = marked.parse(rawContent);
+            } else {
+              // Fallback to rendered content
+              sections[sectionTitle] = renderDiv.innerHTML || "";
+            }
+
+            console.log(`Added section ${sectionTitle}:`, sections[sectionTitle].substring(0, 100) + '...'); // Debug log
+          }
+        });
+
+        if (Object.keys(sections).length === 0) {
+          throw new Error('No content sections found');
+        }
+
+        console.log('Total sections found:', Object.keys(sections).length);
+
+        // Show loading spinner while downloading
+        const spinner = document.getElementById('loadingSpinner');
+        if (spinner) spinner.style.display = 'flex';
+
+        fetch("/download_doc", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(sections)
+        })
+          .then(res => {
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            return res.blob();
+          })
+          .then(blob => {
+            const link = document.createElement("a");
+            link.href = window.URL.createObjectURL(blob);
+            link.download = "PRD_Draft.docx";
+            link.click();
+          })
+          .catch(error => {
+            console.error('Download failed:', error);
+            alert('Failed to download document. Please try again.');
+          })
+          .finally(() => {
+            // Hide loading spinner
+            if (spinner) spinner.style.display = 'none';
+          });
+      } catch (error) {
+        console.error('Error preparing download:', error);
+        alert('Error preparing document for download: ' + error.message);
+      }
     }
 
     document.querySelectorAll('form[method="post"], form[method="get"]').forEach(form => {
       form.addEventListener('submit', () => showLoading());
     });
+
   </script>
 </body>
+
+</html>
+
 </html>

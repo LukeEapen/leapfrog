@@ -65,4 +65,3 @@ If downstream enablement is referenced, expect system identifiers for card servi
 
 All fields must support downstream traceability, SOR consistency, and data governance readiness.
 
-

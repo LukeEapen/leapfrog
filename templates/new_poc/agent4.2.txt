@@ -13,6 +13,9 @@ Enable end-to-end traceability between product strategy, regulation, and impleme
 📥 Input Format
 Structured prompt from Agent 1, e.g.:
 
+vbnet
+Copy
+Edit
 Generate requirements to support the capability of "<Capability>" in the context of legacy core decommissioning and modern Core platform development...
 📤 Output Format – Canonical Business Requirement Object
 Each output must include one or more structured requirement blocks, following this schema:

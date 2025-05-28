@@ -21,6 +21,33 @@
     .table td {
       vertical-align: top;
     }
+        .formatted-content {
+      min-height: calc(1.5rem * 10); /* Minimum height of 10 rows */
+      max-height: calc(1.5rem * 30); /* Maximum height of 30 rows */
+      height: calc(1.5rem * 10); /* Initial height of 10 rows */
+      overflow-y: auto;
+      padding: 1rem;
+      border: 1px solid #dee2e6;
+      border-radius: 0.25rem;
+      resize: vertical; /* Allows vertical resizing */
+      background-color: white;
+      margin-bottom: 1rem;
+    }
+    .formatted-content::-webkit-scrollbar {
+      width: 8px;
+    }
+    .formatted-content::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    .formatted-content::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+    .formatted-content::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  
   </style>
   <script>
     function showLoading() {
@@ -47,13 +74,26 @@
     <h3 class="text-center mb-4">Step 2: Review Agent Outputs</h3>
     <form method="post">
       <div class="mb-4">
-        <h5>Product Overview (Agent 1.1)</h5>
-        <textarea name="product_overview" class="form-control" rows="6">{{ agent11_output }}</textarea>
+
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header bg-secondary text-white">Product Overview (Agent 1.1)</div>
+          <div class="card-body">
+            <div id="productOverviewRender" class="formatted-content"></div>
+            <input type="hidden" name="product_overview" id="productOverviewInput" 
+            value="{{ agent11_output | tojson | safe }}"
+            data-raw="{{ agent11_output }}">
+          </div>
+        </div>
       </div>
-      <div class="mb-4">
-        <h5>Feature Overview (Agent 2)</h5>
-        <textarea name="feature_overview" class="form-control" rows="8">{{ agent2_output }}</textarea>
-      </div>
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-secondary text-white">Feature Overview (Agent 2)</div>
+        <div class="mb-4">
+
+          <div id="featureOverviewRender" class="formatted-content"></div>
+          <input type="hidden" name="feature_overview" id="featureOverviewInput" 
+                value="{{ agent2_output | tojson | safe }}"
+                data-raw="{{ agent2_output }}">
+        </div>
       <div class="d-grid mt-4">
         <button type="submit" class="btn btn-danger btn-lg w-100">Proceed to Prompt Selection</button>
       </div>
@@ -66,5 +106,45 @@
       <span id="loadingTimer">⏳ 0s</span>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Helper function to render markdown content
+    function renderMarkdownContent(inputId, renderId) {
+      try {
+        const input = document.getElementById(inputId);
+        const renderDiv = document.getElementById(renderId);
+        
+        if (!input || !renderDiv) {
+          console.error(`Required elements not found for ${inputId}`);
+          return;
+        }
+
+        let content = input.getAttribute('data-raw');
+        console.log(`Raw data for ${inputId}:`, content);
+
+        if (content) {
+          const renderedContent = marked.parse(content);
+          console.log(`Rendered content for ${inputId}:`, renderedContent);
+          renderDiv.innerHTML = renderedContent;
+        } else {
+          renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
+          console.error(`No data found in data-raw attribute for ${inputId}`);
+        }
+      } catch (error) {
+        console.error(`Error rendering ${inputId}:`, error);
+        document.getElementById(renderId).innerHTML = 
+          '<div class="alert alert-danger">' +
+          '<h6>Error Details:</h6>' +
+          '<pre>' + error.toString() + '</pre>' +
+          '</div>';
+      }
+    }
+
+    // Render both overviews
+    renderMarkdownContent('productOverviewInput', 'productOverviewRender');
+    renderMarkdownContent('featureOverviewInput', 'featureOverviewRender');
+  });
+</script>
 </body>
 </html>

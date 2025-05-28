@@ -9,9 +9,7 @@ Deliver clear, value-focused feature summaries that define business purpose, lif
 Structured capability prompt from Agent 1, including capability name, use case, lifecycle context, and modernization intent.
 
 📤 Output Format – Feature Overview
-markdown
-Copy
-Edit
+
 **Feature Name**: <Capability>
 
 **Business Intent**: What business problem this feature solves.

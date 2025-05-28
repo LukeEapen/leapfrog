@@ -81,7 +81,7 @@ def call_agent(agent_id, input_text):
         messages = openai.beta.threads.messages.list(thread_id=thread.id)
         result = messages.data[0].content[0].text.value
 
-        logging.info(f"[CALL END] {agent_id} done in {time.time()-start_time:.2f}s (waited {wait_end-wait_start:.2f}s)")
+        logging.info(f"[CALL END] {agent_id} done in {time.time()-start_time:.2f}s (waited {wait_end-wait_start:.2f}s) and result : {result}")
         return result
     except Exception as e:
         logging.error(f"[ERROR] Agent {agent_id} failed: {e}")
