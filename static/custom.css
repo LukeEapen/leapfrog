@@ -1,0 +1,73 @@
+:root {
+  --bs-primary: #b30000;      /* Red */
+  --bs-secondary: #f8f9fa;    /* Light Grey */
+  --bs-dark: #343a40;         /* Grey */
+  --color-bg: #f8f9fa;         /* Light grey */
+  --color-card: #ffffff;       /* White */
+  --color-primary: #dc3545;    /* Bootstrap red */
+  --color-secondary: #6c757d;  /* Bootstrap grey */
+  --color-light: #e9ecef;      /* Lighter grey */
+  --font-stack: 'Segoe UI', sans-serif;
+}
+
+body {
+  background-color: var(--bs-secondary);
+  color: var(--bs-dark);
+}
+
+.navbar, .card-header {
+  background-color: var(--bs-dark);
+  color: white;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 0.75rem;
+}
+
+.btn-primary {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+.btn-primary:hover {
+  background-color: #800000;
+  border-color: #800000;
+}
+
+input.form-control, select.form-control, textarea.form-control {
+  border-radius: 0.5rem;
+  border: 1px solid #ced4da;
+}
+
+input.form-control:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(179, 0, 0, 0.25);
+}
+.input-card {
+  background: var(--color-card);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 0 2rem rgba(0, 0, 0, 0.05);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.section-title {
+  background: var(--color-light);
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.btn-danger {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-danger:hover {
+  background-color: #bb2d3b;
+  border-color: #b02a37;
+}
