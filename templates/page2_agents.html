@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Review PRD Outputs</title>
@@ -13,41 +14,51 @@
       gap: 1rem;
       margin-top: 1rem;
     }
+
     .table th {
       background-color: #0d6efd;
       color: white;
       text-align: center;
     }
+
     .table td {
       vertical-align: top;
     }
-        .formatted-content {
-      min-height: calc(1.5rem * 10); /* Minimum height of 10 rows */
-      max-height: calc(1.5rem * 30); /* Maximum height of 30 rows */
-      height: calc(1.5rem * 10); /* Initial height of 10 rows */
+
+    .formatted-content {
+      min-height: calc(1.5rem * 10);
+      /* Minimum height of 10 rows */
+      max-height: calc(1.5rem * 30);
+      /* Maximum height of 30 rows */
+      height: calc(1.5rem * 10);
+      /* Initial height of 10 rows */
       overflow-y: auto;
       padding: 1rem;
       border: 1px solid #dee2e6;
       border-radius: 0.25rem;
-      resize: vertical; /* Allows vertical resizing */
+      resize: vertical;
+      /* Allows vertical resizing */
       background-color: white;
       margin-bottom: 1rem;
     }
+
     .formatted-content::-webkit-scrollbar {
       width: 8px;
     }
+
     .formatted-content::-webkit-scrollbar-track {
       background: #f1f1f1;
       border-radius: 4px;
     }
+
     .formatted-content::-webkit-scrollbar-thumb {
       background: #888;
       border-radius: 4px;
     }
+
     .formatted-content::-webkit-scrollbar-thumb:hover {
       background: #555;
     }
-  
   </style>
   <script>
     function showLoading() {
@@ -69,9 +80,13 @@
   </script>
   <script src="{{ url_for('static', filename='js/global.js') }}"></script>
 </head>
+
 <body class="bg-light">
   <div class="container my-5">
     <h3 class="text-center mb-4">Step 2: Review Agent Outputs</h3>
+    {% if agent11_output == "" or agent2_output == "" %}
+    <div class="alert alert-info text-center">⏳ Please wait while the PRD assistant processes your input...</div>
+    {% endif %}
     <form method="post">
       <div class="mb-4">
 
@@ -79,9 +94,8 @@
           <div class="card-header bg-secondary text-white">Product Overview (Agent 1.1)</div>
           <div class="card-body">
             <div id="productOverviewRender" class="formatted-content"></div>
-            <input type="hidden" name="product_overview" id="productOverviewInput" 
-            value="{{ agent11_output | tojson | safe }}"
-            data-raw="{{ agent11_output }}">
+            <input type="hidden" name="product_overview" id="productOverviewInput"
+              value="{{ agent11_output | tojson | safe }}" data-raw="{{ agent11_output }}">
           </div>
         </div>
       </div>
@@ -90,13 +104,12 @@
         <div class="mb-4">
 
           <div id="featureOverviewRender" class="formatted-content"></div>
-          <input type="hidden" name="feature_overview" id="featureOverviewInput" 
-                value="{{ agent2_output | tojson | safe }}"
-                data-raw="{{ agent2_output }}">
+          <input type="hidden" name="feature_overview" id="featureOverviewInput"
+            value="{{ agent2_output | tojson | safe }}" data-raw="{{ agent2_output }}">
         </div>
-      <div class="d-grid mt-4">
-        <button type="submit" class="btn btn-danger btn-lg w-100">Proceed to Prompt Selection</button>
-      </div>
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-danger btn-lg w-100">Proceed to Prompt Selection</button>
+        </div>
     </form>
 
     <div id="loadingSpinner" class="d-flex text-muted">
@@ -107,44 +120,45 @@
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    // Helper function to render markdown content
-    function renderMarkdownContent(inputId, renderId) {
-      try {
-        const input = document.getElementById(inputId);
-        const renderDiv = document.getElementById(renderId);
-        
-        if (!input || !renderDiv) {
-          console.error(`Required elements not found for ${inputId}`);
-          return;
-        }
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Helper function to render markdown content
+      function renderMarkdownContent(inputId, renderId) {
+        try {
+          const input = document.getElementById(inputId);
+          const renderDiv = document.getElementById(renderId);
 
-        let content = input.getAttribute('data-raw');
-        console.log(`Raw data for ${inputId}:`, content);
+          if (!input || !renderDiv) {
+            console.error(`Required elements not found for ${inputId}`);
+            return;
+          }
 
-        if (content) {
-          const renderedContent = marked.parse(content);
-          console.log(`Rendered content for ${inputId}:`, renderedContent);
-          renderDiv.innerHTML = renderedContent;
-        } else {
-          renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
-          console.error(`No data found in data-raw attribute for ${inputId}`);
+          let content = input.getAttribute('data-raw');
+          console.log(`Raw data for ${inputId}:`, content);
+
+          if (content) {
+            const renderedContent = marked.parse(content);
+            console.log(`Rendered content for ${inputId}:`, renderedContent);
+            renderDiv.innerHTML = renderedContent;
+          } else {
+            renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
+            console.error(`No data found in data-raw attribute for ${inputId}`);
+          }
+        } catch (error) {
+          console.error(`Error rendering ${inputId}:`, error);
+          document.getElementById(renderId).innerHTML =
+            '<div class="alert alert-danger">' +
+            '<h6>Error Details:</h6>' +
+            '<pre>' + error.toString() + '</pre>' +
+            '</div>';
         }
-      } catch (error) {
-        console.error(`Error rendering ${inputId}:`, error);
-        document.getElementById(renderId).innerHTML = 
-          '<div class="alert alert-danger">' +
-          '<h6>Error Details:</h6>' +
-          '<pre>' + error.toString() + '</pre>' +
-          '</div>';
       }
-    }
 
-    // Render both overviews
-    renderMarkdownContent('productOverviewInput', 'productOverviewRender');
-    renderMarkdownContent('featureOverviewInput', 'featureOverviewRender');
-  });
-</script>
+      // Render both overviews
+      renderMarkdownContent('productOverviewInput', 'productOverviewRender');
+      renderMarkdownContent('featureOverviewInput', 'featureOverviewRender');
+    });
+  </script>
 </body>
+
 </html>

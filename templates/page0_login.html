@@ -53,17 +53,23 @@
     .form-check-label {
       font-size: 0.9rem;
     }
-    .alert {
-      display: none;
-    }
+      .alert {
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+        }
   </style>
   <script src="{{ url_for('static', filename='js/global.js') }}"></script>
 </head>
 <body>
   <div class="login-card">
-    <h4 class="login-title text-center mb-4">Welcome to PRD Assistant</h4>
-    <div class="alert alert-danger" id="loginAlert">Invalid credentials. Please try again.</div>
-    <form method="post" action="/">
+          <h4 class="login-title text-center mb-4">Welcome to PRD Assistant</h4>
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            Invalid username or password. Please try again.
+        </div>
+        {% endif %}
+      <form method="post" action="/">
       <div class="mb-3 position-relative input-group">
         <span class="form-icon"><i class="bi bi-person"></i></span>
         <input type="text" id="username" name="username" class="form-control" placeholder="Username" required>

@@ -97,6 +97,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 const renderedContent = marked.parse(content);
                 console.log(`Rendered content for ${inputId}:`, renderedContent);
                 renderDiv.innerHTML = renderedContent;
+
+                // Apply Bootstrap classes to any generated tables
+                renderDiv.querySelectorAll("table").forEach(table => {
+                table.classList.add("table", "table-bordered", "table-sm", "table-striped");
+                table.style.marginTop = "1rem";
+                table.style.fontSize = "0.9rem";
+                });
             } else {
                 renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
             }
