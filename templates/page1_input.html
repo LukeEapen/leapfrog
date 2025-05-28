@@ -38,10 +38,11 @@
     }
     #loadingSpinner {
       display: none;
-      margin-top: 1.5rem;
       justify-content: center;
       align-items: center;
-      gap: 1rem;
+      margin-top: 1rem;
+      font-weight: 500;
+      font-size: 1.1rem;
     }
     .btn-align-end {
       display: flex;
@@ -74,10 +75,7 @@
           <label class="form-label">Industry</label>
           <input type="text" class="form-control" name="industry" placeholder="Write industry name here (e.g., Financial Services)" required>
         </div>
-        <div class="col-md-6">
-          <label class="form-label">Sub-industry</label>
-          <input type="text" class="form-control" name="sub_industry" placeholder="Write sector name here (e.g., Payments)" required>
-        </div>
+    
         <div class="col-md-6">
           <label class="form-label">Sector</label>
           <input type="text" class="form-control" name="sector" placeholder="Enter sector details" required>
@@ -107,9 +105,7 @@
     </form>
 
     <div id="loadingSpinner" class="d-flex text-muted">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
+  
       <span id="loadingTimer">⏳ 0s</span>
     </div>
   </div>

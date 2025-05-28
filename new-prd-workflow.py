@@ -110,7 +110,7 @@ def page1():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        inputs = {key: request.form[key] for key in ['industry', 'sub_industry', 'sector', 'geography', 'intent', 'features']}
+        inputs = {key: request.form[key] for key in ['industry', 'sector', 'geography', 'intent', 'features']}
         session.update(inputs)
 
         context = "\n".join(f"{k.replace('_', ' ').title()}: {v}" for k, v in inputs.items())
@@ -122,14 +122,14 @@ def page1():
 
         def run_agents():
             try:
-                a1 = call_agent(ASSISTANTS['agent_1'], context)
+                #a1 = call_agent(ASSISTANTS['agent_1'], context)
                 a11, a2, a3 = asyncio.run(call_agents_parallel([
-                    (ASSISTANTS['agent_1_1'], a1),
-                    (ASSISTANTS['agent_2'], a1),
-                    (ASSISTANTS['agent_3'], a1)
+                    (ASSISTANTS['agent_1_1'], context),
+                    (ASSISTANTS['agent_2'], context),
+                    (ASSISTANTS['agent_3'], context)
                 ]))
                 final_data = {
-                    "agent_1_output": a1,
+                    #"agent_1_output": a1,
                     "product_overview": a11,
                     "feature_overview": a2,
                     "highest_order": a3,
@@ -228,6 +228,8 @@ def page4():
 
     data = get_data(session.get('data_key', '')) or {}
     outputs = data.get('combined_outputs', {})
+    outputs["product_overview"] = data.get("product_overview", "")
+    outputs["feature_overview"] = data.get("feature_overview", "")
 
     if not outputs:  # Only re-run if not already computed
         feature_overview = data.get("feature_overview", "")
@@ -237,7 +239,18 @@ def page4():
             return dict(zip(keys, results))
         
         outputs = asyncio.run(gather_outputs())
-        data['combined_outputs'] = outputs
+        renamed_outputs = {
+            "Product Requirements / User Stories Generator": outputs.get("agent_4_1", ""),
+            "Operational Business Requirements Generator": outputs.get("agent_4_2", ""),
+            "Capability-Scoped Non-Functional Requirements Generator": outputs.get("agent_4_3", ""),
+            "Data Attribute Requirement Generator": outputs.get("agent_4_4", ""),
+            "LRC: Legal, Regulatory, and Compliance Synthesizer": outputs.get("agent_4_5", "")
+        }
+        data['combined_outputs'] = {
+            "Product Overview (Agent 1.1)": data.get("product_overview", ""),
+            "Feature Overview (Agent 2)": data.get("feature_overview", ""),
+            **renamed_outputs
+        }
         session['combined_outputs'] = outputs
 
         if USING_REDIS:
@@ -250,6 +263,7 @@ def page4():
 
 
 @app.route("/download_doc", methods=["POST"])
+@app.route("/download_doc", methods=["POST"])
 def download_doc():
     doc = Document()
 
@@ -258,24 +272,20 @@ def download_doc():
     except:
         content = {}
 
-    # Load fallback if empty
-    if not content:
-        content = session.get("combined_outputs", {}) or {}
-        data = get_data(session.get("data_key", "")) or {}
-        content.update({
-            "Product Overview (Agent 1.1)": data.get("product_overview", ""),
-            "Feature Overview (Agent 2)": data.get("feature_overview", "")
-        })
-    else:
-        data = get_data(session.get("data_key", "")) or {}
-        content.setdefault("Product Overview (Agent 1.1)", data.get("product_overview", ""))
-        content.setdefault("Feature Overview (Agent 2)", data.get("feature_overview", ""))
+    # Always try to merge in overview sections
+    data = get_data(session.get("data_key", "")) or {}
+    content.setdefault("Product Overview (Agent 1.1)", data.get("product_overview", ""))
+    content.setdefault("Feature Overview (Agent 2)", data.get("feature_overview", ""))
 
     # Define preferred order
     section_order = [
         "Product Overview (Agent 1.1)",
         "Feature Overview (Agent 2)",
-        "Agent 4 1", "Agent 4 2", "Agent 4 3", "Agent 4 4", "Agent 4 5"
+        "Product Requirements / User Stories Generator",
+        "Operational Business Requirements Generator",
+        "Capability-Scoped Non-Functional Requirements Generator",
+        "Data Attribute Requirement Generator",
+        "LRC: Legal, Regulatory, and Compliance Synthesizer"
     ]
 
     # Sort content
@@ -283,7 +293,6 @@ def download_doc():
 
     for title, html in sorted_items:
         doc.add_heading(title, level=2)
-        # Use BeautifulSoup to extract and format clean text
         soup = BeautifulSoup(html, "html.parser")
         for element in soup.find_all(["p", "strong", "em", "ul", "ol", "li", "table", "tr", "td", "th"]):
             if element.name == "p":
@@ -293,12 +302,10 @@ def download_doc():
             elif element.name == "li":
                 doc.add_paragraph(f"• {element.get_text(strip=True)}")
             elif element.name == "table":
-                # Very basic table rendering
                 rows = element.find_all("tr")
                 for row in rows:
                     cells = [td.get_text(strip=True) for td in row.find_all(["td", "th"])]
                     doc.add_paragraph(" | ".join(cells))
-            # Optional: handle other tags similarly
 
     buffer = BytesIO()
     doc.save(buffer)
@@ -306,6 +313,7 @@ def download_doc():
     return send_file(buffer, as_attachment=True, download_name="PRD_Draft.docx")
 
 
+
 if __name__ == '__main__':
-    ort = int(os.environ.get("PORT", 7007))
+    ort = int(os.environ.get("PORT", 7001))
     app.run(host="0.0.0.0", port=ort, debug=True)

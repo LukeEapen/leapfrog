@@ -34,14 +34,19 @@
     .formatted-content::-webkit-scrollbar-thumb:hover {
       background: #555;
     }
+    .formatted-content table thead th {
+    background-color: #dc3545; /* Bootstrap's danger red */
+    color: white;
+    text-align: center;
+}
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body class="bg-light">
     <div class="container py-5">
-        <h2 class="mb-4">Prompt Picker</h2>
+        <h2 class="mb-4">Highest Level Requirement</h2>
         <div class="card shadow-sm mt-4">
-            <div class="card-header bg-secondary text-white">Highest Order Requirement</div>
+            <div class="card-header bg-secondary text-white">High Priority Requirement</div>
             <div class="card-body">
                 <div id="highestOrderRender" class="formatted-content"></div>
                 <input type="hidden" id="highestOrderInput" 
@@ -52,28 +57,12 @@
       
         <!-- Loading Spinner with Timer -->
         <div id="loadingSpinner" class="d-flex align-items-center mb-3" style="display: none;">
-        <div class="spinner-border text-danger me-2" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
+
         <span id="loadingTimer">⏳ 0s</span>
         </div>
         <form method="POST">
-            <div class="mb-3">
-                <label class="form-label">Select Prompts:</label><br>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="prompts" value="Feature Summary">
-                    <label class="form-check-label">Feature Summary</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="prompts" value="Business Goals">
-                    <label class="form-check-label">Business Goals</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="prompts" value="Technical Challenges">
-                    <label class="form-check-label">Technical Challenges</label>
-                </div>
-                <!-- Add more checkboxes as needed -->
-            </div>
+          
+            <a href="/page2" class="btn btn-secondary w-100 mb-3">← Back to Review Outputs</a>
             <button type="submit" class="btn btn-danger btn-lg w-100" onclick="startLoading()">Generate PRD Draft</button>
         </form>
     </div>
@@ -94,15 +83,32 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log(`Raw data for ${inputId}:`, content);
 
             if (content) {
-                const renderedContent = marked.parse(content);
-                console.log(`Rendered content for ${inputId}:`, renderedContent);
+                function renderPlainTextTable(rawText) {
+                const lines = rawText.trim().split("\n");
+                const rows = lines.map(line => {
+                    const cols = line.split("|").map(c => c.trim()).filter(c => c.length);
+                    return cols.length ? `<tr>${cols.map(c => `<td>${c}</td>`).join("")}</tr>` : "";
+                }).filter(row => row);
+
+                if (!rows.length) return "<p>No table content.</p>";
+
+                return `
+                    <table class="table table-bordered table-sm table-striped">
+      
+                    <tbody>${rows.join("")}</tbody>
+                    </table>`;
+                }
+
+                const renderedContent = renderPlainTextTable(content);
                 renderDiv.innerHTML = renderedContent;
 
                 // Apply Bootstrap classes to any generated tables
                 renderDiv.querySelectorAll("table").forEach(table => {
-                table.classList.add("table", "table-bordered", "table-sm", "table-striped");
-                table.style.marginTop = "1rem";
-                table.style.fontSize = "0.9rem";
+                    const firstRow = table.querySelector("tr");
+                    const thead = document.createElement("thead");
+                    thead.appendChild(firstRow.cloneNode(true));
+                    table.insertBefore(thead, table.firstChild);
+                    firstRow.remove();
                 });
             } else {
                 renderDiv.innerHTML = '<p class="text-muted">No content available</p>';

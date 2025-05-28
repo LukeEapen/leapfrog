@@ -18,8 +18,9 @@
       display: none;
       justify-content: center;
       align-items: center;
-      gap: 1rem;
       margin-top: 1rem;
+      font-weight: 500;
+      font-size: 1.1rem;
     }
 
     .formatted-content {
@@ -65,6 +66,7 @@
 <body class="bg-light">
   <div class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
+      <a href="/page3" class="btn btn-outline-secondary me-2">← Back to Prompts</a>
       <h3 class="mb-0">Final PRD Draft Output</h3>
       <div>
 
@@ -73,20 +75,32 @@
     </div>
 
     <div id="loadingSpinner" class="d-flex text-muted">
-      <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
       <span id="loadingTimer">⏳ 0s</span>
     </div>
 
     <!-- Replace the existing card-body content with this -->
     <div class="card shadow-sm" id="docContent">
       <div class="card-body">
-        {% for key, output in outputs.items() %}
-        <h5 class="text-primary mt-4">{{ key.replace('_', ' ').title() }}</h5>
-        <div class="formatted-content" id="{{ key }}_render"></div>
-        <input type="hidden" id="{{ key }}_input" value="{{ output | tojson | safe }}" data-raw="{{ output }}">
+        {% set titles = {
+          'product_overview': 'Product Overview (Agent 1.1)',
+          'feature_overview': 'Feature Overview (Agent 2)',
+          'agent_4_1': 'Product Requirements / User Stories (Agent 4.1)',
+          'agent_4_2': 'Operational Business Requirements (Agent 4.2)',
+          'agent_4_3': 'Non-Functional Requirements (Agent 4.3)',
+          'agent_4_4': 'Data Attribute Requirement (Agent 4.4)',
+          'agent_4_5': 'LRC: Legal, Regulatory, and Compliance (Agent 4.5)'
+        } %}
+
+        {% set key_order = ['product_overview', 'feature_overview', 'agent_4_1', 'agent_4_2', 'agent_4_3', 'agent_4_4', 'agent_4_5'] %}
+
+        {% for key in key_order %}
+          {% if outputs[key] and titles[key] %}
+            <h5 class="text-primary mt-4">{{ titles[key] }}</h5>
+            <div class="formatted-content" id="{{ key }}_render"></div>
+            <input type="hidden" id="{{ key }}_input" value="{{ outputs[key] | tojson | safe }}" data-raw="{{ outputs[key] }}">
+          {% endif %}
         {% endfor %}
+
       </div>
     </div>
   </div>
@@ -155,38 +169,35 @@
     function downloadDoc() {
       try {
         const sections = {};
-        // First, get all input elements to ensure we have all sections
+        const titleMap = {
+          'product_overview': 'Product Overview (Agent 1.1)',
+          'feature_overview': 'Feature Overview (Agent 2)',
+          'agent_4_1': 'Product Requirements / User Stories Generator',
+          'agent_4_2': 'Operational Business Requirements Generator',
+          'agent_4_3': 'Capability-Scoped Non-Functional Requirements Generator',
+          'agent_4_4': 'Data Attribute Requirement Generator',
+          'agent_4_5': 'LRC: Legal, Regulatory, and Compliance Synthesizer'
+        };
+
         document.querySelectorAll('[id$="_input"]').forEach(input => {
           const key = input.id.replace('_input', '');
           const renderDiv = document.getElementById(`${key}_render`);
+          const rawContent = input.getAttribute('data-raw') || "";
+          const sectionTitle = titleMap[key] || key;
 
-          if (renderDiv) {
-            // Convert the section name to title case for consistency
-            const sectionTitle = key.split('_')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ');
-
-            // Get the raw content from data-raw attribute first
-            const rawContent = input.getAttribute('data-raw');
-            if (rawContent) {
-              // Use marked to parse the raw content
-              sections[sectionTitle] = marked.parse(rawContent);
-            } else {
-              // Fallback to rendered content
-              sections[sectionTitle] = renderDiv.innerHTML || "";
-            }
-
-            console.log(`Added section ${sectionTitle}:`, sections[sectionTitle].substring(0, 100) + '...'); // Debug log
+          if (rawContent) {
+            sections[sectionTitle] = marked.parse(rawContent);
+          } else {
+            sections[sectionTitle] = renderDiv?.innerHTML || "";
           }
+
+          console.log(`Added section ${sectionTitle}:`, sections[sectionTitle].substring(0, 100) + '...');
         });
 
         if (Object.keys(sections).length === 0) {
           throw new Error('No content sections found');
         }
 
-        console.log('Total sections found:', Object.keys(sections).length);
-
-        // Show loading spinner while downloading
         const spinner = document.getElementById('loadingSpinner');
         if (spinner) spinner.style.display = 'flex';
 
@@ -210,18 +221,14 @@
             alert('Failed to download document. Please try again.');
           })
           .finally(() => {
-            // Hide loading spinner
             if (spinner) spinner.style.display = 'none';
           });
+
       } catch (error) {
         console.error('Error preparing download:', error);
         alert('Error preparing document for download: ' + error.message);
       }
     }
-
-    document.querySelectorAll('form[method="post"], form[method="get"]').forEach(form => {
-      form.addEventListener('submit', () => showLoading());
-    });
 
   </script>
 </body>
