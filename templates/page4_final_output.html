@@ -63,7 +63,8 @@
       padding: 0.75rem 1rem;
       border-radius: 0.5rem;
       margin-top: 2rem;
-      border-left: 5px solid #0d6efd; /* Bootstrap primary blue */
+      border-left: 5px solid #dc3545; /* Changed from #0d6efd to Bootstrap's danger red */
+      color: #dc3545; /* Added to make the text red as well */
     }
 
     body {
@@ -102,13 +103,13 @@
     <div class="card shadow-sm" id="docContent">
       <div class="card-body">
         {% set titles = {
-          'product_overview': 'Product Overview (Agent 1.1)',
-          'feature_overview': 'Feature Overview (Agent 2)',
-          'agent_4_1': 'Product Requirements / User Stories (Agent 4.1)',
-          'agent_4_2': 'Operational Business Requirements (Agent 4.2)',
-          'agent_4_3': 'Non-Functional Requirements (Agent 4.3)',
-          'agent_4_4': 'Data Attribute Requirement (Agent 4.4)',
-          'agent_4_5': 'LRC: Legal, Regulatory, and Compliance (Agent 4.5)'
+          'product_overview': 'Product Overview',
+          'feature_overview': 'Feature Overview',
+          'agent_4_1': 'Product Requirements / User Stories',
+          'agent_4_2': 'Functional Requirements',
+          'agent_4_3': 'Non-Functional Requirements',
+          'agent_4_4': 'Data Requirements',
+          'agent_4_5': 'Legal, Regulatory, and Compliance Requirements'
         } %}
 
         {% set key_order = ['product_overview', 'feature_overview', 'agent_4_1', 'agent_4_2', 'agent_4_3', 'agent_4_4', 'agent_4_5'] %}

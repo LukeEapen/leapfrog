@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,127 +8,198 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
     <script src="{{ url_for('static', filename='js/global.js') }}"></script>
-     <style>
-            .formatted-content {
-      min-height: calc(1.5rem * 10); /* Minimum height of 10 rows */
-      max-height: calc(1.5rem * 30); /* Maximum height of 30 rows */
-      height: calc(1.5rem * 10); /* Initial height of 10 rows */
-      overflow-y: auto;
-      padding: 1rem;
-      border: 1px solid #dee2e6;
-      border-radius: 0.25rem;
-      resize: vertical; /* Allows vertical resizing */
-      background-color: white;
-      margin-bottom: 1rem;
-    }
-    .formatted-content::-webkit-scrollbar {
-      width: 8px;
-    }
-    .formatted-content::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 4px;
-    }
-    .formatted-content::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 4px;
-    }
-    .formatted-content::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-    .formatted-content table thead th {
-    background-color: #dc3545; /* Bootstrap's danger red */
-    color: white;
-    text-align: center;
-}
+    <style>
+        .formatted-content {
+            min-height: calc(1.5rem * 10);
+            /* Minimum height of 10 rows */
+            max-height: calc(1.5rem * 30);
+            /* Maximum height of 30 rows */
+            height: calc(1.5rem * 10);
+            /* Initial height of 10 rows */
+            overflow-y: auto;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            resize: vertical;
+            /* Allows vertical resizing */
+            background-color: white;
+            margin-bottom: 1rem;
+        }
+
+        .formatted-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .formatted-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .formatted-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .formatted-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .formatted-content table thead th {
+            background-color: #dc3545;
+            /* Bootstrap's danger red */
+            color: white;
+            text-align: center;
+        }
+
+        .btn-align-end {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .loading-text,
+        .default-text {
+            display: inline-block;
+        }
+
+        .d-none {
+            display: none !important;
+        }
+
+        .btn-danger:disabled {
+            background-color: #6c757d !important;
+            border-color: #6c757d !important;
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
+
 <body class="bg-light">
     <div class="container py-5">
-        <h2 class="mb-4">Highest Level Requirement</h2>
+        <h2 class="mb-4">High Level Requirements</h2>
         <div class="card shadow-sm mt-4">
-            <div class="card-header bg-secondary text-white">High Priority Requirement</div>
+            <a href="/page2" class="btn btn-light border">← Back to Inputs</a>
+            <div class="card-header bg-secondary text-white">High Level Requirements</div>
             <div class="card-body">
                 <div id="highestOrderRender" class="formatted-content"></div>
-                <input type="hidden" id="highestOrderInput" 
-                       value="{{ highest_order | tojson | safe }}"
-                       data-raw="{{ highest_order }}">
+                <input type="hidden" id="highestOrderInput" value="{{ highest_order | tojson | safe }}"
+                    data-raw="{{ highest_order }}">
             </div>
         </div>
-      
+
+
+        <form method="POST">
+            <div class="d-grid mt-4">
+                <button type="submit" id="submitBtn" class="btn btn-danger btn-lg w-100" onclick="handleSubmit(event)">
+                    <span class="default-text">Generate PRD Draft</span>
+                    <span class="loading-text d-none">Processing...</span>
+                </button>
+            </div>
+        </form>
         <!-- Loading Spinner with Timer -->
         <div id="loadingSpinner" class="d-flex align-items-center mb-3" style="display: none;">
 
-        <span id="loadingTimer">⏳ 0s</span>
+            <span id="loadingTimer">⏳ 0s</span>
         </div>
-        <form method="POST">
-          
-            <a href="/page2" class="btn btn-secondary w-100 mb-3">← Back to Review Outputs</a>
-            <button type="submit" class="btn btn-danger btn-lg w-100" onclick="startLoading()">Generate PRD Draft</button>
-        </form>
     </div>
     <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Helper function to render markdown content
-    function renderMarkdownContent(inputId, renderId) {
-        try {
-            const input = document.getElementById(inputId);
-            const renderDiv = document.getElementById(renderId);
-            
-            if (!input || !renderDiv) {
-                console.error(`Required elements not found for ${inputId}`);
-                return;
-            }
+        document.addEventListener('DOMContentLoaded', function () {
+            // Helper function to render markdown content
+            function renderMarkdownContent(inputId, renderId) {
+                try {
+                    const input = document.getElementById(inputId);
+                    const renderDiv = document.getElementById(renderId);
 
-            let content = input.getAttribute('data-raw');
-            console.log(`Raw data for ${inputId}:`, content);
+                    if (!input || !renderDiv) {
+                        console.error(`Required elements not found for ${inputId}`);
+                        return;
+                    }
 
-            if (content) {
-                function renderPlainTextTable(rawText) {
-                const lines = rawText.trim().split("\n");
-                const rows = lines.map(line => {
-                    const cols = line.split("|").map(c => c.trim()).filter(c => c.length);
-                    return cols.length ? `<tr>${cols.map(c => `<td>${c}</td>`).join("")}</tr>` : "";
-                }).filter(row => row);
+                    let content = input.getAttribute('data-raw');
+                    console.log(`Raw data for ${inputId}:`, content);
 
-                if (!rows.length) return "<p>No table content.</p>";
+                    if (content) {
+                        function renderPlainTextTable(rawText) {
+                            const lines = rawText.trim().split("\n");
+                            const rows = lines.map(line => {
+                                const cols = line.split("|").map(c => c.trim()).filter(c => c.length);
+                                return cols.length ? `<tr>${cols.map(c => `<td>${c}</td>`).join("")}</tr>` : "";
+                            }).filter(row => row);
 
-                return `
+                            if (!rows.length) return "<p>No table content.</p>";
+
+                            return `
                     <table class="table table-bordered table-sm table-striped">
       
                     <tbody>${rows.join("")}</tbody>
                     </table>`;
+                        }
+
+                        const renderedContent = renderPlainTextTable(content);
+                        renderDiv.innerHTML = renderedContent;
+
+                        // Apply Bootstrap classes to any generated tables
+                        renderDiv.querySelectorAll("table").forEach(table => {
+                            const firstRow = table.querySelector("tr");
+                            const thead = document.createElement("thead");
+                            thead.appendChild(firstRow.cloneNode(true));
+                            table.insertBefore(thead, table.firstChild);
+                            firstRow.remove();
+                        });
+                    } else {
+                        renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
+                    }
+                } catch (error) {
+                    console.error(`Error rendering ${inputId}:`, error);
+                    document.getElementById(renderId).innerHTML =
+                        '<div class="alert alert-danger">' +
+                        '<h6>Error Details:</h6>' +
+                        '<pre>' + error.toString() + '</pre>' +
+                        '</div>';
                 }
-
-                const renderedContent = renderPlainTextTable(content);
-                renderDiv.innerHTML = renderedContent;
-
-                // Apply Bootstrap classes to any generated tables
-                renderDiv.querySelectorAll("table").forEach(table => {
-                    const firstRow = table.querySelector("tr");
-                    const thead = document.createElement("thead");
-                    thead.appendChild(firstRow.cloneNode(true));
-                    table.insertBefore(thead, table.firstChild);
-                    firstRow.remove();
-                });
-            } else {
-                renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
             }
-        } catch (error) {
-            console.error(`Error rendering ${inputId}:`, error);
-            document.getElementById(renderId).innerHTML = 
-                '<div class="alert alert-danger">' +
-                '<h6>Error Details:</h6>' +
-                '<pre>' + error.toString() + '</pre>' +
-                '</div>';
+
+            // Render the highest order requirement
+            renderMarkdownContent('highestOrderInput', 'highestOrderRender');
+        });
+        function handleSubmit(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const form = event.target.closest('form');
+
+            // Check form validity
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const defaultText = submitBtn.querySelector('.default-text');
+            const loadingText = submitBtn.querySelector('.loading-text');
+
+            // Disable the button
+            submitBtn.disabled = true;
+            submitBtn.classList.remove('btn-danger');
+            submitBtn.classList.add('btn-secondary');
+            // Show loading text
+            defaultText.classList.add('d-none');
+            loadingText.classList.remove('d-none');
+
+            // Start the spinner
+            startSpinner();
+
+            // Submit the form programmatically
+            form.submit();
         }
-    }
-
-    // Render the highest order requirement
-    renderMarkdownContent('highestOrderInput', 'highestOrderRender');
-});
-
-// ... existing loading spinner code ...
-</script>
+        // ... existing loading spinner code ...
+    </script>
 </body>
+
 </html>

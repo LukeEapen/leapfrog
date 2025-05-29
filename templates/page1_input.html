@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>PRD Assistant Input</title>
@@ -12,6 +13,7 @@
       font-family: 'Segoe UI', sans-serif;
       padding: 2rem;
     }
+
     .input-card {
       background: white;
       padding: 2rem;
@@ -20,9 +22,11 @@
       max-width: 960px;
       margin: 0 auto;
     }
+
     .form-label {
       font-weight: 500;
     }
+
     .section-title {
       background: #d3d3d3;
       font-weight: 600;
@@ -30,12 +34,14 @@
       border-radius: 0.25rem;
       margin-bottom: 1rem;
     }
+
     .instructions-box {
       background: #f1f1f1;
       padding: 1rem;
       border: 1px solid #ccc;
       margin-bottom: 2rem;
     }
+
     #loadingSpinner {
       display: none;
       justify-content: center;
@@ -44,27 +50,52 @@
       font-weight: 500;
       font-size: 1.1rem;
     }
+
     .btn-align-end {
       display: flex;
       justify-content: flex-end;
       margin-top: 1rem;
     }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .loading-text,
+    .default-text {
+      display: inline-block;
+    }
+
+    .d-none {
+      display: none !important;
+    }
+    .btn-danger:disabled {
+      background-color: #6c757d !important;
+      border-color: #6c757d !important;
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
   </style>
   <script src="{{ url_for('static', filename='js/global.js') }}"></script>
 </head>
+
 <body>
   <div class="input-card">
-    <h4 class="mb-4">Wireframes: UI for generic PRD drafting solution – first page (uploading key inputs and providing context)</h4>
+    <h4 class="mb-4">PRD drafting solution | Context and file upload</h4>
     <div class="section-title">Instructions: Using the PRD drafting solution</div>
     <div class="instructions-box">
-      <p>This agentic AI assistant accelerates the creation of a first-draft Product Requirements Document (PRD) based on the product and features you define. By guiding you through a structured input process, it delivers a clear and actionable draft – freeing you to focus on refinement, alignment, and execution.</p>
+      <p>This agentic AI assistant accelerates the creation of a first-draft Product Requirements Document (PRD) based
+        on the product and features you define. By guiding you through a structured input process, it delivers a clear
+        and actionable draft – freeing you to focus on refinement, alignment, and execution.</p>
       <ul>
-        <li>Provide relevant context, including industry, product details, + documentation that define the product’s functionality – <strong>provide as much detail & context as possible</strong></li>
-        <li>Upload any supporting materials to strengthen the tool’s understanding and improve the quality of the output</li>
+        <li>Provide relevant context, including industry, product details, + documentation that define the product’s
+          functionality – <strong>provide as much detail & context as possible</strong></li>
+        <li>Upload any supporting materials to strengthen the tool’s understanding and improve the quality of the output
+        </li>
         <li>Review and refine the tool’s understanding of the product & features</li>
-        <li>Select the components of the PRD that you would like to have included in your PRD draft</li>
-        <li>View initial PRD draft, selecting components to regenerate if necessary</li>
-        <li>Once all sections are complete, download your initial PRD draft, ready for refinement and stakeholder feedback</li>
+        <li>Once all sections are complete, download your initial PRD draft, ready for refinement and stakeholder
+          feedback</li>
       </ul>
     </div>
 
@@ -73,42 +104,85 @@
       <div class="row g-3 mb-4">
         <div class="col-md-6">
           <label class="form-label">Industry</label>
-          <input type="text" class="form-control" name="industry" placeholder="Write industry name here (e.g., Financial Services)" required>
+          <input type="text" class="form-control" name="industry"
+            placeholder="Write industry name here (e.g., Financial Services)" required>
         </div>
-    
+
         <div class="col-md-6">
           <label class="form-label">Sector</label>
           <input type="text" class="form-control" name="sector" placeholder="Enter sector details" required>
         </div>
         <div class="col-md-6">
           <label class="form-label">Geography</label>
-          <input type="text" class="form-control" name="geography" placeholder="Write countries that this product will be used in (e.g., USA, Canada)" required>
+          <input type="text" class="form-control" name="geography"
+            placeholder="Write countries that this product will be used in (e.g., USA, Canada)" required>
         </div>
-         <div class="col-12">
+        <div class="col-12">
           <label class="form-label text-muted">Additional context (Disabled)</label>
-          <input type="file" class="form-control" name="context_file" accept=".txt,.doc,.docx" disabled style="background-color: #e9ecef; cursor: not-allowed;">
+          <input type="file" class="form-control" name="context_file" accept=".txt,.doc,.docx" disabled
+            style="background-color: #e9ecef; cursor: not-allowed;">
           <small class="text-muted">(Feature temporarily disabled)</small>
         </div>
       </div>
 
       <div class="mb-4">
         <label class="form-label">What is the product / platform that you are trying to build?</label>
-        <textarea name="intent" class="form-control" rows="4" placeholder="Insert product description here. Include purpose, target audience, platform (web/mobile/etc.), and any relevant context – provide as much detail for your product as possible to give the tool sufficient context to write the PRD." required></textarea>
+        <textarea name="intent" class="form-control" rows="4"
+          placeholder="Insert product description here. Include purpose, target audience, platform (web/mobile/etc.), and any relevant context – provide as much detail for your product as possible to give the tool sufficient context to write the PRD."
+          required></textarea>
       </div>
       <div class="mb-4">
         <label class="form-label">What specific features will this PRD cover?</label>
-        <textarea name="features" class="form-control" rows="4" placeholder="Insert detailed description of the feature here. Be sure to describe what the feature does, how users interact with it, what it must integrate with or support technically, what data it requires or generates, and any important performance, security, or UX constraints." required></textarea>
+        <textarea name="features" class="form-control" rows="4"
+          placeholder="Insert detailed description of the feature here. Be sure to describe what the feature does, how users interact with it, what it must integrate with or support technically, what data it requires or generates, and any important performance, security, or UX constraints."
+          required></textarea>
       </div>
       <div class="d-grid mt-4">
-        <button type="submit" class="btn btn-danger btn-lg w-100" onclick="startSpinner()">Submit</button>
+        <button type="submit" id="submitBtn" class="btn btn-danger btn-lg w-100" onclick="handleSubmit(event)">
+          <span class="default-text">Submit</span>
+          <span class="loading-text d-none">Processing...</span>
+        </button>
       </div>
     </form>
 
     <div id="loadingSpinner" class="d-flex text-muted">
-  
+
       <span id="loadingTimer">⏳ 0s</span>
     </div>
   </div>
 
 </body>
+<script>
+function handleSubmit(event) {
+    event.preventDefault(); // Prevent default form submission
+    
+    const form = event.target.closest('form');
+    
+    // Check form validity
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const defaultText = submitBtn.querySelector('.default-text');
+    const loadingText = submitBtn.querySelector('.loading-text');
+    
+    // Disable the button
+    submitBtn.disabled = true;
+    submitBtn.classList.remove('btn-danger');
+    submitBtn.classList.add('btn-secondary');
+    
+    // Show loading text
+    defaultText.classList.add('d-none');
+    loadingText.classList.remove('d-none');
+    
+    // Start the spinner
+    startSpinner();
+    
+    // Submit the form programmatically
+    form.submit();
+}
+</script>
+
 </html>
