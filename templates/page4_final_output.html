@@ -102,7 +102,7 @@
     <!-- Replace the existing card-body content with this -->
     <div class="card shadow-sm" id="docContent">
       <div class="card-body">
-        {% set titles = {
+        {% set section_titles = {
           'product_overview': 'Product Overview',
           'feature_overview': 'Feature Overview',
           'agent_4_1': 'Product Requirements / User Stories',
@@ -112,16 +112,15 @@
           'agent_4_5': 'Legal, Regulatory, and Compliance Requirements'
         } %}
 
-        {% set key_order = ['product_overview', 'feature_overview', 'agent_4_1', 'agent_4_2', 'agent_4_3', 'agent_4_4', 'agent_4_5'] %}
+        {% set key_order = section_titles.keys() %}
 
         {% for key in key_order %}
-          {% if outputs[key] and titles[key] %}
-            <h5 class="text-primary mt-4">{{ titles[key] }}</h5>
-            <div class="formatted-content" id="{{ key }}_render"></div>
+          {% if outputs[key] %}
+            <h4 class="text-primary border-bottom pb-1 mt-4">{{ section_titles[key] }}</h4>
+            <div class="formatted-content bg-white px-3 py-2 border rounded" id="{{ key }}_render"></div>
             <input type="hidden" id="{{ key }}_input" value="{{ outputs[key] | tojson | safe }}" data-raw="{{ outputs[key] }}">
           {% endif %}
         {% endfor %}
-
       </div>
     </div>
   </div>

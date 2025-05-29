@@ -7,6 +7,10 @@ import openai, os, logging, time, json, uuid, asyncio
 from datetime import timedelta
 from concurrent.futures import ThreadPoolExecutor
 from bs4 import BeautifulSoup 
+from markdown2 import markdown
+from bs4 import BeautifulSoup
+from docx.shared import Pt
+from docx.enum.style import WD_STYLE_TYPE
 
 # Try Redis; fallback to file storage
 try:
@@ -263,21 +267,17 @@ def page4():
 
 
 @app.route("/download_doc", methods=["POST"])
-@app.route("/download_doc", methods=["POST"])
 def download_doc():
     doc = Document()
-
     try:
         content = request.get_json(force=True)
     except:
         content = {}
 
-    # Always try to merge in overview sections
     data = get_data(session.get("data_key", "")) or {}
     content.setdefault("Product Overview (Agent 1.1)", data.get("product_overview", ""))
     content.setdefault("Feature Overview (Agent 2)", data.get("feature_overview", ""))
 
-    # Define preferred order
     section_order = [
         "Product Overview (Agent 1.1)",
         "Feature Overview (Agent 2)",
@@ -288,24 +288,22 @@ def download_doc():
         "LRC: Legal, Regulatory, and Compliance Synthesizer"
     ]
 
-    # Sort content
     sorted_items = [(key, content[key]) for key in section_order if key in content]
 
-    for title, html in sorted_items:
+    for title, raw_markdown in sorted_items:
         doc.add_heading(title, level=2)
-        soup = BeautifulSoup(html, "html.parser")
-        for element in soup.find_all(["p", "strong", "em", "ul", "ol", "li", "table", "tr", "td", "th"]):
-            if element.name == "p":
-                doc.add_paragraph(element.get_text(strip=True))
-            elif element.name == "strong":
-                doc.add_paragraph(element.get_text(strip=True)).bold = True
-            elif element.name == "li":
-                doc.add_paragraph(f"• {element.get_text(strip=True)}")
-            elif element.name == "table":
-                rows = element.find_all("tr")
-                for row in rows:
-                    cells = [td.get_text(strip=True) for td in row.find_all(["td", "th"])]
-                    doc.add_paragraph(" | ".join(cells))
+        html_content = markdown(raw_markdown, extras=["fenced-code-blocks", "tables"])
+        soup = BeautifulSoup(html_content, "html.parser")
+        for el in soup.find_all(["h1", "h2", "h3", "strong", "p", "li", "ul", "ol"]):
+            text = el.get_text(strip=True)
+            if el.name == "strong":
+                doc.add_paragraph(text).runs[0].bold = True
+            elif el.name == "li":
+                doc.add_paragraph(f"• {text}", style="List Bullet")
+            elif el.name in ["h1", "h2", "h3"]:
+                doc.add_heading(text, level=3)
+            else:
+                doc.add_paragraph(text)
 
     buffer = BytesIO()
     doc.save(buffer)
