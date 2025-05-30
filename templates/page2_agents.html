@@ -123,21 +123,35 @@
       <div class="mb-4">
 
         <div class="card mb-4 shadow-sm">
-          <div class="card-header bg-secondary text-white">Product Overview</div>
+          <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <span>Product Overview</span>
+            <button type="button" class="btn btn-sm btn-light" onclick="toggleEdit('product')">
+              <span class="edit-text">Edit</span>
+              <span class="save-text d-none">Save Changes</span>
+            </button>
+          </div>
           <div class="card-body">
             <div id="productOverviewRender" class="formatted-content"></div>
+            <textarea id="productOverviewEditor" class="form-control d-none" rows="10"></textarea>
             <input type="hidden" name="product_overview" id="productOverviewInput"
               value="{{ agent11_output | tojson | safe }}" data-raw="{{ agent11_output }}">
           </div>
         </div>
-      </div>
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-secondary text-white">Feature Overview</div>
-        <div class="mb-4">
 
-          <div id="featureOverviewRender" class="formatted-content"></div>
-          <input type="hidden" name="feature_overview" id="featureOverviewInput"
-            value="{{ agent2_output | tojson | safe }}" data-raw="{{ agent2_output }}">
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <span>Feature Overview</span>
+            <button type="button" class="btn btn-sm btn-light" onclick="toggleEdit('feature')">
+              <span class="edit-text">Edit</span>
+              <span class="save-text d-none">Save Changes</span>
+            </button>
+          </div>
+          <div class="card-body">
+            <div id="featureOverviewRender" class="formatted-content"></div>
+            <textarea id="featureOverviewEditor" class="form-control d-none" rows="10"></textarea>
+            <input type="hidden" name="feature_overview" id="featureOverviewInput"
+              value="{{ agent2_output | tojson | safe }}" data-raw="{{ agent2_output }}">
+          </div>
         </div>
 
         <div class="d-grid mt-4">
@@ -223,6 +237,57 @@
       // Submit the form programmatically
       form.submit();
     }
+
+    function toggleEdit(type) {
+    const renderDiv = document.getElementById(`${type}OverviewRender`);
+    const editor = document.getElementById(`${type}OverviewEditor`);
+    const input = document.getElementById(`${type}OverviewInput`);
+    const btn = event.currentTarget;
+    const editText = btn.querySelector('.edit-text');
+    const saveText = btn.querySelector('.save-text');
+
+    if (editor.classList.contains('d-none')) {
+        // Switch to edit mode
+        editor.value = input.getAttribute('data-raw');
+        renderDiv.classList.add('d-none');
+        editor.classList.remove('d-none');
+        editText.classList.add('d-none');
+        saveText.classList.remove('d-none');
+    } else {
+        // Save changes and update via API
+        const newContent = editor.value;
+        const payload = {
+            type: type,
+            content: newContent
+        };
+
+        fetch('/update_content', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            
+            // Update the content
+            input.value = JSON.stringify(newContent);
+            input.setAttribute('data-raw', newContent);
+            renderDiv.innerHTML = marked.parse(newContent);
+            
+            // Switch back to view mode
+            renderDiv.classList.remove('d-none');
+            editor.classList.add('d-none');
+            editText.classList.remove('d-none');
+            saveText.classList.add('d-none');
+        })
+        .catch(error => {
+            alert('Error saving changes: ' + error.message);
+        });
+    }
+}
   </script>
 </body>
 

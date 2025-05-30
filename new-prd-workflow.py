@@ -196,6 +196,45 @@ def page2():
         agent2_output=data.get('feature_overview', '')
     )
 
+@app.route('/update_content', methods=['POST'])
+def update_content():
+    if not session.get('logged_in'):
+        return jsonify({'error': 'Not authenticated'}), 401
+        
+    try:
+        data = request.get_json()
+        content_type = data.get('type')
+        new_content = data.get('content')
+        
+        if not content_type or not new_content:
+            return jsonify({'error': 'Missing required fields'}), 400
+            
+        # Get stored data
+        stored_data = get_data(session.get('data_key', '')) or {}
+        
+        # Update content based on type
+        if content_type == 'product':
+            # Re-run Agent 1.1 with new content
+            new_response = call_agent(ASSISTANTS['agent_1_1'], new_content)
+            stored_data['product_overview'] = new_response
+        elif content_type == 'feature':
+            # Re-run Agent 2 with new content
+            new_response = call_agent(ASSISTANTS['agent_2'], new_content)
+            stored_data['feature_overview'] = new_response
+            
+        # Store updated data
+        if USING_REDIS:
+            redis_client.setex(session['data_key'], 3600, json.dumps(stored_data))
+        else:
+            with open(os.path.join(TEMP_DIR, f'prd_session_{session["data_key"]}.json'), 'w') as f:
+                json.dump(stored_data, f)
+                
+        return jsonify({'success': True, 'response': new_response})
+        
+    except Exception as e:
+        logging.error(f"Error updating content: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
 @app.route('/page3', methods=['GET', 'POST'])
 def page3():
     if not session.get('logged_in'): return redirect(url_for('login'))
@@ -279,13 +318,13 @@ def download_doc():
     content.setdefault("Feature Overview (Agent 2)", data.get("feature_overview", ""))
 
     section_order = [
-        "Product Overview (Agent 1.1)",
-        "Feature Overview (Agent 2)",
-        "Product Requirements / User Stories Generator",
-        "Operational Business Requirements Generator",
-        "Capability-Scoped Non-Functional Requirements Generator",
-        "Data Attribute Requirement Generator",
-        "LRC: Legal, Regulatory, and Compliance Synthesizer"
+        "Product Overview",
+        "Feature Overview",
+        "Product requirements",
+        "Functional requirements",
+        "Non-functional requirements",
+        "Data requirements",
+        "Legal, compliance, regulatory requirements"
     ]
 
     sorted_items = [(key, content[key]) for key in section_order if key in content]
