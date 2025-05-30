@@ -11,7 +11,9 @@ from markdown2 import markdown
 from bs4 import BeautifulSoup
 from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
-
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+import re
 # Try Redis; fallback to file storage
 try:
     import redis
@@ -39,8 +41,8 @@ ASSISTANTS = {
     'agent_1': 'asst_EvIwemZYiG4cCmYc7GnTZoQZ',
     'agent_1_1': 'asst_sW7IMhE5tQ78Ylx0zQkh6YnZ',
     'agent_2': 'asst_t5hnaKy1wPvD48jTbn8Mx45z',
-    'agent_3': 'asst_EkihtJQe9qFiztRdRXPhiy2G',
-    'agent_4_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator – System Instructions
+    'agent_3': 'asst_EqkbMBdfOpUoEUaBPxCChVLR', #'asst_EkihtJQe9qFiztRdRXPhiy2G',
+    'agent_4_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator - System Instructions
     'agent_4_2': 'asst_CLBdcKGduMvSBM06MC1OJ7bF', # Agent 4.2: Operational Business Requirements Generator – System Instructions
     'agent_4_3': 'asst_61ITzgJTPqkQf4OFnnMnndNb', # Agent 4.3: Capability-Scoped Non-Functional Requirements Generator – System Instructions
     'agent_4_4': 'asst_pPFGsMMqWg04OSHNmyQ5oaAy', # Agent 4.4: Data Attribute Requirement Generator – System Instructions
@@ -132,6 +134,7 @@ def page1():
                     (ASSISTANTS['agent_2'], context),
                     (ASSISTANTS['agent_3'], context)
                 ]))
+
                 final_data = {
                     #"agent_1_output": a1,
                     "product_overview": a11,
@@ -305,6 +308,40 @@ def page4():
     return render_template('page4_final_output.html', outputs=outputs)
 
 
+
+def add_hyperlink(paragraph, url, text=None):
+    """Add a hyperlink to a paragraph."""
+    if text is None:
+        text = url
+
+    part = paragraph.part
+    r_id = part.relate_to(url, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink', is_external=True)
+
+    hyperlink = OxmlElement('w:hyperlink')
+    hyperlink.set(qn('r:id'), r_id)
+
+    new_run = OxmlElement('w:r')
+    rPr = OxmlElement('w:rPr')
+
+    color = OxmlElement('w:color')
+    color.set(qn('w:val'), '0000FF')
+    rPr.append(color)
+
+    underline = OxmlElement('w:u')
+    underline.set(qn('w:val'), 'single')
+    rPr.append(underline)
+
+    new_run.append(rPr)
+    new_run_text = OxmlElement('w:t')
+    new_run_text.text = text
+    new_run.append(new_run_text)
+    hyperlink.append(new_run)
+
+    paragraph._p.append(hyperlink)
+    return paragraph
+
+
+# Extract references from session outputs
 @app.route("/download_doc", methods=["POST"])
 def download_doc():
     doc = Document()
@@ -343,6 +380,40 @@ def download_doc():
                 doc.add_heading(text, level=3)
             else:
                 doc.add_paragraph(text)
+
+    # Extract references from session outputs
+    def extract_references_from_outputs(outputs):
+        refs = []
+        for content in outputs.values():
+            lines = content.splitlines()
+            in_refs = False
+            for line in lines:
+                if line.strip().lower().startswith("references"):
+                    in_refs = True
+                    continue
+                if in_refs and line.strip():
+                    # Match URL from markdown or plain link
+                    match = re.search(r'(https?://\S+)', line)
+                    if match:
+                        refs.append(match.group(1))
+                    else:
+                        refs.append(line.strip())
+        return refs
+
+     # Get stored outputs
+    session_outputs = get_data(session.get("data_key", "")).get("combined_outputs", {})
+    all_refs = extract_references_from_outputs(session_outputs)
+
+    # Append references page
+    if all_refs:
+        doc.add_page_break()
+        doc.add_heading("References", level=2)
+        for ref in all_refs:
+            p = doc.add_paragraph(style="List Bullet")
+            if ref.startswith("http"):
+                add_hyperlink(p, ref)
+            else:
+                p.add_run(ref)
 
     buffer = BytesIO()
     doc.save(buffer)
