@@ -7,47 +7,184 @@
     <title>Prompt Picker</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+
+    <!-- Add after existing links -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+
     <script src="{{ url_for('static', filename='js/global.js') }}"></script>
     <style>
+        :root {
+            --primary-red: #dc3545;
+            --primary-red-dark: #c82333;
+            --primary-grey: #343a40;
+            --secondary-grey: #6c757d;
+            --light-grey: #f8f9fa;
+            --gradient-red: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            --gradient-grey: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            --card-shadow: 0 8px 24px rgba(220, 53, 69, 0.12);
+            --border-radius: 0.75rem;
+            --transition-speed: 0.3s;
+            --white: #ffffff;
+            --table-header-bg: var(--gradient-red);
+            --card-header-bg: var(--gradient-grey);
+            --lightest-grey: #f8f9fa;
+        }
+
+        body {
+            background-color: #343a40 !important;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            padding: 2rem 1rem;
+        }
+
+        html,
+        body {
+            height: 100%;
+            background-color: #343a40 !important;
+        }
+
+        .container {
+            max-width: 1280px;
+            /* Increased from 1140px */
+            padding: 2rem 1rem;
+            width: 95%;
+            /* Added to ensure some margin on very wide screens */
+        }
+
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            transition: all var(--transition-speed) ease;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            min-width: 960px;
+            /* Added minimum width */
+            margin: 0 auto;
+            /* Center the card */
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            background: var(--white);
+            color: var(--primary-grey);
+            border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+            padding: 1.25rem 1.5rem;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header i {
+            color: var(--primary-red);
+        }
+
         .formatted-content {
-            min-height: calc(1.5rem * 10);
-            /* Minimum height of 10 rows */
-            max-height: calc(1.5rem * 30);
-            /* Maximum height of 30 rows */
-            height: calc(1.5rem * 10);
-            /* Initial height of 10 rows */
+            min-height: 200px;
+            max-height: 500px;
+            padding: 1.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 0.75rem;
+            background: var(--white);
+            font-size: 1rem;
+            line-height: 1.6;
             overflow-y: auto;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            resize: vertical;
-            /* Allows vertical resizing */
-            background-color: white;
+            margin: 1rem 0;
+        }
+
+        .formatted-content table {
+            width: 100%;
             margin-bottom: 1rem;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
         }
 
-        .formatted-content::-webkit-scrollbar {
-            width: 8px;
+        .formatted-content thead th {
+            background: var(--gradient-red);
+            color: var(--white);
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+            border: none;
         }
 
-        .formatted-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
+        .formatted-content tbody td {
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+            background: white;
         }
 
-        .formatted-content::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
+        /* Fix table header corners */
+        .formatted-content table thead tr:first-child th:first-child {
+            border-top-left-radius: 0.5rem;
         }
 
-        .formatted-content::-webkit-scrollbar-thumb:hover {
-            background: #555;
+        .formatted-content table thead tr:first-child th:last-child {
+            border-top-right-radius: 0.5rem;
         }
 
-        .formatted-content table thead th {
-            background-color: #dc3545;
-            /* Bootstrap's danger red */
+        .formatted-content tbody tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+
+        .btn-back {
+            position: relative;
+            padding-left: 2rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-back::before {
+            content: "←";
+            position: absolute;
+            left: 1rem;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-back:hover::before {
+            transform: translateX(-3px);
+        }
+
+        /* Update these styles in your existing <style> section */
+
+        #submitBtn {
+            background: var(--gradient-red);
+            border: none;
+            height: 3.5rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: var(--border-radius);
+            transition: all var(--transition-speed) ease;
             color: white;
+        }
+
+        #submitBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+            background: linear-gradient(135deg, #c82333 0%, #dc3545 100%);
+        }
+
+        #submitBtn:disabled {
+            background: var(--secondary-grey);
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.65;
+        }
+
+        #loadingSpinner {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-top: 1rem;
+            box-shadow: var(--card-shadow);
             text-align: center;
         }
 
@@ -77,36 +214,130 @@
             opacity: 0.65;
             cursor: not-allowed;
         }
+
+        /* Add responsive adjustment for smaller screens */
+        @media (max-width: 992px) {
+            .card {
+                min-width: auto;
+                /* Remove min-width on smaller screens */
+                width: 100%;
+                /* Take full width */
+            }
+
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        /* Add new style for the header box */
+        .page-title-box {
+            background: var(--lightest-grey);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .page-title-box h2 {
+            color: var(--primary-grey);
+            margin: 0;
+        }
+
+        /* Add these styles in your existing <style> section */
+
+        #loadingSpinner {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
+
+        .loading-animation {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.98);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .white-card-wrapper {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            margin-top: 1rem;
+        }
+
+        .formatted-content h3 {
+            background: #ffffff;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border-left: 5px solid var(--primary-red);
+            color: var(--primary-red);
+            border-radius: 0.5rem;
+            font-weight: 600;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body class="bg-light">
-    <div class="container py-5">
-        <h2 class="mb-4">High Level Requirements</h2>
-        <div class="card shadow-sm mt-4">
-            <a href="/page2" class="btn btn-light border">← Back to Inputs</a>
-            <div class="card-header bg-secondary text-white">High Level Requirements</div>
-            <div class="card-body">
-                <div id="highestOrderRender" class="formatted-content"></div>
-                <input type="hidden" id="highestOrderInput" value="{{ highest_order | tojson | safe }}"
-                    data-raw="{{ highest_order }}">
+    <div class="white-card-wrapper p-4 rounded shadow-sm">
+        <div class="container py-5">
+            <div class="mb-4 d-flex justify-content-between align-items-center">
+                <a href="/page2" class="btn btn-light btn-back border">Back to Review</a>
+                <h2 class="text-primary fw-semibold mb-0">High Level Requirements</h2>
+                <div style="width: 100px;"></div>
             </div>
-        </div>
 
-
-        <form method="POST">
-            <div class="d-grid mt-4">
-                <button type="submit" id="submitBtn" class="btn btn-danger btn-lg w-100" onclick="handleSubmit(event)">
-                    <span class="default-text">Generate PRD Draft</span>
-                    <span class="loading-text d-none">Processing...</span>
-                </button>
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <i class="bi bi-list-check me-2"></i>Requirements Overview
+                </div>
+                <div class="card-body px-4 py-3" style="width:100%;">
+                    <div id="highestOrderRender" class="formatted-content"></div>
+                    <input type="hidden" id="highestOrderInput" value="{{ highest_order | tojson | safe }}"
+                        data-raw="{{ highest_order }}">
+                </div>
             </div>
-        </form>
-        <!-- Loading Spinner with Timer -->
-        <div id="loadingSpinner" class="d-flex align-items-center mb-3" style="display: none;">
 
-            <span id="loadingTimer">⏳ 0s</span>
+            <form method="POST" class="mt-4">
+                <div class="d-grid">
+                    <button type="submit" id="submitBtn" class="btn btn-lg" onclick="handleSubmit(event)">
+                        <span class="default-text">
+                            <i class="bi bi-check-circle me-2"></i>Approve & Generate PRD Draft
+                        </span>
+                        <span class="loading-text d-none">
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing...
+                        </span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Replace the existing loadingSpinner div with this -->
+            <div id="loadingSpinner" class="d-none text-center mt-4">
+                <div class="d-flex align-items-center justify-content-center bg-white p-3 rounded shadow-sm">
+                    <div class="spinner-border text-danger me-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span id="loadingTimer" class="fs-5 text-danger">⏳ 0s</span>
+                </div>
+            </div>
+
         </div>
     </div>
     <script>
@@ -128,7 +359,12 @@
                     if (content) {
                         function renderPlainTextTable(rawText) {
                             const lines = rawText.trim().split("\n");
-                            const rows = lines.map(line => {
+                            const cleanedLines = lines.filter((line, idx) => {
+                                if (idx === 1) return false; // remove markdown dash row
+                                return true;
+                            });
+
+                            const rows = cleanedLines.map(line => {
                                 const cols = line.split("|").map(c => c.trim()).filter(c => c.length);
                                 return cols.length ? `<tr>${cols.map(c => `<td>${c}</td>`).join("")}</tr>` : "";
                             }).filter(row => row);
@@ -148,10 +384,16 @@
                         // Apply Bootstrap classes to any generated tables
                         renderDiv.querySelectorAll("table").forEach(table => {
                             const firstRow = table.querySelector("tr");
-                            const thead = document.createElement("thead");
-                            thead.appendChild(firstRow.cloneNode(true));
-                            table.insertBefore(thead, table.firstChild);
-                            firstRow.remove();
+                            if (firstRow) {
+                                const thead = document.createElement("thead");
+                                firstRow.querySelectorAll("td").forEach(td => {
+                                    const th = document.createElement("th");
+                                    th.textContent = td.textContent;
+                                    thead.appendChild(th);
+                                });
+                                table.deleteRow(0);
+                                table.insertBefore(thead, table.firstChild);
+                            }
                         });
                     } else {
                         renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
@@ -169,36 +411,75 @@
             // Render the highest order requirement
             renderMarkdownContent('highestOrderInput', 'highestOrderRender');
         });
+        let startTime;
+
+        function startSpinner() {
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const loadingTimer = document.getElementById('loadingTimer');
+
+            // Show spinner
+            loadingSpinner.classList.remove('d-none');
+
+            // Start timer
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                loadingTimer.textContent = `⏳ ${elapsedSeconds}s`;
+            }, 1000);
+        }
+
         function handleSubmit(event) {
-            event.preventDefault(); // Prevent default form submission
+            event.preventDefault();
 
             const form = event.target.closest('form');
-
-            // Check form validity
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
             }
 
+            // Get all the elements we need
             const submitBtn = document.getElementById('submitBtn');
             const defaultText = submitBtn.querySelector('.default-text');
             const loadingText = submitBtn.querySelector('.loading-text');
+            const loadingSpinner = document.getElementById('loadingSpinner');
 
-            // Disable the button
+            // Update button state
             submitBtn.disabled = true;
             submitBtn.classList.remove('btn-danger');
             submitBtn.classList.add('btn-secondary');
-            // Show loading text
             defaultText.classList.add('d-none');
             loadingText.classList.remove('d-none');
 
-            // Start the spinner
-            startSpinner();
+            // Show spinner and start timer
+            loadingSpinner.classList.remove('d-none');
+            startTimer();
 
-            // Submit the form programmatically
+            // Submit the form
             form.submit();
         }
-        // ... existing loading spinner code ...
+
+        let timerInterval;
+
+        function startTimer() {
+            const startTime = Date.now();
+            const timerElement = document.getElementById('loadingTimer');
+
+            // Clear any existing interval
+            if (timerInterval) clearInterval(timerInterval);
+
+            // Start new timer
+            timerInterval = setInterval(() => {
+                const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                timerElement.textContent = `⏳ ${elapsedSeconds}s`;
+            }, 1000);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+        });
     </script>
 </body>
 
