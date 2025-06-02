@@ -68,7 +68,7 @@ app.config.update(
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-executor = ThreadPoolExecutor()
+executor = ThreadPoolExecutor(max_workers=10)
 
 ASSISTANTS = {
     'agent_1': 'asst_EvIwemZYiG4cCmYc7GnTZoQZ',
@@ -151,6 +151,17 @@ def monitor_agent_performance(func):
             raise
     return wrapper
 
+async def wait_for_run_completion(thread_id, run_id, timeout=30, poll_interval=0.25):
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        status = openai.beta.threads.runs.retrieve(run_id=run_id, thread_id=thread_id)
+        if status.status == "completed":
+            return status
+        elif status.status == "failed":
+            raise RuntimeError(f"Run {run_id} failed.")
+        await asyncio.sleep(poll_interval)
+    raise TimeoutError(f"Run {run_id} did not complete in {timeout} seconds.")
+
 @monitor_agent_performance
 def call_agent(agent_id, input_text):
     try:
@@ -207,14 +218,9 @@ def call_agent(agent_id, input_text):
 
 # Update call_agents_parallel to use retry logic
 async def call_agents_parallel(agent_calls):
-    loop = asyncio.get_event_loop()
     tasks = [
-        loop.run_in_executor(
-            executor, 
-            call_agent_with_retry, 
-            agent_id, 
-            input_text
-        ) for agent_id, input_text in agent_calls
+        call_agent_with_retry(agent_id, input_text)
+        for agent_id, input_text in agent_calls
     ]
     return await asyncio.gather(*tasks)
 
@@ -445,9 +451,9 @@ def page4():
     try:
         data = get_data(session.get('data_key', ''))
         if not data:
-            return "No data found", 404
+            logger.error("No data found for session key")
+            return "No data found", 404  # Or render a friendly template
 
-        # Structure outputs with all required sections
         outputs = {
             'product_overview': data.get('product_overview', ''),
             'feature_overview': data.get('feature_overview', ''),
@@ -458,16 +464,16 @@ def page4():
             'agent_4_5': data.get('combined_outputs', {}).get('agent_4_5', '')
         }
 
-        # Log the outputs for debugging
-        logging.info("[PAGE4] Rendering with outputs:")
+        logger.info("[PAGE4] Rendering with outputs:")
         for key, value in outputs.items():
-            logging.info(f"{key}: {value[:100]}...")  # Log first 100 chars
+            logger.info(f"{key}: {value[:100]}...")
 
         return render_template('page4_final_output.html', outputs=outputs)
 
     except Exception as e:
-        logging.error(f"Error in page4: {str(e)}")
+        logger.error(f"Error in page4: {str(e)}")
         return str(e), 500
+
 
 
 
@@ -856,23 +862,25 @@ def before_request():
         cleanup_expired_sessions()
 
 @monitor_agent_performance
-def call_agent_with_retry(agent_id, input_text, max_retries=3):
-    """Call agent with retry logic and monitoring."""
-    last_error = None
-    
+async def call_agent_with_retry(agent_id, input_text, max_retries=3):
     for attempt in range(max_retries):
         try:
-            result = call_agent(agent_id, input_text)
-            if isinstance(result, str) and result.startswith("Error:"):
-                raise ValueError(result)
-            return result
+            thread = openai.beta.threads.create(messages=[{"role": "user", "content": input_text}])
+            run = openai.beta.threads.runs.create(thread_id=thread.id, assistant_id=agent_id)
+
+            # Use the async event loop to wait non-blockingly
+            status = await wait_for_run_completion(thread.id, run.id)
+
+            messages = openai.beta.threads.messages.list(thread_id=thread.id)
+            response = messages.data[0].content[0].text.value if messages.data else ""
+            return response
+
         except Exception as e:
-            last_error = e
-            if attempt < max_retries - 1:
-                backoff = 2 ** attempt
-                logging.warning(f"Attempt {attempt + 1} failed, retrying in {backoff}s: {str(e)}")
-                time.sleep(backoff)
-                continue
+            print(f"[Retry {attempt+1}/{max_retries}] Error with agent {agent_id}: {e}")
+            if attempt == max_retries - 1:
+                return f"Error: {str(e)}"
+            await asyncio.sleep(1.5)
+            
 def store_session_data(data):
     """Store large session data in Redis/files and keep only key in session."""
     try:
