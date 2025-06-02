@@ -187,7 +187,7 @@ def call_agent(agent_id, input_text):
             raise ValueError("Failed to create run")
 
         start_time = time.time()
-        while time.time() - start_time < 30:  # 30 second timeout
+        while time.time() - start_time < 60:  # 60 second timeout
             status = openai.beta.threads.runs.retrieve(
                 thread_id=thread.id, 
                 run_id=run.id
@@ -216,14 +216,50 @@ def call_agent(agent_id, input_text):
         logging.error(f"[ERROR] Agent {agent_id} failed: {e}")
         return f"Error: {str(e)}"
 
+@monitor_agent_performance
+async def call_agent_async(agent_id, input_text):
+    try:
+        logging.info(f"[CALL START] Calling agent {agent_id}")
+        thread = openai.beta.threads.create()
+
+        message = openai.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=input_text
+        )
+
+        run = openai.beta.threads.runs.create(
+            thread_id=thread.id,
+            assistant_id=agent_id
+        )
+
+        # Use async polling
+        await wait_for_run_completion(thread.id, run.id)
+
+        messages = openai.beta.threads.messages.list(thread_id=thread.id)
+        response = messages.data[0].content[0].text.value
+
+        logging.info(f"[AGENT RESPONSE] Agent {agent_id}:\n{response}")
+        return response
+
+    except Exception as e:
+        logging.error(f"[ERROR] Agent {agent_id} failed: {e}")
+        return f"Error: {str(e)}"
+
+
 # Update call_agents_parallel to use retry logic
 async def call_agents_parallel(agent_calls):
     tasks = [
-        call_agent_with_retry(agent_id, input_text)
+        call_agent_with_cache(agent_id, input_text)
         for agent_id, input_text in agent_calls
     ]
     return await asyncio.gather(*tasks)
 
+agent_semaphore = asyncio.Semaphore(3)  # Limit concurrent calls
+
+async def call_agent_with_limit(agent_id, input_text):
+    async with agent_semaphore:
+        return await call_agent_with_cache(agent_id, input_text)
 def verify_credentials(username, password):
     """Verify user credentials against environment variables."""
     return (username == os.getenv('ADMIN_USERNAME') and 
@@ -433,6 +469,17 @@ def page3():
 
     return render_template('page3_prompt_picker.html', highest_order=data.get('highest_order', ''))
 
+_agent_response_cache = {}
+
+async def call_agent_with_cache(agent_id, input_text):
+    cache_key = f"{agent_id}_{hash(input_text)}"
+    if cache_key in _agent_response_cache:
+        logging.info(f"[CACHE HIT] Returning cached response for {agent_id}")
+        return _agent_response_cache[cache_key]
+    
+    result = await call_agent_with_retry(agent_id, input_text)
+    _agent_response_cache[cache_key] = result
+    return result
 
 def require_auth(f):
     @wraps(f)
