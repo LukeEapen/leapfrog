@@ -411,7 +411,7 @@
             // Render the highest order requirement
             renderMarkdownContent('highestOrderInput', 'highestOrderRender');
         });
-        let startTime;
+
 
         function startSpinner() {
             const loadingSpinner = document.getElementById('loadingSpinner');
@@ -428,6 +428,9 @@
             }, 1000);
         }
 
+        let timerInterval;
+        let startTime;
+
         function handleSubmit(event) {
             event.preventDefault();
 
@@ -437,28 +440,59 @@
                 return;
             }
 
-            // Get all the elements we need
             const submitBtn = document.getElementById('submitBtn');
             const defaultText = submitBtn.querySelector('.default-text');
             const loadingText = submitBtn.querySelector('.loading-text');
             const loadingSpinner = document.getElementById('loadingSpinner');
+            const loadingTimer = document.getElementById('loadingTimer');
 
-            // Update button state
+            // UI update
             submitBtn.disabled = true;
-            submitBtn.classList.remove('btn-danger');
-            submitBtn.classList.add('btn-secondary');
             defaultText.classList.add('d-none');
             loadingText.classList.remove('d-none');
-
-            // Show spinner and start timer
             loadingSpinner.classList.remove('d-none');
-            startTimer();
 
-            // Submit the form
-            form.submit();
+            // Start timer
+            startTime = Date.now();
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                loadingTimer.textContent = `⏳ ${elapsedSeconds}s`;
+
+                if (elapsedSeconds > 180) {
+                    clearInterval(timerInterval);
+                    alert("Timeout. Please try again.");
+                }
+            }, 1000);
+
+            // Submit using fetch
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form)
+            }).then(response => {
+                if (response.redirected) {
+                    clearInterval(timerInterval);
+                    window.location.href = response.url;
+                } else {
+                    throw new Error("Unexpected response");
+                }
+            }).catch(err => {
+                clearInterval(timerInterval);
+                alert("Error: " + err.message);
+                submitBtn.disabled = false;
+                defaultText.classList.remove('d-none');
+                loadingText.classList.add('d-none');
+                loadingSpinner.classList.add('d-none');
+            });
         }
 
-        let timerInterval;
+
+        // Clean up timer when leaving page
+        window.addEventListener('beforeunload', () => {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+        });
 
         function startTimer() {
             const startTime = Date.now();
@@ -474,12 +508,7 @@
             }, 1000);
         }
 
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-            }
-        });
+
     </script>
 </body>
 
