@@ -238,11 +238,32 @@ def page1():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    if request.method == 'POST':
+    if request.method == 'POST':             # Get form inputs
         inputs = {key: request.form[key] for key in ['industry', 'sector', 'geography', 'intent', 'features']}
+        
+        # Handle file upload
+        if 'context_file' in request.files:
+            file = request.files['context_file']
+            if file and file.filename:
+                try:
+                    # Read file content
+                    file_content = file.read().decode('utf-8')
+                    # Add file content to inputs
+                    inputs['context_file'] = file_content
+                except Exception as e:
+                    logging.error(f"File upload error: {str(e)}")
+                    return "Error processing file upload", 400
+
         session.update(inputs)
 
-        context = "\n".join(f"{k.replace('_', ' ').title()}: {v}" for k, v in inputs.items())
+       # Update context to include file content
+        context_parts = [f"{k.replace('_', ' ').title()}: {v}" for k, v in inputs.items() 
+                        if k != 'context_file']
+        
+        if 'context_file' in inputs:
+            context_parts.append(f"\nAdditional Context:\n{inputs['context_file']}")
+            
+        context = "\n".join(context_parts)
         session_id = store_data({
             "inputs": inputs,
             "status": "processing"
