@@ -1,25 +1,10 @@
-✅ Step 4: Running the Application
-Install Flask and OpenAI:
-pip install flask openai
-pip install openai python-dotenv
+# Agentic AI Workflow – OpenAI Assistants
 
-python -m venv venv
-.\venv\Scripts\activate
+This project is an **agentic AI workflow platform** that orchestrates multiple OpenAI assistants (agents) to automate and validate business requirements, compliance, architecture, and more. It features a modern web UI and a modular backend, making it easy to extend and adapt for enterprise use cases.
 
-pip install -r requirements.txt
+![Agentic AI Workflow](./assets/workflow-diagram.png)
 
-Run your Flask app:
-python app.py
-
-pip list
-
-Visit your UI:
-http://127.0.0.1:5000
-
-
-pip install openai python-dotenv
-⑤ Run the interpreter
-python main.py
+*Architecture diagram showing the multi-agent workflow process
 
 
 # Agentic AI Workflow – OpenAI Assistants
