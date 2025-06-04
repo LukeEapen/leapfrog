@@ -93,8 +93,9 @@ This Flask-based web application integrates with OpenAI's API to generate compre
 
 ## 🔧 Prerequisites
 
-- Python 3.7 or higher
+- Python 3.78 or higher
 - pip (Python package manager)
+- Virtualenv
 - Windows, macOS, or Linux operating system
 - Modern web browser (Chrome, Firefox, Edge recommended)
 - OpenAI API key with appropriate permissions
@@ -106,6 +107,13 @@ This Flask-based web application integrates with OpenAI's API to generate compre
    git clone https://github.com/yourusername/openai-assistant-clean.git
    cd openai-assistant-clean
    ```
+
+   ```bash
+   git clone https://github.com/lukelallu/openai-assistant-clean.git
+   cd openai-assistant-clean
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
 
 2. **Create Virtual Environment** (Recommended)
    ```powershell
