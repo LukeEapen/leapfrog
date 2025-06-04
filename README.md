@@ -21,6 +21,36 @@ This project is an **agentic AI workflow platform** that orchestrates multiple O
 
 This Flask-based web application integrates with OpenAI's API to generate comprehensive Product Requirements Documents (PRDs). It utilizes multiple AI agents to analyze requirements and produce structured documentation.
 
+## 🔧 Tech Stack
+
+### Frontend
+- HTML with Bootstrap 5
+- JavaScript for dynamic interactions
+- Jinja2 templating engine
+
+### Backend
+- Python (Flask) for server-side logic
+- Session management and caching
+- Agent orchestration and workflow control
+
+### LLM Integration
+- GPT-4.1-mini via OpenAI Assistants API
+- Async request handling
+- Structured output parsing
+
+### Agent Frameworks
+- **CrewAI**: Role-based agent architecture
+  - Specialized agents (Strategist, Analyst, Legal)
+  - Inter-agent communication
+- **LangGraph**: Flow control system
+  - Branching logic
+  - Retry mechanisms
+  - Loop handling
+
+### Prompt Configuration
+- Temperature: 0.2 (optimized for deterministic output)
+- Top P: 1.0 (complete sampling for comprehensive analysis)
+
 ## ✨ Features
 
 - Multi-agent AI system for requirement analysis
