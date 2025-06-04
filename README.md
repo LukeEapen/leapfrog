@@ -1,5 +1,10 @@
 ﻿# PRD Generator Assistant
 
+# Agentic AI Workflow – OpenAI Assistants
+
+This project is an **agentic AI workflow platform** that orchestrates multiple OpenAI assistants (agents) to automate and validate business requirements, compliance, architecture, and more. It features a modern web UI and a modular backend, making it easy to extend and adapt for enterprise use cases.
+
+![Agentic AI Workflow](./assets/workflow-diagram.png)
 ## 📋 Table of Contents
 - [Overview](#overview)
 - [Features](#features)
