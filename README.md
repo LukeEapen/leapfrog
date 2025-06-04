@@ -53,6 +53,7 @@ This Flask-based web application integrates with OpenAI's API to generate compre
 
 ## ✨ Features
 
+### Core Functionality
 - Multi-agent AI system for requirement analysis
 - Interactive web interface
 - Real-time document generation
@@ -60,6 +61,35 @@ This Flask-based web application integrates with OpenAI's API to generate compre
 - Session management
 - Progress tracking
 - Error handling and logging
+
+### Advanced Features
+- **Autonomous yet Supervised**
+  - Human edits guide agent re-runs
+  - Iterative refinement process
+  - Quality control checkpoints
+
+- **Smart Workflow**
+  - Output-aware transitions between agents
+  - Context-based agent selection
+  - Sequential LLM collaboration
+  - Modular agent architecture
+
+- **User Experience**
+  - Preview & Edit functionality
+  - Interactive async outputs
+  - Feedback loops and reask options
+  - Version control for all outputs
+
+- **Document Processing**
+  - Markdown → Docx conversion
+  - Styled exports via python-docx
+  - Clean, professional formatting
+
+- **Technical Control**
+  - LangGraph-powered flow control
+  - Branching and retry logic
+  - Process optimization
+  - Comprehensive error handling
 
 ## 🔧 Prerequisites
 
