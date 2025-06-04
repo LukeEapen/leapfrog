@@ -151,7 +151,7 @@ def monitor_agent_performance(func):
             raise
     return wrapper
 
-async def wait_for_run_completion(thread_id, run_id, timeout=30, poll_interval=0.25):
+async def wait_for_run_completion(thread_id, run_id, timeout=90, poll_interval=0.5):
     start_time = time.time()
     while time.time() - start_time < timeout:
         status = openai.beta.threads.runs.retrieve(run_id=run_id, thread_id=thread_id)
