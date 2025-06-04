@@ -71,10 +71,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 executor = ThreadPoolExecutor(max_workers=10)
 
 ASSISTANTS = {
-    'agent_1': 'asst_EvIwemZYiG4cCmYc7GnTZoQZ',
-    'agent_1_1': 'asst_sW7IMhE5tQ78Ylx0zQkh6YnZ',
-    'agent_2': 'asst_t5hnaKy1wPvD48jTbn8Mx45z',
-    'agent_3': 'asst_EqkbMBdfOpUoEUaBPxCChVLR', #'asst_EkihtJQe9qFiztRdRXPhiy2G',
+    #'agent_1': 'asst_EvIwemZYiG4cCmYc7GnTZoQZ',
+    'agent_1_1': 'asst_sW7IMhE5tQ78Ylx0zQkh6YnZ', # Agent 1.1 - Product Overview Synthesizer – System Instructions
+    'agent_2': 'asst_t5hnaKy1wPvD48jTbn8Mx45z',   # Agent 2: Feature Overview Generator – System Instructions
+    'agent_3': 'asst_EqkbMBdfOpUoEUaBPxCChVLR',   # Agent 3: Highest-Order Requirements Agent
     'agent_4_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator - System Instructions
     'agent_4_2': 'asst_CLBdcKGduMvSBM06MC1OJ7bF', # Agent 4.2: Operational Business Requirements Generator – System Instructions
     'agent_4_3': 'asst_61ITzgJTPqkQf4OFnnMnndNb', # Agent 4.3: Capability-Scoped Non-Functional Requirements Generator – System Instructions
