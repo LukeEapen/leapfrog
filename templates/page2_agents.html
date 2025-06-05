@@ -1,3 +1,26 @@
+<!--
+  page2_agents.html
+
+  This template renders the "Review PRD Outputs" page for a PRD (Product Requirements Document) assistant web application.
+  It displays the outputs of two agents: Product Overview and Feature Overview, allowing users to review, edit, and approve the generated content.
+
+  Key Features:
+  - Uses Bootstrap 5 for layout and styling, with custom CSS for enhanced UI.
+  - Renders markdown content for both Product Overview and Feature Overview using the Marked.js library.
+  - Provides "Edit" functionality for both sections, enabling inline editing with a textarea and saving changes via AJAX to the /update_content endpoint.
+  - Displays a loading spinner and timer when submitting or processing content.
+  - Handles form submission with a custom handler to show loading states and prevent duplicate submissions.
+  - Includes user feedback via alerts and disables the submit button during processing.
+  - Responsive and visually enhanced with gradients, shadows, and animation for a modern UX.
+
+  Context:
+  - Expects Flask/Jinja2 variables: agent11_output (Product Overview) and agent2_output (Feature Overview).
+  - Used as part of a multi-step PRD assistant workflow, with navigation back to the input page.
+
+  Dependencies:
+  - Bootstrap 5, Bootstrap Icons, Marked.js, Highlight.js
+  - Custom CSS (static/custom.css) and optional global JS (static/js/global.js)
+-->
 <!DOCTYPE html>
 <html lang="en">
 

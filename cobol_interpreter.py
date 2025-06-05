@@ -1,4 +1,29 @@
 import os
+"""
+cobol_interpreter.py
+
+A Flask web application for processing COBOL code files using OpenAI assistants.
+The application allows users to upload COBOL source files, which are then processed
+sequentially by two OpenAI assistants (Agent 1 and Agent 3). The responses from both
+agents are returned as a JSON response.
+
+Features:
+- File upload endpoint for COBOL source files.
+- Integration with OpenAI's API to call assistants for code analysis or transformation.
+- Logging of assistant interactions and error handling.
+- Environment variable management using dotenv.
+
+Endpoints:
+- '/' : Renders the main HTML page for file upload.
+- '/upload' : Accepts file uploads, processes the file with two OpenAI assistants, and returns their responses.
+
+Configuration:
+- Requires an OPENAI_API_KEY in the environment.
+- Uploads are saved to an 'uploads' directory in the current working directory.
+
+Usage:
+Run the script to start the Flask server. Upload a COBOL file via the web interface or API to receive processed results from the assistants.
+"""
 import openai
 from flask import Flask, request, jsonify, render_template
 import time
@@ -19,6 +44,19 @@ assistant_id_agent_1 = "asst_P2HdYTBuZtBZqHGZizbsii1P"
 assistant_id_agent_3 = "asst_bHzpgDT7IB6Bb80GpDmhOxcW"  # Replace with Agent 3's ID
 
 def call_agent(assistant_id, message):
+    """
+    Calls an OpenAI assistant with a given message and returns the assistant's reply.
+    This function creates a new conversation thread, sends a user message, runs the assistant,
+    polls for completion, and retrieves the assistant's response. It logs the process and
+    measures the elapsed time for the assistant to complete the task.
+    Args:
+        assistant_id (str): The unique identifier of the OpenAI assistant to call.
+        message (str): The message to send to the assistant.
+    Returns:
+        str: The assistant's reply as a string.
+    Raises:
+        Exception: If the assistant run fails, is cancelled, expires, or any other error occurs during the process.
+    """
     logging.info(f"Calling assistant with ID: {assistant_id} and message: {message}")
     start_time = time.time()
 
@@ -74,6 +112,13 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    """
+    Handles file upload via HTTP request, saves the uploaded file to the server, reads its contents,
+    and processes it by sequentially calling two agents. Returns the responses from both agents as JSON.
+    Returns:
+        Response: A JSON response containing the outputs from both agents if successful,
+                  or an error message with appropriate HTTP status code if an error occurs.
+    """
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
 

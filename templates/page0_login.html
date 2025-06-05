@@ -1,3 +1,38 @@
+<!--
+  page0_login.html
+
+  Description:
+  -------------
+  This HTML template renders a modern, animated login page for the "PRD Assistant" application.
+  It uses Bootstrap 5 for layout and styling, Bootstrap Icons for UI icons, Google Fonts (Inter), and Animate.css for animation effects.
+  Custom CSS is included for branding, gradients, and interactive UI elements.
+
+  Features:
+  ---------
+  - Responsive, centered login card with fade-in animation.
+  - Username and password fields with icons.
+  - "Show Password" toggle using a checkbox.
+  - Animated "Sign In" button with loading state and spinner.
+  - Error alert for invalid login attempts (conditionally rendered via Jinja2).
+  - Custom gradients, shadows, and transitions for a polished look.
+  - Accessibility considerations (labels, placeholders, focus styles).
+
+  Usage:
+  ------
+  - Rendered by Flask/Jinja2, expects an 'error' variable in context to show error alert.
+  - Form submits via POST to the root ("/") endpoint.
+  - Requires Bootstrap, Bootstrap Icons, Animate.css, and a custom stylesheet.
+  - Includes a script for toggling password visibility and button loading state.
+
+  Customization:
+  --------------
+  - Update branding colors in the :root CSS variables.
+  - Adjust form fields or add additional authentication logic as needed.
+  - Extend error handling or integrate with backend authentication.
+
+  Author: [Your Name or Team]
+  Date: [Creation Date]
+-->
 <!DOCTYPE html>
 <html lang="en">
 

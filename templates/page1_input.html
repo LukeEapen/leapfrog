@@ -1,3 +1,33 @@
+<!--
+  PRD Assistant Input Page
+
+  Description:
+  This HTML template renders the input form for a Product Requirements Document (PRD) drafting assistant. 
+  It provides a structured UI for users to supply product context, upload supporting files, and describe 
+  the product and its features. The assistant uses this input to generate a first-draft PRD.
+
+  Features:
+  - Responsive, modern UI styled with Bootstrap 5 and custom CSS.
+  - Instructions and guidance for users on how to provide effective input.
+  - Input fields for industry, sector, geography, and file upload (TXT/DOC/DOCX).
+  - Textareas for detailed product and feature descriptions.
+  - Real-time form validation with visual feedback (valid/invalid states).
+  - Animated loading spinner and processing indicator on form submission.
+  - Accessibility features (labels, placeholders, visually hidden loading text).
+  - Customizable via external CSS and JS files.
+
+  Usage:
+  - Place this template in your Flask app's templates directory.
+  - Ensure static assets (custom.css, global.js) are available in the static directory.
+  - The form submits via POST to the "/page1" endpoint and supports file uploads.
+  - JavaScript handles validation and loading state UX.
+
+  Dependencies:
+  - Bootstrap 5.3.0 (CSS)
+  - Bootstrap Icons 1.7.2
+  - Google Fonts (Inter)
+  - Custom CSS and JS (referenced via Flask's url_for)
+-->
 <!DOCTYPE html>
 <html lang="en">
 

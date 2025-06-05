@@ -1,3 +1,28 @@
+<!--
+    File: /c:/Users/73042C/luke/openai-assistant-clean/templates/page3_prompt_picker.html
+
+    Description:
+    This HTML template renders the "Prompt Picker" page for an OpenAI assistant web application.
+    It displays high-level requirements in a formatted table, allows users to approve and generate a PRD draft,
+    and provides responsive, visually enhanced UI using Bootstrap 5 and custom CSS.
+
+    Key Features:
+    - Responsive card-based layout with custom color themes and gradients.
+    - Displays high-level requirements in a styled table, parsed from markdown/plain text.
+    - "Back to Review" navigation and "Approve & Generate PRD Draft" submission button.
+    - Loading spinner with elapsed timer shown during form submission.
+    - Uses Bootstrap Icons and Marked.js for enhanced UI and markdown support.
+    - JavaScript handles markdown-to-table rendering, form submission with fetch, and loading state management.
+    - Accessibility and error handling for missing content or submission errors.
+
+    Usage:
+    - Expects a Jinja2 variable `highest_order` containing markdown or table-formatted requirements.
+    - On submit, POSTs the form and shows a spinner until redirected or error occurs.
+    - Designed to be included in a Flask/Jinja2 application.
+
+    Author: (Your Name/Team)
+    Date: (Creation/Last Modified Date)
+-->
 <!DOCTYPE html>
 <html lang="en">
 

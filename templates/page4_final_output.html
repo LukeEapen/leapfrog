@@ -1,3 +1,36 @@
+<!--
+  page4_final_output.html
+
+  This HTML template renders the final PRD (Product Requirements Document) draft output page for a web application.
+  It is designed with Bootstrap 5 and custom CSS for a modern, clean look, and supports dynamic rendering of markdown content.
+
+  Key Features:
+  - Responsive layout with a styled container and card for displaying PRD sections.
+  - Header section includes navigation ("Back to Requirements"), page title, and a "Download as Word" button.
+  - Each PRD section (Product Overview, Feature Overview, Requirements, etc.) is rendered dynamically if content is present.
+  - Markdown content is rendered client-side using the "marked" library for rich formatting.
+  - Download functionality: Users can export the PRD as a Word (.docx) document via an API call to /generate_word_doc.
+  - Enhanced error handling: User-friendly alerts are shown for download errors, with auto-dismiss and console logging.
+  - Custom scrollbar and typography for improved readability and aesthetics.
+  - Accessibility and usability improvements, including loading indicators and disabled states for buttons.
+
+  Template Variables:
+  - outputs: A dictionary containing markdown content for each PRD section, passed from the backend.
+
+  JavaScript:
+  - Renders markdown content into each section on DOMContentLoaded.
+  - Handles the download process, including API communication, error handling, and UI feedback.
+  - Utility functions for error display and content collection.
+
+  Usage:
+  - Used as the final step in a PRD generation workflow, allowing users to review and export their document.
+
+  Dependencies:
+  - Bootstrap 5, Bootstrap Icons, marked.js, FileSaver.js, docx.js
+
+  Author: [Your Name or Team]
+  Date: [Date]
+-->
 <!DOCTYPE html>
 <html lang="en">
 
