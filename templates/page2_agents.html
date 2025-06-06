@@ -316,76 +316,111 @@
 </head>
 
 <body style="background-color: #343a40;">
-  <div class="content-wrapper p-4 rounded shadow-sm">
-    <div class="container">
-
-      <!-- existing content from here down -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <a href="/page1" class="btn btn-light btn-back border">Back to Inputs</a>
-        <h3 class="m-0 fw-semibold text-primary">Review Product & Feature Overview</h3>
-        <div style="width: 100px;"></div>
-      </div>
-
-      {% if agent11_output == "" or agent2_output == "" %}
-      <div class="alert alert-info text-center">⏳ Please wait while the PRD assistant processes your input...</div>
-      {% endif %}
-
-
-
-      <form method="post">
-        <div class="mb-4">
-
-          <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-              <span>Product Overview</span>
-              <button type="button" class="btn btn-edit" onclick="toggleEdit('product')">
-                <i class="bi bi-pencil-square me-1"></i>
-                <span class="edit-text">Edit</span>
-                <span class="save-text d-none">Save Changes</span>
-              </button>
+  <div id="mainContent" style="margin-left: 320px;">
+    <div class="content-wrapper p-4 rounded shadow-sm">
+      <div class="container">
+        <!-- Chat Panel -->
+        <div id="chatPanel"
+          style="position: fixed; top: 0; left: 0; width: 340px; height: 100vh; background: #f8f9fa; border-right: 1px solid #dee2e6; box-shadow: 2px 0 6px rgba(0,0,0,0.1); padding: 0.75rem; overflow-y: auto; z-index: 1040;">
+          <ul class="nav nav-tabs mb-2" id="chatTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product-chat"
+                type="button">Product</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="feature-tab" data-bs-toggle="tab" data-bs-target="#feature-chat"
+                type="button">Feature</button>
+            </li>
+          </ul>
+          <div class="tab-content" id="chatTabContent">
+            <!-- Product Chat -->
+            <div class="tab-pane fade show active" id="product-chat">
+              <div id="productChatbox" class="mb-2" style="font-size: 0.9rem; height: 300px; overflow-y: auto;"></div>
+              <div class="input-group">
+                <input type="text" id="productMessage" class="form-control" placeholder="Ask about Product">
+                <button class="btn btn-primary" onclick="sendChat('product')">Send</button>
+              </div>
             </div>
-            <div class="card-body">
-              <div id="productOverviewRender" class="formatted-content"></div>
-              <textarea id="productOverviewEditor" class="form-control d-none" rows="10"></textarea>
-              <input type="hidden" name="product_overview" id="productOverviewInput"
-                value="{{ agent11_output | tojson | safe }}" data-raw="{{ agent11_output | e }}">
-            </div>
-          </div>
-
-          <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-              <span>Feature Overview</span>
-              <button type="button" class="btn btn-edit" onclick="toggleEdit('feature')">
-                <i class="bi bi-pencil-square me-1"></i>
-                <span class="edit-text">Edit</span>
-                <span class="save-text d-none">Save Changes</span>
-              </button>
-            </div>
-            <div class="card-body">
-              <div id="featureOverviewRender" class="formatted-content"></div>
-              <textarea id="featureOverviewEditor" class="form-control d-none" rows="10"></textarea>
-              <input type="hidden" name="feature_overview" id="featureOverviewInput"
-                value="{{ agent2_output | tojson | safe }}" data-raw="{{ agent2_output }}">
+            <!-- Feature Chat -->
+            <div class="tab-pane fade" id="feature-chat">
+              <div id="featureChatbox" class="mb-2" style="font-size: 0.9rem; height: 300px; overflow-y: auto;"></div>
+              <div class="input-group">
+                <input type="text" id="featureMessage" class="form-control" placeholder="Ask about Feature">
+                <button class="btn btn-success" onclick="sendChat('feature')">Send</button>
+              </div>
             </div>
           </div>
-
-          <div class="d-grid mt-4">
-            <button type="submit" id="submitBtn" class="btn btn-danger btn-lg w-100" onclick="handleSubmit(event)">
-              <span class="default-text">Approve & Submit</span>
-              <span class="loading-text d-none">Processing...</span>
-            </button>
-
-          </div>
-      </form>
-
-      <div id="loadingSpinner" class="d-flex text-muted justify-content-center align-items-center">
-        <div class="spinner-border text-primary me-2" role="status">
-          <span class="visually-hidden">Loading...</span>
         </div>
-        <span id="loadingTimer" class="fs-5">⏳ 0s</span>
+        <!-- existing content from here down -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <a href="/page1" class="btn btn-light btn-back border">Back to Inputs</a>
+          <h3 class="m-0 fw-semibold text-primary">Review Product & Feature Overview</h3>
+          <div style="width: 100px;"></div>
+        </div>
+
+        {% if agent11_output == "" or agent2_output == "" %}
+        <div class="alert alert-info text-center">⏳ Please wait while the PRD assistant processes your input...</div>
+        {% endif %}
+
+
+
+        <form method="post">
+          <div class="mb-4">
+            <button onclick="toggleChatPanel()" class="btn btn-outline-secondary"
+              style="position: fixed; top: 10px; right: 10px; z-index: 1100;">Toggle Chat</button>
+
+            <div class="card mb-4 shadow-sm">
+              <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <span>Product Overview</span>
+                <div>
+                  <button type="button" class="btn btn-edit" onclick="toggleEdit('product')">
+                    <i class="bi bi-pencil-square me-1"></i>
+
+                  </button>
+
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="productOverviewRender" class="formatted-content"></div>
+                <textarea id="productOverviewEditor" class="form-control d-none" rows="10"></textarea>
+                <input type="hidden" name="product_overview" id="productOverviewInput"
+                  value="{{ agent11_output | tojson | safe }}" data-raw="{{ agent11_output | e }}">
+              </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm">
+              <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <span>Feature Overview</span>
+                <button type="button" class="btn btn-edit" onclick="toggleEdit('feature')">
+                  <i class="bi bi-pencil-square me-1"></i>
+                </button>
+              </div>
+              <div class="card-body">
+                <div id="featureOverviewRender" class="formatted-content"></div>
+                <textarea id="featureOverviewEditor" class="form-control d-none" rows="10"></textarea>
+                <input type="hidden" name="feature_overview" id="featureOverviewInput"
+                  value="{{ agent2_output | tojson | safe }}" data-raw="{{ agent2_output }}">
+              </div>
+            </div>
+
+            <div class="d-grid mt-4">
+              <button type="submit" id="submitBtn" class="btn btn-danger btn-lg w-100" onclick="handleSubmit(event)">
+                <span class="default-text">Approve & Submit</span>
+                <span class="loading-text d-none">Processing...</span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div id="loadingSpinner" class="d-flex text-muted justify-content-center align-items-center">
+          <div class="spinner-border text-primary me-2" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <span id="loadingTimer" class="fs-5">⏳ 0s</span>
+        </div>
       </div>
-    </div>
-  </div> <!-- end content-wrapper -->
+    </div> <!-- end content-wrapper -->
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -456,7 +491,34 @@
       // Submit the form programmatically
       form.submit();
     }
+    function openChatbot() {
+      const modal = new bootstrap.Modal(document.getElementById('chatbotModal'));
+      modal.show();
+    }
 
+    async function sendChatMessage() {
+      const input = document.getElementById('userMessage');
+      const message = input.value.trim();
+      if (!message) return;
+
+      const chatbox = document.getElementById('chatbox');
+      chatbox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+      input.value = '...';
+
+      try {
+        const response = await fetch('/chat_with_agent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+        const result = await response.json();
+        chatbox.innerHTML += `<div><strong>Assistant:</strong> ${result.reply}</div>`;
+      } catch (error) {
+        chatbox.innerHTML += `<div class="text-danger">Error: ${error.message}</div>`;
+      } finally {
+        input.value = '';
+      }
+    }
     function toggleEdit(type) {
       const renderDiv = document.getElementById(`${type}OverviewRender`);
       const editor = document.getElementById(`${type}OverviewEditor`);
@@ -507,7 +569,100 @@
           });
       }
     }
+
+
+    async function sendChatMessage() {
+      const input = document.getElementById('userMessage');
+      const message = input.value.trim();
+      if (!message) return;
+
+      const chatbox = document.getElementById('chatbox');
+      chatbox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+      input.value = '...';
+
+      try {
+        const response = await fetch('/chat_with_agent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+
+        const result = await response.json();
+        const reply = result.reply;
+        chatbox.innerHTML += `<div><strong>Assistant:</strong> ${reply}</div>`;
+
+        // ✅ Update productOverviewInput and re-render content
+        const productInput = document.getElementById('productOverviewInput');
+        const productRender = document.getElementById('productOverviewRender');
+
+        productInput.setAttribute('data-raw', reply);
+        productInput.value = JSON.stringify(reply);  // for form post
+        productRender.innerHTML = marked.parse(reply);
+
+      } catch (error) {
+        chatbox.innerHTML += `<div class="text-danger">Error: ${error.message}</div>`;
+      } finally {
+        input.value = '';
+      }
+    }
+
+    function toggleChatPanel() {
+      const panel = document.getElementById('chatPanel');
+      panel.style.display = (panel.style.display === 'none' ? 'block' : 'none');
+    }
+
+    async function sendChat(type) {
+      const input = document.getElementById(type + 'Message');
+      const button = input.nextElementSibling;
+      const chatbox = document.getElementById(type + 'Chatbox');
+      const message = input.value.trim();
+      if (!message) return;
+
+      chatbox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+
+      // Show spinner and disable UI
+      input.disabled = true;
+      button.disabled = true;
+      button.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
+      input.value = '';
+
+      try {
+        const response = await fetch('/update_content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, content: message })
+        });
+
+        const result = await response.json();
+        const reply = result.response;
+        chatbox.innerHTML += `<div><strong>Assistant:</strong> ${reply}</div>`;
+
+        // Render updated content
+        const renderId = type === 'product' ? 'productOverviewRender' : 'featureOverviewRender';
+        const inputId = type === 'product' ? 'productOverviewInput' : 'featureOverviewInput';
+
+        const renderDiv = document.getElementById(renderId);
+        const hiddenInput = document.getElementById(inputId);
+
+        hiddenInput.setAttribute('data-raw', reply);
+        hiddenInput.value = JSON.stringify(reply);
+        renderDiv.innerHTML = marked.parse(reply);
+
+      } catch (err) {
+        chatbox.innerHTML += `<div class="text-danger">Error: ${err.message}</div>`;
+      } finally {
+        input.disabled = false;
+        button.disabled = false;
+        button.innerHTML = "Send";
+        chatbox.scrollTop = chatbox.scrollHeight;
+      }
+    }
   </script>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 
 </html>

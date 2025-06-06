@@ -647,7 +647,13 @@ def update_content():
             # Re-run Agent 2 with new content
             new_response = call_agent(ASSISTANTS['agent_2'], new_content)
             stored_data['feature_overview'] = new_response
-            
+        elif content_type.startswith('agent_4_'):
+            agent_id = ASSISTANTS.get(content_type)
+            if not agent_id:
+                return jsonify({'error': f'Unknown agent for {content_type}'}), 400
+            new_response = call_agent(agent_id, new_content)
+            stored_data['combined_outputs'][content_type] = new_response   
+
         # Store updated data
         if USING_REDIS:
             redis_client.setex(session['data_key'], 3600, json.dumps(stored_data))
@@ -1470,6 +1476,52 @@ def get_session_data():
         return None
         
     return get_data(session_id)
+
+@app.route('/chat_with_agent', methods=['POST'])
+def chat_with_agent():
+    if not session.get('logged_in'):
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        if not message:
+            return jsonify({'error': 'Message is required'}), 400
+
+        # 👇 THIS is where it talks to Agent 1.1
+        reply = call_agent(ASSISTANTS['agent_1_1'], message)
+
+        return jsonify({'reply': reply})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/chat_agent3", methods=["POST"])
+@require_auth
+def chat_agent3():
+    try:
+        data = request.get_json()
+        user_msg = data.get("message", "")
+        session_id = session.get("data_key", "")
+        current_data = get_data(session_id)
+
+        # Call Agent 3
+        agent_reply = call_agent(ASSISTANTS['agent_3'], user_msg)
+
+        # Update Highest Order section
+        if current_data:
+            current_data["highest_order"] = agent_reply
+            if USING_REDIS:
+                redis_client.setex(session_id, 3600, json.dumps(current_data))
+            else:
+                with open(os.path.join(TEMP_DIR, f'prd_session_{session_id}.json'), 'w') as f:
+                    json.dump(current_data, f)
+
+        return jsonify({"reply": agent_reply})
+
+    except Exception as e:
+        logging.error(f"Chat Agent 3 error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+        
 # Add to main
 if __name__ == '__main__':
     cleanup_expired_sessions()
