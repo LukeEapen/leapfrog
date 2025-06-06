@@ -141,7 +141,8 @@ ASSISTANTS = {
     'agent_4_2': 'asst_CLBdcKGduMvSBM06MC1OJ7bF', # Agent 4.2: Operational Business Requirements Generator – System Instructions
     'agent_4_3': 'asst_61ITzgJTPqkQf4OFnnMnndNb', # Agent 4.3: Capability-Scoped Non-Functional Requirements Generator – System Instructions
     'agent_4_4': 'asst_pPFGsMMqWg04OSHNmyQ5oaAy', # Agent 4.4: Data Attribute Requirement Generator – System Instructions
-    'agent_4_5': 'asst_wwgc1Zbl5iknlDtcFLOuTIjd'  # Agent 4.5: LRC: Legal, Regulatory, and Compliance Synthesizer – System Instructions
+    'agent_4_5': 'asst_wwgc1Zbl5iknlDtcFLOuTIjd',  # Agent 4.5: LRC: Legal, Regulatory, and Compliance Synthesizer – System Instructions
+'agent_4_6': 'asst_JOtY81FnKEkrhgcJmuJSDyip'
 }
 
 ########################
@@ -1521,7 +1522,60 @@ def chat_agent3():
     except Exception as e:
         logging.error(f"Chat Agent 3 error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+     
+
+@app.route("/review_prd", methods=["POST"])
+def review_prd():
+    """
+    Agent 4.6: PRD Review and Quality Assurance Agent
+    
+    This endpoint processes requests to review a complete PRD using Agent 4.6 (asst_JOtY81FnKEkrhgcJmuJSDyip).
+    The agent analyzes all PRD sections for:
+    - Completeness of requirements
+    - Clarity and consistency
+    - Missing critical information
+    - Improvement suggestions
+    
+    Args:
+        sections (dict): PRD sections to review, received as JSON in request body
         
+    Returns:
+        JSON response containing:
+        - Array of issues found
+        - Each issue includes: section name, identified problem, and suggestion for improvement
+    """
+    data = request.get_json()
+    prd_sections = data.get("sections", {})
+
+    full_prd = "\n\n".join(
+        f"{key.replace('_', ' ').title()}:\n{value}"
+        for key, value in prd_sections.items()
+        if value.strip()
+    )
+
+  # Construct review prompt for Agent 4.6
+    review_prompt = (
+        "As the PRD Review and Quality Assurance Agent, analyze this PRD content. "
+        "For each section, evaluate completeness, clarity, and identify any gaps. "
+        "Provide specific, actionable improvements. "
+        "Format response as JSON array with fields: section, issue, suggestion.\n\n"
+        f"{full_prd}"
+    )
+
+    # Call Agent 4.6 (PRD Review Agent)
+    response = call_agent(ASSISTANTS['agent_4_6'], review_prompt)
+   # response = call_openai_agent("agent_4_6", review_prompt)  # Assumes this helper exists
+    try:
+        parsed = json.loads(response)
+    except json.JSONDecodeError:
+        parsed = [{
+            "section": "ReviewAgent", 
+            "issue": "Invalid JSON response format", 
+            "suggestion": "Please try the review again"
+        }]
+
+    return jsonify({"issues": parsed})
+    
 # Add to main
 if __name__ == '__main__':
     cleanup_expired_sessions()
