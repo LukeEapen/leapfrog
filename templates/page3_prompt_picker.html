@@ -350,8 +350,7 @@
                     </div>
                     <div class="mt-3">
                         <div class="fw-bold text-secondary mb-1">Highest Order Requirement</div>
-                        <div id="highestOrderRender"
-                            style="border: 1px solid #dee2e6; background: #fff; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.9rem;">
+                        <div class="formatted-content" id="highestOrderRender">
                         </div>
                         <input type="hidden" id="highestOrderInput" data-raw="{{ highest_order }}">
                     </div>
@@ -384,69 +383,71 @@
         </div>
     </div>
     <script>
+        function renderMarkdownContent(inputId, renderId) {
+            try {
+                const input = document.getElementById(inputId);
+                const renderDiv = document.getElementById(renderId);
+
+                if (!input || !renderDiv) {
+                    console.error(`Required elements not found for ${inputId}`);
+                    return;
+                }
+
+                const content = input.getAttribute('data-raw');
+                if (!content) {
+                    renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
+                    return;
+                }
+
+                // Step 1: Render markdown to HTML
+                const renderedHTML = marked.parse(content);
+                renderDiv.innerHTML = renderedHTML;
+                // Fallback: if no valid table was rendered, but pipes are present, try manual conversion
+                if (!renderDiv.querySelector("table") && content.includes('|')) {
+                    const lines = content.trim().split('\n').filter(line => line.includes('|'));
+                    if (lines.length > 1) {
+                        const header = lines[0];
+                        const body = lines.slice(1);
+                        let html = '<table class="table table-bordered table-striped table-sm"><thead><tr>';
+
+                        header.split('|').forEach(cell => {
+                            html += `<th>${cell.trim()}</th>`;
+                        });
+
+                        html += '</tr></thead><tbody>';
+                        body.forEach(row => {
+                            if (!row.includes('|')) return;
+                            html += '<tr>';
+                            row.split('|').forEach(cell => {
+                                html += `<td>${cell.trim()}</td>`;
+                            });
+                            html += '</tr>';
+                        });
+                        html += '</tbody></table>';
+                        renderDiv.innerHTML = html;
+                    }
+                }
+
+                // Step 2: Style all tables
+                renderDiv.querySelectorAll("table").forEach(table => {
+                    table.classList.add("table", "table-bordered", "table-striped", "table-sm");
+
+
+                });
+
+            } catch (error) {
+                console.error(`Error rendering ${inputId}:`, error);
+                renderDiv.innerHTML =
+                    '<div class="alert alert-danger">' +
+                    '<h6>Error Details:</h6>' +
+                    '<pre>' + error.toString() + '</pre>' +
+                    '</div>';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             // Helper function to render markdown content
-            function renderMarkdownContent(inputId, renderId) {
-                try {
-                    const input = document.getElementById(inputId);
-                    const renderDiv = document.getElementById(renderId);
 
-                    if (!input || !renderDiv) {
-                        console.error(`Required elements not found for ${inputId}`);
-                        return;
-                    }
-
-                    const content = input.getAttribute('data-raw');
-                    if (!content) {
-                        renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
-                        return;
-                    }
-
-                    // Step 1: Render markdown to HTML
-                    const renderedHTML = marked.parse(content);
-                    renderDiv.innerHTML = renderedHTML;
-                    // Fallback: if no valid table was rendered, but pipes are present, try manual conversion
-                    if (!renderDiv.querySelector("table") && content.includes('|')) {
-                        const lines = content.trim().split('\n').filter(line => line.includes('|'));
-                        if (lines.length > 1) {
-                            const header = lines[0];
-                            const body = lines.slice(1);
-                            let html = '<table class="table table-bordered table-striped table-sm"><thead><tr>';
-
-                            header.split('|').forEach(cell => {
-                                html += `<th>${cell.trim()}</th>`;
-                            });
-
-                            html += '</tr></thead><tbody>';
-                            body.forEach(row => {
-                                if (!row.includes('|')) return;
-                                html += '<tr>';
-                                row.split('|').forEach(cell => {
-                                    html += `<td>${cell.trim()}</td>`;
-                                });
-                                html += '</tr>';
-                            });
-                            html += '</tbody></table>';
-                            renderDiv.innerHTML = html;
-                        }
-                    }
-
-                    // Step 2: Style all tables
-                    renderDiv.querySelectorAll("table").forEach(table => {
-                        table.classList.add("table", "table-bordered", "table-striped", "table-sm");
-
-                        
-                    });
-
-                } catch (error) {
-                    console.error(`Error rendering ${inputId}:`, error);
-                    renderDiv.innerHTML =
-                        '<div class="alert alert-danger">' +
-                        '<h6>Error Details:</h6>' +
-                        '<pre>' + error.toString() + '</pre>' +
-                        '</div>';
-                }
-            }
 
 
             // Render the highest order requirement
