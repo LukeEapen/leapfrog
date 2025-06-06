@@ -652,18 +652,56 @@ def update_content():
         # Update content based on type
         if content_type == 'product':
             # Re-run Agent 1.1 with new content
-            new_response = call_agent(ASSISTANTS['agent_1_1'], new_content)
+            existing_content = stored_data.get('product_overview', '')
+            full_prompt = f"""You are editing the Product Overview section. Keep existing relevant content unless changes are requested.
+
+            Current content:
+            {existing_content}
+
+            User instruction:
+            {new_content}
+            """
+            new_response = call_agent(ASSISTANTS['agent_1_1'], full_prompt)
             stored_data['product_overview'] = new_response
         elif content_type == 'feature':
             # Re-run Agent 2 with new content
-            new_response = call_agent(ASSISTANTS['agent_2'], new_content)
+            existing_content = stored_data.get('feature_overview', '')
+            full_prompt = f"""You are editing the Feature Overview section. Maintain useful content unless instructed otherwise.
+
+            Current content:
+            {existing_content}
+
+            User instruction:
+            {new_content}
+            """
+            new_response = call_agent(ASSISTANTS['agent_2'], full_prompt)
             stored_data['feature_overview'] = new_response
+        elif content_type == 'highest_order':
+            existing_content = stored_data.get('combined_outputs', {}).get('highest_order', '')
+            full_prompt = f"""Here is the current High-Level Requirements section.
+
+            {existing_content}
+
+            Please revise it based on this instruction:
+            {new_content}
+            """
+            new_response = call_agent(ASSISTANTS['agent_3'], full_prompt)
+            stored_data['combined_outputs']['highest_order'] = new_response
         elif content_type.startswith('agent_4_'):
-            agent_id = ASSISTANTS.get(content_type)
-            if not agent_id:
-                return jsonify({'error': f'Unknown agent for {content_type}'}), 400
-            new_response = call_agent(agent_id, new_content)
-            stored_data['combined_outputs'][content_type] = new_response   
+                agent_id = ASSISTANTS.get(content_type)
+                if not agent_id:
+                    return jsonify({'error': f'Unknown agent for {content_type}'}), 400
+                existing_content = stored_data.get('combined_outputs', {}).get(content_type, '')
+                full_prompt = f"""You are updating the following section of a Product Requirements Document. Keep all useful information intact, and only modify based on the user request. Be conservative with deletions.
+
+                {existing_content}
+
+                User instruction:
+                {new_content}
+                """
+
+                new_response = call_agent(agent_id, full_prompt)
+                stored_data['combined_outputs'][content_type] = new_response   
 
         # Store updated data
         if USING_REDIS:
