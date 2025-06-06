@@ -387,7 +387,7 @@
     <div class="container my-5">
       <!-- Page 4 Chat Panel -->
       <div id="chatPanel"
-        style="position: fixed; top: 0; left: 0; width: 680px; height: 100vh; background: #f8f9fa; border-right: 1px solid #dee2e6; box-shadow: 2px 0 6px rgba(0,0,0,0.1); padding: 1rem; overflow-y: auto; z-index: 1050;">
+        style="display: none; position: fixed; top: 0; left: 0; width: 680px; height: 100vh; background: #f8f9fa; border-right: 1px solid #dee2e6; box-shadow: 2px 0 6px rgba(0,0,0,0.1); padding: 1rem; overflow-y: auto; z-index: 1050;">
         <!-- CHAT TAB HEADERS -->
         {% set agent_titles = {
         'agent_4_1': 'Product Requirements / User Stories',
@@ -447,7 +447,13 @@
           }.items() %}
           {% if outputs[key] %}
           <section class="mb-4">
-            <h4 class="section-title">{{ title }}</h4>
+            <div class="d-flex justify-content-between align-items-center">
+              <h4 class="section-title m-0">{{ title }}</h4>
+              {% if key.startswith('agent_4_') %}
+              <button type="button" class="btn btn-sm btn-warning ms-3" onclick="toggleChatPanel('{{ key }}')">💬
+                Chat</button>
+              {% endif %}
+            </div>
             <div class="formatted-content bg-white px-3 py-2 border rounded" id="{{ key }}_render"></div>
             <input type="hidden" id="{{ key }}_input" value="{{ outputs[key] | tojson | safe }}"
               data-raw="{{ outputs[key] }}">
@@ -729,7 +735,27 @@
       }
     }
 
+    let visibleTabId = null;
 
+    function toggleChatPanel(agentKey) {
+      const panel = document.getElementById('chatPanel');
+      const tabId = `${agentKey}-tab`;
+      const tabElement = document.getElementById(tabId);
+
+      if (!tabElement) return;
+
+      if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        bootstrap.Tab.getOrCreateInstance(tabElement).show();
+        visibleTabId = agentKey;
+      } else if (visibleTabId === agentKey) {
+        panel.style.display = 'none';
+        visibleTabId = null;
+      } else {
+        bootstrap.Tab.getOrCreateInstance(tabElement).show();
+        visibleTabId = agentKey;
+      }
+    }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <div class="modal fade" id="reviewModal" tabindex="-1">

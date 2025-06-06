@@ -313,7 +313,12 @@ def call_agent(agent_id, input_text):
     """
     try:
         logging.info(f"[CALL START] Calling agent {agent_id}")
-        thread = openai.beta.threads.create()
+        thread_key = f"thread_{agent_id}"
+        if thread_key not in session:
+            thread = openai.beta.threads.create()
+            session[thread_key] = thread.id
+        else:
+            thread = openai.beta.threads.retrieve(session[thread_key])
         
         if not thread or not thread.id:
             raise ValueError("Failed to create thread")
@@ -378,7 +383,12 @@ async def call_agent_async(agent_id, input_text):
     """
     try:
         logging.info(f"[CALL START] Calling agent {agent_id}")
-        thread = openai.beta.threads.create()
+        thread_key = f"thread_{agent_id}"
+        if thread_key not in session:
+            thread = openai.beta.threads.create()
+            session[thread_key] = thread.id
+        else:
+            thread = openai.beta.threads.retrieve(session[thread_key])
 
         message = openai.beta.threads.messages.create(
             thread_id=thread.id,

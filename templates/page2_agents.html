@@ -293,6 +293,10 @@
       margin: 3rem auto;
       padding: 2rem;
     }
+
+    #chatPanel {
+      display: none;
+    }
   </style>
   <script>
     function showLoading() {
@@ -311,6 +315,8 @@
         form.addEventListener('submit', showLoading);
       });
     });
+
+
   </script>
   <script src="{{ url_for('static', filename='js/global.js') }}"></script>
 </head>
@@ -369,7 +375,9 @@
             <div class="card mb-4 shadow-sm">
               <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                 <span>Product Overview</span>
-         
+                <button type="button" class="btn btn-sm btn-warning" onclick="toggleChatPanel('product')">
+                  💬 Chat
+                </button>
               </div>
               <div class="card-body">
                 <div id="productOverviewRender" class="formatted-content"></div>
@@ -382,7 +390,9 @@
             <div class="card mb-4 shadow-sm">
               <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                 <span>Feature Overview</span>
-      
+                <button type="button" class="btn btn-sm btn-warning" onclick="toggleChatPanel('feature')">
+                  💬 Chat
+                </button>
               </div>
               <div class="card-body">
                 <div id="featureOverviewRender" class="formatted-content"></div>
@@ -595,9 +605,21 @@
       }
     }
 
-    function toggleChatPanel() {
+    function toggleChatPanel(tab) {
       const panel = document.getElementById('chatPanel');
-      panel.style.display = (panel.style.display === 'none' ? 'block' : 'none');
+      const currentTab = document.querySelector('.nav-link.active')?.id;
+      const newTabId = `${tab}-tab`;
+
+      const tabTrigger = new bootstrap.Tab(document.getElementById(newTabId));
+
+      if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        tabTrigger.show();
+      } else if (currentTab === newTabId) {
+        panel.style.display = 'none'; // Close panel if same tab clicked again
+      } else {
+        tabTrigger.show(); // Switch tab
+      }
     }
 
     async function sendChat(type) {

@@ -324,7 +324,7 @@
     <div id="mainContent" style="margin-left: 320px;">
         <!-- Chat Panel for Page 3 (Agent 3) -->
         <div id="chatPanel"
-            style="position: fixed; top: 0; left: 0; width: 320px; height: 100vh; background: #f8f9fa; border-right: 1px solid #dee2e6; box-shadow: 2px 0 6px rgba(0,0,0,0.1); padding: 0.75rem; overflow-y: auto; z-index: 1040;">
+            style="display: none; position: fixed; top: 0; left: 0; width: 320px; height: 100vh; background: #f8f9fa; border-right: 1px solid #dee2e6; box-shadow: 2px 0 6px rgba(0,0,0,0.1); padding: 0.75rem; overflow-y: auto; z-index: 1040;">
             <div class="mb-2 fw-bold text-primary">Chat with Highest Order Agent</div>
             <div id="highestOrderChatbox"
                 style="height: 300px; overflow-y: auto; font-size: 0.9rem; margin-bottom: 1rem; border: 1px solid #ccc; padding: 0.5rem; background: #fff;">
@@ -342,6 +342,9 @@
                     <a href="/page2" class="btn btn-light btn-back border">Back to Review</a>
                     <h2 class="text-primary fw-semibold mb-0">High Level Requirements</h2>
                     <div style="width: 100px;"></div>
+                    <button type="button" class="btn btn-sm btn-warning" onclick="toggleChatPanel()">
+                        💬 Chat
+                    </button>
                 </div>
 
                 <div class="card shadow-sm">
@@ -591,7 +594,14 @@
                 chatbox.scrollTop = chatbox.scrollHeight;
             }
         }
+        let panelVisible = true;
+        const chatPanel = document.getElementById('chatPanel');
+        if (chatPanel) chatPanel.style.display = 'none'; // Ensure it's hidden on load
 
+        function toggleChatPanel() {
+            panelVisible = !panelVisible;
+            chatPanel.style.display = panelVisible ? 'block' : 'none';
+        }
     </script>
 </body>
 
