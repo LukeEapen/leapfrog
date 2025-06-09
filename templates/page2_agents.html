@@ -297,6 +297,37 @@
     #chatPanel {
       display: none;
     }
+
+    .chat-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 400px;
+      z-index: 1050;
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+
+    .chat-body {
+      background-color: #f8f9fa;
+      font-size: 0.95rem;
+    }
+
+    .chat-message {
+      margin-bottom: 0.75rem;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .chat-message.user {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+    }
+
+    .chat-message.agent {
+      background: #d1e7dd;
+      border-left: 4px solid #198754;
+    }
   </style>
   <script>
     function showLoading() {
@@ -326,34 +357,20 @@
     <div class="content-wrapper p-4 rounded shadow-sm">
       <div class="container">
         <!-- Chat Panel -->
-        <div id="chatPanel"
-          style="position: fixed; top: 0; left: 0; width: 340px; height: 100vh; background: #f8f9fa; border-right: 1px solid #dee2e6; box-shadow: 2px 0 6px rgba(0,0,0,0.1); padding: 0.75rem; overflow-y: auto; z-index: 1040;">
-          <ul class="nav nav-tabs mb-2" id="chatTab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product-chat"
-                type="button">Product</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="feature-tab" data-bs-toggle="tab" data-bs-target="#feature-chat"
-                type="button">Feature</button>
-            </li>
-          </ul>
-          <div class="tab-content" id="chatTabContent">
-            <!-- Product Chat -->
-            <div class="tab-pane fade show active" id="product-chat">
-              <div id="productChatbox" class="mb-2" style="font-size: 0.9rem; height: 300px; overflow-y: auto;"></div>
-              <div class="input-group">
-                <input type="text" id="productMessage" class="form-control" placeholder="Ask about Product">
-                <button class="btn btn-primary" onclick="sendChat('product')">Send</button>
-              </div>
-            </div>
-            <!-- Feature Chat -->
-            <div class="tab-pane fade" id="feature-chat">
-              <div id="featureChatbox" class="mb-2" style="font-size: 0.9rem; height: 300px; overflow-y: auto;"></div>
-              <div class="input-group">
-                <input type="text" id="featureMessage" class="form-control" placeholder="Ask about Feature">
-                <button class="btn btn-success" onclick="sendChat('feature')">Send</button>
-              </div>
+        <!-- Improved Chat Panel -->
+        <div class="chat-panel card shadow-lg border-0" id="chatPanel" style="display: none;">
+          <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <strong><i class="bi bi-chat-dots-fill me-2"></i><span id="chatSectionTitle">Chat Assistant</span></strong>
+            <button type="button" class="btn-close btn-close-white" onclick="toggleChatPanel()"
+              aria-label="Close"></button>
+          </div>
+          <div class="card-body chat-body px-3 py-2" id="chatMessages" style="max-height: 500px; overflow-y: auto;">
+          </div>
+          <div class="card-footer bg-light">
+            <div class="input-group">
+              <input type="text" class="form-control" id="chatInput" placeholder="Ask a question..."
+                onkeydown="if(event.key === 'Enter') sendUnifiedChat();">
+              <button class="btn btn-warning" type="button" onclick="sendUnifiedChat()">Send</button>
             </div>
           </div>
         </div>
@@ -604,23 +621,55 @@
         input.value = '';
       }
     }
-
-    function toggleChatPanel(tab) {
+    function toggleChatPanel(section = null) {
       const panel = document.getElementById('chatPanel');
-      const currentTab = document.querySelector('.nav-link.active')?.id;
-      const newTabId = `${tab}-tab`;
+      const input = document.getElementById('chatInput');
+      const title = document.getElementById('chatSectionTitle');
+      const isOpening = panel.style.display === 'none';
 
-      const tabTrigger = new bootstrap.Tab(document.getElementById(newTabId));
+      panel.style.display = isOpening ? 'block' : 'none';
 
-      if (panel.style.display === 'none') {
-        panel.style.display = 'block';
-        tabTrigger.show();
-      } else if (currentTab === newTabId) {
-        panel.style.display = 'none'; // Close panel if same tab clicked again
-      } else {
-        tabTrigger.show(); // Switch tab
+      if (section && isOpening) {
+        input.dataset.section = section;
+        title.textContent = section === 'product' ? 'Product Overview Chat' : 'Feature Overview Chat';
       }
     }
+
+
+    function sendUnifiedChat() {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      const chatbox = document.getElementById('chatMessages');
+      const section = input.dataset.section || 'product';
+
+      if (!message) return;
+
+      chatbox.innerHTML += `<div class="chat-message user"><strong>You:</strong> ${message}</div>`;
+
+      fetch('/update_content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: section, content: message })
+      })
+        .then(res => res.json())
+        .then(data => {
+          chatbox.innerHTML += `<div class="chat-message agent"><strong>Assistant:</strong> ${data.response}</div>`;
+
+          // Update corresponding section
+          const renderId = section === 'product' ? 'productOverviewRender' : 'featureOverviewRender';
+          const inputId = section === 'product' ? 'productOverviewInput' : 'featureOverviewInput';
+          const renderDiv = document.getElementById(renderId);
+          const hiddenInput = document.getElementById(inputId);
+
+          hiddenInput.setAttribute('data-raw', data.response);
+          hiddenInput.value = JSON.stringify(data.response);
+          renderDiv.innerHTML = marked.parse(data.response);
+        });
+
+      input.value = '';
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
 
     async function sendChat(type) {
       const input = document.getElementById(type + 'Message');

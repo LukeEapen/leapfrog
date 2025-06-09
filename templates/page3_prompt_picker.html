@@ -316,6 +316,37 @@
             border-radius: 0.5rem;
             font-weight: 600;
         }
+
+        .chat-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            z-index: 1050;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .chat-body {
+            background-color: #f8f9fa;
+            font-size: 0.95rem;
+        }
+
+        .chat-message {
+            margin-bottom: 0.75rem;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .chat-message.user {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .chat-message.agent {
+            background: #d1e7dd;
+            border-left: 4px solid #198754;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -323,18 +354,25 @@
 <body style="background-color: #343a40;">
     <div id="mainContent" style="margin-left: 320px;">
         <!-- Chat Panel for Page 3 (Agent 3) -->
-        <div id="chatPanel"
-            style="display: none; position: fixed; top: 0; left: 0; width: 320px; height: 100vh; background: #f8f9fa; border-right: 1px solid #dee2e6; box-shadow: 2px 0 6px rgba(0,0,0,0.1); padding: 0.75rem; overflow-y: auto; z-index: 1040;">
-            <div class="mb-2 fw-bold text-primary">Chat with Highest Order Agent</div>
-            <div id="highestOrderChatbox"
-                style="height: 300px; overflow-y: auto; font-size: 0.9rem; margin-bottom: 1rem; border: 1px solid #ccc; padding: 0.5rem; background: #fff;">
+        <div class="chat-panel card shadow-lg border-0" id="chatPanel" style="display: none;">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <strong><i class="bi bi-chat-dots-fill me-2"></i><span id="chatSectionTitle">High-Level Requirement
+                        Chat</span></strong>
+                <button type="button" class="btn-close btn-close-white" onclick="toggleChatPanel()"
+                    aria-label="Close"></button>
             </div>
-            <div class="input-group">
-                <input type="text" id="highestOrderMessage" class="form-control"
-                    placeholder="Ask about Highest Order...">
-                <button class="btn btn-danger" onclick="sendHighestOrderChat()">Send</button>
+            <div class="card-body chat-body px-3 py-2" id="highestOrderChatbox"
+                style="max-height: 500px; overflow-y: auto;"></div>
+            <div class="card-footer bg-light">
+                <div class="input-group">
+                    <input type="text" id="highestOrderMessage" class="form-control"
+                        placeholder="Ask about high-level requirements..."
+                        onkeydown="if(event.key==='Enter') sendHighestOrderChat();">
+                    <button class="btn btn-danger" onclick="sendHighestOrderChat()">Send</button>
+                </div>
             </div>
         </div>
+
         <div class="white-card-wrapper p-4 rounded shadow-sm">
 
             <div class="container py-5">
@@ -561,8 +599,7 @@
             const message = input.value.trim();
             if (!message) return;
 
-            // Show message, disable input
-            chatbox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+            chatbox.innerHTML += `<div class="chat-message user"><strong>You:</strong> ${message}</div>`;
             input.disabled = true;
             sendButton.disabled = true;
             sendButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
@@ -574,12 +611,13 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ message })
                 });
+
                 const data = await response.json();
                 const reply = data.reply;
 
-                chatbox.innerHTML += `<div><strong>Agent 3:</strong> ${reply}</div>`;
+                chatbox.innerHTML += `<div class="chat-message agent"><strong>Agent:</strong> ${reply}</div>`;
                 document.getElementById("highestOrderInput").setAttribute("data-raw", reply);
-                renderMarkdownContent('highestOrderInput', 'highestOrderRender');
+                renderMarkdownContent("highestOrderInput", "highestOrderRender");
 
                 const inputElem = document.getElementById("highestOrderInput");
                 inputElem.setAttribute("data-raw", reply);
@@ -594,6 +632,7 @@
                 chatbox.scrollTop = chatbox.scrollHeight;
             }
         }
+
         let panelVisible = true;
         const chatPanel = document.getElementById('chatPanel');
         if (chatPanel) chatPanel.style.display = 'none'; // Ensure it's hidden on load

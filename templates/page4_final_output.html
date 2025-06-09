@@ -372,6 +372,24 @@
       padding: 0.5rem 0.75rem;
       border-radius: 0.5rem;
     }
+
+    .tab-pane .chatbox-message {
+      margin-bottom: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .tab-pane .chatbox-message.user {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+    }
+
+    .tab-pane .chatbox-message.agent {
+      background-color: #d1e7dd;
+      border-left: 4px solid #28a745;
+    }
   </style>
 </head>
 
@@ -388,6 +406,8 @@
       <!-- Page 4 Chat Panel -->
       <div id="chatPanel"
         style="display: none; position: fixed; top: 0; left: 0; width: 680px; height: 100vh; background: #f8f9fa; border-right: 1px solid #dee2e6; box-shadow: 2px 0 6px rgba(0,0,0,0.1); padding: 1rem; overflow-y: auto; z-index: 1050;">
+        <h5 class="fw-semibold text-danger mb-3" id="chatContextLabel">Chat Context: <span id="chatContextName">—</span>
+        </h5>
         <!-- CHAT TAB HEADERS -->
         {% set agent_titles = {
         'agent_4_1': 'Product Requirements / User Stories',
@@ -660,7 +680,7 @@
       if (!message) return;
 
       const chatbox = document.getElementById(`${agentId}_chatbox`);
-      chatbox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+      chatbox.innerHTML += `<div class="chatbox-message user"><strong>You:</strong> ${message}</div>`;
 
       // Disable and show spinner
       input.disabled = true;
@@ -677,7 +697,7 @@
         const result = await response.json();
         const reply = result.response;
 
-        chatbox.innerHTML += `<div><strong>Agent:</strong> ${reply}</div>`;
+        chatbox.innerHTML += `<div class="chatbox-message agent"><strong>Agent:</strong> ${reply}</div>`;
 
         // Update hidden input and rendered div
         const renderDiv = document.getElementById(`${agentId}_render`);
@@ -741,6 +761,15 @@
       const panel = document.getElementById('chatPanel');
       const tabId = `${agentKey}-tab`;
       const tabElement = document.getElementById(tabId);
+      const label = document.getElementById('chatContextName');
+
+      const agentTitles = {
+        'agent_4_1': 'Product Requirements / User Stories',
+        'agent_4_2': 'Functional Requirements',
+        'agent_4_3': 'Non-Functional Requirements',
+        'agent_4_4': 'Data Requirements',
+        'agent_4_5': 'Legal, Regulatory, and Compliance Requirements'
+      };
 
       if (!tabElement) return;
 
@@ -755,7 +784,10 @@
         bootstrap.Tab.getOrCreateInstance(tabElement).show();
         visibleTabId = agentKey;
       }
+
+      label.textContent = agentTitles[agentKey] || 'Unknown';
     }
+
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <div class="modal fade" id="reviewModal" tabindex="-1">
