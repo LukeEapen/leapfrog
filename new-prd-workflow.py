@@ -78,6 +78,7 @@ from bs4 import BeautifulSoup
 from markdown2 import markdown
 from docx.shared import Pt, RGBColor  # Add RGBColor hereE
 from docx import Document
+import docx  # <-- Add this import for docx.Document usage
 from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml import OxmlElement
