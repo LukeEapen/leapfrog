@@ -513,6 +513,17 @@ def page1():
                 try:
                     # Read file content
                     file_content = file.read().decode('utf-8')
+
+
+                    filename = file.filename.lower()
+                    if filename.endswith('.txt'):
+                        file_content = file.read().decode('utf-8')
+                    elif filename.endswith('.docx'):
+                        doc = docx.Document(file)
+                        file_content = "\n".join([para.text for para in doc.paragraphs])
+                    else:
+                        file_content = "Unsupported file format."
+
                     # Add file content to inputs
                     inputs['context_file'] = file_content
                 except Exception as e:
