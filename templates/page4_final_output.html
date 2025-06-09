@@ -409,9 +409,17 @@
     <div class="container my-5">
       <!-- Page 4 Chat Panel -->
       <div id="chatPanel"
-        style="display: none; position: fixed; top: 0; left: 0; width: 400px; height: 100vh; background: #f8f9fa; border-right: 1px solid #dee2e6; box-shadow: 2px 0 6px rgba(0,0,0,0.1); padding: 1rem; overflow-y: auto; z-index: 1050;">
-        <h5 class="fw-semibold text-danger mb-3" id="chatContextLabel">Chat Context: <span id="chatContextName">—</span>
-        </h5>
+        style="display: none; position: fixed; top: 0; left: 0; width: 340px; height: 100vh; background: #ffffff; border-right: 1px solid #dee2e6; box-shadow: 4px 0 12px rgba(0,0,0,0.1); padding: 1rem 1rem 0.5rem; overflow-y: auto; z-index: 1050;">
+         <div class="d-flex align-items-center justify-content-between bg-dark text-white px-3 py-2 rounded mb-3">
+          <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-person-workspace me-2"></i>
+            Chat Context: <span id="chatContextName">—</span>
+          </h6>
+          <button class="btn btn-sm btn-outline-light"
+            onclick="document.getElementById('chatPanel').style.display='none'; document.getElementById('mainContent').style.marginLeft='0';">
+            ✖ Close
+          </button>
+        </div>
         <!-- CHAT TAB HEADERS -->
         {% set agent_titles = {
         'agent_4_1': 'Product Requirements / User Stories',
