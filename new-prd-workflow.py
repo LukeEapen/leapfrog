@@ -552,6 +552,14 @@ def page1():
         })
         session['data_key'] = session_id
 
+        # Ensure old data is cleared
+        if USING_REDIS:
+            redis_client.delete(session_id)
+        else:
+            path = os.path.join(TEMP_DIR, f'prd_session_{session_id}.json')
+            if os.path.exists(path):
+                os.remove(path)
+
         def run_agents():
             try:
                 #a1 = call_agent(ASSISTANTS['agent_1'], context)
@@ -615,16 +623,18 @@ def page2():
 
     # Wait for background job to complete
     start_time = time.time()
-    timeout = 120  # max 30 seconds wait
-    while True:
-        if data.get("status") == "complete":
+    timeout = 120  # seconds
+
+    while time.time() - start_time < timeout:
+        current_data = get_data(session_id) or {}
+        if current_data.get("status") == "complete":
+            data = current_data
             break
-        if data.get("status") == "error":
-            return f"<h3>❌ Agent processing failed:</h3><pre>{data.get('message')}</pre>", 500
+        elif current_data.get("status") == "error":
+            return f"<h3>❌ Agent processing failed:</h3><pre>{current_data.get('message')}</pre>", 500
         time.sleep(1)
-        if time.time() - start_time > timeout:
-            return "Processing took too long. Please refresh the page in a few seconds.", 504
-        data = get_data(session_id) or {}
+    else:
+        return "⏳ Processing took too long. Please refresh the page shortly.", 504
 
     if request.method == 'POST':
         data.update({
