@@ -240,6 +240,17 @@
             cursor: not-allowed;
         }
 
+        @media (max-width: 768px) {
+            #chatPanel {
+                width: 100%;
+                border-radius: 0;
+            }
+
+            #mainContent {
+                margin-left: 0 !important;
+            }
+        }
+
         /* Add responsive adjustment for smaller screens */
         @media (max-width: 992px) {
             .card {
@@ -317,15 +328,29 @@
             font-weight: 600;
         }
 
+        .chatPanel-old {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+            border-radius: 0 0.75rem 0.75rem 0;
+            z-index: 1050;
+            display: none;
+        }
+
         .chat-panel {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 400px;
+            top: 0;
+            left: 0;
+            width: 320px;
             z-index: 1050;
             border-radius: 0.75rem;
             overflow: hidden;
         }
+
 
         .chat-body {
             background-color: #f8f9fa;
@@ -347,31 +372,43 @@
             background: #d1e7dd;
             border-left: 4px solid #198754;
         }
+
+        .fixed-chat-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+        }
+
+        #mainContent {
+            transition: margin-left 0.3s ease-in-out;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body style="background-color: #343a40;">
-    <div id="mainContent" style="margin-left: 320px;">
-        <!-- Chat Panel for Page 3 (Agent 3) -->
-        <div class="chat-panel card shadow-lg border-0" id="chatPanel" style="display: none;">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <strong><i class="bi bi-chat-dots-fill me-2"></i><span id="chatSectionTitle">High-Level Requirement
-                        Chat</span></strong>
-                <button type="button" class="btn-close btn-close-white" onclick="toggleChatPanel()"
-                    aria-label="Close"></button>
-            </div>
-            <div class="card-body chat-body px-3 py-2" id="highestOrderChatbox"
-                style="max-height: 500px; overflow-y: auto;"></div>
-            <div class="card-footer bg-light">
-                <div class="input-group">
-                    <input type="text" id="highestOrderMessage" class="form-control"
-                        placeholder="Ask about high-level requirements..."
-                        onkeydown="if(event.key==='Enter') sendHighestOrderChat();">
-                    <button class="btn btn-danger" onclick="sendHighestOrderChat()">Send</button>
-                </div>
+    <!-- Chat Panel for Page 3 (Agent 3) -->
+    <div class="chat-panel card shadow-lg border-0" id="chatPanel" style="display: none;">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <strong><i class="bi bi-chat-dots-fill me-2"></i><span id="chatContextName">High-Level Requirement
+                    Chat</span></strong>
+            <button type="button" class="btn-close btn-close-white" onclick="toggleChatPanel()"
+                aria-label="Close"></button>
+        </div>
+        <div class="card-body chat-body px-3 py-2" id="highestOrderChatbox"
+            style="max-height: 500px; overflow-y: auto;"></div>
+        <div class="card-footer bg-light">
+            <div class="input-group">
+                <input type="text" id="highestOrderMessage" class="form-control"
+                    placeholder="Ask about high-level requirements..."
+                    onkeydown="if(event.key==='Enter') sendHighestOrderChat();">
+                <button class="btn btn-danger" onclick="sendHighestOrderChat()">Send</button>
             </div>
         </div>
+    </div>
+    <div id="mainContent">
+
 
         <div class="white-card-wrapper p-4 rounded shadow-sm">
 
@@ -380,9 +417,11 @@
                     <a href="/page2" class="btn btn-light btn-back border">Back to Review</a>
                     <h2 class="text-primary fw-semibold mb-0">High Level Requirements</h2>
                     <div style="width: 100px;"></div>
-                    <button type="button" class="btn btn-sm btn-warning" onclick="toggleChatPanel()">
-                        💬 Chat
-                    </button>
+                    <div class="text-end">
+                        <button class="btn btn-warning" onclick="toggleChatPanel()">
+                            💬 Chat
+                        </button>
+                    </div>
                 </div>
 
                 <div class="card shadow-sm">
@@ -421,6 +460,7 @@
                 </div>
 
             </div>
+
         </div>
     </div>
     <script>
@@ -600,10 +640,18 @@
             if (!message) return;
 
             chatbox.innerHTML += `<div class="chat-message user"><strong>You:</strong> ${message}</div>`;
+            chatbox.innerHTML += `<div class="chat-message text-muted" id="sendingIndicator">Sending...</div>`;
             input.disabled = true;
             sendButton.disabled = true;
             sendButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
             input.value = "";
+
+            // Show confirmation
+            const confirmation = document.createElement('div');
+            confirmation.className = 'text-success small mt-2 fade';
+            confirmation.innerText = 'Message sent...';
+            chatbox.appendChild(confirmation);
+            setTimeout(() => confirmation.remove(), 2000);
 
             try {
                 const response = await fetch("/chat_agent3", {
@@ -639,7 +687,15 @@
 
         function toggleChatPanel() {
             panelVisible = !panelVisible;
-            chatPanel.style.display = panelVisible ? 'block' : 'none';
+            const chatPanel = document.getElementById('chatPanel');
+            const mainContent = document.getElementById('mainContent');
+            if (panelVisible) {
+                chatPanel.style.display = 'block';
+                mainContent.style.marginLeft = '320px';
+            } else {
+                chatPanel.style.display = 'none';
+                mainContent.style.marginLeft = '0';
+            }
         }
     </script>
 </body>

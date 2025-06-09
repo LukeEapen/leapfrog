@@ -328,6 +328,15 @@
       background: #d1e7dd;
       border-left: 4px solid #198754;
     }
+
+    .fade {
+      transition: opacity 0.5s ease-in-out;
+      opacity: 1;
+    }
+
+    #mainContent {
+      transition: margin-left 0.3s ease-in-out;
+    }
   </style>
   <script>
     function showLoading() {
@@ -353,7 +362,7 @@
 </head>
 
 <body style="background-color: #343a40;">
-  <div id="mainContent" style="margin-left: 320px;">
+  <div id="mainContent">
     <div class="content-wrapper p-4 rounded shadow-sm">
       <div class="container">
         <!-- Chat Panel -->
@@ -625,9 +634,12 @@
       const panel = document.getElementById('chatPanel');
       const input = document.getElementById('chatInput');
       const title = document.getElementById('chatSectionTitle');
+      const mainContent = document.getElementById('mainContent');
+
       const isOpening = panel.style.display === 'none';
 
       panel.style.display = isOpening ? 'block' : 'none';
+      mainContent.style.marginLeft = isOpening ? '340px' : '0';
 
       if (section && isOpening) {
         input.dataset.section = section;
@@ -636,15 +648,20 @@
     }
 
 
+
     function sendUnifiedChat() {
       const input = document.getElementById('chatInput');
       const message = input.value.trim();
       const chatbox = document.getElementById('chatMessages');
       const section = input.dataset.section || 'product';
+      const sendButton = input.nextElementSibling;
+      sendButton.disabled = true;
+      sendButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
 
       if (!message) return;
 
       chatbox.innerHTML += `<div class="chat-message user"><strong>You:</strong> ${message}</div>`;
+      chatbox.innerHTML += `<div class="chat-message text-muted" id="sendingIndicator">Sending...</div>`;
 
       fetch('/update_content', {
         method: 'POST',
@@ -653,7 +670,15 @@
       })
         .then(res => res.json())
         .then(data => {
+          document.getElementById("sendingIndicator")?.remove();
           chatbox.innerHTML += `<div class="chat-message agent"><strong>Assistant:</strong> ${data.response}</div>`;
+
+          // ✅ Add success confirmation
+          const confirmation = document.createElement('div');
+          confirmation.className = 'text-success small mt-2 fade';
+          confirmation.innerText = 'Message sent successfully';
+          chatbox.appendChild(confirmation);
+          setTimeout(() => confirmation.remove(), 2000);
 
           // Update corresponding section
           const renderId = section === 'product' ? 'productOverviewRender' : 'featureOverviewRender';
@@ -664,6 +689,13 @@
           hiddenInput.setAttribute('data-raw', data.response);
           hiddenInput.value = JSON.stringify(data.response);
           renderDiv.innerHTML = marked.parse(data.response);
+        })
+        .finally(() => {
+          input.value = '';
+          input.disabled = false;
+          sendButton.disabled = false;
+          sendButton.innerHTML = "Send";
+          chatbox.scrollTop = chatbox.scrollHeight;
         });
 
       input.value = '';

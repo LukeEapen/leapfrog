@@ -388,7 +388,11 @@
 
     .tab-pane .chatbox-message.agent {
       background-color: #d1e7dd;
-      border-left: 4px solid #28a745;
+      border-left: 4px solid #198754;
+    }
+
+    #mainContent {
+      transition: margin-left 0.3s ease-in-out;
     }
   </style>
 </head>
@@ -401,11 +405,11 @@
       <p class="mt-2 fw-semibold text-danger">Reviewing PRD... please wait</p>
     </div>
   </div>
-  <div style="margin-left: 700px;">
+  <div id="mainContent">
     <div class="container my-5">
       <!-- Page 4 Chat Panel -->
       <div id="chatPanel"
-        style="display: none; position: fixed; top: 0; left: 0; width: 680px; height: 100vh; background: #f8f9fa; border-right: 1px solid #dee2e6; box-shadow: 2px 0 6px rgba(0,0,0,0.1); padding: 1rem; overflow-y: auto; z-index: 1050;">
+        style="display: none; position: fixed; top: 0; left: 0; width: 400px; height: 100vh; background: #f8f9fa; border-right: 1px solid #dee2e6; box-shadow: 2px 0 6px rgba(0,0,0,0.1); padding: 1rem; overflow-y: auto; z-index: 1050;">
         <h5 class="fw-semibold text-danger mb-3" id="chatContextLabel">Chat Context: <span id="chatContextName">—</span>
         </h5>
         <!-- CHAT TAB HEADERS -->
@@ -467,10 +471,11 @@
           }.items() %}
           {% if outputs[key] %}
           <section class="mb-4">
-            <div class="d-flex justify-content-between align-items-center">
-              <h4 class="section-title m-0">{{ title }}</h4>
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+              <strong><i class="bi bi-chat-dots-fill me-2"></i> <span id="chatContextName_{{ key }}">{{ title
+                  }}</span></strong>
               {% if key.startswith('agent_4_') %}
-              <button type="button" class="btn btn-sm btn-warning ms-3" onclick="toggleChatPanel('{{ key }}')">💬
+              <button type="button" class="btn btn-warning" onclick="toggleChatPanel('{{ key }}')">💬
                 Chat</button>
               {% endif %}
             </div>
@@ -681,7 +686,7 @@
 
       const chatbox = document.getElementById(`${agentId}_chatbox`);
       chatbox.innerHTML += `<div class="chatbox-message user"><strong>You:</strong> ${message}</div>`;
-
+      chatbox.innerHTML += `<div class="chatbox-message text-muted" id="sendingIndicator">Sending...</div>`;
       // Disable and show spinner
       input.disabled = true;
       button.disabled = true;
@@ -696,7 +701,7 @@
 
         const result = await response.json();
         const reply = result.response;
-
+        document.getElementById("sendingIndicator")?.remove();
         chatbox.innerHTML += `<div class="chatbox-message agent"><strong>Agent:</strong> ${reply}</div>`;
 
         // Update hidden input and rendered div
@@ -706,6 +711,12 @@
         hiddenInput.setAttribute('data-raw', reply);
         hiddenInput.value = JSON.stringify(reply);
         renderDiv.innerHTML = marked.parse(reply);
+
+        const confirmation = document.createElement('div');
+        confirmation.className = 'text-success small mt-2 fade';
+        confirmation.innerText = 'Message sent...';
+        chatbox.appendChild(confirmation);
+        setTimeout(() => confirmation.remove(), 2000);
 
       } catch (err) {
         chatbox.innerHTML += `<div class="text-danger">Error: ${err.message}</div>`;
@@ -759,6 +770,7 @@
 
     function toggleChatPanel(agentKey) {
       const panel = document.getElementById('chatPanel');
+      const content = document.getElementById('mainContent');
       const tabId = `${agentKey}-tab`;
       const tabElement = document.getElementById(tabId);
       const label = document.getElementById('chatContextName');
@@ -775,10 +787,12 @@
 
       if (panel.style.display === 'none') {
         panel.style.display = 'block';
+        content.style.marginLeft = '360px';
         bootstrap.Tab.getOrCreateInstance(tabElement).show();
         visibleTabId = agentKey;
       } else if (visibleTabId === agentKey) {
         panel.style.display = 'none';
+        content.style.marginLeft = '0';
         visibleTabId = null;
       } else {
         bootstrap.Tab.getOrCreateInstance(tabElement).show();
