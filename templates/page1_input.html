@@ -464,6 +464,15 @@
         }
       }
     });
+
+    document.querySelector('input[name="context_file"]').addEventListener('change', function () {
+      const maxSizeKB = 100;
+      const file = this.files[0];
+      if (file && file.size > maxSizeKB * 1024) {
+        alert(`File exceeds ${maxSizeKB}KB. Please choose a smaller file.`);
+        this.value = ''; // Clear the file input
+      }
+    });
   </script>
   <script src="{{ url_for('static', filename='js/global.js') }}"></script>
 </body>

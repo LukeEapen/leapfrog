@@ -506,30 +506,35 @@ def page1():
 
     if request.method == 'POST':             # Get form inputs
         inputs = {key: request.form[key] for key in ['industry', 'sector', 'geography', 'intent', 'features']}
-        
+        MAX_FILE_SIZE_KB = 100
         # Handle file upload
         if 'context_file' in request.files:
-            file = request.files['context_file']
-            if file and file.filename:
-                try:
-                    # Read file content
-                    file_content = file.read().decode('utf-8')
+                file = request.files['context_file']
+                if file and file.filename:
+                    file.seek(0, os.SEEK_END)
+                    file_length = file.tell()
+                    file.seek(0)  # Reset stream pointer
 
+                    if file_length > MAX_FILE_SIZE_KB * 1024:
+                        logging.warning("Uploaded file too large")
+                        return "Uploaded file exceeds the 100KB limit.", 400
+                    try:
+                        filename = file.filename.lower()
+                        if filename.endswith('.txt'):
+                            # Read as UTF-8 text
+                            file_content = file.read().decode('utf-8')
+                        elif filename.endswith('.docx'):
+                            # Read as docx (do not decode)
+                            doc = docx.Document(file)
+                            file_content = "\n".join([para.text for para in doc.paragraphs])
+                        else:
+                            file_content = "Unsupported file format."
 
-                    filename = file.filename.lower()
-                    if filename.endswith('.txt'):
-                        file_content = file.read().decode('utf-8')
-                    elif filename.endswith('.docx'):
-                        doc = docx.Document(file)
-                        file_content = "\n".join([para.text for para in doc.paragraphs])
-                    else:
-                        file_content = "Unsupported file format."
-
-                    # Add file content to inputs
-                    inputs['context_file'] = file_content
-                except Exception as e:
-                    logging.error(f"File upload error: {str(e)}")
-                    return "Error processing file upload", 400
+                        # Add file content to inputs
+                        inputs['context_file'] = file_content
+                    except Exception as e:
+                        logging.error(f"File upload error: {str(e)}")
+                        return "Error processing file upload", 400
 
         session.update(inputs)
 
