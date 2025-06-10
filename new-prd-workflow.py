@@ -870,6 +870,7 @@ def page4():
             'agent_4_4': data.get('combined_outputs', {}).get('agent_4_4', ''),
             'agent_4_5': data.get('combined_outputs', {}).get('agent_4_5', '')
         }
+        logger.info(json.dumps(outputs, indent=2))
 
         logger.info("[PAGE4] Rendering with outputs:")
         for key, value in outputs.items():

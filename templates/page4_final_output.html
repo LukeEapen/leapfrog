@@ -536,7 +536,10 @@
         </button>
         <button class="btn btn-warning ms-3" onclick="triggerPRDReview()">🧪 Review PRD</button>
       </div>
-
+      <div class="d-flex justify-content-end mb-3">
+        <button class="btn btn-sm btn-outline-primary me-2" onclick="expandAll()">Expand All</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="collapseAll()">Collapse All</button>
+      </div>
       <!-- Replace the existing card-body content with this -->
       <div class="card shadow-sm" id="docContent">
         <div class="card-body">
@@ -550,18 +553,23 @@
           'agent_4_5': 'Legal, Regulatory, and Compliance Requirements'
           }.items() %}
           {% if outputs[key] %}
-          <section class="mb-4">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-              <strong><i class="bi bi-chat-dots-fill me-2"></i> <span id="chatContextName_{{ key }}">{{ title
-                  }}</span></strong>
+
+          <section class="mb-3">
+            <div class="d-flex justify-content-between align-items-center bg-dark text-white px-3 py-2 rounded-top">
+              <div class="card-header bg-dark text-white flex-grow-1" role="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse_{{ key }}" aria-expanded="false" aria-controls="collapse_{{ key }}">
+                <strong><i class="bi bi-chevron-down me-2"></i> {{ title }}</strong>
+              </div>
               {% if key.startswith('agent_4_') %}
-              <button type="button" class="btn btn-warning" onclick="toggleChatPanel('{{ key }}')">💬
+              <button type="button" class="btn btn-warning btn-sm ms-2" onclick="toggleChatPanel('{{ key }}')">💬
                 Chat</button>
               {% endif %}
             </div>
-            <div class="formatted-content bg-white px-3 py-2 border rounded" id="{{ key }}_render"></div>
-            <input type="hidden" id="{{ key }}_input" value="{{ outputs[key] | tojson | safe }}"
-              data-raw="{{ outputs[key] }}">
+            <div id="collapse_{{ key }}" class="collapse prd-section-collapse">
+              <div class="formatted-content bg-white px-3 py-2 border rounded" id="{{ key }}_render"></div>
+              <input type="hidden" id="{{ key }}_input" value="{{ outputs[key] | tojson | safe }}"
+                data-raw="{{ outputs[key] }}">
+            </div>
           </section>
           {% endif %}
           {% endfor %}
@@ -577,13 +585,13 @@
       }
     }
     document.addEventListener('DOMContentLoaded', function () {
+
       // Set up markdown options
       marked.setOptions({
         breaks: true,
         gfm: true
       });
-
-      // Render all sections
+      // Render markdown for all PRD sections
       document.querySelectorAll('[id$="_input"]').forEach(input => {
         const key = input.id.replace('_input', '');
         const renderDiv = document.getElementById(`${key}_render`);
@@ -594,108 +602,126 @@
           }
         }
       });
-    });
+
+      // Collapse/expand icon toggle logic
+      document.querySelectorAll('.card-header[data-bs-toggle="collapse"]').forEach(header => {
+        const icon = header.querySelector('i.bi');
+        const targetId = header.getAttribute('data-bs-target');
+        const target = document.querySelector(targetId);
+
+        target.addEventListener('shown.bs.collapse', () => {
+          icon.classList.remove('bi-chevron-down');
+          icon.classList.add('bi-chevron-up');
+        });
+
+        target.addEventListener('hidden.bs.collapse', () => {
+          icon.classList.remove('bi-chevron-up');
+          icon.classList.add('bi-chevron-down');
+        });
+      });
 
 
-    // ...existing script content...
-    function showLoading() {
-      const spinner = document.getElementById('loadingSpinner');
-      if (spinner) spinner.style.display = 'flex';
-      let seconds = 0;
-      const label = document.getElementById('loadingTimer');
-      window.loadingInterval = setInterval(() => {
-        seconds++;
-        if (label) label.textContent = `⏳ ${seconds}s`;
-      }, 1000);
-    }
 
 
-    async function downloadDoc() {
-      const downloadBtn = document.querySelector('.btn-download');
-      const originalText = downloadBtn.innerHTML;
-      const startTime = new Date();
+      // ...existing script content...
+      function showLoading() {
+        const spinner = document.getElementById('loadingSpinner');
+        if (spinner) spinner.style.display = 'flex';
+        let seconds = 0;
+        const label = document.getElementById('loadingTimer');
+        window.loadingInterval = setInterval(() => {
+          seconds++;
+          if (label) label.textContent = `⏳ ${seconds}s`;
+        }, 1000);
+      }
 
-      try {
-        console.log('[Download] Starting document generation...');
 
-        // Show loading state
-        downloadBtn.innerHTML = `
+      async function downloadDoc() {
+        const downloadBtn = document.querySelector('.btn-download');
+        const originalText = downloadBtn.innerHTML;
+        const startTime = new Date();
+
+        try {
+          console.log('[Download] Starting document generation...');
+
+          // Show loading state
+          downloadBtn.innerHTML = `
             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
             Generating document...
         `;
-        downloadBtn.disabled = true;
+          downloadBtn.disabled = true;
 
-        // Get all content and log its presence
-        const sections = getAllContent();
-        console.log('[Download] Sections collected:', Object.keys(sections));
+          // Get all content and log its presence
+          const sections = getAllContent();
+          console.log('[Download] Sections collected:', Object.keys(sections));
 
-        // Make the API call
-        console.log('[Download] Sending request to /generate_word_doc');
-        const response = await fetch('/generate_word_doc', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ sections })
-        });
+          // Make the API call
+          console.log('[Download] Sending request to /generate_word_doc');
+          const response = await fetch('/generate_word_doc', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ sections })
+          });
 
-        // Log response status
-        console.log('[Download] Response status:', response.status);
+          // Log response status
+          console.log('[Download] Response status:', response.status);
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('[Download] Server error:', errorText);
-          throw new Error(`Server error: ${response.status} - ${errorText}`);
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[Download] Server error:', errorText);
+            throw new Error(`Server error: ${response.status} - ${errorText}`);
+          }
+
+          // Get and validate blob
+          const blob = await response.blob();
+          console.log('[Download] Blob received, size:', blob.size, 'bytes');
+
+          if (blob.size === 0) {
+            throw new Error('Generated document is empty');
+          }
+
+          // Create and trigger download
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `PRD_Document_${new Date().toISOString().split('T')[0]}.docx`;
+          document.body.appendChild(a);
+          a.click();
+
+          // Log success
+          const endTime = new Date();
+          const duration = (endTime - startTime) / 1000;
+          console.log(`[Download] Document generated successfully in ${duration} seconds`);
+
+          // Cleanup
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+        } catch (error) {
+          console.error('[Download] Error details:', {
+            message: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+          });
+
+          showError(`Failed to generate document: ${error.message}. Check browser console for details.`);
+        } finally {
+          // Reset button state
+          downloadBtn.innerHTML = originalText;
+          downloadBtn.disabled = false;
         }
-
-        // Get and validate blob
-        const blob = await response.blob();
-        console.log('[Download] Blob received, size:', blob.size, 'bytes');
-
-        if (blob.size === 0) {
-          throw new Error('Generated document is empty');
-        }
-
-        // Create and trigger download
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `PRD_Document_${new Date().toISOString().split('T')[0]}.docx`;
-        document.body.appendChild(a);
-        a.click();
-
-        // Log success
-        const endTime = new Date();
-        const duration = (endTime - startTime) / 1000;
-        console.log(`[Download] Document generated successfully in ${duration} seconds`);
-
-        // Cleanup
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-
-      } catch (error) {
-        console.error('[Download] Error details:', {
-          message: error.message,
-          stack: error.stack,
-          timestamp: new Date().toISOString()
-        });
-
-        showError(`Failed to generate document: ${error.message}. Check browser console for details.`);
-      } finally {
-        // Reset button state
-        downloadBtn.innerHTML = originalText;
-        downloadBtn.disabled = false;
       }
-    }
 
-    // Enhanced error display
-    function showError(message) {
-      console.error('[Error]', message);
+      // Enhanced error display
+      function showError(message) {
+        console.error('[Error]', message);
 
-      const alertDiv = document.createElement('div');
-      alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
-      alertDiv.style.zIndex = '1050';
-      alertDiv.innerHTML = `
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+        alertDiv.style.zIndex = '1050';
+        alertDiv.innerHTML = `
         <div class="d-flex align-items-center">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
             <div>
@@ -706,127 +732,127 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
 
-      document.body.appendChild(alertDiv);
+        document.body.appendChild(alertDiv);
 
-      // Auto-dismiss after 8 seconds
-      setTimeout(() => {
-        if (document.body.contains(alertDiv)) {
-          alertDiv.remove();
-        }
-      }, 8000);
-    }
+        // Auto-dismiss after 8 seconds
+        setTimeout(() => {
+          if (document.body.contains(alertDiv)) {
+            alertDiv.remove();
+          }
+        }, 8000);
+      }
 
-    function getAllContent() {
-      const sections = {};
-      const sectionIds = [
-        'product_overview',
-        'feature_overview',
-        'agent_4_1',
-        'agent_4_2',
-        'agent_4_3',
-        'agent_4_4',
-        'agent_4_5'
-      ];
+      function getAllContent() {
+        const sections = {};
+        const sectionIds = [
+          'product_overview',
+          'feature_overview',
+          'agent_4_1',
+          'agent_4_2',
+          'agent_4_3',
+          'agent_4_4',
+          'agent_4_5'
+        ];
 
-      sectionIds.forEach(id => {
-        const input = document.getElementById(`${id}_input`);
-        if (input) {
-          sections[id] = input.getAttribute('data-raw') || '';
-        }
-      });
+        sectionIds.forEach(id => {
+          const input = document.getElementById(`${id}_input`);
+          if (input) {
+            sections[id] = input.getAttribute('data-raw') || '';
+          }
+        });
 
-      return sections;
-    }
+        return sections;
+      }
 
-    function showError(message) {
-      const alertDiv = document.createElement('div');
-      alertDiv.className = 'alert alert-danger alert-dismissible fade show';
-      alertDiv.innerHTML = `
+      function showError(message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
         <strong>Error!</strong> ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
 
-      document.querySelector('.container').insertBefore(
-        alertDiv,
-        document.querySelector('.card')
-      );
+        document.querySelector('.container').insertBefore(
+          alertDiv,
+          document.querySelector('.card')
+        );
 
-      // Auto-dismiss after 5 seconds
-      setTimeout(() => {
-        alertDiv.remove();
-      }, 5000);
-    }
-
-
-    async function sendAgentMessage(agentId) {
-      const input = document.getElementById(`${agentId}_message`);
-      const button = input.nextElementSibling;
-      const message = input.value.trim();
-      if (!message) return;
-
-      const chatbox = document.getElementById(`${agentId}_chatbox`);
-      chatbox.innerHTML += `<div class="chatbox-message user"><strong>You:</strong> ${message}</div>`;
-      chatbox.innerHTML += `<div class="chatbox-message text-muted" id="sendingIndicator">Sending...</div>`;
-      // Disable and show spinner
-      input.disabled = true;
-      button.disabled = true;
-      button.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
-
-      try {
-        const response = await fetch('/update_content', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: agentId, content: message })
-        });
-
-        const result = await response.json();
-        const reply = result.response;
-        document.getElementById("sendingIndicator")?.remove();
-        chatbox.innerHTML += `<div class="chatbox-message agent"><strong>Agent:</strong> ${reply}</div>`;
-
-        // Update hidden input and rendered div
-        const renderDiv = document.getElementById(`${agentId}_render`);
-        const hiddenInput = document.getElementById(`${agentId}_input`);
-
-        hiddenInput.setAttribute('data-raw', reply);
-        hiddenInput.value = JSON.stringify(reply);
-        renderDiv.innerHTML = marked.parse(reply);
-
-        const confirmation = document.createElement('div');
-        confirmation.className = 'text-success small mt-2 fade';
-        confirmation.innerText = 'Message sent...';
-        chatbox.appendChild(confirmation);
-        setTimeout(() => confirmation.remove(), 2000);
-
-      } catch (err) {
-        chatbox.innerHTML += `<div class="text-danger">Error: ${err.message}</div>`;
-      } finally {
-        input.disabled = false;
-        button.disabled = false;
-        button.innerHTML = "Send";
-        input.value = '';
-        chatbox.scrollTop = chatbox.scrollHeight;
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+          alertDiv.remove();
+        }, 5000);
       }
-    }
 
-    async function triggerPRDReview() {
-      const sections = getAllContent();
-      const btn = document.querySelector(".btn-warning");
-      const originalLabel = btn.innerHTML;
 
-      btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Reviewing...`;
-      btn.disabled = true;
-      toggleReviewOverlay(true); // ✅ Show overlay on click
+      async function sendAgentMessage(agentId) {
+        const input = document.getElementById(`${agentId}_message`);
+        const button = input.nextElementSibling;
+        const message = input.value.trim();
+        if (!message) return;
 
-      try {
-        const res = await fetch("/review_prd", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sections })
-        });
+        const chatbox = document.getElementById(`${agentId}_chatbox`);
+        chatbox.innerHTML += `<div class="chatbox-message user"><strong>You:</strong> ${message}</div>`;
+        chatbox.innerHTML += `<div class="chatbox-message text-muted" id="sendingIndicator">Sending...</div>`;
+        // Disable and show spinner
+        input.disabled = true;
+        button.disabled = true;
+        button.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
 
-        const data = await res.json();
-        const html = data.issues.map(i => `
+        try {
+          const response = await fetch('/update_content', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: agentId, content: message })
+          });
+
+          const result = await response.json();
+          const reply = result.response;
+          document.getElementById("sendingIndicator")?.remove();
+          chatbox.innerHTML += `<div class="chatbox-message agent"><strong>Agent:</strong> ${reply}</div>`;
+
+          // Update hidden input and rendered div
+          const renderDiv = document.getElementById(`${agentId}_render`);
+          const hiddenInput = document.getElementById(`${agentId}_input`);
+
+          hiddenInput.setAttribute('data-raw', reply);
+          hiddenInput.value = JSON.stringify(reply);
+          renderDiv.innerHTML = marked.parse(reply);
+
+          const confirmation = document.createElement('div');
+          confirmation.className = 'text-success small mt-2 fade';
+          confirmation.innerText = 'Message sent...';
+          chatbox.appendChild(confirmation);
+          setTimeout(() => confirmation.remove(), 2000);
+
+        } catch (err) {
+          chatbox.innerHTML += `<div class="text-danger">Error: ${err.message}</div>`;
+        } finally {
+          input.disabled = false;
+          button.disabled = false;
+          button.innerHTML = "Send";
+          input.value = '';
+          chatbox.scrollTop = chatbox.scrollHeight;
+        }
+      }
+
+      async function triggerPRDReview() {
+        const sections = getAllContent();
+        const btn = document.querySelector(".btn-warning");
+        const originalLabel = btn.innerHTML;
+
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Reviewing...`;
+        btn.disabled = true;
+        toggleReviewOverlay(true); // ✅ Show overlay on click
+
+        try {
+          const res = await fetch("/review_prd", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sections })
+          });
+
+          const data = await res.json();
+          const html = data.issues.map(i => `
       <div class="mb-3">
         <strong>${i.section}</strong><br/>
         🔺 <span class="text-danger">${i.issue}</span><br/>
@@ -834,18 +860,21 @@
       </div>
     `).join("");
 
-        document.getElementById("reviewFeedback").innerHTML = html;
-        new bootstrap.Modal(document.getElementById("reviewModal")).show();
-      } catch (err) {
-        showError("Review failed. See console.");
-        console.error(err);
-      } finally {
-        btn.innerHTML = originalLabel;
-        btn.disabled = false;
-        toggleReviewOverlay(false); // ✅ Hide overlay after completion
+          document.getElementById("reviewFeedback").innerHTML = html;
+          new bootstrap.Modal(document.getElementById("reviewModal")).show();
+        } catch (err) {
+          showError("Review failed. See console.");
+          console.error(err);
+        } finally {
+          btn.innerHTML = originalLabel;
+          btn.disabled = false;
+          toggleReviewOverlay(false); // ✅ Hide overlay after completion
+        }
       }
-    }
 
+
+
+    }); // <-- Add this closing brace and parenthesis for DOMContentLoaded
     let visibleTabId = null;
 
     function toggleChatPanel(agentKey) {
@@ -881,7 +910,12 @@
 
       label.textContent = agentTitles[agentKey] || 'Unknown';
     }
-
+    function expandAll() {
+      document.querySelectorAll('.prd-section-collapse').forEach(el => bootstrap.Collapse.getOrCreateInstance(el).show());
+    }
+    function collapseAll() {
+      document.querySelectorAll('.prd-section-collapse.show').forEach(el => bootstrap.Collapse.getOrCreateInstance(el).hide());
+    }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <div class="modal fade" id="reviewModal" tabindex="-1">
