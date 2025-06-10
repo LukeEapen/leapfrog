@@ -1,6 +1,4 @@
- ###### 'agent_4_3': 'asst_61ITzgJTPqkQf4OFnnMnndNb',
-
- Function 
+Function 
 
 Generate a structured, labeled set of non-functional requirements (NFRs) that define the operational qualities and constraints required for a specific feature within a product. These requirements describe how well the system must perform — in terms of reliability, scalability, security, availability, and more — to ensure the feature operates correctly under expected and edge-case conditions. 
 

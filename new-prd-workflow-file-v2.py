@@ -83,6 +83,39 @@ from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from concurrent.futures import ThreadPoolExecutor
+def run_chat_agent(prompt_file_path, user_input, temperature=0.2, top_p=1.0, max_tokens=1000):
+    with open(prompt_file_path, 'r', encoding='utf-8') as f:
+        system_prompt = f.read()
+
+    response = openai.chat.completions.create(
+        model="gpt-4-1106-preview",  # or your preferred model
+        temperature=temperature,
+        top_p=top_p,
+        max_tokens=max_tokens,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_input}
+        ]
+    )
+
+    # Correct way for openai>=1.10.0
+    return response.choices[0].message.content
+
+def create_agent_from_file(agent_key, file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            system_prompt = f.read()
+
+        assistant = openai.beta.assistants.create(
+            name=agent_key.replace("_", " ").title(),
+            instructions=system_prompt,
+            model="gpt-4-1106-preview",
+        )
+        AGENT_IDS[key] = assistant.id
+    except Exception as e:
+        logging.error(f"Error creating agent from file {file_path}: {e}")
+        return None
 
 ########################
 # REDIS CONFIGURATION
@@ -132,20 +165,96 @@ executor = ThreadPoolExecutor(max_workers=10)
 # OPENAI ASSISTANT IDs
 ########################
 
-# Map of assistant IDs to their roles
-ASSISTANTS = {
-    #'agent_1': 'asst_EvIwemZYiG4cCmYc7GnTZoQZ',
-    'agent_1_1': 'asst_sW7IMhE5tQ78Ylx0zQkh6YnZ', # Agent 1.1 - Product Overview Synthesizer – System Instructions
-    'agent_2'  : 'asst_t5hnaKy1wPvD48jTbn8Mx45z',   # Agent 2: Feature Overview Generator – System Instructions
-    'agent_3'  : 'asst_EqkbMBdfOpUoEUaBPxCChVLR',   # Agent 3: Highest-Order Requirements Agent
-    'agent_4_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator - System Instructions
-    'agent_4_2': 'asst_CLBdcKGduMvSBM06MC1OJ7bF', # Agent 4.2: Operational Business Requirements Generator – System Instructions
-    'agent_4_3': 'asst_61ITzgJTPqkQf4OFnnMnndNb', # Agent 4.3: Capability-Scoped Non-Functional Requirements Generator – System Instructions
-    'agent_4_4': 'asst_pPFGsMMqWg04OSHNmyQ5oaAy', # Agent 4.4: Data Attribute Requirement Generator – System Instructions
-    'agent_4_5': 'asst_wwgc1Zbl5iknlDtcFLOuTIjd',  # Agent 4.5: LRC: Legal, Regulatory, and Compliance Synthesizer – System Instructions
-    'agent_4_6': 'asst_JOtY81FnKEkrhgcJmuJSDyip'
+
+CACHE_FILE = 'assistant_ids.json'
+
+# Pull user-facing inputs from data
+data = {}  # Ensure 'data' is defined to avoid NameError
+inputs = {
+    'agent_1_1': data.get("product_overview", ""),
+    'agent_2': data.get("feature_overview", ""),
+    'agent_3': f"{data.get('product_overview', '')}\n{data.get('feature_overview', '')}",
+    'agent_4_1': data.get("agent_3", ""),
+    'agent_4_2': data.get("agent_3", ""),
+    'agent_4_3': data.get("agent_3", ""),
+    'agent_4_4': data.get("agent_3", ""),
+    'agent_4_5': data.get("agent_3", ""),
+    'agent_4_6': data.get("agent_3", "")
 }
 
+AGENT_FILES = {
+    'agent_1_1': 'agents/agent_1_1',
+    'agent_2': 'agents/agent_2',
+    'agent_3': 'agents/agent_3',
+    'agent_4_1': 'agents/agent_4_1',
+    'agent_4_2': 'agents/agent_4_2',
+    'agent_4_3': 'agents/agent_4_3',
+    'agent_4_4': 'agents/agent_4_4',
+    'agent_4_5': 'agents/agent_4_5',
+    'agent_4_6': 'agents/agent_4_6'
+}
+
+if os.path.exists(CACHE_FILE):
+    with open(CACHE_FILE) as f:
+        AGENT_IDS = json.load(f)
+else:
+    AGENT_IDS = {}
+    for key, filename in AGENT_FILES.items():
+        filepath = os.path.join('agents', filename)
+        AGENT_IDS[key] = create_agent_from_file(key, filepath)
+    with open(CACHE_FILE, 'w') as f:
+        json.dump(AGENT_IDS, f)
+
+
+
+def load_or_create_assistants():
+    """
+    Loads assistant IDs from cache or creates them at runtime if not found.
+    Returns a dictionary mapping agent keys to OpenAI assistant IDs.
+    """
+    cache_file = 'assistant_ids.json'
+    agent_files = {
+        'agent_1_1': 'agents/agent_1_1',
+        'agent_2': 'agents/agent_2',
+        'agent_3': 'agents/agent_3',
+        'agent_4_1': 'agents/agent_4_1',
+        'agent_4_2': 'agents/agent_4_2',
+        'agent_4_3': 'agents/agent_4_3',
+        'agent_4_4': 'agents/agent_4_4',
+        'agent_4_5': 'agents/agent_4_5',
+        'agent_4_6': 'agents/agent_4_6'
+    }
+    # Try to load from cache
+    if os.path.exists(cache_file):
+        with open(cache_file, 'r') as f:
+            assistants = json.load(f)
+    else:
+        assistants = {}
+
+    # Create any missing assistants
+    updated = False
+    for key, prompt_path in agent_files.items():
+        if key not in assistants or not assistants[key]:
+            try:
+                with open(prompt_path, 'r', encoding='utf-8') as f:
+                    system_prompt = f.read()
+                assistant = openai.beta.assistants.create(
+                    name=key.replace("_", " ").title(),
+                    instructions=system_prompt,
+                    model="gpt-4-1106-preview",
+                )
+                assistants[key] = assistant.id
+                updated = True
+            except Exception as e:
+                logging.error(f"Error creating assistant for {key}: {e}")
+    # Save updated cache if needed
+    if updated:
+        with open(cache_file, 'w') as f:
+            json.dump(assistants, f)
+    return assistants
+
+# Initialize ASSISTANTS at runtime
+ASSISTANTS = load_or_create_assistants()
 ########################
 # LOGGING CONFIGURATION
 ########################
@@ -296,7 +405,7 @@ async def wait_for_run_completion(thread_id, run_id, timeout=90, poll_interval=0
 
 
 @monitor_agent_performance
-def call_agent(agent_id, input_text):
+def call_agent1(agent_id, input_text):
     """
     Calls an OpenAI assistant agent with the specified input text and returns the agent's response.
     Args:
@@ -416,7 +525,7 @@ async def call_agent_async(agent_id, input_text):
         return f"Error: {str(e)}"
 
 
-# Update call_agents_parallel to use retry logic
+# Update call _agents_parallel to use retry logic
 async def call_agents_parallel(agent_calls):
     """
     Executes multiple agent calls in parallel using asyncio.
@@ -432,7 +541,7 @@ async def call_agents_parallel(agent_calls):
         Exception: Propagates any exceptions raised by the agent calls.
 
     Note:
-        This function assumes that `call_agent_with_cache` is an async function that takes
+        This function assumes that `call_ agent_with_cache` is an async function that takes
         (agent_id, input_text) as arguments.
     """
     tasks = [
@@ -562,27 +671,29 @@ def page1():
 
         def run_agents():
             try:
-                #a1 = call_agent(ASSISTANTS['agent_1'], context)
-                a11, a2, a3 = asyncio.run(call_agents_parallel([
-                    (ASSISTANTS['agent_1_1'], context),
-                    (ASSISTANTS['agent_2'], context),
-                    (ASSISTANTS['agent_3'], context)
-                ]))
-                logging.info(f"Agent 1.1 Output: {a11}")
-                logging.info(f"Agent 2 Output: {a2}")
-                final_data = {
-                    #"agent_1_output": a1,
-                    "product_overview": a11,
-                    "feature_overview": a2,
-                    "highest_order": a3,
-                    "status": "complete"
-                }
-                if USING_REDIS:
-                    redis_client.setex(session_id, 3600, json.dumps(final_data))
-                else:
-                    with open(os.path.join(TEMP_DIR, f'prd_session_{session_id}.json'), 'w') as f:
-                        json.dump(final_data, f)
-                logging.info(f"[AGENTS DONE] Page 1 background agents complete for session {session_id}")
+
+                with ThreadPoolExecutor(max_workers=3) as executor:
+                    futures = [
+                        executor.submit(run_chat_agent, AGENT_FILES['agent_1_1'], context),
+                        executor.submit(run_chat_agent, AGENT_FILES['agent_2'], context),
+                        executor.submit(run_chat_agent, AGENT_FILES['agent_3'], context),
+                    ]
+                    a11, a2, a3 = [f.result() for f in futures]
+                    logging.info(f"Agent 1.1 Output: {a11}")
+                    logging.info(f"Agent 2 Output: {a2}")
+                    final_data = {
+                        #"agent_1_output": a1,
+                        "product_overview": a11,
+                        "feature_overview": a2,
+                        "highest_order": a3,
+                        "status": "complete"
+                    }
+                    if USING_REDIS:
+                        redis_client.setex(session_id, 3600, json.dumps(final_data))
+                    else:
+                        with open(os.path.join(TEMP_DIR, f'prd_session_{session_id}.json'), 'w') as f:
+                            json.dump(final_data, f)
+                    logging.info(f"[AGENTS DONE] Page 1 background agents complete for session {session_id}")
             except Exception as e:
                 logging.error(f"Error during agent execution: {e}")
                 fail_data = {"status": "error", "message": str(e)}
@@ -688,7 +799,7 @@ def update_content():
             User instruction:
             {new_content}
             """
-            new_response = call_agent(ASSISTANTS['agent_1_1'], full_prompt)
+            new_response = run_chat_agent(ASSISTANTS['agent_1_1'], full_prompt)
             stored_data['product_overview'] = new_response
         elif content_type == 'feature':
             # Re-run Agent 2 with new content
@@ -701,7 +812,7 @@ def update_content():
             User instruction:
             {new_content}
             """
-            new_response = call_agent(ASSISTANTS['agent_2'], full_prompt)
+            new_response = run_chat_agent(ASSISTANTS['agent_2'], full_prompt)
             stored_data['feature_overview'] = new_response
         elif content_type == 'highest_order':
             existing_content = stored_data.get('combined_outputs', {}).get('highest_order', '')
@@ -712,7 +823,7 @@ def update_content():
             Please revise it based on this instruction:
             {new_content}
             """
-            new_response = call_agent(ASSISTANTS['agent_3'], full_prompt)
+            new_response = run_chat_agent(ASSISTANTS['agent_3'], full_prompt)
             stored_data['combined_outputs']['highest_order'] = new_response
         elif content_type.startswith('agent_4_'):
                 agent_id = ASSISTANTS.get(content_type)
@@ -727,7 +838,7 @@ def update_content():
                 {new_content}
                 """
 
-                new_response = call_agent(agent_id, full_prompt)
+                new_response = run_chat_agent(agent_id, full_prompt)
                 stored_data['combined_outputs'][content_type] = new_response   
 
         # Store updated data
@@ -786,11 +897,13 @@ def page3():
 
         logging.info(f"[PAGE3] Combined input for agents: {combined_input}")
 
-        keys = [k for k in ASSISTANTS if k.startswith("agent_4_")]
-        # Use asyncio to call all agents in parallel
-        results = asyncio.run(call_agents_parallel([
-            (ASSISTANTS[k], combined_input) for k in keys
-        ]))
+        keys = [k for k in AGENT_FILES if k.startswith("agent_4_")]
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = [
+                executor.submit(run_chat_agent, AGENT_FILES[k], combined_input)
+                for k in keys
+            ]
+            results = [f.result() for f in futures]
         outputs = dict(zip(keys, results))
 
         data['combined_outputs'] = outputs
@@ -1566,7 +1679,7 @@ def chat_with_agent():
             return jsonify({'error': 'Message is required'}), 400
 
         # 👇 THIS is where it talks to Agent 1.1
-        reply = call_agent(ASSISTANTS['agent_1_1'], message)
+        reply = run_chat_agent(ASSISTANTS['agent_1_1'], message)
 
         return jsonify({'reply': reply})
     except Exception as e:
@@ -1582,7 +1695,7 @@ def chat_agent3():
         current_data = get_data(session_id)
 
         # Call Agent 3
-        agent_reply = call_agent(ASSISTANTS['agent_3'], user_msg)
+        agent_reply = run_chat_agent(ASSISTANTS['agent_3'], user_msg)
 
         # Update Highest Order section
         if current_data:
@@ -1639,7 +1752,7 @@ def review_prd():
     )
 
     # Call Agent 4.6 (PRD Review Agent)
-    response = call_agent(ASSISTANTS['agent_4_6'], review_prompt)
+    response = run_chat_agent(AGENT_FILES['agent_4_6'], review_prompt)
    # response = call_openai_agent("agent_4_6", review_prompt)  # Assumes this helper exists
     try:
         parsed = json.loads(response)
@@ -1655,6 +1768,7 @@ def review_prd():
 # Add to main
 if __name__ == '__main__':
     cleanup_expired_sessions()
-    port = int(os.environ.get("PORT", 7001))
+    port = int(os.environ.get("PORT", 7002))
     app.run(host="0.0.0.0", port=port, debug=True)
+
 

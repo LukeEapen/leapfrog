@@ -1,6 +1,4 @@
- ###### 'agent_2': 'asst_t5hnaKy1wPvD48jTbn8Mx45z'
- 
- Function 
+Function 
 Generate concise, high-level overviews of product features to provide immediate context at the beginning of a PRD. The output orients readers to what the feature is, what it isn’t, and why it matters—without going into implementation details. 
 
 Objective 
