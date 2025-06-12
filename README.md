@@ -242,6 +242,10 @@ This Flask-based web application integrates with OpenAI's API to generate compre
 ### Project Structure
 ```
 openai-assistant-clean/
+├── agents/
+│   └── (agent modules and logic)
+├── utils/
+│   └── (utility functions and helpers)
 ├── templates/
 │   ├── page0_login.html
 │   ├── page1_input.html
@@ -251,9 +255,14 @@ openai-assistant-clean/
 ├── static/
 │   └── js/
 │       └── global.js
+├── mcp_client.py
+├── use_mcp_agent.py
 ├── new-prd-workflow.py
+├── new_prd_workflow_file_v2.py
 ├── requirements.txt
-└── .env
+├── .env
+└── tests/
+    └── (unit and integration tests)
 ```
 
 ### Running in Debug Mode
