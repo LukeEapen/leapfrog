@@ -54,6 +54,7 @@ import logging
 import tempfile
 import logging.config
 import random
+import requests
 from io import BytesIO
 from datetime import timedelta
 from concurrent.futures import ThreadPoolExecutor
@@ -64,7 +65,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 # Third-party framework and API imports
-import google.generativeai as genai
+
 import redis
 from flask import (
     Flask, render_template, request, redirect,
@@ -82,38 +83,46 @@ import docx
 from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+import openai
+
+load_dotenv()
+openai.api_key = os.getenv("GROQ_API_KEY")
+openai.api_base = "https://api.groq.com/openai/v1"
+models = openai.models.list()
+for m in models.data:
+    print(m.id)
 
 def run_chat_agent(prompt_file_path, user_input, temperature=0.2, top_p=1.0, max_tokens=10000):
-    with open(prompt_file_path, 'r', encoding='utf-8') as f:
-        system_prompt = f.read()
+            with open(prompt_file_path, 'r', encoding='utf-8') as f:
+                system_prompt = f.read()
 
-    prompt = f"{system_prompt}\n\nUser Input:\n{user_input}"
+                full_prompt = f"{system_prompt.strip()}\n\nUser Input:\n{user_input.strip()}"
 
-    logger.info(f"[GEMINI CALL] Calling Gemini API with prompt file '{prompt_file_path}' | user_input length: {len(user_input)}")
+                response = requests.post(
+                    "http://localhost:11434/api/generate",
+                    json={
+                        "model": "llama3",
+                        "prompt": full_prompt,
+                        "temperature": temperature,
+                        "top_p": top_p,
+                        "max_tokens": max_tokens,
+                        "stream": False
+                    },
+                    timeout=60  # <-- Add this line (timeout in seconds)
+                )
+            #    response = openai.chat.completions.create(
+            #    model="mixtral-8x7b-32768",  # Current model name on Groq
+            #    messages=[
+             #       {"role": "system", "content": system_prompt},
+             #       {"role": "user", "content": user_input}
+            #    ],
+            #    temperature=temperature,
+            #    top_p=top_p,
+            #    max_tokens=max_tokens
+            #)
 
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
-    response = model.generate_content(
-        prompt,
-        generation_config={
-            "temperature": temperature,
-            "top_p": top_p,
-            "max_output_tokens": max_tokens
-        }
-    )
-
-    # Log token usage if available
-    usage = getattr(response, "usage_metadata", None)
-    if usage:
-        prompt_tokens = usage.prompt_token_count
-        completion_tokens = usage.candidates_token_count
-        total_tokens = prompt_tokens + completion_tokens if prompt_tokens and completion_tokens else None
-        logger.info(f"[GEMINI USAGE] Prompt tokens: {prompt_tokens}, Completion tokens: {completion_tokens}, Total tokens: {total_tokens}")
-        # If you want to estimate cost, you can multiply total_tokens by your rate here
-        # logger.info(f"[GEMINI COST ESTIMATE] (Set your rate per 1K tokens here)")
-    else:
-        logger.info("[GEMINI USAGE] Usage metadata not available in response.")
-
-    return response.text
+            #return response['choices'][0]['message']['content']
+            return response.choices[0].message.content
 
 ########################
 # REDIS CONFIGURATION
@@ -140,7 +149,7 @@ except redis.ConnectionError as e:
 ########################
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
@@ -315,16 +324,17 @@ def page1():
                 os.remove(path)
 
         def run_agents():
+            logging.info("run_agents started")
             try:
                 a11 = run_chat_agent(AGENT_FILES['agent_1_1'], context)
                 a2 = run_chat_agent(AGENT_FILES['agent_2'], context)
-                a3 = run_chat_agent(AGENT_FILES['agent_3'], context)
+               # a3 = run_chat_agent(AGENT_FILES['agent_3'], context)
                 logging.info(f"Agent 1.1 Output: {a11}")
                 logging.info(f"Agent 2 Output: {a2}")
                 final_data = {
                     "product_overview": a11,
                     "feature_overview": a2,
-                    "highest_order": a3,
+                 #   "highest_order": a3,
                     "status": "complete"
                 }
                 if USING_REDIS:
@@ -596,6 +606,6 @@ def review_prd():
     return jsonify({"issues": parsed})
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 7003))
+    port = int(os.environ.get("PORT", 7004))
     print(f"Starting Flask server on port {port} ...")
     app.run(host="0.0.0.0", port=port, debug=True)

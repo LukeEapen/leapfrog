@@ -143,7 +143,12 @@ This Flask-based web application integrates with OpenAI's API to generate compre
    - Install Redis if you want to use it for session management
    - Update Redis configuration in `.env`
 
-## 🚀 Running the Application
+3. **MCP Client Configuration** (Optional)
+   - If using MCP integration, ensure `mcp_client.py` and `use_mcp_agent.py` are present.
+   - Update `.env` with your MCP credentials as shown above.
+
+
+## 🚀 Running the Application [v1]
 
 1. **Start the Application**
    ```powershell
@@ -155,6 +160,29 @@ This Flask-based web application integrates with OpenAI's API to generate compre
    - Navigate to `http://localhost:7001`
    - Log in with your configured credentials
 
+## 🚀 Running the Application [v2]
+
+1. **Start the Application**
+   ```powershell
+   python .\new-prd-workflow.py
+   ```
+
+2. **Start the New Workflow (v2)**
+   ```powershell
+   python .\new_prd_workflow_file_v2.py
+   ```
+
+3. **Start the MCP Agent API (if using MCP integration)**
+   ```powershell
+   uvicorn use_mcp_agent:app --port 4000
+   ```
+
+4. **Access the Web Interface**
+   - Open your browser
+   - Navigate to `http://localhost:7002`
+   - Log in with your configured credentials
+
+   
 ## 📖 Usage Guide
 
 ### Login Page

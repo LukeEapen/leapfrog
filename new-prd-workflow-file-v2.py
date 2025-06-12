@@ -84,23 +84,12 @@ from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from concurrent.futures import ThreadPoolExecutor
-def run_chat_agent(prompt_file_path, user_input, temperature=0.2, top_p=1.0, max_tokens=1000):
-    with open(prompt_file_path, 'r', encoding='utf-8') as f:
-        system_prompt = f.read()
+import requests
+import uuid
+import streamlit as st
+from utils.text_processing import extract_text_from_file, validate_uploaded_file
+from mcp_client import call_agent_via_mcp
 
-    response = openai.chat.completions.create(
-        model="gpt-4-1106-preview",  # or your preferred model
-        temperature=temperature,
-        top_p=top_p,
-        max_tokens=max_tokens,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_input}
-        ]
-    )
-
-    # Correct way for openai>=1.10.0
-    return response.choices[0].message.content
 
 def create_agent_from_file(agent_key, file_path):
     try:
@@ -674,9 +663,9 @@ def page1():
 
                 with ThreadPoolExecutor(max_workers=3) as executor:
                     futures = [
-                        executor.submit(run_chat_agent, AGENT_FILES['agent_1_1'], context),
-                        executor.submit(run_chat_agent, AGENT_FILES['agent_2'], context),
-                        executor.submit(run_chat_agent, AGENT_FILES['agent_3'], context),
+                        executor.submit(call_agent_via_mcp, AGENT_FILES['agent_1_1'], context),
+                        executor.submit(call_agent_via_mcp, AGENT_FILES['agent_2'], context),
+                        executor.submit(call_agent_via_mcp, AGENT_FILES['agent_3'], context),
                     ]
                     a11, a2, a3 = [f.result() for f in futures]
                     logging.info(f"Agent 1.1 Output: {a11}")
@@ -799,7 +788,7 @@ def update_content():
             User instruction:
             {new_content}
             """
-            new_response = run_chat_agent(ASSISTANTS['agent_1_1'], full_prompt)
+            new_response = call_agent_via_mcp(ASSISTANTS['agent_1_1'], full_prompt)
             stored_data['product_overview'] = new_response
         elif content_type == 'feature':
             # Re-run Agent 2 with new content
@@ -812,7 +801,7 @@ def update_content():
             User instruction:
             {new_content}
             """
-            new_response = run_chat_agent(ASSISTANTS['agent_2'], full_prompt)
+            new_response = call_agent_via_mcp(ASSISTANTS['agent_2'], full_prompt)
             stored_data['feature_overview'] = new_response
         elif content_type == 'highest_order':
             existing_content = stored_data.get('combined_outputs', {}).get('highest_order', '')
@@ -823,7 +812,7 @@ def update_content():
             Please revise it based on this instruction:
             {new_content}
             """
-            new_response = run_chat_agent(ASSISTANTS['agent_3'], full_prompt)
+            new_response = call_agent_via_mcp(ASSISTANTS['agent_3'], full_prompt)
             stored_data['combined_outputs']['highest_order'] = new_response
         elif content_type.startswith('agent_4_'):
                 agent_id = ASSISTANTS.get(content_type)
@@ -838,7 +827,7 @@ def update_content():
                 {new_content}
                 """
 
-                new_response = run_chat_agent(agent_id, full_prompt)
+                new_response = call_agent_via_mcp(agent_id, full_prompt)
                 stored_data['combined_outputs'][content_type] = new_response   
 
         # Store updated data
@@ -900,7 +889,7 @@ def page3():
         keys = [k for k in AGENT_FILES if k.startswith("agent_4_")]
         with ThreadPoolExecutor(max_workers=3) as executor:
             futures = [
-                executor.submit(run_chat_agent, AGENT_FILES[k], combined_input)
+                executor.submit(call_agent_via_mcp, AGENT_FILES[k], combined_input)
                 for k in keys
             ]
             results = [f.result() for f in futures]
@@ -1403,6 +1392,9 @@ def initialize_document_styles(doc):
     
     return doc
 
+# Define a dummy session_store for file-based session management
+session_store = {}
+
 def cleanup_expired_sessions():
     """
     Removes expired session files from the temporary directory if Redis is not used.
@@ -1419,26 +1411,28 @@ def cleanup_expired_sessions():
     if USING_REDIS:
         return  # Redis handles expiration
         
+    now = time.time()
+    removed = 0
     try:
-        current_time = time.time()
-        cleaned = 0
-        failed = 0
-        
-        for filename in os.listdir(TEMP_DIR):
-            if not filename.startswith('prd_session_'):
-                continue
-                
-            filepath = os.path.join(TEMP_DIR, filename)
+        expiry_seconds = 3600  # 1 hour expiration for sessions
+        # For dict-like session store
+        keys_to_delete = []
+        for session_id, session_data in session_store.items():
             try:
-                if current_time - os.path.getmtime(filepath) > 3600:
-                    os.remove(filepath)
-                    cleaned += 1
-            except OSError as e:
-                failed += 1
-                logging.error(f"Failed to remove {filepath}: {e}")
-                
-        logging.info(f"Session cleanup: {cleaned} removed, {failed} failed")
-        
+                last_active = session_data.get('last_active', 0)
+                if now - last_active > expiry_seconds:
+                    keys_to_delete.append(session_id)
+            except Exception as e:
+                logging.warning(f"Error checking session {session_id}: {e}")
+
+        for session_id in keys_to_delete:
+            try:
+                del session_store[session_id]
+                removed += 1
+            except Exception as e:
+                logging.error(f"Error deleting session {session_id}: {e}")
+
+        logging.info(f"Session cleanup complete. Removed {removed} expired sessions.")
     except Exception as e:
         logging.error(f"Session cleanup failed: {e}")
 
@@ -1679,7 +1673,7 @@ def chat_with_agent():
             return jsonify({'error': 'Message is required'}), 400
 
         # 👇 THIS is where it talks to Agent 1.1
-        reply = run_chat_agent(ASSISTANTS['agent_1_1'], message)
+        reply = call_agent_via_mcp(ASSISTANTS['agent_1_1'], message)
 
         return jsonify({'reply': reply})
     except Exception as e:
@@ -1695,7 +1689,7 @@ def chat_agent3():
         current_data = get_data(session_id)
 
         # Call Agent 3
-        agent_reply = run_chat_agent(ASSISTANTS['agent_3'], user_msg)
+        agent_reply = call_agent_via_mcp(ASSISTANTS['agent_3'], user_msg)
 
         # Update Highest Order section
         if current_data:
@@ -1752,7 +1746,7 @@ def review_prd():
     )
 
     # Call Agent 4.6 (PRD Review Agent)
-    response = run_chat_agent(AGENT_FILES['agent_4_6'], review_prompt)
+    response = call_agent_via_mcp(AGENT_FILES['agent_4_6'], review_prompt)
    # response = call_openai_agent("agent_4_6", review_prompt)  # Assumes this helper exists
     try:
         parsed = json.loads(response)
@@ -1767,7 +1761,6 @@ def review_prd():
     
 # Add to main
 if __name__ == '__main__':
-    cleanup_expired_sessions()
     port = int(os.environ.get("PORT", 7002))
     app.run(host="0.0.0.0", port=port, debug=True)
 
