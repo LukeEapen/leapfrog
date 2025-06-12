@@ -6,4 +6,4 @@ echo "Starting MCP..."
 uvicorn use_mcp_agent:app --port 4000
 
 echo "Starting app..."
-python  python new-prd-workflow-file-v2.py
+python new-prd-workflow-file-v2.py
