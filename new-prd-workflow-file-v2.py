@@ -84,10 +84,7 @@ from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from concurrent.futures import ThreadPoolExecutor
-import requests
 import uuid
-import streamlit as st
-from utils.text_processing import extract_text_from_file, validate_uploaded_file
 from mcp_client import call_agent_via_mcp
 
 
@@ -393,79 +390,7 @@ async def wait_for_run_completion(thread_id, run_id, timeout=90, poll_interval=0
     raise TimeoutError(f"Run {run_id} did not complete in {timeout} seconds.")
 
 
-@monitor_agent_performance
-def call_agent1(agent_id, input_text):
-    """
-    Calls an OpenAI assistant agent with the specified input text and returns the agent's response.
-    Args:
-        agent_id (str): The ID of the assistant agent to call.
-        input_text (str): The input text to send to the agent.
-    Returns:
-        str: The response from the agent, or an error message if the call fails.
-    Raises:
-        ValueError: If thread, message, or run creation fails, or if no messages are returned.
-        Exception: For any other unexpected errors during the agent call process.
-    Logs:
-        - Start and end of the agent call.
-        - The agent's response.
-        - Any errors encountered during the process.
-    """
-    try:
-        logging.info(f"[CALL START] Calling agent {agent_id}")
-        thread_key = f"thread_{agent_id}"
-        if thread_key not in session:
-            thread = openai.beta.threads.create()
-            session[thread_key] = thread.id
-        else:
-            thread = openai.beta.threads.retrieve(session[thread_key])
-        
-        if not thread or not thread.id:
-            raise ValueError("Failed to create thread")
-            
-        message = openai.beta.threads.messages.create(
-            thread_id=thread.id, 
-            role="user", 
-            content=input_text
-        )
-        if not message:
-            raise ValueError("Failed to create message")
-            
-        run = openai.beta.threads.runs.create(
-            thread_id=thread.id, 
-            assistant_id=agent_id
-        )
-        if not run:
-            raise ValueError("Failed to create run")
 
-        start_time = time.time()
-        while time.time() - start_time < 60:  # 60 second timeout
-            status = openai.beta.threads.runs.retrieve(
-                thread_id=thread.id, 
-                run_id=run.id
-            )
-            if status.status == "completed":
-                break
-            time.sleep(0.25)
-            
-        messages = openai.beta.threads.messages.list(thread_id=thread.id)
-        if not messages.data:
-            raise ValueError("No messages returned")
-            
-        response = messages.data[0].content[0].text.value
-        
-        # Log the agent's response
-        logging.info(f"""
-        [AGENT RESPONSE] Agent {agent_id}:
-        ----------------------------------------
-        {response}
-        ----------------------------------------
-        """)
-            
-        return response
-
-    except Exception as e:
-        logging.error(f"[ERROR] Agent {agent_id} failed: {e}")
-        return f"Error: {str(e)}"
 
 @monitor_agent_performance
 async def call_agent_async(agent_id, input_text):
@@ -482,29 +407,7 @@ async def call_agent_async(agent_id, input_text):
     """
     try:
         logging.info(f"[CALL START] Calling agent {agent_id}")
-        thread_key = f"thread_{agent_id}"
-        if thread_key not in session:
-            thread = openai.beta.threads.create()
-            session[thread_key] = thread.id
-        else:
-            thread = openai.beta.threads.retrieve(session[thread_key])
-
-        message = openai.beta.threads.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=input_text
-        )
-
-        run = openai.beta.threads.runs.create(
-            thread_id=thread.id,
-            assistant_id=agent_id
-        )
-
-        # Use async polling
-        await wait_for_run_completion(thread.id, run.id)
-
-        messages = openai.beta.threads.messages.list(thread_id=thread.id)
-        response = messages.data[0].content[0].text.value
+        response = await call_agent_via_mcp(AGENT_IDS[agent_id], input_text)
 
         logging.info(f"[AGENT RESPONSE] Agent {agent_id}:\n{response}")
         return response
@@ -1544,19 +1447,7 @@ async def call_agent_with_retry(agent_id, input_text, max_retries=3):
     for attempt in range(max_retries):
         try:
             # Create thread with initial message
-            thread = openai.beta.threads.create(messages=[{"role": "user", "content": input_text}])
-            if not thread or not thread.id:
-                raise ValueError("Thread creation failed")
-
-            # Start agent run
-            run = openai.beta.threads.runs.create(thread_id=thread.id, assistant_id=agent_id)
-
-            # Use the async event loop to wait non-blockingly
-            status = await wait_for_run_completion(thread.id, run.id)
-
-            # Get response messages
-            messages = openai.beta.threads.messages.list(thread_id=thread.id)
-            response = messages.data[0].content[0].text.value if messages.data else ""
+            response = await call_agent_via_mcp(AGENT_IDS[agent_id], input_text)
             return response
 
         except Exception as e:
