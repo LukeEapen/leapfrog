@@ -55,9 +55,37 @@
       width: 100%;
       border-radius: 0.5rem;
       cursor: pointer;
-    }    .submit-btn:disabled {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .submit-btn:disabled {
       background-color: #666;
       cursor: not-allowed;
+    }
+
+    .submit-btn .btn-spinner {
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    .submit-btn .btn-timer {
+      font-size: 0.9rem;
+      font-weight: normal;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .submit-btn.success {
@@ -299,7 +327,11 @@
           <label for="context" class="form-label">Additional context</label>
           <textarea class="form-control" id="context" name="context" placeholder="Insert any additional context not captured by the PRD or other uploaded documents here."></textarea>
         </div>
-        <button type="submit" class="submit-btn" id="uploadBtn">Upload & Preview Summary</button>
+        <button type="submit" class="submit-btn" id="uploadBtn">
+          <span class="btn-spinner" id="uploadSpinner"></span>
+          <span class="btn-text">Upload & Preview Summary</span>
+          <span class="btn-timer" id="uploadTimer"></span>
+        </button>
       </form>
     </div>
 
@@ -332,7 +364,11 @@
         <div class="summary-box" id="userContext"></div>
       </div>
       
-      <button type="button" class="submit-btn" id="generateEpicsBtn">Generate Epics</button>
+      <button type="button" class="submit-btn" id="generateEpicsBtn">
+        <span class="btn-spinner" id="epicSpinner"></span>
+        <span class="btn-text">Generate Epics</span>
+        <span class="btn-timer" id="epicTimer"></span>
+      </button>
     </div>
 
     <!-- Loading Spinner for Epic Generation -->
@@ -344,21 +380,51 @@
     </div>
 
   </div>
-
   <script>
     let previewData = null;
+    let uploadTimer = null;
+    let epicTimer = null;
 
-    // Step 1: Document Upload
+    // Timer utility functions
+    function startTimer(timerId, buttonTimerElement) {
+      let seconds = 0;
+      return setInterval(() => {
+        seconds++;
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        const timeString = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        buttonTimerElement.textContent = timeString;
+      }, 1000);
+    }
+
+    function showButtonLoading(button, spinner, timer, buttonText, loadingText) {
+      button.disabled = true;
+      spinner.style.display = 'block';
+      button.querySelector('.btn-text').textContent = loadingText;
+      timer.textContent = '0:00';
+      return startTimer(null, timer);
+    }
+
+    function hideButtonLoading(button, spinner, timer, originalText, timerInterval) {
+      button.disabled = false;
+      spinner.style.display = 'none';
+      button.querySelector('.btn-text').textContent = originalText;
+      timer.textContent = '';
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    }    // Step 1: Document Upload
     document.getElementById('documentUploadForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
       const formData = new FormData(this);
       const uploadBtn = document.getElementById('uploadBtn');
+      const uploadSpinner = document.getElementById('uploadSpinner');
+      const uploadTimerEl = document.getElementById('uploadTimer');
       const loadingSpinner = document.getElementById('loadingSpinner');
       
-      // Show loading spinner
-      uploadBtn.disabled = true;
-      uploadBtn.textContent = 'Processing...';
+      // Show loading spinner and start timer
+      uploadTimer = showButtonLoading(uploadBtn, uploadSpinner, uploadTimerEl, 'Upload & Preview Summary', 'Processing...');
       loadingSpinner.style.display = 'block';
         try {
         const response = await fetch('/document-upload', {
@@ -396,19 +462,15 @@
         } else {
           showAlert('danger', 'Error processing documents: ' + (result.error || 'Unknown error'));
         }
-        
-      } catch (error) {
+          } catch (error) {
         console.error('Error details:', error);
         showAlert('danger', 'Error uploading documents: ' + error.message + '. Please check the console for more details.');
       } finally {
-        // Hide loading spinner
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = 'Upload & Preview Summary';
+        // Hide loading spinner and timer
+        hideButtonLoading(uploadBtn, uploadSpinner, uploadTimerEl, 'Upload & Preview Summary', uploadTimer);
         loadingSpinner.style.display = 'none';
       }
-    });
-
-    // Step 2: Generate Epics
+    });    // Step 2: Generate Epics
     document.getElementById('generateEpicsBtn').addEventListener('click', async function() {
       if (!previewData) {
         showAlert('danger', 'No preview data available. Please upload documents first.');
@@ -416,14 +478,15 @@
       }
       
       const generateBtn = document.getElementById('generateEpicsBtn');
+      const epicSpinner = document.getElementById('epicSpinner');
+      const epicTimerEl = document.getElementById('epicTimer');
       const epicLoadingSpinner = document.getElementById('epicLoadingSpinner');
       
-      // Show loading spinner
-      generateBtn.disabled = true;
-      generateBtn.textContent = 'Generating...';
+      // Show loading spinner and start timer
+      epicTimer = showButtonLoading(generateBtn, epicSpinner, epicTimerEl, 'Generate Epics', 'Generating...');
       epicLoadingSpinner.style.display = 'block';
       
-      try {        const response = await fetch('/generate-epics', {
+      try {const response = await fetch('/generate-epics', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -462,14 +525,12 @@
           
         } else {
           showAlert('danger', 'Error generating epics: ' + (result.error || 'Unknown error'));
-        }
-          } catch (error) {
+        }          } catch (error) {
         console.error('Error details:', error);
         showAlert('danger', 'Error generating epics: ' + error.message + '. Please check the console for more details.');
       } finally {
-        // Hide loading spinner
-        generateBtn.disabled = false;
-        generateBtn.textContent = 'Generate Epics';
+        // Hide loading spinner and timer
+        hideButtonLoading(generateBtn, epicSpinner, epicTimerEl, 'Generate Epics', epicTimer);
         epicLoadingSpinner.style.display = 'none';
       }
     });

@@ -65,8 +65,7 @@
     .priority-low {
       color: green;
       font-weight: bold;
-    }
-    .footer-btn {
+    }    .footer-btn {
       background-color: #d0021b;
       color: white;
       font-weight: bold;
@@ -75,9 +74,68 @@
       border-radius: 10px;
       border: none;
       margin-top: 20px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
+
+    .footer-btn:disabled {
+      background-color: #666;
+      cursor: not-allowed;
+    }
+
+    .footer-btn .btn-spinner {
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    .footer-btn .btn-timer {
+      font-size: 0.9rem;
+      font-weight: normal;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     .hidden {
       display: none;
+    }
+    /* User stories table styling */
+    .table {
+      background-color: white;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .table th {
+      background-color: #343a40;
+      color: white;
+      border: none;
+      font-weight: bold;
+      vertical-align: middle;
+    }
+    .table td {
+      vertical-align: middle;
+      border-color: #dee2e6;
+    }
+    .table-striped tbody tr:nth-of-type(odd) {
+      background-color: #f8f9fa;
+    }
+    .badge {
+      font-size: 0.8em;
+    }
+    .form-check-input:checked {
+      background-color: #d0021b;
+      border-color: #d0021b;
     }
   </style>
 </head>
@@ -91,10 +149,13 @@
   </div>  <div id="epics-container">
     {{ epics|safe }}
   </div>
-
   <form id="approve-epics-form" method="POST" action="/approve-epics">
     <input type="hidden" name="epic_ids" id="epic_ids" value="epic_1,epic_2">
-    <button type="submit" class="footer-btn">Approve Epic(s)</button>
+    <button type="submit" class="footer-btn" id="approveEpicsBtn">
+      <span class="btn-spinner" id="approveSpinner"></span>
+      <span class="btn-text">Approve Epic(s)</span>
+      <span class="btn-timer" id="approveTimer"></span>
+    </button>
   </form>
 
   <div id="user-stories-section" class="{{ 'hidden' if not user_stories }}">
@@ -107,15 +168,52 @@
     </p>
     <div id="user-stories-container">
       {{ user_stories|safe }}
-    </div>
-    <form id="proceed-form" method="POST" action="/generate-user-story">
+    </div>    <form id="proceed-form" method="POST" action="/generate-user-story">
       <input type="hidden" name="selected_story_id" id="selected_story_id">
-      <button type="submit" class="footer-btn">Proceed with selection</button>
+      <button type="submit" class="footer-btn" id="proceedBtn">
+        <span class="btn-spinner" id="proceedSpinner"></span>
+        <span class="btn-text">Proceed with selection</span>
+        <span class="btn-timer" id="proceedTimer"></span>
+      </button>
     </form>
   </div>
 </div>
 
-<script>  // Function to parse and format epics if they're in JSON format
+<script>  
+  // Timer and spinner utility functions
+  let approveTimer = null;
+  let proceedTimer = null;
+
+  function startTimer(timerId, buttonTimerElement) {
+    let seconds = 0;
+    return setInterval(() => {
+      seconds++;
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      const timeString = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+      buttonTimerElement.textContent = timeString;
+    }, 1000);
+  }
+
+  function showButtonLoading(button, spinner, timer, buttonText, loadingText) {
+    button.disabled = true;
+    spinner.style.display = 'block';
+    button.querySelector('.btn-text').textContent = loadingText;
+    timer.textContent = '0:00';
+    return startTimer(null, timer);
+  }
+
+  function hideButtonLoading(button, spinner, timer, originalText, timerInterval) {
+    button.disabled = false;
+    spinner.style.display = 'none';
+    button.querySelector('.btn-text').textContent = originalText;
+    timer.textContent = '';
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+  }
+
+  // Function to parse and format epics if they're in JSON format
   function parseAndFormatEpics() {
     const epicsContainer = document.getElementById('epics-container');
     let content = epicsContainer.innerHTML.trim();
@@ -243,7 +341,7 @@
       }
     }
   }
-    // Parse epics when page loads
+  // Parse epics when page loads
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, checking for epics content...');
     const epicsContainer = document.getElementById('epics-container');
@@ -252,6 +350,14 @@
       parseAndFormatEpics();
     } else {
       console.log('Epics container not found');
+    }
+    
+    // Also check for user stories content
+    console.log('DOM loaded, checking for user stories content...');
+    const userStoriesContainer = document.getElementById('user-stories-container');
+    if (userStoriesContainer && userStoriesContainer.innerHTML.trim()) {
+      console.log('User stories container found with content');
+      parseAndFormatUserStories();
     }
   });
   
@@ -263,19 +369,52 @@
       console.log('Delayed check - content found:', epicsContainer.innerHTML);
       parseAndFormatEpics();
     }
-  }, 500);
-  document.getElementById("approve-epics-form")?.addEventListener("submit", async function (e) {
+    
+    // Check user stories again too
+    console.log('Timeout triggered, checking user stories again...');
+    const userStoriesContainer = document.getElementById('user-stories-container');
+    if (userStoriesContainer && userStoriesContainer.innerHTML.trim()) {
+      console.log('Delayed check - user stories content found');
+      parseAndFormatUserStories();
+    }
+  }, 500);document.getElementById("approve-epics-form")?.addEventListener("submit", async function (e) {
     e.preventDefault();
+    
+    const approveBtn = document.getElementById('approveEpicsBtn');
+    const approveSpinner = document.getElementById('approveSpinner');
+    const approveTimerEl = document.getElementById('approveTimer');
     
     // Get current epics content to preserve it
     const epicsContainer = document.getElementById('epics-container');
     const currentEpicsContent = epicsContainer ? epicsContainer.innerHTML : '';
     
-    // Collect selected epic IDs from checkboxes
+    // Collect selected epic IDs and their content from checkboxes
     const selectedEpics = [];
+    const selectedEpicContents = {};
     const checkboxes = document.querySelectorAll('input[name="epic_ids"]:checked');
+    
     checkboxes.forEach(checkbox => {
-      selectedEpics.push(checkbox.value);
+      const epicId = checkbox.value;
+      selectedEpics.push(epicId);
+      
+      // Find the epic card containing this checkbox to extract the epic content
+      const epicCard = checkbox.closest('.epic-card');
+      if (epicCard) {
+        // Extract epic title and description
+        const titleElement = epicCard.querySelector('h5');
+        const descriptionElement = epicCard.querySelector('p');
+        
+        const epicTitle = titleElement ? titleElement.textContent.replace(/^Epic \d+: /, '') : '';
+        const epicDescription = descriptionElement ? descriptionElement.textContent.replace(/^Description: /, '') : '';
+        
+        selectedEpicContents[epicId] = {
+          title: epicTitle,
+          description: epicDescription,
+          fullContent: epicCard.textContent || ''
+        };
+        
+        console.log(`Extracted content for ${epicId}:`, selectedEpicContents[epicId]);
+      }
     });
     
     if (selectedEpics.length === 0) {
@@ -283,24 +422,33 @@
       return;
     }
     
-    // Create form data with selected epics and current content
+    // Show loading spinner and start timer
+    approveTimer = showButtonLoading(approveBtn, approveSpinner, approveTimerEl, 'Approve Epic(s)', 'Processing...');
+    
+    // Create form data with selected epics, their content, and current HTML
     const formData = new FormData();
     formData.append('epic_ids', selectedEpics.join(','));
     formData.append('current_epics', currentEpicsContent);
+    formData.append('selected_epic_contents', JSON.stringify(selectedEpicContents));
     
     try {
       console.log('Submitting epic approval with selected epics:', selectedEpics);
+      console.log('Epic contents:', selectedEpicContents);
       
       const response = await fetch("/approve-epics", {
         method: "POST",
         body: formData,
       });
-      
-      if (response.ok) {
+        if (response.ok) {
         const html = await response.text();
         document.open();
         document.write(html);
         document.close();
+        
+        // After the new page loads, try to parse user stories
+        setTimeout(function() {
+          parseAndFormatUserStories();
+        }, 1000);
       } else {
         console.error('Error submitting epic approval:', response.statusText);
         alert('Error processing epic approval. Please try again.');
@@ -308,14 +456,506 @@
     } catch (error) {
       console.error('Error submitting epic approval:', error);
       alert('Network error. Please check your connection and try again.');
+    } finally {
+      // Hide loading spinner and timer
+      hideButtonLoading(approveBtn, approveSpinner, approveTimerEl, 'Approve Epic(s)', approveTimer);
     }
-  });
-
-  document.getElementById("proceed-form")?.addEventListener("submit", function (e) {
-    const checked = document.querySelector('input[name="user_story_id"]:checked');
+  });  document.getElementById("proceed-form")?.addEventListener("submit", async function (e) {
+    e.preventDefault(); // Prevent default form submission
+    
+    const proceedBtn = document.getElementById('proceedBtn');
+    const proceedSpinner = document.getElementById('proceedSpinner');
+    const proceedTimerEl = document.getElementById('proceedTimer');
+    
+    // Debug: Check what radio buttons exist
+    const allRadios = document.querySelectorAll('input[type="radio"]');
+    console.log('All radio buttons found:', allRadios);
+    allRadios.forEach((radio, index) => {
+      console.log(`Radio ${index}: name="${radio.name}", value="${radio.value}", checked=${radio.checked}`);
+    });
+    
+    // Try multiple selectors to find the checked user story
+    let checked = document.querySelector('input[name="user_story_id"]:checked');
+    
+    // Fallback: try other possible names
+    if (!checked) {
+      checked = document.querySelector('input[name="story_id"]:checked');
+    }
+    if (!checked) {
+      checked = document.querySelector('#user-stories-container input[type="radio"]:checked');
+    }
+    
+    console.log('Selected user story radio button:', checked);
+    
     if (checked) {
       document.getElementById("selected_story_id").value = checked.value;
+      
+      // Show loading spinner and start timer
+      proceedTimer = showButtonLoading(proceedBtn, proceedSpinner, proceedTimerEl, 'Proceed with selection', 'Processing...');
+      
+      try {
+        // Create form data
+        const formData = new FormData();
+        formData.append('selected_story_id', checked.value);
+        
+        console.log('Submitting user story selection:', checked.value);
+        
+        const response = await fetch("/generate-user-story", {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('User story selection result:', result);
+          
+          if (result.success) {
+            // Show success message
+            alert(`User story ${result.story_id} selected successfully!`);
+            
+            // You can add navigation to user story details page here
+            // For example: window.location.href = result.redirect_url;
+            
+          } else {
+            console.error('Error in user story selection:', result.error);
+            alert(`Error: ${result.error}`);
+          }
+        } else {
+          console.error('Error submitting user story selection:', response.statusText);
+          alert('Error processing user story selection. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error submitting user story selection:', error);
+        alert('Network error. Please check your connection and try again.');
+      } finally {
+        // Hide loading spinner and timer
+        hideButtonLoading(proceedBtn, proceedSpinner, proceedTimerEl, 'Proceed with selection', proceedTimer);
+      }
+    } else {
+      // Enhanced error message with debugging info
+      console.error('No user story selected');
+      console.log('User stories container content:', document.getElementById('user-stories-container')?.innerHTML);
+      alert('Please select a user story to proceed. If you don\'t see any selectable options, try refreshing the page or checking the console for errors.');
     }
+  });
+    // Function to parse and format user stories if they're in JSON format
+  function parseAndFormatUserStories() {
+    const userStoriesContainer = document.getElementById('user-stories-container');
+    if (!userStoriesContainer) {
+      console.log('User stories container not found');
+      return;
+    }
+    
+    let content = userStoriesContainer.innerHTML.trim();
+    
+    // If content is already formatted (contains user-story-card or table), don't reprocess
+    if (content.includes('user-story-card') || content.includes('<table')) {
+      console.log('User stories already formatted, skipping parsing');
+      return;
+    }
+    
+    // Remove any HTML tags and get plain text
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    content = tempDiv.textContent || tempDiv.innerText || '';
+    content = content.trim();
+    
+    console.log('Raw user stories content to parse:', content);
+    
+    // If content is empty or very short, leave it as is
+    if (!content || content.length < 5) {
+      console.log('User stories content too short or empty, skipping parsing');
+      return;
+    }
+
+    try {
+      // Multiple strategies to extract JSON from text
+      let cleanContent = content;
+      let extractionMethod = 'direct';
+      
+      // Strategy 1: Look for markdown-wrapped JSON
+      if (cleanContent.includes('```json')) {
+        const jsonMatch = cleanContent.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonMatch && jsonMatch[1]) {
+          cleanContent = jsonMatch[1].trim();
+          extractionMethod = 'markdown-json';
+        }
+      } 
+      // Strategy 2: Look for any code block with ```
+      else if (cleanContent.includes('```')) {
+        const codeBlockMatch = cleanContent.match(/```\s*([\s\S]*?)\s*```/);
+        if (codeBlockMatch && codeBlockMatch[1]) {
+          cleanContent = codeBlockMatch[1].trim();
+          extractionMethod = 'markdown-code';
+        }
+      }
+      
+      // Strategy 3: Look for JSON array pattern (most robust)
+      // This regex finds arrays that start with [ and end with ] and contain objects
+      const jsonArrayPattern = /\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/;
+      const jsonArrayMatch = cleanContent.match(jsonArrayPattern);
+      if (jsonArrayMatch) {
+        cleanContent = jsonArrayMatch[0];
+        extractionMethod = 'regex-array';
+        console.log(`Found JSON array using ${extractionMethod}:`, cleanContent.substring(0, 200) + '...');
+      }
+      
+      // Strategy 4: Look for single object pattern
+      if (!jsonArrayMatch) {
+        const singleObjectPattern = /\{\s*"[\s\S]*?\}/;
+        const singleObjectMatch = cleanContent.match(singleObjectPattern);
+        if (singleObjectMatch) {
+          cleanContent = singleObjectMatch[0];
+          extractionMethod = 'regex-object';
+          console.log(`Found JSON object using ${extractionMethod}:`, cleanContent.substring(0, 200) + '...');
+        }
+      }
+      
+      console.log(`Extraction method: ${extractionMethod}`);
+      console.log('Cleaned user stories content:', cleanContent.substring(0, 500) + '...');
+      
+      // Try to parse as JSON
+      const userStoriesData = JSON.parse(cleanContent);
+      
+      if (Array.isArray(userStoriesData) && userStoriesData.length > 0) {
+        console.log('Successfully parsed user stories array:', userStoriesData);
+          // Format the user stories as a table
+        let formattedHTML = `
+          <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+              <thead class="thead-dark">
+                <tr>
+                  <th>Select</th>
+                  <th>Story ID</th>
+                  <th>Name</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+        
+        userStoriesData.forEach((story, index) => {
+          formattedHTML += `
+            <tr>
+              <td>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="user_story_id" value="${story.story_id || `story_${index + 1}`}" id="story_${index + 1}">
+                  <label class="form-check-label" for="story_${index + 1}"></label>
+                </div>
+              </td>
+              <td><strong>${story.story_id || `US${index + 1}`}</strong></td>              <td><strong>${story.name || story.title || 'Untitled Story'}</strong></td>
+              <td>${story.description || 'No description available'}</td>
+            </tr>
+          `;
+        });
+        
+        formattedHTML += `
+              </tbody>
+            </table>
+          </div>
+        `;
+        
+        userStoriesContainer.innerHTML = formattedHTML;
+        console.log('User stories formatted successfully as table');
+        
+        // Show the user stories section
+        const userStoriesSection = document.getElementById('user-stories-section');
+        if (userStoriesSection) {
+          userStoriesSection.classList.remove('hidden');
+        }
+        
+        return; // Exit successfully
+        
+      } else if (userStoriesData && typeof userStoriesData === 'object') {
+        // Handle single user story object
+        console.log('Single user story object detected');
+        const formattedHTML = `
+          <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+              <thead class="thead-dark">
+                <tr>
+                  <th>Select</th>
+                  <th>Story ID</th>
+                  <th>Name</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="user_story_id" value="${userStoriesData.story_id || 'story_1'}" id="story_1" checked>
+                      <label class="form-check-label" for="story_1"></label>
+                    </div>
+                  </td>
+                  <td><strong>${userStoriesData.story_id || 'US1'}</strong></td>
+                  <td><strong>${userStoriesData.name || userStoriesData.title || 'Untitled Story'}</strong></td>
+                  <td>${userStoriesData.description || 'No description available'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+        userStoriesContainer.innerHTML = formattedHTML;
+        console.log('Single user story formatted successfully');
+        
+        // Show the user stories section
+        const userStoriesSection = document.getElementById('user-stories-section');
+        if (userStoriesSection) {
+          userStoriesSection.classList.remove('hidden');
+        }
+        
+        return; // Exit successfully
+      }
+      
+      // If we reach here, the JSON was valid but not in expected format
+      console.log('JSON parsed but not in expected user stories format:', userStoriesData);
+        } catch (e) {
+      // If it's not JSON, try more aggressive extraction methods
+      console.log('User stories JSON parse error:', e.message);
+      console.log('Content that failed to parse:', content.substring(0, 1000) + '...');
+      
+      // Try multiple extraction strategies in sequence
+      let extractedData = null;
+      let successMethod = null;
+      
+      // Strategy 1: More flexible array extraction with nested braces
+      const flexibleArrayPattern = /\[(?:[^[\]{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\]/g;
+      const arrayMatches = content.match(flexibleArrayPattern);
+      if (arrayMatches) {
+        for (let match of arrayMatches) {
+          try {
+            const parsed = JSON.parse(match);
+            if (Array.isArray(parsed) && parsed.length > 0 && 
+                parsed[0] && (parsed[0].title || parsed[0].story_id || parsed[0].role)) {
+              extractedData = parsed;
+              successMethod = 'flexible-array';
+              break;
+            }
+          } catch (e2) {
+            continue;
+          }
+        }
+      }
+      
+      // Strategy 2: Extract from "User Stories for:" pattern
+      if (!extractedData) {
+        const userStoriesPattern = /User Stories for:[\s\S]*?(\[[\s\S]*?\])/i;
+        const userStoriesMatch = content.match(userStoriesPattern);
+        if (userStoriesMatch && userStoriesMatch[1]) {
+          try {
+            const parsed = JSON.parse(userStoriesMatch[1]);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              extractedData = parsed;
+              successMethod = 'user-stories-pattern';
+            }
+          } catch (e2) {
+            console.log('Failed to parse user stories pattern match:', e2.message);
+          }
+        }
+      }
+      
+      // Strategy 3: Find largest JSON-like structure
+      if (!extractedData) {
+        const jsonLikePattern = /[\[{][\s\S]*?[\]}]/g;
+        const jsonLikeMatches = content.match(jsonLikePattern);
+        if (jsonLikeMatches) {
+          // Sort by length (longest first) to get the most complete structure
+          jsonLikeMatches.sort((a, b) => b.length - a.length);
+          
+          for (let match of jsonLikeMatches) {
+            try {
+              const parsed = JSON.parse(match);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                extractedData = parsed;
+                successMethod = 'largest-json';
+                break;
+              } else if (parsed && typeof parsed === 'object' && 
+                        (parsed.title || parsed.story_id || parsed.role)) {
+                extractedData = [parsed]; // Wrap single object in array
+                successMethod = 'single-object-wrapped';
+                break;
+              }
+            } catch (e2) {
+              continue;
+            }
+          }
+        }
+      }
+        if (extractedData) {
+        console.log(`Successfully extracted user stories using ${successMethod}:`, extractedData);
+          // Use the same table formatting logic as above
+        let formattedHTML = `
+          <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+              <thead class="thead-dark">
+                <tr>
+                  <th>Select</th>
+                  <th>Story ID</th>
+                  <th>Name</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+        
+        extractedData.forEach((story, index) => {
+          formattedHTML += `
+            <tr>
+              <td>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="user_story_id" value="${story.story_id || `story_${index + 1}`}" id="story_${index + 1}">
+                  <label class="form-check-label" for="story_${index + 1}"></label>
+                </div>
+              </td>
+              <td><strong>${story.story_id || `US${index + 1}`}</strong></td>              <td><strong>${story.name || story.title || 'Untitled Story'}</strong></td>
+              <td>${story.description || 'No description available'}</td>
+            </tr>
+          `;
+        });
+        
+        formattedHTML += `
+              </tbody>
+            </table>
+          </div>
+        `;
+        
+        userStoriesContainer.innerHTML = formattedHTML;
+        console.log('User stories extracted and formatted successfully as table');
+        
+        // Show the user stories section
+        const userStoriesSection = document.getElementById('user-stories-section');
+        if (userStoriesSection) {
+          userStoriesSection.classList.remove('hidden');
+        }
+        
+        return; // Exit successfully
+      }
+            
+            // Use the same table formatting logic as above
+            let formattedHTML = `
+              <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                  <thead class="thead-dark">
+                    <tr>
+                      <th>Select</th>
+                      <th>Story ID</th>
+                      <th>Title</th>
+                      <th>User Role</th>
+                      <th>Goal</th>
+                      <th>Benefit</th>
+                      <th>Priority</th>
+                      <th>Acceptance Criteria</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+            `;
+            
+            userStoriesData.forEach((story, index) => {
+              // Format acceptance criteria as a bulleted list
+              let acceptanceCriteria = '';
+              if (story.acceptance_criteria && Array.isArray(story.acceptance_criteria)) {
+                acceptanceCriteria = '<ul class="mb-0">';
+                story.acceptance_criteria.forEach(criteria => {
+                  acceptanceCriteria += `<li>${criteria}</li>`;
+                });
+                acceptanceCriteria += '</ul>';
+              } else if (story.acceptance_criteria) {
+                acceptanceCriteria = story.acceptance_criteria;
+              }
+              
+              // Determine priority badge color
+              let priorityClass = 'badge-secondary';
+              if (story.priority && story.priority.toLowerCase() === 'high') {
+                priorityClass = 'badge-danger';
+              } else if (story.priority && story.priority.toLowerCase() === 'medium') {
+                priorityClass = 'badge-warning';
+              } else if (story.priority && story.priority.toLowerCase() === 'low') {
+                priorityClass = 'badge-success';
+              }
+              
+              formattedHTML += `
+                <tr>
+                  <td>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="user_story_id" value="${story.story_id || `story_${index + 1}`}" id="story_${index + 1}">
+                      <label class="form-check-label" for="story_${index + 1}"></label>
+                    </div>
+                  </td>
+                  <td><strong>${story.story_id || `US${index + 1}`}</strong></td>
+                  <td>${story.title || 'Untitled Story'}</td>
+                  <td>${story.role || 'Not specified'}</td>
+                  <td>${story.goal || 'Not specified'}</td>
+                  <td>${story.benefit || 'Not specified'}</td>
+                  <td>
+                    <span class="badge ${priorityClass}">${story.priority || 'Not set'}</span>
+                  </td>
+                  <td>${acceptanceCriteria || 'Not specified'}</td>
+                </tr>
+              `;
+            });
+            
+            formattedHTML += `
+                  </tbody>
+                </table>
+              </div>
+            `;
+            
+            userStoriesContainer.innerHTML = formattedHTML;
+            console.log('User stories extracted and formatted successfully as table');
+            
+            // Show the user stories section
+            const userStoriesSection = document.getElementById('user-stories-section');
+            if (userStoriesSection) {
+              userStoriesSection.classList.remove('hidden');
+            }
+          return; // Exit successfully
+      }
+      
+      // If we reach here, no extraction method worked
+      // Only show error if content looks like it should be JSON but isn't
+      if (content.includes('[') || content.includes('{') || content.includes('story') || content.includes('```')) {
+        console.log('Content appears to be malformed user stories data, showing error');
+        
+        // Try to show a more user-friendly version of the content
+        let displayContent = content;
+        if (displayContent.length > 2000) {
+          displayContent = displayContent.substring(0, 2000) + '... [Content truncated]';
+        }
+        
+        userStoriesContainer.innerHTML = `
+          <div class="alert alert-warning">
+            <h6>User Stories Processing</h6>
+            <p><strong>The system returned user stories but they could not be parsed into a table format.</strong></p>
+            <details>
+              <summary>Click to view raw response</summary>
+              <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; color: #333; white-space: pre-wrap; max-height: 400px; overflow-y: auto; margin-top: 10px;">${displayContent}</pre>
+            </details>
+            <p class="mt-2"><em>The content above contains the user stories but in a text format. Please contact support to improve the parsing.</em></p>
+          </div>
+        `;
+        
+        // Still show the user stories section even if parsing failed
+        const userStoriesSection = document.getElementById('user-stories-section');
+        if (userStoriesSection) {
+          userStoriesSection.classList.remove('hidden');
+        }
+      } else {        // If content doesn't look like JSON, leave it as is
+        console.log('User stories content does not appear to be JSON, leaving as is');
+      }
+    }
+  
+  // Parse user stories when epics are approved and user stories section is visible
+  document.getElementById("approve-epics-form")?.addEventListener("submit", function () {
+    setTimeout(function() {
+      const userStoriesSection = document.getElementById('user-stories-section');
+      if (userStoriesSection && !userStoriesSection.classList.contains('hidden')) {
+        console.log('User stories section is visible, parsing user stories...');
+        parseAndFormatUserStories();
+      } else {
+        console.log('User stories section is not visible yet');
+      }
+    }, 500); // Delay to allow section to become visible
   });
 </script>
 </body>

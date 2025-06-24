@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Story Details - Enhanced</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #2f323a;
+      color: #fff;
+    }
+    .header-bar {
+      background-color: #d0021b;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 6px 6px 0 0;
+      margin-bottom: 20px;
+    }
+    .card {
+      background-color: #f8f9fa;
+      color: #000;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      background-color: #444;
+      color: white;
+      font-weight: bold;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-button {
+      background-color: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: white;
+      font-size: 0.9rem;
+    }
+    .chat-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+    .footer-btn {
+      background-color: #d0021b;
+      color: white;
+      font-weight: bold;
+      width: 100%;
+      padding: 15px;
+      border-radius: 10px;
+      border: none;
+      margin-top: 20px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .footer-btn:disabled {
+      background-color: #666;
+      cursor: not-allowed;
+    }
+    .footer-btn .btn-spinner {
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+    .footer-btn .btn-timer {
+      font-size: 0.9rem;
+      font-weight: normal;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .loading-container {
+      text-align: center;
+      padding: 40px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .loading-spinner {
+      width: 3rem;
+      height: 3rem;
+      border: 4px solid rgba(208, 2, 27, 0.3);
+      border-top: 4px solid #d0021b;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    .status-badge {
+      background-color: #28a745;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .epic-info {
+      background-color: #e7f3ff;
+      border-left: 4px solid #007bff;
+      padding: 15px;
+      margin-bottom: 20px;
+      color: #000;
+      border-radius: 0 6px 6px 0;
+    }
+    .user-story-info {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin-bottom: 20px;
+      color: #000;
+      border-radius: 0 6px 6px 0;
+    }
+    .acceptance-criteria-list {
+      list-style: none;
+      padding: 0;
+    }
+    .acceptance-criteria-list li {
+      background-color: #e8f5e8;
+      margin-bottom: 10px;
+      padding: 12px;
+      border-radius: 6px;
+      border-left: 4px solid #28a745;
+      color: #000;
+    }
+    .acceptance-criteria-list li:before {
+      content: "✓ ";
+      font-weight: bold;
+      color: #28a745;
+      margin-right: 8px;
+    }
+    .hidden {
+      display: none;
+    }
+    .error-message {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+  <div class="header-bar">User Story Details & Acceptance Criteria</div>
+
+  <!-- Epic Information -->
+  <div class="epic-info">
+    <h6><strong>📋 Parent Epic</strong></h6>
+    <h5>{{ epic_title or 'Loading Epic Information...' }}</h5>
+    {% if epic_description %}
+    <p class="mb-0"><small>{{ epic_description }}</small></p>
+    {% endif %}
+  </div>
+
+  <!-- User Story Information -->
+  <div class="user-story-info">
+    <h6><strong>🎯 User Story</strong></h6>
+    <h5>{{ user_story_name or 'Loading User Story...' }}</h5>
+    <p class="mb-0">{{ user_story_description or 'Loading Description...' }}</p>
+    {% if priority %}
+    <div class="mt-2">
+      <span class="status-badge">Priority: {{ priority }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Acceptance Criteria Section -->
+  <div class="section-title">
+    <span>🎯 Acceptance Criteria</span>
+    <button class="btn btn-outline-light btn-sm chat-button">💬 Chat</button>
+  </div>
+
+  <!-- Loading State -->
+  <div id="acceptance-criteria-loading" class="loading-container {{ 'hidden' if acceptance_criteria }}">
+    <div class="loading-spinner"></div>
+    <h5 style="color: #000;">Generating Acceptance Criteria...</h5>
+    <p style="color: #666;">Our AI agent is analyzing the user story and generating comprehensive acceptance criteria. This may take 30-60 seconds.</p>
+    <div class="mt-3">
+      <span class="btn-timer" id="loadingTimer" style="color: #666;">0:00</span>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div id="acceptance-criteria-error" class="error-message hidden">
+    <h6><strong>Error Generating Acceptance Criteria</strong></h6>
+    <p id="error-message-text">An error occurred while generating acceptance criteria. Please try again.</p>
+    <button class="btn btn-primary" onclick="retryAcceptanceCriteria()">Retry</button>
+  </div>
+
+  <!-- Success State -->
+  <div id="acceptance-criteria-content" class="{{ 'hidden' if not acceptance_criteria }}">
+    <div class="card">
+      {% if acceptance_criteria %}
+      <ul class="acceptance-criteria-list">
+        {% for criterion in acceptance_criteria %}
+        <li>{{ criterion }}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>No acceptance criteria available.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <button type="button" class="btn btn-secondary btn-lg btn-block" onclick="goBack()">
+        ← Back to User Stories
+      </button>
+    </div>
+    <div class="col-md-6">
+      <form action="/submit-jira-ticket" method="POST" style="margin: 0;">
+        <input type="hidden" name="epic_title" value="{{ epic_title or '' }}">
+        <input type="hidden" name="user_story_name" value="{{ user_story_name or '' }}">
+        <input type="hidden" name="user_story_description" value="{{ user_story_description or '' }}">
+        <input type="hidden" name="acceptance_criteria" value="{{ acceptance_criteria|join('|||') if acceptance_criteria else '' }}">
+        <input type="hidden" name="priority" value="{{ priority or 'Medium' }}">
+        
+        <button type="submit" class="footer-btn" id="submitJiraBtn">
+          <span class="btn-spinner" id="submitSpinner"></span>
+          <span class="btn-text">Submit & Export to Jira</span>
+          <span class="btn-timer" id="submitTimer"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Timer and spinner utility functions
+  let loadingTimer = null;
+  let submitTimer = null;
+
+  function startTimer(timerId, buttonTimerElement) {
+    let seconds = 0;
+    return setInterval(() => {
+      seconds++;
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      const timeString = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+      buttonTimerElement.textContent = timeString;
+    }, 1000);
+  }
+
+  function showButtonLoading(button, spinner, timer, buttonText, loadingText) {
+    button.disabled = true;
+    spinner.style.display = 'block';
+    button.querySelector('.btn-text').textContent = loadingText;
+    timer.textContent = '0:00';
+    return startTimer(null, timer);
+  }
+
+  function hideButtonLoading(button, spinner, timer, originalText, timerInterval) {
+    button.disabled = false;
+    spinner.style.display = 'none';
+    button.querySelector('.btn-text').textContent = originalText;
+    timer.textContent = '';
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+  }
+
+  // Check if we need to generate acceptance criteria on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const loadingElement = document.getElementById('acceptance-criteria-loading');
+    const contentElement = document.getElementById('acceptance-criteria-content');
+    
+    // Start loading timer if acceptance criteria are being generated
+    if (!loadingElement.classList.contains('hidden')) {
+      const timerElement = document.getElementById('loadingTimer');
+      loadingTimer = startTimer(null, timerElement);
+      
+      // Call backend to generate acceptance criteria
+      generateAcceptanceCriteria();
+    }
+  });
+
+  async function generateAcceptanceCriteria() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const storyId = urlParams.get('story_id');
+      const epicTitle = urlParams.get('epic_title') || '{{ epic_title }}';
+      const userStoryName = urlParams.get('user_story_name') || '{{ user_story_name }}';
+      const userStoryDescription = urlParams.get('user_story_description') || '{{ user_story_description }}';
+
+      if (!storyId && !userStoryName) {
+        throw new Error('Missing user story information');
+      }
+
+      const formData = new FormData();
+      formData.append('story_id', storyId || 'unknown');
+      formData.append('epic_title', epicTitle);
+      formData.append('user_story_name', userStoryName);
+      formData.append('user_story_description', userStoryDescription);
+
+      const response = await fetch('/generate-acceptance-criteria', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.acceptance_criteria) {
+          // Hide loading, show content
+          document.getElementById('acceptance-criteria-loading').classList.add('hidden');
+          document.getElementById('acceptance-criteria-content').classList.remove('hidden');
+          
+          // Update the acceptance criteria content
+          const criteriaList = document.querySelector('.acceptance-criteria-list');
+          if (criteriaList) {
+            criteriaList.innerHTML = '';
+            data.acceptance_criteria.forEach(criterion => {
+              const li = document.createElement('li');
+              li.textContent = criterion;
+              criteriaList.appendChild(li);
+            });
+          }
+          
+          // Update hidden form fields
+          document.querySelector('input[name="acceptance_criteria"]').value = data.acceptance_criteria.join('|||');
+          
+        } else {
+          throw new Error(data.error || 'Failed to generate acceptance criteria');
+        }
+      } else {
+        throw new Error(`Server error: ${response.status}`);
+      }
+      
+    } catch (error) {
+      console.error('Error generating acceptance criteria:', error);
+      showError(error.message);
+    } finally {
+      // Stop loading timer
+      if (loadingTimer) {
+        clearInterval(loadingTimer);
+      }
+    }
+  }
+
+  function showError(message) {
+    document.getElementById('acceptance-criteria-loading').classList.add('hidden');
+    document.getElementById('acceptance-criteria-error').classList.remove('hidden');
+    document.getElementById('error-message-text').textContent = message;
+  }
+
+  function retryAcceptanceCriteria() {
+    document.getElementById('acceptance-criteria-error').classList.add('hidden');
+    document.getElementById('acceptance-criteria-loading').classList.remove('hidden');
+    
+    const timerElement = document.getElementById('loadingTimer');
+    timerElement.textContent = '0:00';
+    loadingTimer = startTimer(null, timerElement);
+    
+    generateAcceptanceCriteria();
+  }
+
+  function goBack() {
+    window.history.back();
+  }
+
+  // Handle Jira submission
+  document.querySelector('form[action="/submit-jira-ticket"]').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitJiraBtn');
+    const submitSpinner = document.getElementById('submitSpinner');
+    const submitTimerEl = document.getElementById('submitTimer');
+    
+    // Show loading spinner and start timer
+    submitTimer = showButtonLoading(submitBtn, submitSpinner, submitTimerEl, 'Submit & Export to Jira', 'Submitting...');
+    
+    // Form will submit normally, cleanup will happen on page navigation
+  });
+</script>
+</body>
+</html>

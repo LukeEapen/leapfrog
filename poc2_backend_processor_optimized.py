@@ -272,8 +272,7 @@ Use this curated information to generate comprehensive epics and user stories.
         processing_time = time.time() - start_time
         logger.info(f"Total processing time (cached): {processing_time:.2f} seconds")
         return render_template("poc2_epic_story_screen.html", epics=cached_result)
-    
-    # Log token count for the enhanced context
+      # Log token count for the enhanced context
     context_tokens = count_tokens(enhanced_context, "gpt-4o")
     logger.info(f"Enhanced context token count: {context_tokens:,} tokens")
     
@@ -328,9 +327,7 @@ Use this curated information to generate comprehensive epics and user stories.
         # Calculate time savings
         estimated_traditional_time = processing_time * 2  # Estimate of traditional two-agent approach
         time_saved = estimated_traditional_time - processing_time
-        logger.info(f"Estimated time saved by RAG optimization: {time_saved:.2f} seconds")
-
-        # Render page 2 with response
+        logger.info(f"Estimated time saved by RAG optimization: {time_saved:.2f} seconds")        # Render page 2 with response
         logger.info("Rendering epic story screen with RAG-optimized output")
         return render_template("poc2_epic_story_screen.html", epics=final_output)
         
@@ -383,9 +380,7 @@ It contains the most relevant requirements, user stories, and business objective
 Generate comprehensive epics and user stories directly from this curated information.
 """
     
-    logger.info(f"RAG-optimized chunked prompt length: {len(rag_optimized_prompt)} characters (reduced from {len(prompt)})")
-    
-    # Log token count for the optimized prompt
+    logger.info(f"RAG-optimized chunked prompt length: {len(rag_optimized_prompt)} characters (reduced from {len(prompt)})")      # Log token count for the optimized prompt
     optimized_tokens = count_tokens(rag_optimized_prompt, "gpt-4o")
     logger.info(f"RAG-optimized chunked prompt token count: {optimized_tokens:,} tokens")
     
@@ -399,8 +394,7 @@ Generate comprehensive epics and user stories directly from this curated informa
         
         logger.info("Epic Generator (chunked) response received")
         logger.info(f"Epic Generator processing time: {epic_processing_time:.2f} seconds")
-        
-        # Log token usage for Epic Generator interaction
+          # Log token usage for Epic Generator interaction
         log_token_usage(rag_optimized_prompt, epic_response, model="gpt-4o", context="RAG-Enhanced Epic Generator (Chunked)")
         
         final_output = epic_response
@@ -779,8 +773,8 @@ def optimize_prd_content(prd_content, max_length=40000):
 def count_tokens(text, model="gpt-4o"):
     """Count tokens in text using tiktoken. Cached for performance."""
     try:
-        # Map gpt-4o to gpt-4 for tiktoken compatibility
-        tiktoken_model = "gpt-4" if model == "gpt-4o" else model
+        # Map gpt-4o and gpt-4o to gpt-4 for tiktoken compatibility
+        tiktoken_model = "gpt-4" if model in ["gpt-4-turbo", "gpt-4o"] else model
         encoding = tiktoken.encoding_for_model(tiktoken_model)
         return len(encoding.encode(text))
     except Exception as e:
@@ -794,9 +788,9 @@ def log_token_usage(prompt_text, response_text, model="gpt-4o", context=""):
     response_tokens = count_tokens(response_text, model)
     total_tokens = prompt_tokens + response_tokens
     
-    # Cost estimation for GPT-4o (approximate rates)
-    input_cost_per_1k = 0.005  # $0.005 per 1K input tokens
-    output_cost_per_1k = 0.015  # $0.015 per 1K output tokens
+    # Cost estimation for GPT-4 Turbo (approximate rates)
+    input_cost_per_1k = 0.01   # $0.01 per 1K input tokens
+    output_cost_per_1k = 0.03  # $0.03 per 1K output tokens
     
     input_cost = (prompt_tokens / 1000) * input_cost_per_1k
     output_cost = (response_tokens / 1000) * output_cost_per_1k
@@ -828,9 +822,7 @@ def ask_assistant_from_file_optimized(code_filepath, user_prompt):
 
 {assistant_instructions}
 
-Please follow the instructions above and process the user's request accordingly."""
-        
-        # Use chat completions API instead of deprecated Assistants API
+Please follow the instructions above and process the user's request accordingly."""        # Use chat completions API instead of deprecated Assistants API
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -1306,8 +1298,7 @@ def document_upload_preview():
         else:
             logger.warning(f"PRD content is invalid for RAG processing: {prd_content[:100] if prd_content else 'None'}")
             prd_summary = "No valid PRD content available - please check file format and encoding."
-        
-        # Process additional docs with RAG
+          # Process additional docs with RAG
         docs_summary = ""
         if is_valid_content(docs_content):
             if len(docs_content) > 1000:  # Lower threshold for preview
@@ -1322,6 +1313,31 @@ def document_upload_preview():
         
         logger.info(f"PRD summary length: {len(prd_summary)} characters")
         logger.info(f"Additional docs summary length: {len(docs_summary)} characters")
+        
+        # Print RAG summaries to console for debugging
+        print("\n" + "=" * 100)
+        print("📄 RAG-PROCESSED DOCUMENT SUMMARIES:")
+        print("=" * 100)
+        
+        if context:
+            print("🎯 USER CONTEXT:")
+            print("-" * 50)
+            print(context)
+            print("-" * 50)
+        
+        if prd_summary:
+            print("📋 PRD SUMMARY:")
+            print("-" * 50)
+            print(prd_summary)
+            print("-" * 50)
+        
+        if docs_summary:
+            print("📎 ADDITIONAL DOCS SUMMARY:")
+            print("-" * 50)
+            print(docs_summary)
+            print("-" * 50)
+        
+        print("=" * 100 + "\n")
         
         # Create preview data
         preview_data = {
@@ -1401,9 +1417,7 @@ def generate_epics_from_preview():
                 "epics": cached_result,
                 "processing_time": processing_time,
                 "cached": True
-            })
-        
-        # Log token count for the enhanced context
+            })          # Log token count for the enhanced context
         context_tokens = count_tokens(enhanced_context, "gpt-4o")
         logger.info(f"Enhanced context token count: {context_tokens:,} tokens")
         
@@ -1415,17 +1429,25 @@ def generate_epics_from_preview():
             context_tokens = count_tokens(enhanced_context, "gpt-4o")
             logger.info(f"Truncated context token count: {context_tokens:,} tokens")
         else:
-            logger.info(f"Enhanced context is within safe token limits ({context_tokens:,}/128,000 tokens)")
-
-        # Skip PRD Parser Agent - RAG has already done the parsing and summarization
+            logger.info(f"Enhanced context is within safe token limits ({context_tokens:,}/128,000 tokens)")        # Skip PRD Parser Agent - RAG has already done the parsing and summarization
         logger.info("****************Skipping PRD Parser - Using RAG Summary Directly")
         logger.info("Starting Epic Generator with RAG-enhanced content")
         
         # Print Enhanced Context being sent to Epic Agent
+        print("\n" + "=" * 100)
+        print("🔥 ENHANCED CONTEXT INPUT TO EPIC AGENT:")
+        print("=" * 100)
+        print(enhanced_context)  # Print the FULL content
+        print("=" * 100)
+        print(f"📊 Total length: {len(enhanced_context)} characters")
+        print(f"📊 Total tokens: {count_tokens(enhanced_context, 'gpt-4o'):,} tokens")
+        print("=" * 100 + "\n")
+        
+        # Also log to file (truncated for file logs)
         logger.info("=" * 80)
         logger.info("ENHANCED CONTEXT INPUT TO EPIC AGENT:")
         logger.info("=" * 80)
-        logger.info(enhanced_context[:3000] + "..." if len(enhanced_context) > 3000 else enhanced_context)
+        logger.info(enhanced_context[:5000] + "..." if len(enhanced_context) > 5000 else enhanced_context)
         logger.info("=" * 80)
         
         # Directly use Epic Generator with RAG-enhanced content
@@ -1435,6 +1457,14 @@ def generate_epics_from_preview():
         
         logger.info("################Epic Generator response received")
         logger.info(f"Epic Generator processing time: {epic_processing_time:.2f} seconds")
+          # Print Epic Agent Response to console
+        print("\n" + "=" * 100)
+        print("🎯 EPIC AGENT RESPONSE OUTPUT:")
+        print("=" * 100)
+        print(epic_response)
+        print("=" * 100)
+        print(f"📊 Response length: {len(epic_response)} characters")
+        print("=" * 100 + "\n")
         
         # Print Epic Agent Response
         logger.info("=" * 80)
@@ -1494,7 +1524,7 @@ def approve_epics():
     """Process approved epics and generate user stories for them."""
     start_time = time.time()
     logger.info("POST request received for epic approval and user story generation")
-    
+    user_story_list = []  # <-- new list to collect structured stories
     try:
         # Get the approved epic IDs from the form
         epic_ids_str = request.form.get("epic_ids", "")
@@ -1507,47 +1537,82 @@ def approve_epics():
             return render_template("poc2_epic_story_screen.html", 
                                  epics="No epics selected for approval", 
                                  user_stories="")
-        
-        # Get the current epics content to preserve it
+          # Get the current epics content to preserve it
         current_epics = request.form.get("current_epics", "")
         logger.info(f"Current epics content length: {len(current_epics)} characters")
+        
+        # Get the selected epic contents (actual epic data)
+        selected_epic_contents_str = request.form.get("selected_epic_contents", "{}")
+        try:
+            import json
+            selected_epic_contents = json.loads(selected_epic_contents_str)
+            logger.info(f"Received epic contents for {len(selected_epic_contents)} epics")
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse selected epic contents: {e}")
+            selected_epic_contents = {}
         
         # Generate user stories for each approved epic
         user_stories = []
         logger.info("Starting user story generation for approved epics")
         
         for i, epic_id in enumerate(epic_ids):
-            logger.info(f"Generating user stories for epic: {epic_id}")
+            logger.info(f"Generating user stories for epic: {epic_id}")            # Get the actual epic content instead of just the ID
+            epic_content = selected_epic_contents.get(epic_id, {})
+            epic_title = epic_content.get('title', f'Epic {i+1}')
+            epic_description = epic_content.get('description', 'No description available')
             
-            # Create a more detailed prompt for user story generation
+            logger.info(f"Epic {epic_id} - Title: {epic_title[:50]}...")
+            logger.info(f"Epic {epic_id} - Description: {epic_description[:100]}...")
+            
+            # Create a comprehensive prompt with the actual epic content
             prompt = f"""
-            Generate detailed user stories for the epic: {epic_id}
+            Generate detailed user stories for the following epic:
             
-            Please provide 3-5 user stories that break down this epic into actionable development tasks.
-            Each user story should follow the format: "As a [user type], I want [goal] so that [benefit]"
+            Epic Title: {epic_title}
+            Epic Description: {epic_description}
             
-            Include acceptance criteria for each user story.
-            Focus on deliverable functionality that supports the epic's objectives.
+            Requirements:
+            1. Generate 3-5 user stories that break down this epic into actionable development tasks
+            2. Each user story should follow the format: "As a [user type], I want [goal] so that [benefit]"
+            3. Include acceptance criteria for each user story
+            4. Focus on deliverable functionality that supports the epic's objectives
+            5. Consider the technical implementation requirements
+            6. Ensure stories are properly sized for development sprints
+            
+            Please provide comprehensive user stories that fully cover the scope of this epic.
             """
+              # Print what's being sent to User Story Agent
+            print("\n" + "=" * 100)
+            print(f"📝 USER STORY AGENT INPUT FOR EPIC {i+1}:")
+            print("=" * 100)
+            print(f"Epic ID: {epic_id}")
+            print(f"Epic Title: {epic_title}")
+            print(f"Epic Description: {epic_description}")
+            print("-" * 50)
+            print("Full Prompt:")
+            print(prompt)
+            print("=" * 100)
+            print(f"📊 Prompt length: {len(prompt)} characters")
+            print("=" * 100 + "\n")
             
             try:
                 story_response = ask_assistant_from_file_optimized("poc2_agent3_basic_user_story", prompt)
+                
+                # Print User Story Agent Response
+                print("\n" + "=" * 100)
+                print(f"📚 USER STORY AGENT RESPONSE FOR EPIC {i+1}:")
+                print("=" * 100)
+                print(story_response)
+                print("=" * 100)
+                print(f"📊 Response length: {len(story_response)} characters")
+                print("=" * 100 + "\n")                
                 if story_response:
-                    # Format as user story card, not epic card
-                    user_stories.append(f"""
-                    <div class='user-story-card'>
-                        <h6>User Stories for {epic_id}</h6>
-                        <div style='padding: 10px; background-color: #f8f9fa; border-radius: 4px; margin: 5px 0;'>
-                            {story_response}
-                        </div>
-                        <div class="form-check" style="margin-top: 10px;">
-                            <input class="form-check-input" type="radio" name="user_story_id" value="story_{i+1}" id="story_{i+1}">
-                            <label class="form-check-label" for="story_{i+1}">
-                                Select this user story set
-                            </label>
-                        </div>
-                    </div>
-                    """)
+                    # Send the raw JSON response for frontend parsing instead of HTML cards
+                    user_stories.append(story_response)
+                    user_story_list.append({
+                        "epic": epic_title,
+                        "stories": story_response  # Raw agent response for JS parsing
+                    })
                     logger.info(f"Successfully generated user stories for {epic_id}")
                 else:
                     logger.warning(f"No response received for epic {epic_id}")
@@ -1566,21 +1631,18 @@ def approve_epics():
                 </div>
                 """)
         
-        # Combine all user stories
-        user_stories_html = "\n".join(user_stories)
+        # Combine all user stories - send raw content for JS parsing
+        user_stories_content = "\n".join(user_stories)
         
         processing_time = time.time() - start_time
         logger.info(f"User story generation completed in {processing_time:.2f} seconds")
         logger.info(f"Generated user stories for {len(epic_ids)} epics")
         
-        # Render the template with both epics (preserved) and user stories (newly generated)
-        rendered_html = render_template(
-            "poc2_epic_story_screen.html", 
-            epics=current_epics,  # Preserve the original epics
-            user_stories=user_stories_html  # Add the generated user stories
-        )
-        
-        return rendered_html
+        # Render the template with both epics (preserved) and user stories (raw for JS parsing)
+        return render_template("poc2_epic_story_screen.html",
+                       epics=current_epics,  # This should be epics HTML
+                       user_stories=user_stories_content)  # Raw content for JS to parse into table
+
         
     except Exception as e:
         logger.error(f"Error in approve_epics: {str(e)}")
@@ -1600,6 +1662,76 @@ def approve_epics():
             epics=request.form.get("current_epics", ""), 
             user_stories=error_message
         )
+
+@app.route("/generate-user-story", methods=["POST"])
+def generate_user_story():
+    """Process selected user story and redirect to detailed view."""
+    logger.info("POST request received for user story selection")
+    
+    try:
+        # Get the selected story ID
+        if request.is_json:
+            data = request.get_json()
+            selected_story_id = data.get("selected_story_id")
+        else:
+            selected_story_id = request.form.get("selected_story_id")
+        
+        logger.info(f"Processing selected user story ID: {selected_story_id}")
+        
+        if not selected_story_id:
+            return jsonify({
+                "success": False,
+                "error": "No user story selected"
+            }), 400
+        
+        # For now, redirect to a user story details page or return success
+        # You can extend this to fetch more details about the selected story
+        
+        logger.info(f"Successfully processed user story selection: {selected_story_id}")
+        
+        # Return success response - frontend can handle navigation
+        return jsonify({
+            "success": True,
+            "message": f"User story {selected_story_id} selected successfully",
+            "story_id": selected_story_id,
+            "redirect_url": f"/user-story-details?story_id={selected_story_id}"
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in generate_user_story: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route("/user-story-details", methods=["POST"])
+def user_story_details():
+    # Assume you get these from the POST or session
+    epic_title = request.form.get("epic_title")
+    user_story_title = request.form.get("user_story_title")
+    user_story_description = request.form.get("user_story_description")
+    priority = request.form.get("priority", "High")
+
+    # Call the acceptance criteria agent
+    prompt = f"Generate acceptance criteria for: {user_story_title}. Description: {user_story_description}"
+    acceptance_response = ask_assistant_from_file_optimized("poc2_agent4_acceptanceCriteria_gen", prompt)
+
+    # Parse criteria (assume response is a bullet list or parse JSON if needed)
+    import json
+    try:
+        acceptance_criteria = json.loads(acceptance_response)
+    except:
+        acceptance_criteria = acceptance_response.strip().split("\n")
+
+    return render_template(
+        "poc2_user_story_details.html",  # the file above
+        epic_title=epic_title,
+        user_story_title=user_story_title,
+        user_story_description=user_story_description,
+        priority=priority,
+        acceptance_criteria=acceptance_criteria
+    )
+
 
 @app.errorhandler(404)
 def not_found_error(error):
