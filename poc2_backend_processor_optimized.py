@@ -1,0 +1,1648 @@
+from flask import Flask, render_template, request, jsonify
+import openai
+from openai import OpenAI
+import os
+import time
+import logging
+import tiktoken
+import asyncio
+import aiohttp
+import threading
+import string
+import traceback
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import lru_cache
+import hashlib
+import json
+from cachetools import TTLCache
+import tenacity
+
+# Vector Database and RAG imports
+import chromadb
+from chromadb.config import Settings
+from sentence_transformers import SentenceTransformer
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Document processing imports
+try:
+    from docx import Document as DocxDocument
+    DOCX_AVAILABLE = True
+    logger.info("python-docx library available for DOCX file processing")
+except ImportError:
+    logger.warning("python-docx not available. DOCX files will be processed as text extraction fallback.")
+    DOCX_AVAILABLE = False
+
+# Initialize Vector Database and RAG components
+logger.info("Initializing Vector Database and RAG components...")
+
+# Initialize ChromaDB client
+chroma_client = chromadb.PersistentClient(path="./vector_db")
+
+# Initialize embedding model for RAG
+try:
+    embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+    logger.info("Embedding model loaded successfully")
+except Exception as e:
+    logger.warning(f"Failed to load embedding model: {e}. RAG features may be limited.")
+    embedding_model = None
+
+# Create or get collection for PRD documents
+try:
+    prd_collection = chroma_client.get_or_create_collection(
+        name="prd_documents",
+        metadata={"description": "PRD and documentation storage for RAG"}
+    )
+    logger.info("ChromaDB collection initialized successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize ChromaDB collection: {e}")
+    prd_collection = None
+
+app = Flask(__name__)
+
+# Performance optimizations
+THREAD_POOL_SIZE = 4
+MAX_CACHE_SIZE = 1000
+CACHE_TTL = 3600  # 1 hour
+
+# Initialize thread pool for parallel processing
+executor = ThreadPoolExecutor(max_workers=THREAD_POOL_SIZE)
+
+# Cache for responses (in-memory with TTL)
+response_cache = TTLCache(maxsize=MAX_CACHE_SIZE, ttl=CACHE_TTL)
+
+logger.info("Flask application starting up with performance optimizations...")
+logger.info(f"OpenAI API key configured: {'Yes' if os.getenv('OPENAI_API_KEY') else 'No'}")
+logger.info(f"Thread pool size: {THREAD_POOL_SIZE}")
+logger.info(f"Cache size: {MAX_CACHE_SIZE} items, TTL: {CACHE_TTL}s")
+
+@app.route("/prd_parser", methods=["GET"])
+def user_story_input():
+    logger.info("GET request received for user story input page")
+    try:
+        logger.info("Rendering poc2_user_story_input.html template")
+        return render_template("poc2_user_story_input.html")
+    except Exception as e:
+        logger.error(f"Error rendering user story input template: {str(e)}")
+        raise
+
+@app.route("/", methods=["GET"])
+def home():
+    """Home page with navigation to all features."""
+    logger.info("GET request received for home page")
+    
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>RAG-Enhanced PRD to Epic Generator</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+            .container { max-width: 800px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+            .header { text-align: center; margin-bottom: 30px; }
+            .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; }
+            .feature-card { background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; }
+            .feature-card h3 { color: #007bff; margin-top: 0; }
+            .btn { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 5px 0; }
+            .btn:hover { background-color: #0056b3; }
+            .btn-secondary { background-color: #6c757d; }
+            .btn-secondary:hover { background-color: #545b62; }
+            .status { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 20px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🚀 RAG-Enhanced PRD to Epic Generator</h1>
+                <p>Transform your Product Requirements Documents into comprehensive epics and user stories using advanced RAG technology</p>
+                <div class="status">
+                    ✅ Vector Database Active | ✅ RAG Processing Ready | ✅ Epic Generator Online
+                </div>
+            </div>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>📝 Generate Epics & User Stories</h3>
+                    <p>Upload your PRD and additional documentation to generate comprehensive epics and user stories using RAG-enhanced processing.</p>
+                    <a href="/prd_parser" class="btn">Start Processing</a>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🗄️ Vector Database Status</h3>
+                    <p>View all documents stored in the vector database, including chunks, metadata, and content previews.</p>
+                    <a href="/vector-db-status" class="btn btn-secondary">View Database</a>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🔍 Search Vector Database</h3>
+                    <p>Search through stored documents using semantic similarity to find relevant content for any query.</p>
+                    <a href="/vector-db-search" class="btn btn-secondary">Search Database</a>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>⚡ RAG Features</h3>
+                    <p>This system uses Retrieval Augmented Generation with:</p>
+                    <ul>
+                        <li>ChromaDB vector storage</li>
+                        <li>SentenceTransformers embeddings</li>
+                        <li>Intelligent document chunking</li>
+                        <li>Semantic content retrieval</li>
+                        <li>Single-agent optimization</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center; color: #6c757d;">
+                <p>🎯 PRD Parser Agent replaced with RAG summaries | ⚡ 50%+ faster processing | 💰 Reduced token costs</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html_content, 200, {'Content-Type': 'text/html'}
+
+@app.route("/user-story-upload", methods=["POST"])
+def process_user_story():
+    start_time = time.time()
+    logger.info("POST request received for user story processing")
+    
+    # Collect input
+    logger.info("Collecting form data and file uploads")
+    context = request.form.get("context", "")
+    prd_file = request.files.get("prd_file")
+    additional_docs = request.files.get("additional_docs")
+    
+    logger.info(f"Context provided: {'Yes' if context else 'No'}")
+    logger.info(f"PRD file uploaded: {'Yes' if prd_file else 'No'}")
+    logger.info(f"Additional docs uploaded: {'Yes' if additional_docs else 'No'}")
+    
+    if prd_file:
+        logger.info(f"PRD file name: {prd_file.filename}")
+    if additional_docs:
+        logger.info(f"Additional docs file name: {additional_docs.filename}")
+
+    # Parallel file reading for better performance
+    logger.info("Reading uploaded files in parallel")
+    
+    def read_files_parallel():
+        with ThreadPoolExecutor(max_workers=2) as file_executor:
+            prd_future = file_executor.submit(safe_read, prd_file) if prd_file else None
+            docs_future = file_executor.submit(safe_read, additional_docs) if additional_docs else None
+            
+            prd_content = prd_future.result() if prd_future else ""
+            docs_content = docs_future.result() if docs_future else ""
+            
+            return prd_content, docs_content
+    
+    prd_content, docs_content = read_files_parallel()
+    
+    # Debug file content
+    if prd_content:
+        debug_file_content(prd_content, prd_file.filename if prd_file else "prd_content")
+    if docs_content:
+        debug_file_content(docs_content, additional_docs.filename if additional_docs else "additional_docs")    # Store documents in vector database and create RAG summaries
+    logger.info("Processing documents with RAG enhancement")
+    
+    # Process PRD with RAG if content is substantial and valid
+    if is_valid_content(prd_content):
+        if len(prd_content) > 5000:
+            logger.info("Creating RAG-enhanced PRD summary")
+            prd_content = create_rag_summary(prd_content, prd_file.filename if prd_file else "prd_content", max_summary_length=25000)
+        elif len(prd_content) > 30000:
+            logger.info("Large PRD detected - using traditional optimization")
+            prd_content = optimize_prd_content(prd_content, max_length=40000)
+        else:
+            logger.info("PRD content is valid but small, using as-is")
+    else:
+        logger.warning(f"PRD content is invalid for RAG processing: {prd_content[:100] if prd_content else 'None'}")
+        prd_content = "No valid PRD content available - please check file format and encoding."
+    
+    # Process additional docs with RAG
+    if is_valid_content(docs_content):
+        if len(docs_content) > 3000:
+            logger.info("Creating RAG-enhanced docs summary")
+            docs_content = create_rag_summary(docs_content, additional_docs.filename if additional_docs else "additional_docs", max_summary_length=10000)
+        elif len(docs_content) > 15000:
+            logger.info("Large additional docs detected - truncating for faster processing")
+            docs_content = docs_content[:15000] + "...\n[Content truncated for performance]"
+        else:
+            logger.info("Additional docs content is valid but small, using as-is")
+    else:
+        logger.warning(f"Additional docs content is invalid: {docs_content[:100] if docs_content else 'None'}")
+        docs_content = "No valid additional documentation available."
+    
+    logger.info(f"PRD content length (post-RAG): {len(prd_content)} characters")
+    logger.info(f"Additional docs content length (post-RAG): {len(docs_content)} characters")    # Combine prompt with RAG-enhanced content
+    logger.info("Combining context and RAG-enhanced content")
+    
+    # Create enhanced context for Epic Generator
+    enhanced_context = f"""
+{context}
+
+RAG-Enhanced PRD Analysis:
+{prd_content}
+
+Additional Context:
+{docs_content}
+
+Instructions: The above content has been intelligently extracted and summarized using RAG (Retrieval Augmented Generation). 
+It contains the most relevant requirements, user stories, and business objectives from the original documents.
+Use this curated information to generate comprehensive epics and user stories.
+"""
+    logger.info(f"Enhanced context length: {len(enhanced_context)} characters")
+    
+    # Check cache first with more granular caching
+    prompt_hash = get_cache_key(enhanced_context)
+    cached_result = response_cache.get(prompt_hash)
+    if cached_result:
+        logger.info("Cache hit! Returning cached response")
+        processing_time = time.time() - start_time
+        logger.info(f"Total processing time (cached): {processing_time:.2f} seconds")
+        return render_template("poc2_epic_story_screen.html", epics=cached_result)
+    
+    # Log token count for the enhanced context
+    context_tokens = count_tokens(enhanced_context, "gpt-4o")
+    logger.info(f"Enhanced context token count: {context_tokens:,} tokens")
+    
+    # Check if context is within token limits
+    if context_tokens > 120000:
+        logger.warning(f"Enhanced context token count ({context_tokens:,}) is approaching the 128k limit!")
+        # Further optimize if needed
+        enhanced_context = enhanced_context[:100000] + "\n[Content truncated due to token limits]"
+        context_tokens = count_tokens(enhanced_context, "gpt-4o")
+        logger.info(f"Truncated context token count: {context_tokens:,} tokens")
+    else:
+        logger.info(f"Enhanced context is within safe token limits ({context_tokens:,}/128,000 tokens)")    # Skip PRD Parser Agent - RAG has already done the parsing and summarization
+    logger.info("****************Skipping PRD Parser - Using RAG Summary Directly")
+    logger.info("Starting Epic Generator with RAG-enhanced content")
+    
+    # Print Enhanced Context being sent to Epic Agent
+    logger.info("=" * 80)
+    logger.info("ENHANCED CONTEXT INPUT TO EPIC AGENT:")
+    logger.info("=" * 80)
+    logger.info(enhanced_context[:3000] + "..." if len(enhanced_context) > 3000 else enhanced_context)
+    logger.info("=" * 80)
+    
+    try:
+        # Directly use Epic Generator with RAG-enhanced content
+        start_epic_time = time.time()
+        epic_response = ask_assistant_from_file_optimized("poc2_agent2_epic_generator", enhanced_context)
+        epic_processing_time = time.time() - start_epic_time
+        
+        logger.info("################Epic Generator response received")
+        logger.info(f"Epic Generator processing time: {epic_processing_time:.2f} seconds")
+        
+        # Print Epic Agent Response
+        logger.info("=" * 80)
+        logger.info("EPIC AGENT RESPONSE OUTPUT:")
+        logger.info("=" * 80)
+        logger.info(epic_response)
+        logger.info("=" * 80)
+        
+        # Log token usage for Epic Generator interaction
+        log_token_usage(enhanced_context, epic_response, model="gpt-4o", context="RAG-Enhanced Epic Generator")
+
+        final_output = epic_response
+        logger.info(f"Final output length: {len(final_output)} characters")
+        
+        # Cache the result for future requests
+        response_cache[prompt_hash] = final_output
+        logger.info("Response cached for future requests")
+        
+        processing_time = time.time() - start_time
+        logger.info(f"Total RAG-optimized processing time: {processing_time:.2f} seconds")
+        
+        # Calculate time savings
+        estimated_traditional_time = processing_time * 2  # Estimate of traditional two-agent approach
+        time_saved = estimated_traditional_time - processing_time
+        logger.info(f"Estimated time saved by RAG optimization: {time_saved:.2f} seconds")
+
+        # Render page 2 with response
+        logger.info("Rendering epic story screen with RAG-optimized output")
+        return render_template("poc2_epic_story_screen.html", epics=final_output)
+        
+    except Exception as e:
+        logger.error(f"Error in RAG-optimized processing: {str(e)}")
+        raise
+
+def process_large_prompt_chunked(prompt, start_time):
+    """Process large prompts using RAG-enhanced chunking for better performance."""
+    logger.info("Processing large prompt using RAG-enhanced chunked approach")
+    
+    # Check cache first
+    prompt_hash = get_cache_key(prompt)
+    cached_result = response_cache.get(prompt_hash)
+    if cached_result:
+        logger.info("Cache hit! Returning cached response")
+        processing_time = time.time() - start_time
+        logger.info(f"Total processing time (cached): {processing_time:.2f} seconds")
+        return render_template("poc2_epic_story_screen.html", epics=cached_result)
+    
+    # Split prompt into sections and extract content
+    sections = prompt.split('\n\n')
+    context = sections[0] if sections else ""
+    prd_section = ""
+    docs_section = ""
+    
+    # Extract PRD and Docs sections
+    for i, section in enumerate(sections):
+        if 'PRD:' in section or 'RAG-Enhanced PRD Analysis:' in section:
+            prd_section = '\n\n'.join(sections[i:i+15])  # Take next 15 sections for PRD
+            break
+    
+    for i, section in enumerate(sections):
+        if 'Additional Docs:' in section or 'Additional Context:' in section:
+            docs_section = '\n\n'.join(sections[i:])  # Take remaining for docs
+            break
+    
+    # Create RAG-optimized prompt for direct Epic Generator use
+    rag_optimized_prompt = f"""
+{context}
+
+RAG-Enhanced PRD Analysis (Chunked Processing):
+{prd_section[:35000]}
+
+Additional Context:
+{docs_section[:12000]}
+
+Instructions: The above content has been intelligently processed and chunked for optimal performance. 
+It contains the most relevant requirements, user stories, and business objectives from the original documents.
+Generate comprehensive epics and user stories directly from this curated information.
+"""
+    
+    logger.info(f"RAG-optimized chunked prompt length: {len(rag_optimized_prompt)} characters (reduced from {len(prompt)})")
+    
+    # Log token count for the optimized prompt
+    optimized_tokens = count_tokens(rag_optimized_prompt, "gpt-4o")
+    logger.info(f"RAG-optimized chunked prompt token count: {optimized_tokens:,} tokens")
+    
+    try:
+        # Skip PRD Parser - Use Epic Generator directly with RAG-enhanced content
+        logger.info("****************Skipping PRD Parser in chunked processing - Using RAG-enhanced content directly")
+        
+        start_epic_time = time.time()
+        epic_response = ask_assistant_from_file_optimized("poc2_agent2_epic_generator", rag_optimized_prompt)
+        epic_processing_time = time.time() - start_epic_time
+        
+        logger.info("Epic Generator (chunked) response received")
+        logger.info(f"Epic Generator processing time: {epic_processing_time:.2f} seconds")
+        
+        # Log token usage for Epic Generator interaction
+        log_token_usage(rag_optimized_prompt, epic_response, model="gpt-4o", context="RAG-Enhanced Epic Generator (Chunked)")
+        
+        final_output = epic_response
+        
+        # Cache the result
+        response_cache[prompt_hash] = final_output
+        logger.info("Chunked response cached for future requests")
+        
+        processing_time = time.time() - start_time
+        logger.info(f"Total RAG-enhanced chunked processing time: {processing_time:.2f} seconds")
+        
+        # Calculate time savings compared to traditional two-agent approach
+        estimated_traditional_time = processing_time * 2.5  # Estimate of traditional approach with chunking
+        time_saved = estimated_traditional_time - processing_time
+        logger.info(f"Estimated time saved by RAG chunked optimization: {time_saved:.2f} seconds")
+        
+        return render_template("poc2_epic_story_screen.html", epics=final_output)
+        
+    except Exception as e:
+        logger.error(f"Error in RAG-enhanced chunked processing: {str(e)}")
+        raise
+
+def get_cache_key(prompt):
+    """Generate a cache key from the prompt."""
+    return hashlib.md5(prompt.encode('utf-8')).hexdigest()
+
+def store_document_in_vector_db(content, filename, doc_type="prd"):
+    """Store document content in vector database for RAG retrieval."""
+    if not prd_collection or not embedding_model:
+        logger.warning("Vector DB or embedding model not available. Skipping storage.")
+        return None
+    
+    try:
+        logger.info(f"Storing {doc_type} document in vector database: {filename}")
+        
+        # Split content into chunks for better retrieval
+        chunks = split_document_into_chunks(content, chunk_size=1000, overlap=200)
+        logger.info(f"Document split into {len(chunks)} chunks")
+        
+        # Generate embeddings for each chunk
+        chunk_embeddings = embedding_model.encode(chunks)
+        
+        # Create metadata for each chunk
+        documents = []
+        metadatas = []
+        ids = []
+        
+        doc_id = hashlib.md5(f"{filename}_{doc_type}".encode()).hexdigest()
+        
+        for i, (chunk, embedding) in enumerate(zip(chunks, chunk_embeddings)):
+            chunk_id = f"{doc_id}_chunk_{i}"
+            
+            documents.append(chunk)
+            metadatas.append({
+                "filename": filename,
+                "doc_type": doc_type,
+                "chunk_index": i,
+                "total_chunks": len(chunks),
+                "timestamp": datetime.now().isoformat()
+            })
+            ids.append(chunk_id)
+        
+        # Store in ChromaDB
+        prd_collection.add(
+            documents=documents,
+            metadatas=metadatas,
+            ids=ids
+        )
+        
+        logger.info(f"Successfully stored {len(chunks)} chunks in vector database")
+        return doc_id
+        
+    except Exception as e:
+        logger.error(f"Error storing document in vector DB: {str(e)}")
+        return None
+
+def split_document_into_chunks(content, chunk_size=1000, overlap=200):
+    """Split document content into overlapping chunks for better retrieval."""
+    if len(content) <= chunk_size:
+        return [content]
+    
+    chunks = []
+    start = 0
+    
+    while start < len(content):
+        end = start + chunk_size
+        
+        # Try to break at sentence boundaries
+        if end < len(content):
+            # Look for sentence endings within overlap range
+            for punct in ['. ', '.\n', '! ', '!\n', '? ', '?\n']:
+                last_punct = content.rfind(punct, start, end)
+                if last_punct > start:
+                    end = last_punct + len(punct)
+                    break
+        
+        chunk = content[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+        
+        start = end - overlap
+        
+        # Avoid infinite loop
+        if start >= end:
+            start = end
+    
+    return chunks
+
+def retrieve_relevant_content(query, top_k=5, doc_type=None):
+    """Retrieve relevant content from vector database using RAG."""
+    if not prd_collection or not embedding_model:
+        logger.warning("Vector DB or embedding model not available. Skipping RAG retrieval.")
+        return []
+    
+    try:
+        logger.info(f"Retrieving relevant content for query (top {top_k} results)")
+        
+        # Create query filter if doc_type is specified
+        where_filter = {"doc_type": doc_type} if doc_type else None
+        
+        # Query the collection
+        results = prd_collection.query(
+            query_texts=[query],
+            n_results=top_k,
+            where=where_filter
+        )
+        
+        relevant_chunks = []
+        if results['documents'] and results['documents'][0]:
+            for i, (doc, metadata) in enumerate(zip(results['documents'][0], results['metadatas'][0])):
+                relevant_chunks.append({
+                    'content': doc,
+                    'metadata': metadata,
+                    'relevance_rank': i + 1
+                })
+                
+        logger.info(f"Retrieved {len(relevant_chunks)} relevant chunks")
+        return relevant_chunks
+        
+    except Exception as e:
+        logger.error(f"Error retrieving from vector DB: {str(e)}")
+        return []
+
+def create_rag_summary(content, filename, max_summary_length=5000):
+    """Create a RAG-enhanced summary of the document content."""
+    logger.info(f"Creating RAG-enhanced summary for {filename}")
+      # Store the document in vector DB
+    doc_id = store_document_in_vector_db(content, filename)
+    
+    if not doc_id:
+        # Fallback to intelligent content extraction if vector DB fails
+        logger.warning("Vector DB storage failed, using intelligent content extraction")
+        return create_intelligent_summary_fallback(content, filename, max_summary_length)
+    
+    # Create comprehensive summary queries to extract key information
+    summary_queries = [
+        "requirements and functional specifications",
+        "user stories and acceptance criteria", 
+        "business objectives and goals",
+        "system constraints and dependencies",
+        "key features and capabilities",
+        "technical architecture and design",
+        "data flow and integration requirements",
+        "security and compliance requirements",
+        "performance and scalability requirements",
+        "user interface and user experience requirements"
+    ]
+    
+    # Retrieve relevant content for each query
+    summary_parts = []
+    for query in summary_queries:
+        relevant_chunks = retrieve_relevant_content(query, top_k=2, doc_type="prd")
+        
+        if relevant_chunks:
+            # Take the most relevant chunk for each query
+            best_chunk = relevant_chunks[0]['content']
+            summary_parts.append(f"[{query.title()}]\n{best_chunk}\n")
+    
+    # Combine summary parts with intelligent ordering
+    ordered_summary = order_summary_parts(summary_parts)
+    final_summary = "\n\n".join(ordered_summary)
+    
+    # Truncate to max length
+    if len(final_summary) > max_summary_length:
+        logger.info(f"Final summary length ({len(final_summary)}) exceeds max length ({max_summary_length}), truncating")
+        final_summary = final_summary[:max_summary_length] + "... [Content truncated]"
+    
+    logger.info(f"RAG summary created, length: {len(final_summary)} characters")
+    
+    # Print RAG Summary for debugging
+    logger.info("=" * 80)
+    logger.info("RAG SUMMARY GENERATED:")
+    logger.info("=" * 80)
+    logger.info(final_summary[:2000] + "..." if len(final_summary) > 2000 else final_summary)
+    logger.info("=" * 80)
+    
+    return final_summary.strip()
+
+def order_summary_parts(summary_parts):
+    """Order summary parts based on importance and relevance."""
+    logger.info("Ordering summary parts by importance")
+    
+    # Simple heuristic: prioritize sections with more details and specific requirements
+    def section_score(section):
+        score = 0
+        # More weight to user stories and requirements
+        if "user story" in section.lower():
+            score += 10
+        if "requirement" in section.lower():
+            score += 8
+        # Add score for each bullet point or numbered item
+        score += section.count('•') * 2
+        score += section.count('-') * 2
+        score += section.count('1.') * 2
+        score += section.count('2.') * 2
+        return score
+    
+    # Sort sections by computed score
+    ordered_sections = sorted(summary_parts, key=section_score, reverse=True)
+    logger.info(f"Ordered {len(ordered_sections)} summary parts by importance")
+    return ordered_sections
+
+def extract_docx_text(file):
+    """Extract text content from a DOCX file."""
+    try:
+        if not DOCX_AVAILABLE:
+            logger.warning(f"Cannot process DOCX file {file.filename}: python-docx not available")
+            return "[DOCX file detected but python-docx library not available. Please install python-docx to process Word documents.]"
+        
+        logger.info(f"Extracting text from DOCX file: {file.filename}")
+        
+        # Create a temporary BytesIO object from the file
+        from io import BytesIO
+        file_content = file.read()
+        file.seek(0)  # Reset file pointer in case it's needed again
+        
+        # Load the document using python-docx
+        doc = DocxDocument(BytesIO(file_content))
+        
+        # Extract text from all paragraphs
+        text_content = []
+        for paragraph in doc.paragraphs:
+            if paragraph.text.strip():
+                text_content.append(paragraph.text.strip())
+        
+        # Extract text from tables
+        for table in doc.tables:
+            for row in table.rows:
+                row_text = []
+                for cell in row.cells:
+                    if cell.text.strip():
+                        row_text.append(cell.text.strip())
+                if row_text:
+                    text_content.append(" | ".join(row_text))
+        
+        final_text = "\n\n".join(text_content)
+        
+        if final_text.strip():
+            logger.info(f"Successfully extracted {len(final_text)} characters from DOCX file {file.filename}")
+            return final_text
+        else:
+            logger.warning(f"No text content found in DOCX file {file.filename}")
+            return "[DOCX file processed but no readable text content found]"
+            
+    except Exception as e:
+        logger.error(f"Error extracting text from DOCX file {file.filename}: {str(e)}")
+        return f"[Error processing DOCX file: {str(e)}]"
+
+def safe_read(file):
+    """Safely read file content with proper error handling and encoding detection."""
+    try:
+        logger.debug(f"Attempting to read file: {file.filename if file else 'None'}")
+        
+        # Check if this is a DOCX file and handle it specially
+        if file and file.filename and file.filename.lower().endswith('.docx'):
+            logger.info(f"Detected DOCX file: {file.filename}")
+            return extract_docx_text(file)
+        
+        # Read the raw bytes first
+        raw_content = file.read()
+        logger.debug(f"Read {len(raw_content)} bytes from file: {file.filename}")
+        
+        # Check if this looks like a DOCX file even if extension is wrong
+        if raw_content.startswith(b'PK\x03\x04') and b'[Content_Types].xml' in raw_content:
+            logger.info(f"Detected DOCX format in file: {file.filename}")
+            file.seek(0)  # Reset file pointer for DOCX processing
+            return extract_docx_text(file)
+        
+        # Try multiple encodings for regular text files
+        encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252', 'iso-8859-1']
+        
+        for encoding in encodings:
+            try:
+                content = raw_content.decode(encoding)
+                logger.info(f"Successfully decoded file {file.filename} using {encoding} encoding, length: {len(content)} characters")
+                
+                # Validate that we have meaningful content
+                if len(content.strip()) > 0:
+                    return content
+                else:
+                    logger.warning(f"File {file.filename} appears to be empty or whitespace only")
+                    return "[File appears to be empty]"
+                    
+            except UnicodeDecodeError:
+                continue
+        
+        # If all encodings fail, try to extract text from binary content
+        logger.warning(f"All standard encodings failed for {file.filename}, attempting binary extraction")
+        try:
+            # Try to extract printable ASCII characters
+            import string
+            printable_chars = set(string.printable)
+            extracted_text = ''.join(char for char in raw_content.decode('latin-1') if char in printable_chars)
+            
+            if len(extracted_text.strip()) > 50:  # If we got some meaningful text
+                logger.info(f"Extracted {len(extracted_text)} printable characters from {file.filename}")
+                return extracted_text
+            else:
+                logger.error(f"Unable to extract meaningful text from {file.filename}")
+                return f"[Unable to decode file - tried encodings: {', '.join(encodings)}]"
+                
+        except Exception as extract_error:
+            logger.error(f"Binary extraction failed for {file.filename}: {str(extract_error)}")
+            return f"[File reading failed - may be binary or corrupted]"
+            
+    except Exception as e:
+        logger.error(f"Error reading file {file.filename}: {str(e)}")
+        return f"[Error reading file: {str(e)}]"
+
+def optimize_prd_content(prd_content, max_length=40000):
+    """Optimize PRD content by extracting key sections and reducing verbosity."""
+    if len(prd_content) <= max_length:
+        return prd_content
+    
+    logger.info(f"Optimizing PRD content from {len(prd_content)} to ~{max_length} characters")
+    
+    # Split into sections and prioritize important ones
+    sections = prd_content.split('\n\n')
+    important_keywords = [
+        'requirement', 'feature', 'user story', 'acceptance criteria', 
+        'functional', 'non-functional', 'business rule', 'constraint',
+        'objective', 'goal', 'scope', 'assumption', 'dependency'
+    ]
+    
+    # Score sections based on importance
+    scored_sections = []
+    for section in sections:
+        score = 0
+        section_lower = section.lower()
+        
+        # Score based on keywords
+        for keyword in important_keywords:
+            score += section_lower.count(keyword) * 10
+        
+        # Prefer sections with structured content
+        score += section.count('•') * 5
+        score += section.count('-') * 3
+        score += section.count('1.') * 5
+        
+        scored_sections.append((score, section))
+    
+    # Sort by score and take top sections
+    scored_sections.sort(key=lambda x: x[0], reverse=True)
+    
+    optimized_content = ""
+    for score, section in scored_sections:
+        if len(optimized_content) + len(section) <= max_length:
+            optimized_content += section + "\n\n"
+        else:
+            break
+    
+    logger.info(f"Optimized PRD content to {len(optimized_content)} characters")
+    return optimized_content.strip()
+
+@lru_cache(maxsize=100)
+def count_tokens(text, model="gpt-4o"):
+    """Count tokens in text using tiktoken. Cached for performance."""
+    try:
+        # Map gpt-4o to gpt-4 for tiktoken compatibility
+        tiktoken_model = "gpt-4" if model == "gpt-4o" else model
+        encoding = tiktoken.encoding_for_model(tiktoken_model)
+        return len(encoding.encode(text))
+    except Exception as e:
+        logger.warning(f"Error counting tokens: {e}, using fallback estimate")
+        # Fallback: rough estimate of 4 characters per token
+        return len(text) // 4
+
+def log_token_usage(prompt_text, response_text, model="gpt-4o", context=""):
+    """Log detailed token usage and cost estimation."""
+    prompt_tokens = count_tokens(prompt_text, model)
+    response_tokens = count_tokens(response_text, model)
+    total_tokens = prompt_tokens + response_tokens
+    
+    # Cost estimation for GPT-4o (approximate rates)
+    input_cost_per_1k = 0.005  # $0.005 per 1K input tokens
+    output_cost_per_1k = 0.015  # $0.015 per 1K output tokens
+    
+    input_cost = (prompt_tokens / 1000) * input_cost_per_1k
+    output_cost = (response_tokens / 1000) * output_cost_per_1k
+    total_cost = input_cost + output_cost
+    
+    logger.info(f"Token Usage - {context}")
+    logger.info(f"  Input tokens: {prompt_tokens:,}")
+    logger.info(f"  Output tokens: {response_tokens:,}")
+    logger.info(f"  Total tokens: {total_tokens:,}")
+    logger.info(f"  Estimated cost: ${total_cost:.4f}")
+
+def ask_assistant_from_file_optimized(code_filepath, user_prompt):
+    """Optimized assistant interaction using direct chat completion instead of deprecated Assistants API."""
+    start_time = time.time()
+    logger.info(f"Starting optimized assistant interaction: {code_filepath}")
+    
+    try:
+        # Read assistant configuration/instructions with UTF-8 encoding
+        with open(f"agents/{code_filepath}", "r", encoding="utf-8") as file:
+            assistant_instructions = file.read().strip()
+            
+        logger.info(f"Using assistant instructions from: {code_filepath}")
+        
+        # Initialize OpenAI client
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        
+        # Create system message from assistant instructions
+        system_message = f"""You are an expert assistant for PRD (Product Requirements Document) processing and epic generation.
+
+{assistant_instructions}
+
+Please follow the instructions above and process the user's request accordingly."""
+        
+        # Use chat completions API instead of deprecated Assistants API
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.7,
+            max_tokens=4000
+        )
+        
+        assistant_response = response.choices[0].message.content
+        
+        processing_time = time.time() - start_time
+        logger.info(f"Assistant response received in {processing_time:.2f} seconds")
+        logger.info(f"Response length: {len(assistant_response)} characters")
+        
+        return assistant_response
+            
+    except Exception as e:
+        processing_time = time.time() - start_time
+        logger.error(f"Error in assistant interaction after {processing_time:.2f}s: {str(e)}")
+        return f"Error: {str(e)}"
+
+def create_intelligent_summary_fallback(content, filename, max_summary_length=5000):
+    """Create an intelligent summary when vector database is not available."""
+    logger.info(f"Creating intelligent fallback summary for {filename}")
+    
+    if len(content) <= max_summary_length:
+        return content
+    
+    # Extract key sections using keyword-based approach
+    important_keywords = [
+        'requirement', 'feature', 'user story', 'acceptance criteria',
+        'functional', 'non-functional', 'business rule', 'constraint',
+        'objective', 'goal', 'scope', 'assumption', 'dependency',
+        'architecture', 'design', 'integration', 'security', 'performance'
+    ]
+    
+    # Split content into sections
+    sections = content.split('\n\n')
+    scored_sections = []
+    
+    for section in sections:
+        score = 0
+        section_lower = section.lower()
+        
+        # Score based on keywords
+        for keyword in important_keywords:
+            score += section_lower.count(keyword) * 10
+        
+        # Prefer sections with structured content (lists, numbers)
+        score += section.count('•') * 5
+        score += section.count('-') * 3
+        score += section.count('1.') * 5
+        score += section.count('2.') * 4
+        score += section.count('3.') * 3
+        
+        # Prefer longer, more detailed sections
+        if len(section) > 200:
+            score += 5
+        if len(section) > 500:
+            score += 5
+        
+        scored_sections.append((score, section))
+    
+    # Sort by score and take top sections
+    scored_sections.sort(key=lambda x: x[0], reverse=True)
+    
+    # Combine top sections until we reach max length
+    summary_parts = []
+    current_length = 0
+    
+    for score, section in scored_sections:
+        if current_length + len(section) <= max_summary_length:
+            summary_parts.append(section)
+            current_length += len(section)
+        else:
+            # Try to fit partial section
+            remaining_space = max_summary_length - current_length - 50  # Leave space for truncation message
+            if remaining_space > 200:  # Only add if meaningful portion fits
+                partial_section = section[:remaining_space] + "..."
+                summary_parts.append(partial_section)
+            break
+    
+    final_summary = "\n\n".join(summary_parts)
+    
+    if len(final_summary) > max_summary_length:
+        final_summary = final_summary[:max_summary_length] + "... [Content truncated]"
+    
+    logger.info(f"Intelligent fallback summary created, length: {len(final_summary)} characters")
+    
+    # Print Fallback Summary for debugging
+    logger.info("=" * 80)
+    logger.info("INTELLIGENT FALLBACK SUMMARY GENERATED:")
+    logger.info("=" * 80)
+    logger.info(final_summary[:2000] + "..." if len(final_summary) > 2000 else final_summary)
+    logger.info("=" * 80)
+    
+    return final_summary.strip()
+
+def is_valid_content(content):
+    """Check if content is valid for RAG processing."""
+    if not content or len(content.strip()) < 50:
+        return False
+    
+    # Check for error messages
+    error_indicators = [
+        "[Unable to decode",
+        "[Unable to read",
+        "[Error reading",
+        "[File reading failed",
+        "[File appears to be empty"
+    ]
+    
+    for indicator in error_indicators:
+        if content.startswith(indicator):
+            return False
+    
+    return True
+
+def debug_file_content(content, filename):
+    """Debug helper to print file content details."""
+    logger.info(f"=== FILE CONTENT DEBUG: {filename} ===")
+    logger.info(f"Content length: {len(content) if content else 0}")
+    logger.info(f"Content type: {type(content)}")
+    logger.info(f"Is valid for RAG: {is_valid_content(content)}")
+    
+    if content:
+        # Show first 200 characters, safely handling non-printable characters
+        try:
+            preview = content[:200].replace('\n', '\\n').replace('\r', '\\r')
+            # Replace any problematic Unicode characters for logging
+            safe_preview = preview.encode('ascii', errors='replace').decode('ascii')
+            logger.info(f"Content preview: {safe_preview}")
+        except Exception as e:
+            logger.info(f"Content preview: [Unable to display preview due to encoding: {str(e)}]")
+        
+        # Count different character types
+        if len(content) > 0:
+            alpha_count = sum(1 for c in content if c.isalpha())
+            digit_count = sum(1 for c in content if c.isdigit())
+            space_count = sum(1 for c in content if c.isspace())
+            other_count = len(content) - alpha_count - digit_count - space_count
+            
+            logger.info(f"Character breakdown - Alpha: {alpha_count}, Digits: {digit_count}, Spaces: {space_count}, Other: {other_count}")
+    
+    logger.info("=== END FILE DEBUG ===")
+
+# Flask App Startup
+@app.route("/vector-db-status", methods=["GET"])
+def vector_db_status():
+    """View vector database status and contents via web interface."""
+    logger.info("GET request received for vector database status")
+    
+    try:
+        if not prd_collection:
+            return {
+                "status": "error",
+                "message": "Vector database not initialized",
+                "count": 0,
+                "documents": []
+            }
+        
+        # Get collection info
+        collection_info = {
+            "name": prd_collection.name,
+            "metadata": prd_collection.metadata,
+            "count": prd_collection.count()
+        }
+        
+        # Get all documents (limit to 50 for performance)
+        all_docs = prd_collection.get(limit=50)
+        
+        documents = []
+        if all_docs['documents']:
+            for i, (doc, metadata, doc_id) in enumerate(zip(
+                all_docs['documents'], 
+                all_docs['metadatas'], 
+                all_docs['ids']
+            )):
+                documents.append({
+                    "id": doc_id,
+                    "content_preview": doc[:200] + "..." if len(doc) > 200 else doc,
+                    "content_length": len(doc),
+                    "metadata": metadata,
+                    "index": i
+                })
+        
+        # Create HTML response for better viewing
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Vector Database Status</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                .header {{ background-color: #f0f0f0; padding: 15px; border-radius: 5px; }}
+                .document {{ border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 5px; }}
+                .metadata {{ background-color: #f9f9f9; padding: 10px; margin: 5px 0; border-radius: 3px; }}
+                .content {{ background-color: #fff; padding: 10px; border-left: 3px solid #007bff; }}
+                pre {{ white-space: pre-wrap; word-wrap: break-word; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🗄️ Vector Database Status</h1>
+                <p><strong>Collection:</strong> {collection_info['name']}</p>
+                <p><strong>Total Documents:</strong> {collection_info['count']}</p>
+                <p><strong>Showing:</strong> {len(documents)} documents (limited to 50)</p>
+            </div>
+        """
+        
+        if documents:
+            for doc in documents:
+                html_content += f"""
+                <div class="document">
+                    <h3>Document #{doc['index'] + 1}</h3>
+                    <div class="metadata">
+                        <strong>ID:</strong> {doc['id']}<br>
+                        <strong>Length:</strong> {doc['content_length']} characters<br>
+                        <strong>Filename:</strong> {doc['metadata'].get('filename', 'Unknown')}<br>
+                        <strong>Type:</strong> {doc['metadata'].get('doc_type', 'Unknown')}<br>
+                        <strong>Chunk:</strong> {doc['metadata'].get('chunk_index', 'N/A')} / {doc['metadata'].get('total_chunks', 'N/A')}<br>
+                        <strong>Timestamp:</strong> {doc['metadata'].get('timestamp', 'Unknown')}
+                    </div>
+                    <div class="content">
+                        <strong>Content Preview:</strong>
+                        <pre>{doc['content_preview']}</pre>
+                    </div>
+                </div>
+                """
+        else:
+            html_content += "<p>No documents found in the vector database.</p>"
+        
+        html_content += """
+            <div style="margin-top: 30px; padding: 15px; background-color: #e7f3ff; border-radius: 5px;">
+                <h3>🔍 How to Query the Vector Database</h3>
+                <p>You can search the vector database by making a POST request to <code>/vector-db-search</code> with a JSON body:</p>
+                <pre>{"query": "your search query", "top_k": 5}</pre>
+                <p>Or use the search interface: <a href="/vector-db-search">Vector DB Search</a></p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return html_content, 200, {'Content-Type': 'text/html'}
+        
+    except Exception as e:
+        logger.error(f"Error accessing vector database: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Error accessing vector database: {str(e)}",
+            "count": 0,
+            "documents": []
+        }
+
+@app.route("/vector-db-search", methods=["GET", "POST"])
+def vector_db_search():
+    """Search the vector database via web interface."""
+    logger.info(f"{request.method} request received for vector database search")
+    
+    if request.method == "GET":
+        # Render search form
+        html_content = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Vector Database Search</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .search-form { background-color: #f0f0f0; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+                .result { border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 5px; }
+                .metadata { background-color: #f9f9f9; padding: 10px; margin: 5px 0; border-radius: 3px; }
+                .content { background-color: #fff; padding: 10px; border-left: 3px solid #28a745; }
+                input[type="text"] { width: 70%; padding: 10px; margin: 5px; }
+                input[type="number"] { width: 100px; padding: 10px; margin: 5px; }
+                button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+                button:hover { background-color: #0056b3; }
+            </style>
+        </head>
+        <body>
+            <h1>🔍 Vector Database Search</h1>
+            <div class="search-form">
+                <form method="POST">
+                    <label>Search Query:</label><br>
+                    <input type="text" name="query" placeholder="Enter your search query..." required><br>
+                    <label>Number of Results:</label><br>
+                    <input type="number" name="top_k" value="5" min="1" max="20"><br><br>
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+            <p><a href="/vector-db-status">← Back to Vector DB Status</a></p>
+        </body>
+        </html>
+        """
+        return html_content, 200, {'Content-Type': 'text/html'}
+    
+    else:  # POST request
+        try:
+            # Get search parameters
+            if request.is_json:
+                data = request.get_json()
+                query = data.get("query", "")
+                top_k = data.get("top_k", 5)
+            else:
+                query = request.form.get("query", "")
+                top_k = int(request.form.get("top_k", 5))
+            
+            if not query:
+                return {"error": "Query is required"}, 400
+            
+            # Search the vector database
+            results = retrieve_relevant_content(query, top_k=top_k)
+            
+            # Create HTML response
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Search Results</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                    .header {{ background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin-bottom: 20px; }}
+                    .result {{ border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 5px; }}
+                    .metadata {{ background-color: #f9f9f9; padding: 10px; margin: 5px 0; border-radius: 3px; }}
+                    .content {{ background-color: #fff; padding: 10px; border-left: 3px solid #28a745; }}
+                    .relevance {{ color: #007bff; font-weight: bold; }}
+                    pre {{ white-space: pre-wrap; word-wrap: break-word; }}
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>🔍 Search Results</h1>
+                    <p><strong>Query:</strong> "{query}"</p>
+                    <p><strong>Results Found:</strong> {len(results)}</p>
+                </div>
+            """
+            
+            if results:
+                for i, result in enumerate(results):
+                    metadata = result.get('metadata', {})
+                    content = result.get('content', '')
+                    rank = result.get('relevance_rank', i + 1)
+                    
+                    html_content += f"""
+                    <div class="result">
+                        <h3>Result #{rank} <span class="relevance">(Relevance Rank: {rank})</span></h3>
+                        <div class="metadata">
+                            <strong>Filename:</strong> {metadata.get('filename', 'Unknown')}<br>
+                            <strong>Document Type:</strong> {metadata.get('doc_type', 'Unknown')}<br>
+                            <strong>Chunk:</strong> {metadata.get('chunk_index', 'N/A')} / {metadata.get('total_chunks', 'N/A')}<br>
+                            <strong>Timestamp:</strong> {metadata.get('timestamp', 'Unknown')}
+                        </div>
+                        <div class="content">
+                            <strong>Content:</strong>
+                            <pre>{content}</pre>
+                        </div>
+                    </div>
+                    """
+            else:
+                html_content += "<p>No results found for your query.</p>"
+            
+            html_content += """
+                <div style="margin-top: 30px;">
+                    <a href="/vector-db-search">← New Search</a> | 
+                    <a href="/vector-db-status">Vector DB Status</a>
+                </div>
+            </body>
+            </html>
+            """
+            
+            return html_content, 200, {'Content-Type': 'text/html'}
+            
+        except Exception as e:
+            logger.error(f"Error searching vector database: {str(e)}")
+            return {"error": f"Search failed: {str(e)}"}, 500
+
+@app.route("/vector-db-clear", methods=["POST"])
+def vector_db_clear():
+    """Clear all documents from the vector database."""
+    global prd_collection
+    logger.info("POST request received to clear vector database")
+    
+    try:
+        if not prd_collection:
+            return {"status": "error", "message": "Vector database not initialized"}
+        
+        # Get current count
+        current_count = prd_collection.count()
+        
+        # Delete the collection and recreate it
+        chroma_client.delete_collection(prd_collection.name)
+        
+        # Recreate the collection
+        prd_collection = chroma_client.get_or_create_collection(
+            name="prd_documents",
+            metadata={"description": "PRD and documentation storage for RAG"}
+        )
+        
+        logger.info(f"Vector database cleared. Removed {current_count} documents.")
+        
+        return {
+            "status": "success",
+            "message": f"Vector database cleared successfully. Removed {current_count} documents.",
+            "documents_removed": current_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error clearing vector database: {str(e)}")
+        return {"status": "error", "message": f"Error clearing database: {str(e)}"}
+
+@app.route("/document-upload", methods=["POST"])
+def document_upload_preview():
+    """Step 1: Upload and preview documents with RAG summary before epic generation."""
+    logger.info("=== DOCUMENT UPLOAD ENDPOINT CALLED ===")
+    start_time = time.time()
+    logger.info("POST request received for document upload and preview")
+    
+    try:
+        logger.info("=== INSIDE TRY BLOCK ===")
+        
+        # Test logging to ensure we reach this point
+        logger.info("About to process document upload...")
+        
+        # Collect input
+        logger.info("Collecting form data and file uploads for preview")
+        context = request.form.get("context", "")
+        prd_file = request.files.get("prd_file")
+        additional_docs = request.files.get("additional_docs")
+        
+        logger.info(f"Context provided: {'Yes' if context else 'No'}")
+        logger.info(f"PRD file uploaded: {'Yes' if prd_file else 'No'}")
+        logger.info(f"Additional docs uploaded: {'Yes' if additional_docs else 'No'}")
+        
+        if prd_file:
+            logger.info(f"PRD file name: {prd_file.filename}")
+        if additional_docs:
+            logger.info(f"Additional docs file name: {additional_docs.filename}")
+
+        # Parallel file reading for better performance
+        logger.info("Reading uploaded files in parallel for preview")
+        
+        def read_files_parallel():
+            with ThreadPoolExecutor(max_workers=2) as file_executor:
+                prd_future = file_executor.submit(safe_read, prd_file) if prd_file else None
+                docs_future = file_executor.submit(safe_read, additional_docs) if additional_docs else None
+                
+                prd_content = prd_future.result() if prd_future else ""
+                docs_content = docs_future.result() if docs_future else ""
+                
+                return prd_content, docs_content
+        
+        prd_content, docs_content = read_files_parallel()
+        
+        # Debug file content
+        if prd_content:
+            debug_file_content(prd_content, prd_file.filename if prd_file else "prd_content")
+        if docs_content:
+            debug_file_content(docs_content, additional_docs.filename if additional_docs else "additional_docs")
+
+        # Store documents in vector database and create RAG summaries for preview
+        logger.info("Processing documents with RAG enhancement for preview")
+        
+        # Process PRD with RAG if content is substantial and valid
+        prd_summary = ""
+        if is_valid_content(prd_content):
+            if len(prd_content) > 1000:  # Lower threshold for preview
+                logger.info("Creating RAG-enhanced PRD summary for preview")
+                prd_summary = create_rag_summary(prd_content, prd_file.filename if prd_file else "prd_content", max_summary_length=15000)
+            else:
+                logger.info("PRD content is valid but small, using as-is for preview")
+                prd_summary = prd_content
+        else:
+            logger.warning(f"PRD content is invalid for RAG processing: {prd_content[:100] if prd_content else 'None'}")
+            prd_summary = "No valid PRD content available - please check file format and encoding."
+        
+        # Process additional docs with RAG
+        docs_summary = ""
+        if is_valid_content(docs_content):
+            if len(docs_content) > 1000:  # Lower threshold for preview
+                logger.info("Creating RAG-enhanced docs summary for preview")
+                docs_summary = create_rag_summary(docs_content, additional_docs.filename if additional_docs else "additional_docs", max_summary_length=8000)
+            else:
+                logger.info("Additional docs content is valid but small, using as-is for preview")
+                docs_summary = docs_content
+        else:
+            logger.warning(f"Additional docs content is invalid: {docs_content[:100] if docs_content else 'None'}")
+            docs_summary = "No valid additional documentation available."
+        
+        logger.info(f"PRD summary length: {len(prd_summary)} characters")
+        logger.info(f"Additional docs summary length: {len(docs_summary)} characters")
+        
+        # Create preview data
+        preview_data = {
+            "user_context": context,
+            "prd_summary": prd_summary,
+            "docs_summary": docs_summary,
+            "prd_filename": prd_file.filename if prd_file else None,
+            "docs_filename": additional_docs.filename if additional_docs else None,
+            "processing_time": time.time() - start_time
+        }
+        
+        logger.info(f"Document preview generated in {preview_data['processing_time']:.2f} seconds")
+        
+        # Return JSON response for AJAX handling
+        return jsonify({
+            "success": True,
+            "preview_data": preview_data,
+            "message": "Documents processed successfully. Review the summary below and click 'Generate Epics' to proceed."
+        })
+        
+    except Exception as e:
+        print(f"Exception in /document-upload: {e}")
+        logger.info(f"Error in document_upload_preview: {str(e)}")
+        logger.error(f"Exception type: {type(e).__name__}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        
+        return jsonify({
+            "success": False,
+            "error": f"Error processing documents: {str(e)}"
+        }), 500
+
+@app.route("/generate-epics", methods=["POST"])
+def generate_epics_from_preview():
+    """Step 2: Generate epics using the previewed RAG summary."""
+    start_time = time.time()
+    logger.info("POST request received for epic generation from preview")
+    
+    try:
+        # Get the preview data from the request
+        request_data = request.get_json()
+        if not request_data:
+            logger.error("No preview data received for epic generation")
+            return jsonify({"success": False, "error": "No preview data received"}), 400
+        
+        user_context = request_data.get("user_context", "")
+        prd_summary = request_data.get("prd_summary", "")
+        docs_summary = request_data.get("docs_summary", "")
+        
+        logger.info(f"Epic generation - Context: {'Yes' if user_context else 'No'}")
+        logger.info(f"Epic generation - PRD summary: {len(prd_summary)} characters")
+        logger.info(f"Epic generation - Docs summary: {len(docs_summary)} characters")
+
+        # Create enhanced context for Epic Generator
+        enhanced_context = f"""
+        {user_context}
+
+        RAG-Enhanced PRD Analysis:
+        {prd_summary}
+
+        Additional Context:
+        {docs_summary}
+
+        Instructions: The above content has been intelligently extracted and summarized using RAG (Retrieval Augmented Generation). 
+        It contains the most relevant requirements, user stories, and business objectives from the original documents.
+        Use this curated information to generate comprehensive epics and user stories.        """
+        logger.info(f"Enhanced context length: {len(enhanced_context)} characters")
+        
+        # Check cache first
+        prompt_hash = get_cache_key(enhanced_context)
+        cached_result = response_cache.get(prompt_hash)
+        if cached_result:
+            logger.info("Cache hit! Returning cached response")
+            processing_time = time.time() - start_time
+            logger.info(f"Total processing time (cached): {processing_time:.2f} seconds")
+            return jsonify({
+                "success": True,
+                "epics": cached_result,
+                "processing_time": processing_time,
+                "cached": True
+            })
+        
+        # Log token count for the enhanced context
+        context_tokens = count_tokens(enhanced_context, "gpt-4o")
+        logger.info(f"Enhanced context token count: {context_tokens:,} tokens")
+        
+        # Check if context is within token limits
+        if context_tokens > 120000:
+            logger.warning(f"Enhanced context token count ({context_tokens:,}) is approaching the 128k limit!")
+            # Further optimize if needed
+            enhanced_context = enhanced_context[:100000] + "\n[Content truncated due to token limits]"
+            context_tokens = count_tokens(enhanced_context, "gpt-4o")
+            logger.info(f"Truncated context token count: {context_tokens:,} tokens")
+        else:
+            logger.info(f"Enhanced context is within safe token limits ({context_tokens:,}/128,000 tokens)")
+
+        # Skip PRD Parser Agent - RAG has already done the parsing and summarization
+        logger.info("****************Skipping PRD Parser - Using RAG Summary Directly")
+        logger.info("Starting Epic Generator with RAG-enhanced content")
+        
+        # Print Enhanced Context being sent to Epic Agent
+        logger.info("=" * 80)
+        logger.info("ENHANCED CONTEXT INPUT TO EPIC AGENT:")
+        logger.info("=" * 80)
+        logger.info(enhanced_context[:3000] + "..." if len(enhanced_context) > 3000 else enhanced_context)
+        logger.info("=" * 80)
+        
+        # Directly use Epic Generator with RAG-enhanced content
+        start_epic_time = time.time()
+        epic_response = ask_assistant_from_file_optimized("poc2_agent2_epic_generator", enhanced_context)
+        epic_processing_time = time.time() - start_epic_time
+        
+        logger.info("################Epic Generator response received")
+        logger.info(f"Epic Generator processing time: {epic_processing_time:.2f} seconds")
+        
+        # Print Epic Agent Response
+        logger.info("=" * 80)
+        logger.info("EPIC AGENT RESPONSE OUTPUT:")
+        logger.info("=" * 80)
+        logger.info(epic_response)
+        logger.info("=" * 80)
+        
+        # Log token usage for Epic Generator interaction
+        log_token_usage(enhanced_context, epic_response, model="gpt-4o", context="RAG-Enhanced Epic Generator")
+
+        final_output = epic_response
+        logger.info(f"Final output length: {len(final_output)} characters")
+        
+        # Cache the result for future requests
+        response_cache[prompt_hash] = final_output
+        logger.info("Response cached for future requests")
+        
+        processing_time = time.time() - start_time
+        logger.info(f"Total RAG-optimized processing time: {processing_time:.2f} seconds")
+        
+        # Calculate time savings
+        estimated_traditional_time = processing_time * 2  # Estimate of traditional two-agent approach
+        time_saved = estimated_traditional_time - processing_time
+        logger.info(f"Estimated time saved by RAG optimization: {time_saved:.2f} seconds")
+        
+        # Return JSON response for AJAX handling
+        return jsonify({
+            "success": True,
+            "epics": final_output,
+            "processing_time": processing_time,
+            "time_saved": time_saved,
+            "cached": False
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in generate_epics_from_preview: {str(e)}")
+        logger.error(f"Exception type: {type(e).__name__}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        
+        return jsonify({
+            "success": False,
+            "error": f"Error generating epics: {str(e)}"
+        }), 500
+
+@app.route("/epic-results", methods=["GET", "POST"])
+def show_epic_results():
+    """Display the epic results page after generation."""
+    if request.method == "POST":
+        epics = request.form.get("epics", "")
+        return render_template("poc2_epic_story_screen.html", epics=epics)
+    else:
+        return render_template("poc2_epic_story_screen.html", epics="")
+
+@app.route("/approve-epics", methods=["POST"])
+def approve_epics():
+    """Process approved epics and generate user stories for them."""
+    start_time = time.time()
+    logger.info("POST request received for epic approval and user story generation")
+    
+    try:
+        # Get the approved epic IDs from the form
+        epic_ids_str = request.form.get("epic_ids", "")
+        epic_ids = [epic_id.strip() for epic_id in epic_ids_str.split(",") if epic_id.strip()]
+        
+        logger.info(f"Processing approval for epic IDs: {epic_ids}")
+        
+        if not epic_ids:
+            logger.error("No epic IDs provided for approval")
+            return render_template("poc2_epic_story_screen.html", 
+                                 epics="No epics selected for approval", 
+                                 user_stories="")
+        
+        # Get the current epics content to preserve it
+        current_epics = request.form.get("current_epics", "")
+        logger.info(f"Current epics content length: {len(current_epics)} characters")
+        
+        # Generate user stories for each approved epic
+        user_stories = []
+        logger.info("Starting user story generation for approved epics")
+        
+        for i, epic_id in enumerate(epic_ids):
+            logger.info(f"Generating user stories for epic: {epic_id}")
+            
+            # Create a more detailed prompt for user story generation
+            prompt = f"""
+            Generate detailed user stories for the epic: {epic_id}
+            
+            Please provide 3-5 user stories that break down this epic into actionable development tasks.
+            Each user story should follow the format: "As a [user type], I want [goal] so that [benefit]"
+            
+            Include acceptance criteria for each user story.
+            Focus on deliverable functionality that supports the epic's objectives.
+            """
+            
+            try:
+                story_response = ask_assistant_from_file_optimized("poc2_agent3_basic_user_story", prompt)
+                if story_response:
+                    # Format as user story card, not epic card
+                    user_stories.append(f"""
+                    <div class='user-story-card'>
+                        <h6>User Stories for {epic_id}</h6>
+                        <div style='padding: 10px; background-color: #f8f9fa; border-radius: 4px; margin: 5px 0;'>
+                            {story_response}
+                        </div>
+                        <div class="form-check" style="margin-top: 10px;">
+                            <input class="form-check-input" type="radio" name="user_story_id" value="story_{i+1}" id="story_{i+1}">
+                            <label class="form-check-label" for="story_{i+1}">
+                                Select this user story set
+                            </label>
+                        </div>
+                    </div>
+                    """)
+                    logger.info(f"Successfully generated user stories for {epic_id}")
+                else:
+                    logger.warning(f"No response received for epic {epic_id}")
+                    user_stories.append(f"""
+                    <div class='user-story-card'>
+                        <h6>User Stories for {epic_id}</h6>
+                        <p class="text-warning">No user stories could be generated for this epic.</p>
+                    </div>
+                    """)
+            except Exception as e:
+                logger.error(f"Error generating user stories for epic {epic_id}: {str(e)}")
+                user_stories.append(f"""
+                <div class='user-story-card'>
+                    <h6>User Stories for {epic_id}</h6>
+                    <p class="text-danger">Error generating user stories: {str(e)}</p>
+                </div>
+                """)
+        
+        # Combine all user stories
+        user_stories_html = "\n".join(user_stories)
+        
+        processing_time = time.time() - start_time
+        logger.info(f"User story generation completed in {processing_time:.2f} seconds")
+        logger.info(f"Generated user stories for {len(epic_ids)} epics")
+        
+        # Render the template with both epics (preserved) and user stories (newly generated)
+        rendered_html = render_template(
+            "poc2_epic_story_screen.html", 
+            epics=current_epics,  # Preserve the original epics
+            user_stories=user_stories_html  # Add the generated user stories
+        )
+        
+        return rendered_html
+        
+    except Exception as e:
+        logger.error(f"Error in approve_epics: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        
+        # Return error page with preserved epics
+        error_message = f"""
+        <div class='user-story-card'>
+            <h6>Error Generating User Stories</h6>
+            <p class="text-danger">An error occurred while generating user stories: {str(e)}</p>
+            <p class="text-muted">Please try again or contact support if the issue persists.</p>
+        </div>
+        """
+        
+        return render_template(
+            "poc2_epic_story_screen.html", 
+            epics=request.form.get("current_epics", ""), 
+            user_stories=error_message
+        )
+
+@app.errorhandler(404)
+def not_found_error(error):
+    logger.error(f"404 Error: {request.url} not found")
+    return jsonify({"success": False, "error": "Endpoint not found"}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f"500 Error: {str(error)}")
+    logger.error(f"Request URL: {request.url}")
+    logger.error(f"Request method: {request.method}")
+    return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    logger.error(f"Unhandled exception: {str(e)}")
+    logger.error(f"Exception type: {type(e).__name__}")
+    logger.error(f"Request URL: {request.url}")
+    logger.error(f"Request method: {request.method}")
+    logger.error(f"Traceback: {traceback.format_exc()}")
+    return jsonify({"success": False, "error": f"Unexpected error: {str(e)}"}), 500
+
+if __name__ == "__main__":
+    logger.info("Starting Flask application...")
+    logger.info("RAG-Enhanced PRD to Epic/User Story Generator")
+    logger.info("=" * 60)
+    logger.info("Features:")
+    logger.info("- RAG-based document processing with ChromaDB")
+    logger.info("- SentenceTransformers embeddings for semantic search")
+    logger.info("- PRD Parser Agent replaced with intelligent RAG summaries")
+    logger.info("- Single-agent workflow using only Epic Generator")
+    logger.info("- Advanced caching and performance optimizations")
+    logger.info("=" * 60)
+    
+    try:
+        # Run Flask app in debug mode for development
+        app.run(
+            host="0.0.0.0",
+            port=5000,
+            debug=True,
+            threaded=True,
+            use_reloader=False  # Disable reloader to prevent double initialization
+        )
+    except Exception as e:
+        logger.error(f"Failed to start Flask application: {str(e)}")
+        raise

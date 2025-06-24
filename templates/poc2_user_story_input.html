@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Story Drafting Solution</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #2e2e33;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      line-height: 1.75rem;
+    }
+
+    .main-container {
+      background-color: #fff;
+      color: #000;
+      border-radius: 0.75rem;
+      max-width: 960px;
+      margin: auto;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab-title {
+      background-color: #c00;
+      color: #fff;
+      padding: 0.75rem;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      background-color: #444;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .form-control, .form-control-file {
+      margin-bottom: 1.25rem;
+    }    .submit-btn {
+      background-color: #c00;
+      color: white;
+      padding: 0.75rem;
+      font-size: 1.1rem;
+      border: none;
+      width: 100%;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }    .submit-btn:disabled {
+      background-color: #666;
+      cursor: not-allowed;
+    }
+
+    .submit-btn.success {
+      background-color: #28a745 !important;
+      cursor: default;
+    }
+
+    .upload-section-disabled {
+      opacity: 0.7;
+      pointer-events: none;
+      position: relative;
+    }
+
+    .upload-section-disabled::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
+    }
+
+    .preview-section {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background-color: #f8f9fa;
+      border-radius: 0.5rem;
+      border: 1px solid #ddd;
+      display: none;
+    }
+
+    .summary-box {
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 0.25rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    .filename-tag {
+      background-color: #007bff;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+    }
+
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .step {
+      flex: 1;
+      text-align: center;
+      padding: 0.5rem;
+      border: 2px solid #ddd;
+      background-color: #f8f9fa;
+      color: #666;
+    }
+
+    .step.active {
+      border-color: #c00;
+      background-color: #c00;
+      color: white;
+    }
+
+    .step.completed {
+      border-color: #28a745;
+      background-color: #28a745;
+      color: white;
+    }
+
+    .step:first-child {
+      border-radius: 0.5rem 0 0 0.5rem;
+    }
+
+    .step:last-child {
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    .loading-spinner {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .alert {
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 0.25rem;
+    }
+
+    .alert-success {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }    .alert-danger {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+
+    .alert-info {
+      background-color: #d1ecf1;
+      border: 1px solid #bee5eb;
+      color: #0c5460;
+    }
+
+    .btn-close {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: inherit;
+    }textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.375rem 0.75rem;
+      margin: 0.25rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      border-radius: 0.25rem;
+      text-decoration: none;
+      text-align: center;
+      vertical-align: middle;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .btn-outline-primary {
+      color: #007bff;
+      border-color: #007bff;
+      background-color: transparent;
+    }
+
+    .btn-outline-primary:hover {
+      color: #fff;
+      background-color: #007bff;
+    }
+
+    .btn-outline-secondary {
+      color: #6c757d;
+      border-color: #6c757d;
+      background-color: transparent;
+    }
+
+    .btn-outline-secondary:hover {
+      color: #fff;
+      background-color: #6c757d;
+    }
+
+    .spinner-border {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      vertical-align: text-bottom;
+      border: 0.125em solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spinner-border .75s linear infinite;
+    }
+
+    .spinner-border-sm {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-width: 0.1em;
+    }
+
+    @keyframes spinner-border {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="main-container">
+    <div class="tab-title">Input + File Upload</div>
+
+    <div class="section-title">Instructions | How to use this tool</div>
+    <div class="mb-4 border p-4 rounded bg-light text-dark">      <ol>
+        <li><strong>Upload your inputs</strong> – Start by uploading your PRD. Optionally, attach supporting documents for additional context.</li>
+        <li><strong>Review the summary</strong> – After uploading, review the AI-generated summary of your documents to ensure all key information is captured.</li>
+        <li><strong>Generate epics and stories</strong> – Once you're satisfied with the summary, click "Generate Epics" to create stories grouped by epics and prioritized based on the input.</li>
+        <li><strong>Select and complete user stories</strong> – Choose a user story from the list to expand. For each selected story, the tool will help you generate a full user story statement, acceptance criteria, and tagged requirements.</li>
+        <li><strong>Generate Jira ticket</strong> – After completing a user story, the tool will automatically draft a work item in Jira (if integrated).</li>
+        <li><strong>Repeat for additional stories</strong> – Repeat step 5 for as many user stories as needed. You can work on them in any order.</li>
+        <li><strong>Save your work</strong> – Manually save your progress using the save icon. You can return to this webpage later to continue.</li>
+        <li><strong>Export your output</strong> – Once you're done, you can download all completed user stories and Jira tickets as an Excel file.</li>
+      </ol>
+      <p>At any point while using this tool, <strong>use the ‘Chat’ interface</strong> to ask questions and edit outputs.</p>    </div>
+
+    <!-- Step Progress Indicator -->
+    <div class="step-indicator">
+      <div class="step active" id="step1">
+        <strong>1. Upload Documents</strong>
+      </div>
+      <div class="step" id="step2">
+        <strong>2. Generate Epics</strong>
+      </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div id="alertContainer"></div>
+
+    <div class="section-title">Step 1: Upload Documents</div>
+    
+    <!-- Step 1: Document Upload Form -->
+    <div id="uploadSection">
+      <form id="documentUploadForm" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="prdFile" class="form-label">📎 PRD</label>
+          <input class="form-control" type="file" id="prdFile" name="prd_file">
+        </div>
+        <div class="mb-3">
+          <label for="additionalDocs" class="form-label">📎 Additional documents</label>
+          <input class="form-control" type="file" id="additionalDocs" name="additional_docs">
+        </div>
+        <div class="mb-4">
+          <label for="context" class="form-label">Additional context</label>
+          <textarea class="form-control" id="context" name="context" placeholder="Insert any additional context not captured by the PRD or other uploaded documents here."></textarea>
+        </div>
+        <button type="submit" class="submit-btn" id="uploadBtn">Upload & Preview Summary</button>
+      </form>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p>Processing documents and generating summary...</p>
+    </div>
+
+    <!-- Step 2: Preview and Generate Epics -->
+    <div class="preview-section" id="previewSection">
+      <div class="section-title">Step 2: Review Summary & Generate Epics</div>
+      
+      <div class="mb-3">
+        <strong>PRD Summary:</strong>
+        <div id="prdFilename" class="mb-2"></div>
+        <div class="summary-box" id="prdSummary"></div>
+      </div>
+      
+      <div class="mb-3" id="docsSection" style="display: none;">
+        <strong>Additional Documents Summary:</strong>
+        <div id="docsFilename" class="mb-2"></div>
+        <div class="summary-box" id="docsSummary"></div>
+      </div>
+      
+      <div class="mb-3" id="contextSection" style="display: none;">
+        <strong>Additional Context:</strong>
+        <div class="summary-box" id="userContext"></div>
+      </div>
+      
+      <button type="button" class="submit-btn" id="generateEpicsBtn">Generate Epics</button>
+    </div>
+
+    <!-- Loading Spinner for Epic Generation -->
+    <div class="loading-spinner" id="epicLoadingSpinner">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p>Generating epics and user stories...</p>
+    </div>
+
+  </div>
+
+  <script>
+    let previewData = null;
+
+    // Step 1: Document Upload
+    document.getElementById('documentUploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const uploadBtn = document.getElementById('uploadBtn');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      
+      // Show loading spinner
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = 'Processing...';
+      loadingSpinner.style.display = 'block';
+        try {
+        const response = await fetch('/document-upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        // Check if the response is actually JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const textResponse = await response.text();
+          console.error('Non-JSON response:', textResponse);
+          showAlert('danger', `Server error: Expected JSON response but got ${contentType}. Status: ${response.status}`);
+          return;
+        }
+        
+        const result = await response.json();
+        console.log('Result:', result);
+          if (result.success) {
+          previewData = result.preview_data;
+          showPreview(previewData);
+          showAlert('success', result.message);
+          
+          // Update step indicator
+          document.getElementById('step1').classList.remove('active');
+          document.getElementById('step1').classList.add('completed');
+          document.getElementById('step2').classList.add('active');
+          
+          // Disable the upload form since we have successfully processed the files
+          disableUploadForm();
+          
+        } else {
+          showAlert('danger', 'Error processing documents: ' + (result.error || 'Unknown error'));
+        }
+        
+      } catch (error) {
+        console.error('Error details:', error);
+        showAlert('danger', 'Error uploading documents: ' + error.message + '. Please check the console for more details.');
+      } finally {
+        // Hide loading spinner
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Upload & Preview Summary';
+        loadingSpinner.style.display = 'none';
+      }
+    });
+
+    // Step 2: Generate Epics
+    document.getElementById('generateEpicsBtn').addEventListener('click', async function() {
+      if (!previewData) {
+        showAlert('danger', 'No preview data available. Please upload documents first.');
+        return;
+      }
+      
+      const generateBtn = document.getElementById('generateEpicsBtn');
+      const epicLoadingSpinner = document.getElementById('epicLoadingSpinner');
+      
+      // Show loading spinner
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Generating...';
+      epicLoadingSpinner.style.display = 'block';
+      
+      try {        const response = await fetch('/generate-epics', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(previewData)
+        });
+        
+        console.log('Generate epics response status:', response.status);
+        
+        // Check if the response is actually JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const textResponse = await response.text();
+          console.error('Non-JSON response:', textResponse);
+          showAlert('danger', `Server error: Expected JSON response but got ${contentType}. Status: ${response.status}`);
+          return;
+        }
+        
+        const result = await response.json();
+        console.log('Generate epics result:', result);
+          if (result.success) {
+          // Create a temporary form to submit the epics data
+          const tempForm = document.createElement('form');
+          tempForm.method = 'POST';
+          tempForm.action = '/epic-results';
+          tempForm.style.display = 'none';
+          
+          const epicsInput = document.createElement('input');
+          epicsInput.type = 'hidden';
+          epicsInput.name = 'epics';
+          epicsInput.value = result.epics;
+          
+          tempForm.appendChild(epicsInput);
+          document.body.appendChild(tempForm);
+          tempForm.submit();
+          
+        } else {
+          showAlert('danger', 'Error generating epics: ' + (result.error || 'Unknown error'));
+        }
+          } catch (error) {
+        console.error('Error details:', error);
+        showAlert('danger', 'Error generating epics: ' + error.message + '. Please check the console for more details.');
+      } finally {
+        // Hide loading spinner
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Epics';
+        epicLoadingSpinner.style.display = 'none';
+      }
+    });
+
+    function showPreview(data) {
+      // Show PRD summary
+      if (data.prd_summary) {
+        document.getElementById('prdSummary').textContent = data.prd_summary;
+        if (data.prd_filename) {
+          document.getElementById('prdFilename').innerHTML = '<span class="filename-tag">' + data.prd_filename + '</span>';
+        }
+      }
+      
+      // Show docs summary if available
+      if (data.docs_summary && data.docs_summary.trim() !== "No valid additional documentation available.") {
+        document.getElementById('docsSummary').textContent = data.docs_summary;
+        document.getElementById('docsSection').style.display = 'block';
+        if (data.docs_filename) {
+          document.getElementById('docsFilename').innerHTML = '<span class="filename-tag">' + data.docs_filename + '</span>';
+        }
+      }
+      
+      // Show user context if available
+      if (data.user_context && data.user_context.trim()) {
+        document.getElementById('userContext').textContent = data.user_context;
+        document.getElementById('contextSection').style.display = 'block';
+      }
+      
+      // Show preview section
+      document.getElementById('previewSection').style.display = 'block';
+      
+      // Scroll to preview section
+      document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+    }    function showAlert(type, message) {
+      const alertContainer = document.getElementById('alertContainer');
+      let alertClass;
+      
+      switch(type) {
+        case 'success':
+          alertClass = 'alert-success';
+          break;
+        case 'danger':
+          alertClass = 'alert-danger';
+          break;
+        case 'info':
+          alertClass = 'alert-info';
+          break;
+        default:
+          alertClass = 'alert-info';
+      }
+      
+      const alertHTML = `
+        <div class="alert ${alertClass}" role="alert">
+          ${message}
+          <button type="button" class="btn-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      `;
+      
+      alertContainer.innerHTML = alertHTML;
+      
+      // Auto-hide success alerts after 5 seconds
+      if (type === 'success') {
+        setTimeout(() => {
+          const alertElement = alertContainer.querySelector('.alert-success');
+          if (alertElement) alertElement.remove();
+        }, 5000);
+      }
+    }function disableUploadForm() {
+      // Disable all form inputs
+      document.getElementById('prdFile').disabled = true;
+      document.getElementById('additionalDocs').disabled = true;
+      document.getElementById('context').disabled = true;
+      
+      // Update upload button
+      const uploadBtn = document.getElementById('uploadBtn');
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = '✓ Documents Processed';
+      uploadBtn.classList.add('success');
+      
+      // Add visual indication to the upload section
+      const uploadSection = document.getElementById('uploadSection');
+      uploadSection.classList.add('upload-section-disabled');
+      
+      // Add a success message to the upload section
+      const successMessage = document.createElement('div');
+      successMessage.className = 'alert alert-success mt-3';
+      successMessage.innerHTML = `
+        <strong>✓ Upload Complete!</strong> Your documents have been successfully processed and are ready for epic generation.
+        <br><small>To upload different documents, please refresh the page.</small>
+      `;
+      uploadSection.appendChild(successMessage);
+      
+      // Prevent form submission
+      const uploadForm = document.getElementById('documentUploadForm');
+      uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        showAlert('info', 'Documents have already been processed. Please refresh the page to upload new documents.');
+      });
+    }
+  </script>
+
+</body>
+
+</html>

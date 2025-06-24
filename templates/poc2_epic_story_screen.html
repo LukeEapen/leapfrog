@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Epic generation & list of user stories</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
+  <style>
+    body {
+      background-color: #2f323a;
+      color: #fff;
+    }
+    .header-bar {
+      background-color: #d0021b;
+      color: white;
+      text-align: center;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 6px 6px 0 0;
+      margin-bottom: 10px;
+    }
+    .section-header {
+      background-color: #444;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+    }    .epic-card, .user-story-card {
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 10px;
+      color: #000;
+    }
+    #epics-container {
+      background-color: white;
+      border-radius: 6px;
+      padding: 15px;
+      margin-top: 10px;
+      color: #000;
+    }
+    #user-stories-container {
+      background-color: white;
+      border-radius: 6px;
+      padding: 15px;
+      margin-top: 10px;
+      color: #000;
+    }
+    .epic-card h5 {
+      color: #d0021b;
+      font-weight: bold;
+    }
+    .priority-high {
+      color: red;
+      font-weight: bold;
+    }
+    .priority-medium {
+      color: orange;
+      font-weight: bold;
+    }
+    .priority-low {
+      color: green;
+      font-weight: bold;
+    }
+    .footer-btn {
+      background-color: #d0021b;
+      color: white;
+      font-weight: bold;
+      padding: 10px;
+      width: 100%;
+      border-radius: 10px;
+      border: none;
+      margin-top: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+  <div class="header-bar">Epic generation & list of user stories</div>
+
+  <div class="section-header">
+    <span>Epics</span>
+    <button class="btn btn-outline-light btn-sm">💬 Chat</button>
+  </div>  <div id="epics-container">
+    {{ epics|safe }}
+  </div>
+
+  <form id="approve-epics-form" method="POST" action="/approve-epics">
+    <input type="hidden" name="epic_ids" id="epic_ids" value="epic_1,epic_2">
+    <button type="submit" class="footer-btn">Approve Epic(s)</button>
+  </form>
+
+  <div id="user-stories-section" class="{{ 'hidden' if not user_stories }}">
+    <div class="section-header">
+      <span>User stories</span>
+      <button class="btn btn-outline-light btn-sm">💬 Chat</button>
+    </div>
+    <p class="mb-3 text-light">
+      Review this list of generated user stories for each epic, sorted by the solution’s ranking of priority based on industry and uploaded context. Select <strong>one</strong> story to proceed with generating a detailed user story.
+    </p>
+    <div id="user-stories-container">
+      {{ user_stories|safe }}
+    </div>
+    <form id="proceed-form" method="POST" action="/generate-user-story">
+      <input type="hidden" name="selected_story_id" id="selected_story_id">
+      <button type="submit" class="footer-btn">Proceed with selection</button>
+    </form>
+  </div>
+</div>
+
+<script>  // Function to parse and format epics if they're in JSON format
+  function parseAndFormatEpics() {
+    const epicsContainer = document.getElementById('epics-container');
+    let content = epicsContainer.innerHTML.trim();
+    
+    // If content is already formatted (contains epic-card divs), don't reprocess
+    if (content.includes('epic-card')) {
+      console.log('Content already formatted, skipping parsing');
+      return;
+    }
+    
+    // Remove any HTML tags and get plain text
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    content = tempDiv.textContent || tempDiv.innerText || '';
+    content = content.trim();
+    
+    console.log('Raw content to parse:', content);
+    
+    // If content is empty or very short, leave it as is
+    if (!content || content.length < 5) {
+      console.log('Content too short or empty, skipping parsing');
+      return;
+    }
+    
+    try {
+      // Clean up the content - remove any backticks or markdown formatting
+      let cleanContent = content;
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.replace(/^```json\s*/i, '').replace(/\s*```\s*$/, '');
+      }
+      if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```\s*$/, '');
+      }
+      
+      console.log('Cleaned content:', cleanContent);
+      
+      // Try to parse as JSON
+      const epicsData = JSON.parse(cleanContent);
+      
+      if (Array.isArray(epicsData)) {
+        console.log('Successfully parsed epics array:', epicsData);
+        
+        // Format the epics nicely
+        let formattedHTML = '';
+        epicsData.forEach((epic, index) => {
+          formattedHTML += `
+            <div class="epic-card">
+              <h5>Epic ${index + 1}: ${epic.epic_title || 'Untitled Epic'}</h5>
+              <p><strong>Description:</strong> ${epic.epic_description || 'No description available'}</p>
+              <input type="checkbox" name="epic_ids" value="epic_${index + 1}" checked>
+              <label for="epic_${index + 1}">Include this epic</label>
+            </div>
+          `;
+        });
+        
+        epicsContainer.innerHTML = formattedHTML;
+        console.log('Epics formatted successfully');
+        return; // Exit successfully
+        
+      } else if (epicsData && typeof epicsData === 'object') {
+        // Handle single epic object
+        console.log('Single epic object detected');
+        const formattedHTML = `
+          <div class="epic-card">
+            <h5>Epic 1: ${epicsData.epic_title || 'Untitled Epic'}</h5>
+            <p><strong>Description:</strong> ${epicsData.epic_description || 'No description available'}</p>
+            <input type="checkbox" name="epic_ids" value="epic_1" checked>
+            <label for="epic_1">Include this epic</label>
+          </div>
+        `;
+        epicsContainer.innerHTML = formattedHTML;
+        console.log('Single epic formatted successfully');
+        return; // Exit successfully
+      }
+      
+      // If we reach here, the JSON was valid but not in expected format
+      console.log('JSON parsed but not in expected epic format:', epicsData);
+      
+    } catch (e) {
+      // If it's not JSON, check if it looks like JSON that needs cleaning
+      console.log('JSON parse error:', e.message);
+      console.log('Content that failed to parse:', content);
+      
+      // Try to extract JSON from text that might have extra content
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        try {
+          const epicsData = JSON.parse(jsonMatch[0]);
+          if (Array.isArray(epicsData)) {
+            console.log('Extracted JSON from text successfully');
+            let formattedHTML = '';
+            epicsData.forEach((epic, index) => {
+              formattedHTML += `
+                <div class="epic-card">
+                  <h5>Epic ${index + 1}: ${epic.epic_title || 'Untitled Epic'}</h5>
+                  <p><strong>Description:</strong> ${epic.epic_description || 'No description available'}</p>
+                  <input type="checkbox" name="epic_ids" value="epic_${index + 1}" checked>
+                  <label for="epic_${index + 1}">Include this epic</label>
+                </div>
+              `;
+            });
+            epicsContainer.innerHTML = formattedHTML;
+            console.log('Extracted epics formatted successfully');
+            return; // Exit successfully
+          }
+        } catch (e2) {
+          console.log('Failed to parse extracted JSON:', e2.message);
+        }
+      }
+      
+      // Only show error if content looks like it should be JSON but isn't
+      if (content.includes('[') || content.includes('{') || content.includes('epic')) {
+        console.log('Content appears to be malformed epic data, showing error');
+        epicsContainer.innerHTML = `
+          <div class="epic-card">
+            <h5>Epic Processing Error</h5>
+            <p><strong>Raw response:</strong></p>
+            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; color: #333; white-space: pre-wrap;">${content}</pre>
+            <p><em>The system returned data in an unexpected format. Please contact support if this issue persists.</em></p>
+          </div>
+        `;
+      } else {
+        // If content doesn't look like JSON, leave it as is
+        console.log('Content does not appear to be JSON, leaving as is');
+      }
+    }
+  }
+    // Parse epics when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, checking for epics content...');
+    const epicsContainer = document.getElementById('epics-container');
+    if (epicsContainer) {
+      console.log('Epics container found, content:', epicsContainer.innerHTML);
+      parseAndFormatEpics();
+    } else {
+      console.log('Epics container not found');
+    }
+  });
+  
+  // Also try after a slight delay in case content is loaded asynchronously
+  setTimeout(function() {
+    console.log('Timeout triggered, checking epics again...');
+    const epicsContainer = document.getElementById('epics-container');
+    if (epicsContainer && epicsContainer.innerHTML.trim()) {
+      console.log('Delayed check - content found:', epicsContainer.innerHTML);
+      parseAndFormatEpics();
+    }
+  }, 500);
+  document.getElementById("approve-epics-form")?.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    
+    // Get current epics content to preserve it
+    const epicsContainer = document.getElementById('epics-container');
+    const currentEpicsContent = epicsContainer ? epicsContainer.innerHTML : '';
+    
+    // Collect selected epic IDs from checkboxes
+    const selectedEpics = [];
+    const checkboxes = document.querySelectorAll('input[name="epic_ids"]:checked');
+    checkboxes.forEach(checkbox => {
+      selectedEpics.push(checkbox.value);
+    });
+    
+    if (selectedEpics.length === 0) {
+      alert('Please select at least one epic to approve.');
+      return;
+    }
+    
+    // Create form data with selected epics and current content
+    const formData = new FormData();
+    formData.append('epic_ids', selectedEpics.join(','));
+    formData.append('current_epics', currentEpicsContent);
+    
+    try {
+      console.log('Submitting epic approval with selected epics:', selectedEpics);
+      
+      const response = await fetch("/approve-epics", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const html = await response.text();
+        document.open();
+        document.write(html);
+        document.close();
+      } else {
+        console.error('Error submitting epic approval:', response.statusText);
+        alert('Error processing epic approval. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting epic approval:', error);
+      alert('Network error. Please check your connection and try again.');
+    }
+  });
+
+  document.getElementById("proceed-form")?.addEventListener("submit", function (e) {
+    const checked = document.querySelector('input[name="user_story_id"]:checked');
+    if (checked) {
+      document.getElementById("selected_story_id").value = checked.value;
+    }
+  });
+</script>
+</body>
+</html>
