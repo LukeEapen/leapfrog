@@ -403,17 +403,31 @@
       button.querySelector('.btn-text').textContent = loadingText;
       timer.textContent = '0:00';
       return startTimer(null, timer);
-    }
-
-    function hideButtonLoading(button, spinner, timer, originalText, timerInterval) {
+    }    function hideButtonLoading(button, spinner, timer, originalText, timerInterval) {
+      // Re-enable button
       button.disabled = false;
-      spinner.style.display = 'none';
-      button.querySelector('.btn-text').textContent = originalText;
-      timer.textContent = '';
+      
+      // Hide spinner
+      if (spinner) {
+        spinner.style.display = 'none';
+      }
+      
+      // Reset button text
+      const btnText = button.querySelector('.btn-text');
+      if (btnText) {
+        btnText.textContent = originalText;
+      }
+      
+      // Clear timer text
+      if (timer) {
+        timer.textContent = '';
+      }
+      
+      // Clear the timer interval
       if (timerInterval) {
         clearInterval(timerInterval);
       }
-    }    // Step 1: Document Upload
+    }// Step 1: Document Upload
     document.getElementById('documentUploadForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
@@ -422,10 +436,10 @@
       const uploadSpinner = document.getElementById('uploadSpinner');
       const uploadTimerEl = document.getElementById('uploadTimer');
       const loadingSpinner = document.getElementById('loadingSpinner');
-      
-      // Show loading spinner and start timer
+        // Show loading spinner and start timer
       uploadTimer = showButtonLoading(uploadBtn, uploadSpinner, uploadTimerEl, 'Upload & Preview Summary', 'Processing...');
       loadingSpinner.style.display = 'block';
+      console.log('Loading spinner shown:', loadingSpinner.style.display);
         try {
         const response = await fetch('/document-upload', {
           method: 'POST',
@@ -445,8 +459,16 @@
         }
         
         const result = await response.json();
-        console.log('Result:', result);
-          if (result.success) {
+        console.log('Result:', result);        if (result.success) {          // Immediately hide the loading spinner on success
+          const spinner = document.getElementById('loadingSpinner');
+          if (spinner) {
+            spinner.style.display = 'none';
+            spinner.style.visibility = 'hidden';
+            console.log('Loading spinner hidden on success:', spinner.style.display);
+          } else {
+            console.error('Loading spinner element not found on success');
+          }
+          
           previewData = result.preview_data;
           showPreview(previewData);
           showAlert('success', result.message);
@@ -460,15 +482,42 @@
           disableUploadForm();
           
         } else {
+          // Immediately hide the loading spinner on error too
+          const spinner = document.getElementById('loadingSpinner');
+          if (spinner) {
+            spinner.style.display = 'none';
+            spinner.style.visibility = 'hidden';
+          }
+          
           showAlert('danger', 'Error processing documents: ' + (result.error || 'Unknown error'));
+        }          } catch (error) {
+        // Immediately hide the loading spinner on error
+        const spinner = document.getElementById('loadingSpinner');
+        if (spinner) {
+          spinner.style.display = 'none';
+          spinner.style.visibility = 'hidden';
         }
-          } catch (error) {
+        
         console.error('Error details:', error);
-        showAlert('danger', 'Error uploading documents: ' + error.message + '. Please check the console for more details.');
-      } finally {
-        // Hide loading spinner and timer
+        showAlert('danger', 'Error uploading documents: ' + error.message + '. Please check the console for more details.');} finally {
+        // Hide loading spinner and timer - be explicit about both
         hideButtonLoading(uploadBtn, uploadSpinner, uploadTimerEl, 'Upload & Preview Summary', uploadTimer);
         loadingSpinner.style.display = 'none';
+          // Double-check that the loading spinner is hidden
+        const spinner = document.getElementById('loadingSpinner');
+        if (spinner) {
+          spinner.style.display = 'none';
+          spinner.style.visibility = 'hidden';
+          console.log('Loading spinner finally hidden:', spinner.style.display);
+        } else {
+          console.error('Loading spinner element not found in finally block');
+        }
+        
+        // Clear the timer if it's still running
+        if (uploadTimer) {
+          clearInterval(uploadTimer);
+          uploadTimer = null;
+        }
       }
     });    // Step 2: Generate Epics
     document.getElementById('generateEpicsBtn').addEventListener('click', async function() {

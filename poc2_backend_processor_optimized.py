@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import openai
 from openai import OpenAI
 import os
@@ -71,6 +71,10 @@ except Exception as e:
     prd_collection = None
 
 app = Flask(__name__)
+
+# Configure Flask app
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
+# In production, make sure to set FLASK_SECRET_KEY environment variable
 
 # Performance optimizations
 THREAD_POOL_SIZE = 4
@@ -1429,7 +1433,7 @@ def generate_epics_from_preview():
             context_tokens = count_tokens(enhanced_context, "gpt-4o")
             logger.info(f"Truncated context token count: {context_tokens:,} tokens")
         else:
-            logger.info(f"Enhanced context is within safe token limits ({context_tokens:,}/128,000 tokens)")        # Skip PRD Parser Agent - RAG has already done the parsing and summarization
+            logger.info(f"Enhanced context is within safe token limits ({context_tokens:,}/128,000 tokens)")    # Skip PRD Parser Agent - RAG has already done the parsing and summarization
         logger.info("****************Skipping PRD Parser - Using RAG Summary Directly")
         logger.info("Starting Epic Generator with RAG-enhanced content")
         
@@ -1464,8 +1468,7 @@ def generate_epics_from_preview():
         print(epic_response)
         print("=" * 100)
         print(f"📊 Response length: {len(epic_response)} characters")
-        print("=" * 100 + "\n")
-        
+        print("=" * 100 + "\n")                
         # Print Epic Agent Response
         logger.info("=" * 80)
         logger.info("EPIC AGENT RESPONSE OUTPUT:")
@@ -1540,11 +1543,9 @@ def approve_epics():
           # Get the current epics content to preserve it
         current_epics = request.form.get("current_epics", "")
         logger.info(f"Current epics content length: {len(current_epics)} characters")
-        
-        # Get the selected epic contents (actual epic data)
+          # Get the selected epic contents (actual epic data)
         selected_epic_contents_str = request.form.get("selected_epic_contents", "{}")
         try:
-            import json
             selected_epic_contents = json.loads(selected_epic_contents_str)
             logger.info(f"Received epic contents for {len(selected_epic_contents)} epics")
         except json.JSONDecodeError as e:
@@ -1618,8 +1619,13 @@ def approve_epics():
                     logger.warning(f"No response received for epic {epic_id}")
                     user_stories.append(f"""
                     <div class='user-story-card'>
-                        <h6>User Stories for {epic_id}</h6>
-                        <p class="text-warning">No user stories could be generated for this epic.</p>
+                    <h6>User Stories for: {epic_title}</h6>
+                    <label>
+                        <input type="radio" name="user_story_id" value="story_{i+1}">
+                        <div style='padding: 10px; background-color: #f8f9fa; border-radius: 4px; margin: 5px 0;'>
+                        {story_response}
+                        </div>
+                    </label>
                     </div>
                     """)
             except Exception as e:
@@ -1637,6 +1643,7 @@ def approve_epics():
         processing_time = time.time() - start_time
         logger.info(f"User story generation completed in {processing_time:.2f} seconds")
         logger.info(f"Generated user stories for {len(epic_ids)} epics")
+        
         
         # Render the template with both epics (preserved) and user stories (raw for JS parsing)
         return render_template("poc2_epic_story_screen.html",
@@ -1663,86 +1670,279 @@ def approve_epics():
             user_stories=error_message
         )
 
-@app.route("/generate-user-story", methods=["POST"])
-def generate_user_story():
-    """Process selected user story and redirect to detailed view."""
-    logger.info("POST request received for user story selection")
+@app.route("/user-story-details", methods=["GET", "POST"])
+def user_story_details():
+    """Process selected user story and display details with acceptance criteria."""
+    logger.info("Request received for user story details")
     
     try:
-        # Get the selected story ID
-        if request.is_json:
-            data = request.get_json()
-            selected_story_id = data.get("selected_story_id")
+        # Handle POST request (form submission from epic story screen)
+        if request.method == "POST":
+            logger.info("POST request received for user story selection")
+            
+            # Get the selected story ID and details
+            if request.is_json:
+                data = request.get_json()
+                selected_story_id = data.get("user_story_id")
+                story_name = data.get("selected_story_name", "")
+                selected_story_description = data.get("selected_story_description", "")
+                epic_title = data.get("epic_title", "")
+                priority = data.get("priority", "High")
+                logger.info(f"Processing selected user story ID (JSON): {selected_story_id}")
+            else:
+                selected_story_id = request.form.get("user_story_id")
+                story_name = request.form.get("selected_story_name", "")
+                selected_story_description = request.form.get("selected_story_description", "")
+                epic_title = request.form.get("epic_title", "")
+                priority = request.form.get("priority", "High")
+                logger.info(f"Processing selected user story ID (Form): {selected_story_id}")
+            
+            logger.info(f"Processing selected user story ID: {selected_story_id}")
+            logger.info(f"Processing selected story name: {story_name}")
+            logger.info(f"Processing selected story description: {selected_story_description[:100] if selected_story_description else 'N/A'}...")
+            
+            if not selected_story_id:
+                if request.is_json:
+                    return jsonify({
+                        "success": False,
+                        "error": "No user story selected"
+                    }), 400
+                else:
+                    return render_template("poc2_user_story_details.html", 
+                                         error="No user story selected"), 400
+            
+            # Provide default values if story details are missing
+            if not story_name or not selected_story_description:
+                logger.info("Story name or description missing, using default values")
+                default_story_name = "Charged-Off Account Data Field Identification"
+                default_story_description = "As a system architect, I want to identify and classify the necessary data fields for charged-off accounts so that we can ensure only required and relevant data is transmitted securely."
+
+                story_name = story_name or default_story_name
+                selected_story_description = selected_story_description or default_story_description
+                
+                logger.info(f"Using default story name: {story_name}")
+                logger.info(f"Using default story description: {selected_story_description[:100]}...")
+            
+            logger.info(f"Successfully processed user story selection: {selected_story_id}")
+            
+            # Call the acceptance criteria agent
+            prompt = f"Generate acceptance criteria for: {story_name}. Description: {selected_story_description}"
+            logger.info(f"Processing selected prompt ****Acceptance Criteria Prompt **** : {prompt}")
+
+            acceptance_response = ask_assistant_from_file_optimized("poc2_agent4_acceptanceCriteria_gen", prompt)
+
+            # Parse criteria (assume response is a bullet list or parse JSON if needed)
+            try:
+                acceptance_criteria = json.loads(acceptance_response)
+            except:
+                acceptance_criteria = acceptance_response.strip().split("\n")
+
+
+            logger.info(f"Processing selected prompt ****Acceptance Criteria **** : {acceptance_criteria}")
+              # For AJAX requests, return JSON for navigation
+            if request.is_json:
+                return jsonify({
+                    "success": True,
+                    "story_id": selected_story_id,
+                    "story_name": story_name,
+                    "html": render_template(
+                        "poc2_user_story_details.html",
+                        epic_title=epic_title,
+                        user_story_name=story_name,
+                        user_story_description=selected_story_description,
+                        priority=priority,
+                        acceptance_criteria=acceptance_criteria,
+                        story_id=selected_story_id
+                    ),
+                    "message": "User story processed successfully"
+                })
+            
+            # For regular form submission, render the template directly
+            return render_template(
+                "poc2_user_story_details.html",
+                epic_title=epic_title,
+                user_story_name=story_name,
+                user_story_description=selected_story_description,
+                priority=priority,
+                acceptance_criteria=acceptance_criteria,
+                story_id=selected_story_id
+            )
+            
+        # Handle GET request (direct access or fallback)
         else:
-            selected_story_id = request.form.get("selected_story_id")
+            logger.info("GET request received for user story details")
+            
+            # Try to get data from session first (backward compatibility)
+            session_data = session.get('current_story')
+            
+            if session_data:
+                # Use session data
+                logger.info("Using story data from session")
+                epic_title = session_data.get('epic_title', '')
+                user_story_title = session_data.get('story_name', '')
+                user_story_description = session_data.get('story_description', '')
+                priority = session_data.get('priority', 'High')
+                story_id = session_data.get('story_id', '')
+                acceptance_criteria = session_data.get('acceptance_criteria', [])
+                
+                # Clean up session data after use
+                session.pop('current_story', None)
+                
+            else:
+                # Fallback to query parameters
+                logger.info("No session data found, checking query parameters")
+                epic_title = request.args.get("epic_title", "")
+                user_story_title = request.args.get("user_story_title", "")
+                user_story_description = request.args.get("user_story_description", "")
+                priority = request.args.get("priority", "High")
+                story_id = request.args.get("story_id", "")
+                
+                # Use consistent variable names
+                final_story_name = user_story_title or "Untitled Story"
+                final_story_description = user_story_description or "No description available"
+                
+                # Generate acceptance criteria if not in session
+                logger.info(f"Processing story: {final_story_name}")
+                logger.info(f"Description: {final_story_description[:100]}...")
+
+                # Call the acceptance criteria agent
+                prompt = f"Generate acceptance criteria for: {final_story_name}. Description: {final_story_description}"
+                acceptance_response = ask_assistant_from_file_optimized("poc2_agent4_acceptanceCriteria_gen", prompt)
+                  # Parse criteria (assume response is a bullet list or parse JSON if needed)
+                try:
+                    acceptance_criteria = json.loads(acceptance_response)
+                except:
+                    acceptance_criteria = acceptance_response.strip().split("\n")
+                
+                user_story_title = final_story_name
+                user_story_description = final_story_description
         
-        logger.info(f"Processing selected user story ID: {selected_story_id}")
+            return render_template(
+                "poc2_user_story_details.html",
+                epic_title=epic_title,
+                user_story_name=user_story_title,
+                user_story_description=user_story_description,
+                priority=priority,
+                acceptance_criteria=acceptance_criteria,
+                story_id=story_id
+            )
         
-        if not selected_story_id:
+    except Exception as e:
+        logger.error(f"Error in user_story_details: {str(e)}")
+        if request.is_json:
             return jsonify({
                 "success": False,
-                "error": "No user story selected"
-            }), 400
+                "error": f"Error processing user story details: {str(e)}"
+            }), 500
+        else:
+            return render_template("poc2_user_story_details.html", 
+                                 error=f"Error processing user story details: {str(e)}"), 500
+
+
+
+@app.route("/epic-chat", methods=["POST"])
+def epic_chat():
+    """Handle Epic Chat interactions with session persistence."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No data provided"}), 400
         
-        # For now, redirect to a user story details page or return success
-        # You can extend this to fetch more details about the selected story
+        user_message = data.get("message", "").strip()
+        if not user_message:
+            return jsonify({"success": False, "error": "Message cannot be empty"}), 400
         
-        logger.info(f"Successfully processed user story selection: {selected_story_id}")
+        # Initialize chat history in session if not exists
+        if 'epic_chat_history' not in session:
+            session['epic_chat_history'] = []
+            logger.info("Initialized new Epic Chat session")
         
-        # Return success response - frontend can handle navigation
+        # Add user message to chat history
+        session['epic_chat_history'].append({
+            "role": "user",
+            "message": user_message,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+        
+        # Prepare context for Epic Agent
+        chat_context = ""
+        if session['epic_chat_history']:
+            chat_context = "Previous conversation:\n"
+            for msg in session['epic_chat_history'][-10:]:  # Last 10 messages for context
+                role = "User" if msg["role"] == "user" else "Assistant"
+                chat_context += f"{role}: {msg['message']}\n"
+            chat_context += f"\nLatest user question: {user_message}"
+        else:
+            chat_context = user_message
+        
+        # Call Epic Agent
+        logger.info(f"Calling Epic Agent with message: {user_message[:100]}...")
+        epic_response = ask_assistant_from_file_optimized("poc2_agent2_epic_generator", chat_context)
+        
+        if epic_response.startswith("Error:"):
+            logger.error(f"Epic Agent error: {epic_response}")
+            return jsonify({
+                "success": False,
+                "error": "Failed to get response from Epic Agent"
+            }), 500
+        
+        # Add assistant response to chat history
+        session['epic_chat_history'].append({
+            "role": "assistant",
+            "message": epic_response,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+        
+        # Save session changes
+        session.modified = True
+        
+        logger.info(f"Epic Chat response generated successfully, history length: {len(session['epic_chat_history'])}")
+        
         return jsonify({
             "success": True,
-            "message": f"User story {selected_story_id} selected successfully",
-            "story_id": selected_story_id,
-            "redirect_url": f"/user-story-details?story_id={selected_story_id}"
+            "response": epic_response,
+            "chat_history": session['epic_chat_history']
         })
         
     except Exception as e:
-        logger.error(f"Error in generate_user_story: {str(e)}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+        logger.error(f"Error in Epic Chat: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
-@app.route("/user-story-details", methods=["POST"])
-def user_story_details():
-    # Assume you get these from the POST or session
-    epic_title = request.form.get("epic_title")
-    user_story_title = request.form.get("user_story_title")
-    user_story_description = request.form.get("user_story_description")
-    priority = request.form.get("priority", "High")
-
-    # Call the acceptance criteria agent
-    prompt = f"Generate acceptance criteria for: {user_story_title}. Description: {user_story_description}"
-    acceptance_response = ask_assistant_from_file_optimized("poc2_agent4_acceptanceCriteria_gen", prompt)
-
-    # Parse criteria (assume response is a bullet list or parse JSON if needed)
-    import json
+@app.route("/epic-chat-history", methods=["GET"])
+def get_epic_chat_history():
+    """Get the current Epic Chat history from session."""
     try:
-        acceptance_criteria = json.loads(acceptance_response)
-    except:
-        acceptance_criteria = acceptance_response.strip().split("\n")
+        chat_history = session.get('epic_chat_history', [])
+        return jsonify({
+            "success": True,
+            "chat_history": chat_history
+        })
+    except Exception as e:
+        logger.error(f"Error getting Epic Chat history: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
-    return render_template(
-        "poc2_user_story_details.html",  # the file above
-        epic_title=epic_title,
-        user_story_title=user_story_title,
-        user_story_description=user_story_description,
-        priority=priority,
-        acceptance_criteria=acceptance_criteria
-    )
-
+@app.route("/epic-chat-clear", methods=["POST"])
+def clear_epic_chat():
+    """Clear the Epic Chat history from session."""
+    try:
+        if 'epic_chat_history' in session:
+            del session['epic_chat_history']
+        session.modified = True
+        logger.info("Epic Chat history cleared")
+        return jsonify({"success": True, "message": "Chat history cleared"})
+    except Exception as e:
+        logger.error(f"Error clearing Epic Chat history: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
 
 @app.errorhandler(404)
-def not_found_error(error):
-    logger.error(f"404 Error: {request.url} not found")
+def not_found(error):
+    logger.warning(f"404 error for URL: {request.url}")
     return jsonify({"success": False, "error": "Endpoint not found"}), 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    logger.error(f"500 Error: {str(error)}")
-    logger.error(f"Request URL: {request.url}")
-    logger.error(f"Request method: {request.method}")
+    logger.error(f"500 error: {str(error)}")
     return jsonify({"success": False, "error": "Internal server error"}), 500
 
 @app.errorhandler(Exception)

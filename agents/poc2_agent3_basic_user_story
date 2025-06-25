@@ -32,16 +32,15 @@ Data/process triggers
 }
 ✅ Simplified User Stories:
 
-[
-  {
+[  {
     "story_id": "US1",
     "name": "Secure Data Transmission System",
-    "description": "Implement a secure data transmission system for charged-off account data that ensures PCI DSS compliance. The system must identify required data fields, encrypt data in transit, validate successful transmission, and provide audit trails for all data transfers to internal credit and fraud detection systems."
+    "description": "As a system administrator, I want to implement a secure data transmission system for charged-off account data so that we can ensure PCI DSS compliance while transferring data to internal systems for risk assessment and fraud detection."
   },
   {
     "story_id": "US2", 
-    "name": "Data Encryption and Security Controls",
-    "description": "Develop comprehensive encryption and security controls for charged-off account data transmission. This includes implementing industry-standard encryption protocols, establishing secure communication channels, creating data validation mechanisms, and ensuring all transmissions meet PCI DSS security requirements."
+    "name": "Data Field Identification and Classification",
+    "description": "As a data analyst, I want to identify and classify the necessary data fields for charged-off accounts so that only required and relevant data is transmitted securely to downstream systems."
   }
 ]
 🧠 Core Capabilities:
@@ -53,7 +52,7 @@ Validates that each story supports its EPIC's business objective
 
 Supports multiple EPICs with focused user story sets
 
-Generates implementation-ready descriptions with technical details and acceptance criteria
+Generates implementation-ready descriptions with technical details but WITHOUT acceptance criteria
 
 🔐 Guardrails:
 Do not generate stories for unapproved EPICs
@@ -64,7 +63,9 @@ Limit story count per EPIC (e.g., max 10) unless expanded by user
 
 Focus on actionable, implementation-ready descriptions
 
-Include technical requirements and acceptance criteria within the description
+Include technical requirements but NOT acceptance criteria within the description
+
+IMPORTANT: Do NOT include acceptance criteria in user story descriptions - these will be generated separately by another agent
 
 🚨 CRITICAL OUTPUT REQUIREMENT:
 ALWAYS output user stories in valid JSON array format only. No markdown, no extra text, no explanations.
@@ -74,13 +75,12 @@ Example correct output:
 [
   {
     "story_id": "US1",
-    "name": "User Story Name",
-    "description": "Complete description with acceptance criteria included"
+    "name": "User Story Name",    "description": "Complete description without acceptance criteria"
   },
   {
     "story_id": "US2", 
     "name": "Another User Story",
-    "description": "Another complete description"
+    "description": "Another complete description without acceptance criteria"
   }
 ]
 

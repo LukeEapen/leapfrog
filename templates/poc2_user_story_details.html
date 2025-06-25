@@ -165,25 +165,30 @@
     {% if epic_description %}
     <p class="mb-0"><small>{{ epic_description }}</small></p>
     {% endif %}
-  </div>
-
-  <!-- User Story Information -->
+  </div>  <!-- User Story Information -->
   <div class="user-story-info">
     <h6><strong>🎯 User Story</strong></h6>
-    <h5>{{ user_story_name or 'Loading User Story...' }}</h5>
-    <p class="mb-0">{{ user_story_description or 'Loading Description...' }}</p>
-    {% if priority %}
+    <h5>{{ user_story_name or 'Loading User Story...' }}</h5>    <p class="mb-0">{{ user_story_description or 'Loading Description...' }}</p>
     <div class="mt-2">
-      <span class="status-badge">Priority: {{ priority }}</span>
+      <span class="status-badge">Priority: {{ priority or 'Medium' }}</span>
     </div>
-    {% endif %}
+  </div>  <!-- Debug Information (remove in production) -->
+  <div style="background-color: #f0f0f0; color: #000; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-family: monospace; font-size: 12px;">
+ 
+
+    <p><strong>user_story_description:</strong> {{ user_story_description or 'None' }}</p>
+    <p><strong>priority:</strong> {{ priority or 'None' }}</p>
+
   </div>
 
   <!-- Acceptance Criteria Section -->
   <div class="section-title">
     <span>🎯 Acceptance Criteria</span>
     <button class="btn btn-outline-light btn-sm chat-button">💬 Chat</button>
+        
   </div>
+  <div class="user-story-info"> <p>{{ acceptance_criteria or 'None' }}</p> </div>
+
 
   <!-- Loading State -->
   <div id="acceptance-criteria-loading" class="loading-container {{ 'hidden' if acceptance_criteria }}">
@@ -224,8 +229,7 @@
         ← Back to User Stories
       </button>
     </div>
-    <div class="col-md-6">
-      <form action="/submit-jira-ticket" method="POST" style="margin: 0;">
+    <div class="col-md-6">      <form action="/submit-jira-ticket" method="POST" style="margin: 0;">
         <input type="hidden" name="epic_title" value="{{ epic_title or '' }}">
         <input type="hidden" name="user_story_name" value="{{ user_story_name or '' }}">
         <input type="hidden" name="user_story_description" value="{{ user_story_description or '' }}">
@@ -275,25 +279,30 @@
       clearInterval(timerInterval);
     }
   }
-
   // Check if we need to generate acceptance criteria on page load
   document.addEventListener('DOMContentLoaded', function() {
     const loadingElement = document.getElementById('acceptance-criteria-loading');
     const contentElement = document.getElementById('acceptance-criteria-content');
     
+    console.log('Page loaded. Checking acceptance criteria state:');
+    console.log('Loading element hidden:', loadingElement.classList.contains('hidden'));
+    console.log('Content element hidden:', contentElement.classList.contains('hidden'));
+    
     // Start loading timer if acceptance criteria are being generated
     if (!loadingElement.classList.contains('hidden')) {
+      console.log('No acceptance criteria found, starting generation...');
       const timerElement = document.getElementById('loadingTimer');
       loadingTimer = startTimer(null, timerElement);
       
       // Call backend to generate acceptance criteria
       generateAcceptanceCriteria();
+    } else {
+      console.log('Acceptance criteria already available, skipping generation.');
     }
   });
 
   async function generateAcceptanceCriteria() {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
+    try {      const urlParams = new URLSearchParams(window.location.search);
       const storyId = urlParams.get('story_id');
       const epicTitle = urlParams.get('epic_title') || '{{ epic_title }}';
       const userStoryName = urlParams.get('user_story_name') || '{{ user_story_name }}';
