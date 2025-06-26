@@ -46,15 +46,6 @@
       color: white;
       transform: translateY(-1px);
     }
-    .jira-notice {
-      text-align: center;
-      background-color: #d0021b;
-      color: white;
-      padding: 12px;
-      margin: 0;
-      font-weight: 600;
-      font-size: 15px;
-    }
     .story-header {
       background-color: #444;
       color: white;
@@ -343,14 +334,12 @@
       <button class="back-button" onclick="goBack()">
         &lt; Back
       </button>
-      <span style="position: absolute; right: 16px; top: 8px; font-size: 12px;">
+      <span style="position: absolute; left: 50%; transform: translateX(-50%); font-weight: bold;">
+        Jira ticket creation
+      </span>
+      <span style="position: absolute; right: 16px; top: 12px; font-size: 12px;">
         Use the 'Chat' interface to ask questions and edit outputs
       </span>
-    </div>
-
-    <!-- Jira Ticket Creation Notice -->
-    <div class="jira-notice">
-      Jira ticket creation
     </div>
 
     <!-- User Story Header -->
@@ -367,14 +356,14 @@
     <!-- Epic Information Section -->
     <div class="epic-info-section">
       <div class="epic-label">Epic:</div>
-      <div class="epic-title">{{ epic_title or '<span class="hardcoded-content">*****</span>' | safe }}</div>
-      
+      <div class="epic-title">{{ epic_title or '<span class="hardcoded-content">******</span>' | safe }}</div>
+
       <!-- Story Name Display -->
       <div class="story-name-section" style="margin-top: 12px;">
         <div class="epic-label">Story:</div>
-        <div class="epic-title" style="font-size: 15px; color: #555;">{{ user_story_name or '<span class="hardcoded-content">Lock critical fields for charged-off accounts</span>' | safe }}</div>
+        <div class="epic-title" style="font-size: 15px; color: #555;">{{ user_story_name or '<span class="hardcoded-content">******</span>' | safe }}</div>
       </div>
-      
+
       <div class="info-row">
         <div class="info-item">
           <span class="info-label">Priority:</span>
@@ -382,11 +371,12 @@
         </div>
         <div class="info-item">
           <span class="info-label">Responsible systems:</span>
-          <span>{{ responsible_systems or '<span class="hardcoded-content">Customer acquisition platform, Financial ledger initializer ...</span>' | safe }}</span>
+          <span>********</span>
         </div>
       </div>
     </div>
 
+  
     <!-- Description Section -->
     <div class="section-container">
       <div class="section-header">
@@ -414,17 +404,6 @@
             {{ user_story_description or '<span class="hardcoded-content">As a new borrower, I want to input my personal information (e.g., name, SSN) so that the system can accurately create my customer profile and initiate the onboarding process. This ensures that downstream verification steps (e.g. KYC, credit checks) can proceed without manual data correction or re-entry.</span>' | safe }}
           </div>
           
-          {% if original_description and original_description != user_story_description %}
-          <!-- Show original description if different from enhanced -->
-          <details style="margin-top: 16px;">
-            <summary style="cursor: pointer; color: #666; font-size: 13px; border-top: 1px solid #eee; padding-top: 12px;">
-              View Original Description
-            </summary>
-            <div style="margin-top: 8px; padding: 12px; background: #f8f9fa; border-radius: 4px; font-size: 14px; color: #666; border-left: 3px solid #ccc;">
-              {{ original_description }}
-            </div>
-          </details>
-          {% endif %}
         {% endif %}
       </div>
     </div>
