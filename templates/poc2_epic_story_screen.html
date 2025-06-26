@@ -855,15 +855,1564 @@
     }
   });
 
-  // Placeholder functions for chat functionality
+  // Epic Chat functionality (from bk.html)
+  let epicChatHistory = [];
+  let isEpicChatOpen = false;
+
+  function toggleEpicChat() {
+    const panel = document.getElementById('epic-chat-panel');
+    const widget = document.getElementById('epic-chat-widget');
+    
+    if (isEpicChatOpen) {
+      widget.classList.add('closing');
+      setTimeout(() => {
+        panel.style.display = 'none';
+        widget.classList.remove('closing');
+        isEpicChatOpen = false;
+      }, 300);
+    } else {
+      panel.style.display = 'block';
+      widget.classList.add('opening');
+      setTimeout(() => {
+        panel.classList.add('show');
+        widget.classList.remove('opening');
+      }, 10);
+      isEpicChatOpen = true;
+      
+      // Focus on input
+      setTimeout(() => {
+        const input = document.getElementById('epic-chat-input');
+        if (input) input.focus();
+      }, 100);
+      
+      // Load chat history if needed
+      if (epicChatHistory.length === 0) {
+        loadEpicChatHistory();
+      }
+    }
+  }
+
   function openEpicChat() {
-    console.log('Epic chat functionality not implemented in this fixed version');
+    if (!isEpicChatOpen) {
+      toggleEpicChat();
+    }
+  }
+
+  function closeEpicChat() {
+    if (isEpicChatOpen) {
+      toggleEpicChat();
+    }
+  }
+
+  function clearEpicChat() {
+    if (confirm('Are you sure you want to clear the chat history?')) {
+      epicChatHistory = [];
+      updateChatDisplay();
+      
+      // Clear on server as well
+      fetch('/epic-chat-clear', {
+        method: 'POST'
+      }).catch(console.error);
+      
+      showNotification('Chat history cleared!', 'success');
+    }
+  }
+
+  function loadEpicChatHistory() {
+    fetch('/epic-chat-history')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.history)) {
+          epicChatHistory = data.history;
+          updateChatDisplay();
+        }
+      })
+      .catch(console.error);
+  }
+
+  function sendEpicChatMessage() {
+    const input = document.getElementById('epic-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) {
+      input.focus();
+      return;
+    }
+
+    // Show loading state
+    const sendBtn = document.querySelector('#epic-chat-panel .send-btn');
+    const originalHTML = sendBtn.innerHTML;
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = `
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    `;
+
+    // Clear input immediately
+    input.value = '';
+    updateCharCounter();
+
+    // Add user message to display immediately
+    addMessageToDisplay('user', message);
+
+    // Show typing indicator
+    showTypingIndicator();
+
+    // Send message to backend
+    fetch('/epic-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: message })
+    })
+    .then(response => response.json())
+    .then(data => {
+      hideTypingIndicator();
+      
+      if (data.success) {
+        // Add assistant response
+        addMessageToDisplay('assistant', data.response);
+        epicChatHistory.push({ role: 'user', message: message });
+        epicChatHistory.push({ role: 'assistant', message: data.response });
+        
+        // Check if this response updates the epics section
+        if (data.epics_updated) {
+          updateEpicsSection(data.response);
+        }
+        
+        setTimeout(() => {
+          input.focus();
+        }, 100);
+      } else {
+        console.error('Server error:', data.error);
+        showNotification('Failed to send message', 'error');
+        removeLastUserMessage();
+      }
+    })
+    .catch(error => {
+      hideTypingIndicator();
+      console.error('Error sending message:', error);
+      showNotification('Failed to send message', 'error');
+      removeLastUserMessage();
+    })
+    .finally(() => {
+      // Reset button state
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = originalHTML;
+    });
+  }
+
+  function updateChatDisplay() {
+    const chatMessages = document.getElementById('epic-chat-messages');
+    
+    if (epicChatHistory.length === 0) {
+      chatMessages.innerHTML = `
+        <div class="welcome-message">
+          <div class="message-content">
+            <span class="greeting">👋 Hi! I'm your Epic Assistant</span>
+            <p>I can help you with epic-related questions, improvements, and provide insights about your generated epics.</p>
+            <ul>
+              <li>Ask me to explain or improve any epic</li>
+              <li>Get suggestions for additional epics</li>
+              <li>Discuss epic priorities and dependencies</li>
+              <li>Request epic refinements or alternatives</li>
+            </ul>
+            <p><em>What would you like to know about your epics?</em></p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    epicChatHistory.forEach((msg, index) => {
+      const isUser = msg.role === 'user';
+      const bubbleClass = isUser ? 'user-bubble' : 'agent-bubble';
+      
+      // Check if this is an agent message that might have updated the epics section
+      const hasEpicUpdate = !isUser && (
+        msg.message.toLowerCase().includes('epic') && 
+        (msg.message.toLowerCase().includes('added') || 
+         msg.message.toLowerCase().includes('updated') || 
+         msg.message.toLowerCase().includes('modified'))
+      );
+      
+      html += `
+        <div class="message-bubble ${bubbleClass}">
+          <div class="message-content">${escapeHtml(msg.message)}</div>
+          <span class="message-time">${new Date().toLocaleString()}</span>
+          ${hasEpicUpdate ? `
+            <div class="epic-update-indicator">
+              <span class="update-badge">✨ Epics section updated</span>
+              <button class="view-update-btn" onclick="scrollToEpicsSection()">View Changes</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    });
+    
+    chatMessages.innerHTML = html;
+    setTimeout(() => {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 50);
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function addMessageToDisplay(role, message) {
+    const chatMessages = document.getElementById('epic-chat-messages');
+    const timestamp = new Date().toLocaleString();
+    
+    // Remove welcome message if it exists
+    const welcomeMsg = chatMessages.querySelector('.welcome-message');
+    if (welcomeMsg) {
+      welcomeMsg.remove();
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message-bubble ${role === 'user' ? 'user-bubble' : 'agent-bubble'}`;
+    messageDiv.innerHTML = `
+      <div class="message-content">${escapeHtml(message)}</div>
+      <span class="message-time">${timestamp}</span>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function removeLastUserMessage() {
+    const chatMessages = document.getElementById('epic-chat-messages');
+    const userMessages = chatMessages.querySelectorAll('.user-bubble');
+    if (userMessages.length > 0) {
+      userMessages[userMessages.length - 1].remove();
+    }
+  }
+
+  function showTypingIndicator() {
+    const chatMessages = document.getElementById('epic-chat-messages');
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message-bubble agent-bubble typing-indicator-message';
+    typingDiv.innerHTML = `
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    `;
+    typingDiv.id = 'typing-indicator';
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function hideTypingIndicator() {
+    const indicator = document.getElementById('typing-indicator');
+    if (indicator) {
+      indicator.remove();
+    }
+  }
+
+  function updateCharCounter() {
+    const input = document.getElementById('epic-chat-input');
+    const counter = document.getElementById('char-count');
+    if (input && counter) {
+      counter.textContent = input.value.length;
+      
+      // Change color based on usage
+      const percentage = input.value.length / 2000;
+      if (percentage > 0.9) {
+        counter.style.color = '#ef4444';
+      } else if (percentage > 0.7) {
+        counter.style.color = '#f59e0b';
+      } else {
+        counter.style.color = '#9ca3af';
+      }
+    }
+  }
+
+  function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      z-index: 10000;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+
+  function updateEpicsSection(agentResponse) {
+    // Implementation for updating epics section based on agent response
+    // This is a placeholder - full implementation would parse the response
+    showNotification('Epics section updated based on chat response', 'info');
+  }
+
+  function scrollToEpicsSection() {
+    const epicsContainer = document.getElementById('epics-container');
+    if (epicsContainer) {
+      epicsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      // Highlight the epics section
+      epicsContainer.style.transition = 'all 0.3s ease';
+      epicsContainer.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.3)';
+      setTimeout(() => {
+        epicsContainer.style.boxShadow = '';
+      }, 2000);
+    }
+  }
+
+  // User Story Chat functionality (from bk.html)
+  let userStoryChatHistory = [];
+  let isUserStoryChatOpen = false;
+  let hasSystemInfo = false;
+
+  function toggleUserStoryChat() {
+    const panel = document.getElementById('user-story-chat-panel');
+    const widget = document.getElementById('user-story-chat-widget');
+    
+    if (isUserStoryChatOpen) {
+      widget.classList.add('closing');
+      setTimeout(() => {
+        panel.style.display = 'none';
+        widget.classList.remove('closing');
+        isUserStoryChatOpen = false;
+      }, 300);
+    } else {
+      panel.style.display = 'block';
+      widget.classList.add('opening');
+      setTimeout(() => {
+        panel.classList.add('show');
+        widget.classList.remove('opening');
+      }, 10);
+      isUserStoryChatOpen = true;
+      
+      // Focus on input
+      setTimeout(() => {
+        const input = document.getElementById('user-story-chat-input');
+        if (input) input.focus();
+      }, 100);
+      
+      // Load chat history and check system info
+      if (userStoryChatHistory.length === 0) {
+        loadUserStoryChatHistory();
+      }
+      checkSystemInfo();
+    }
   }
 
   function openUserStoryChat() {
-    console.log('User story chat functionality not implemented in this fixed version');
+    if (!isUserStoryChatOpen) {
+      toggleUserStoryChat();
+    }
+  }
+
+  function closeUserStoryChat() {
+    if (isUserStoryChatOpen) {
+      toggleUserStoryChat();
+    }
+  }
+
+  function clearUserStoryChat() {
+    if (confirm('Are you sure you want to clear the chat history?')) {
+      userStoryChatHistory = [];
+      updateUserStoryChatDisplay();
+      
+      // Clear on server as well
+      fetch('/user-story-chat-clear', {
+        method: 'POST'
+      }).catch(console.error);
+      
+      showNotification('User Story chat history cleared!', 'success');
+    }
+  }
+
+  function loadUserStoryChatHistory() {
+    fetch('/user-story-chat-history')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.history)) {
+          userStoryChatHistory = data.history;
+          updateUserStoryChatDisplay();
+        }
+      })
+      .catch(console.error);
+  }
+
+  function checkSystemInfo() {
+    fetch('/get-system-info')
+      .then(response => response.json())
+      .then(data => {
+        hasSystemInfo = data.has_system_info || false;
+        updateSystemInfoStatus();
+      })
+      .catch(console.error);
+  }
+
+  function updateSystemInfoStatus() {
+    const statusElement = document.getElementById('user-story-status');
+    if (statusElement) {
+      if (hasSystemInfo) {
+        statusElement.innerHTML = '<span style="color: #10b981;">✓ System Info Available</span>';
+      } else {
+        statusElement.innerHTML = '<span style="color: #f59e0b;">⚠ No System Info</span>';
+      }
+    }
+  }
+
+  function showSystemInfoUpload() {
+    const uploadSection = document.getElementById('system-info-upload');
+    if (uploadSection) {
+      uploadSection.style.display = 'block';
+    }
+  }
+
+  function hideSystemInfoUpload() {
+    const uploadSection = document.getElementById('system-info-upload');
+    if (uploadSection) {
+      uploadSection.style.display = 'none';
+    }
+  }
+
+  function uploadSystemInfo(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const statusDiv = document.getElementById('system-info-status');
+    statusDiv.style.display = 'block';
+    statusDiv.className = 'system-status';
+    statusDiv.innerHTML = 'Uploading system information...';
+
+    fetch('/upload-system-info', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        statusDiv.className = 'system-status success';
+        statusDiv.innerHTML = '✓ System information uploaded successfully!';
+        hasSystemInfo = true;
+        updateSystemInfoStatus();
+        hideSystemInfoUpload();
+        showNotification('System information uploaded successfully!', 'success');
+      } else {
+        statusDiv.className = 'system-status error';
+        statusDiv.innerHTML = '✗ Failed to upload system information';
+        showNotification('Failed to upload system information', 'error');
+      }
+    })
+    .catch(error => {
+      statusDiv.className = 'system-status error';
+      statusDiv.innerHTML = '✗ Upload error occurred';
+      showNotification('Failed to upload system information', 'error');
+    });
+
+    // Reset file input
+    input.value = '';
+  }
+
+  function sendUserStoryChatMessage() {
+    const input = document.getElementById('user-story-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) {
+      input.focus();
+      return;
+    }
+
+    // Show loading state
+    const sendBtn = document.querySelector('#user-story-chat-panel .send-btn');
+    const originalHTML = sendBtn.innerHTML;
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = `
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    `;
+
+    // Clear input immediately
+    input.value = '';
+    updateUserStoryCharCounter();
+
+    // Add user message to display immediately
+    addUserStoryMessageToDisplay('user', message);
+
+    // Show typing indicator
+    showUserStoryTypingIndicator();
+
+    // Send message to backend
+    fetch('/user-story-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: message })
+    })
+    .then(response => response.json())
+    .then(data => {
+      hideUserStoryTypingIndicator();
+      
+      if (data.success) {
+        addUserStoryMessageToDisplay('assistant', data.response);
+        userStoryChatHistory.push({ role: 'user', message: message });
+        userStoryChatHistory.push({ role: 'assistant', message: data.response });
+        
+        // Check if this response updates the user stories section
+        if (data.user_stories_updated) {
+          updateUserStoriesSection(data.response);
+        }
+        
+        setTimeout(() => {
+          input.focus();
+        }, 100);
+      } else {
+        console.error('Server error:', data.error);
+        showNotification('Failed to send message', 'error');
+        removeLastUserStoryMessage();
+      }
+    })
+    .catch(error => {
+      hideUserStoryTypingIndicator();
+      console.error('Error sending message:', error);
+      showNotification('Failed to send message', 'error');
+      removeLastUserStoryMessage();
+    })
+    .finally(() => {
+      // Reset button state
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = originalHTML;
+    });
+  }
+
+  function updateUserStoryChatDisplay() {
+    const chatMessages = document.getElementById('user-story-chat-messages');
+    
+    if (userStoryChatHistory.length === 0) {
+      chatMessages.innerHTML = `
+        <div class="welcome-message">
+          <div class="message-content">
+            <span class="greeting">📋 Hi! I'm your User Story Assistant</span>
+            <p>I can help you create, refine, and understand user stories. I can provide guidance on:</p>
+            <ul>
+              <li>Writing better user stories</li>
+              <li>Creating acceptance criteria</li>
+              <li>Story estimation and prioritization</li>
+              <li>Breaking down large stories</li>
+            </ul>
+            <p><em>How can I help you with your user stories today?</em></p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    userStoryChatHistory.forEach((msg, index) => {
+      const isUser = msg.role === 'user';
+      const bubbleClass = isUser ? 'user-bubble' : 'agent-bubble';
+      
+      // Check if this is an agent message that might have updated the user stories section
+      const hasUserStoryUpdate = !isUser && (
+        msg.message.toLowerCase().includes('story') && 
+        (msg.message.toLowerCase().includes('added') || 
+         msg.message.toLowerCase().includes('updated') || 
+         msg.message.toLowerCase().includes('created'))
+      );
+      
+      html += `
+        <div class="message-bubble ${bubbleClass}">
+          <div class="message-content">${escapeHtml(msg.message)}</div>
+          <span class="message-time">${new Date().toLocaleString()}</span>
+          ${hasUserStoryUpdate ? `
+            <div class="epic-update-indicator">
+              <span class="update-badge">📋 User Stories updated</span>
+              <button class="view-update-btn" onclick="scrollToUserStoriesSection()">View Changes</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    });
+    
+    chatMessages.innerHTML = html;
+    setTimeout(() => {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 50);
+  }
+
+  function addUserStoryMessageToDisplay(role, message) {
+    const chatMessages = document.getElementById('user-story-chat-messages');
+    const timestamp = new Date().toLocaleString();
+    
+    // Remove welcome message if it exists
+    const welcomeMsg = chatMessages.querySelector('.welcome-message');
+    if (welcomeMsg) {
+      welcomeMsg.remove();
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message-bubble ${role === 'user' ? 'user-bubble' : 'agent-bubble'}`;
+    messageDiv.innerHTML = `
+      <div class="message-content">${escapeHtml(message)}</div>
+      <span class="message-time">${timestamp}</span>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function removeLastUserStoryMessage() {
+    const chatMessages = document.getElementById('user-story-chat-messages');
+    const userMessages = chatMessages.querySelectorAll('.user-bubble');
+    if (userMessages.length > 0) {
+      userMessages[userMessages.length - 1].remove();
+    }
+  }
+
+  function showUserStoryTypingIndicator() {
+    const chatMessages = document.getElementById('user-story-chat-messages');
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message-bubble agent-bubble typing-indicator-message';
+    typingDiv.innerHTML = `
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    `;
+    typingDiv.id = 'user-story-typing-indicator';
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function hideUserStoryTypingIndicator() {
+    const indicator = document.getElementById('user-story-typing-indicator');
+    if (indicator) {
+      indicator.remove();
+    }
+  }
+
+  function updateUserStoryCharCounter() {
+    const input = document.getElementById('user-story-chat-input');
+    const counter = document.getElementById('user-story-char-count');
+    if (input && counter) {
+      counter.textContent = input.value.length;
+      
+      // Change color based on usage
+      const percentage = input.value.length / 2000;
+      if (percentage > 0.9) {
+        counter.style.color = '#ef4444';
+      } else if (percentage > 0.7) {
+        counter.style.color = '#f59e0b';
+      } else {
+        counter.style.color = '#9ca3af';
+      }
+    }
+  }
+
+  function updateUserStoriesSection(agentResponse) {
+    // Implementation for updating user stories section based on agent response
+    showNotification('User Story Bot provided guidance. Use the main workflow to generate structured user stories.', 'info');
+  }
+
+  function scrollToUserStoriesSection() {
+    const userStoriesSection = document.getElementById('user-stories-section');
+    if (userStoriesSection) {
+      userStoriesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      // Highlight the user stories section
+      userStoriesSection.style.transition = 'all 0.3s ease';
+      userStoriesSection.style.boxShadow = '0 0 20px rgba(240, 147, 251, 0.3)';
+      setTimeout(() => {
+        userStoriesSection.style.boxShadow = '';
+      }, 2000);
+    }
   }
 </script>
+
+<!-- Epic Chat Bot Widget -->
+<div id="epic-chat-widget" class="chat-widget">
+  <!-- Chat Toggle Button -->
+  <div id="chat-toggle-btn" class="chat-toggle" onclick="toggleEpicChat()">
+    <div class="chat-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z" fill="currentColor"/>
+        <circle cx="7" cy="9" r="1" fill="currentColor"/>
+        <circle cx="12" cy="9" r="1" fill="currentColor"/>
+        <circle cx="17" cy="9" r="1" fill="currentColor"/>
+      </svg>
+    </div>
+    <div class="chat-badge" id="chat-badge" style="display: none;">1</div>
+  </div>
+  
+  <!-- Chat Panel -->
+  <div id="epic-chat-panel" class="chat-panel" style="display: none;">
+    <div class="chat-header">
+      <div class="chat-header-content">
+        <div class="agent-avatar">
+          <div class="avatar-gradient">
+            <span class="avatar-text">EA</span>
+          </div>
+        </div>
+        <div class="agent-info">
+          <h6 class="agent-name">Epic Agent</h6>
+          <span class="agent-status">Online • Ready to help</span>
+        </div>
+      </div>
+      <div class="chat-actions">
+        <button class="action-btn" onclick="clearEpicChat()" title="Clear chat">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 9V19H8V9H16ZM14.5 3H9.5L8.5 4H5V6H19V4H15.5L14.5 3ZM18 7H6V19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7Z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button class="action-btn minimize-btn" onclick="toggleEpicChat()" title="Minimize">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 13H5V11H19V13Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <div class="chat-messages-container">
+      <div id="epic-chat-messages" class="chat-messages">
+        <div class="welcome-message">
+          <div class="message-bubble agent-bubble">
+            <div class="message-content">
+              <span class="greeting">👋 Hi there!</span>
+              <p>I'm your Epic Agent. I can help you with:</p>
+              <ul>
+                <li>💡 Refining epic requirements</li>
+                <li>📋 Breaking down user stories</li>
+                <li>✅ Defining acceptance criteria</li>
+                <li>🎯 Optimizing project scope</li>
+              </ul>
+              <p>What would you like to discuss?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="chat-input-area">
+      <div class="input-container">
+        <textarea 
+          id="epic-chat-input" 
+          class="chat-input" 
+          placeholder="Type your message here..."
+          rows="1"
+          maxlength="2000"></textarea>
+        <button class="send-btn" onclick="sendEpicChatMessage()" title="Send message">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-footer">
+        <span class="input-hint">Press Enter to send • Shift+Enter for new line</span>
+        <span class="char-counter"><span id="char-count">0</span>/2000</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Story Chat Bot Widget -->
+<div id="user-story-chat-widget" class="chat-widget user-story-widget">
+  <!-- Chat Toggle Button -->
+  <div id="user-story-chat-toggle-btn" class="chat-toggle user-story-toggle" onclick="toggleUserStoryChat()">
+    <div class="chat-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
+        <path d="M7 10H17V12H7V10Z" fill="currentColor"/>
+        <path d="M7 14H17V16H7V14Z" fill="currentColor"/>
+        <path d="M7 6H17V8H7V6Z" fill="currentColor"/>
+      </svg>
+    </div>
+    <div class="chat-badge" id="user-story-chat-badge" style="display: none;">1</div>
+  </div>
+  
+  <!-- Chat Panel -->
+  <div id="user-story-chat-panel" class="chat-panel" style="display: none;">
+    <div class="chat-header">
+      <div class="chat-header-content">
+        <div class="agent-avatar">
+          <div class="avatar-gradient user-story-avatar">
+            <span class="avatar-text">US</span>
+          </div>
+        </div>
+        <div class="agent-info">
+          <h6 class="agent-name">User Story Bot</h6>
+          <span class="agent-status" id="user-story-status">Online • Ready to help</span>
+        </div>
+      </div>
+      <div class="chat-actions">
+        <button class="action-btn" onclick="showSystemInfoUpload()" title="Upload system info">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button class="action-btn" onclick="clearUserStoryChat()" title="Clear chat">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 9V19H8V9H16ZM14.5 3H9.5L8.5 4H5V6H19V4H15.5L14.5 3ZM18 7H6V19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7Z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button class="action-btn minimize-btn" onclick="toggleUserStoryChat()" title="Minimize">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 13H5V11H19V13Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- System Info Upload Area -->
+    <div id="system-info-upload" class="system-info-section" style="display: none;">
+      <div class="upload-header">
+        <h6>Upload System Information</h6>
+        <button class="close-upload-btn" onclick="hideSystemInfoUpload()">×</button>
+      </div>
+      <div class="upload-content">
+        <div class="file-upload-area" onclick="document.getElementById('system-file-input').click()">
+          <div class="upload-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="#667eea"/>
+            </svg>
+          </div>
+          <p>Click to upload system information</p>
+          <span class="upload-hint">Supports TXT, JSON, CSV files (max 10MB)</span>
+        </div>
+        <input type="file" id="system-file-input" accept=".txt,.json,.csv" style="display: none;" onchange="uploadSystemInfo(this)">
+        <div id="system-info-status" class="system-status" style="display: none;"></div>
+      </div>
+    </div>
+    
+    <div class="chat-messages-container">
+      <div id="user-story-chat-messages" class="chat-messages">
+        <div class="welcome-message">
+          <div class="message-bubble agent-bubble">
+            <div class="message-content">
+              <span class="greeting">📋 Welcome to User Story Bot!</span>
+              <p>I can help you with:</p>
+              <ul>
+                <li>✍️ Creating detailed user stories</li>
+                <li>🎯 Defining acceptance criteria</li>
+                <li>🏗️ Mapping stories to systems</li>
+                <li>📊 Organizing story backlogs</li>
+              </ul>
+              <p>💡 <strong>Tip:</strong> Upload system information to automatically map user stories to the correct systems!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="chat-input-area">
+      <div class="input-container">
+        <textarea 
+          id="user-story-chat-input" 
+          class="chat-input" 
+          placeholder="Describe the user stories you need..."
+          rows="1"
+          maxlength="2000"></textarea>
+        <button class="send-btn" onclick="sendUserStoryChatMessage()" title="Send message">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-footer">
+        <span class="input-hint">Press Enter to send • Shift+Enter for new line</span>
+        <span class="char-counter"><span id="user-story-char-count">0</span>/2000</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Epic Chat Floating Widget Styles */
+.chat-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Chat Toggle Button */
+.chat-toggle {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  position: relative;
+  border: none;
+  outline: none;
+}
+
+.chat-toggle:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 12px 48px rgba(102, 126, 234, 0.6);
+}
+
+.chat-toggle:active {
+  transform: translateY(0) scale(0.95);
+}
+
+.chat-icon {
+  color: white;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: linear-gradient(135deg, #ff416c 0%, #ff4757 100%);
+  color: white;
+  border-radius: 12px;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  border: 2px solid white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Chat Panel */
+.chat-panel {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  width: 480px;
+  height: 520px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(10px) scale(0.95);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Responsive width adjustments */
+@media (max-width: 768px) {
+  .chat-panel {
+    width: calc(100vw - 40px);
+    right: 20px;
+    left: 20px;
+  }
+}
+
+@media (max-width: 520px) {
+  .chat-panel {
+    bottom: 20px;
+    height: calc(100vh - 120px);
+  }
+}
+
+.chat-panel.show {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Chat Header */
+.chat-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+  border-radius: 20px 20px 0 0;
+}
+
+.chat-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.agent-avatar {
+  position: relative;
+}
+
+.avatar-gradient {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+}
+
+.avatar-gradient::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #4ade80;
+  border: 2px solid white;
+  border-radius: 50%;
+  bottom: 2px;
+  right: 2px;
+}
+
+.avatar-text {
+  font-weight: 700;
+  font-size: 14px;
+  color: #333;
+}
+
+.agent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agent-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: white;
+}
+
+.agent-status {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chat-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* Messages Container */
+.chat-messages-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f3f4;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+}
+
+.welcome-message {
+  margin-bottom: 16px;
+}
+
+.message-bubble {
+  max-width: 85%;
+  margin-bottom: 16px;
+  border-radius: 18px;
+  padding: 12px 16px;
+  position: relative;
+  word-wrap: break-word;
+  animation: messageSlide 0.3s ease-out;
+}
+
+@keyframes messageSlide {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+.user-bubble {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 6px;
+}
+
+.agent-bubble {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  color: #333;
+  margin-right: auto;
+  border-bottom-left-radius: 6px;
+}
+
+.message-content {
+  line-height: 1.4;
+}
+
+.message-content .greeting {
+  font-size: 18px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.message-content p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.message-content ul {
+  margin: 8px 0;
+  padding-left: 16px;
+}
+
+.message-content li {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.message-time {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-top: 6px;
+  display: block;
+}
+
+.epic-update-indicator {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.update-badge {
+  font-size: 11px;
+  color: #667eea;
+  font-weight: 600;
+  flex: 1;
+}
+
+.view-update-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.view-update-btn:hover {
+  background: #5a67d8;
+}
+
+/* Chat Input Area */
+.chat-input-area {
+  padding: 16px 20px 20px;
+  background: #f8f9fa;
+  border-radius: 0 0 20px 20px;
+}
+
+.input-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  background: white;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.input-container:focus-within {
+  border-color: #667eea;
+}
+
+.chat-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 8px 0;
+  max-height: 80px;
+  min-height: 20px;
+  font-family: inherit;
+  background: transparent;
+}
+
+.chat-input::placeholder {
+  color: #9ca3af;
+}
+
+.send-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.send-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.send-btn:active {
+  transform: scale(0.95);
+}
+
+.send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.input-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.input-hint {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.char-counter {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .chat-panel {
+    width: calc(100vw - 40px);
+    height: calc(100vh - 140px);
+    bottom: 80px;
+    right: 20px;
+    left: 20px;
+  }
+  
+  .chat-toggle {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* Loading States */
+.message-bubble.loading {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 16px;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #667eea;
+  animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+  0%, 80%, 100% { 
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Animation for opening/closing */
+.chat-widget.opening .chat-panel {
+  animation: slideUpFade 0.3s ease-out forwards;
+}
+
+.chat-widget.closing .chat-panel {
+  animation: slideDownFade 0.3s ease-in forwards;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+}
+
+/* User Story Chat Bot Specific Styles */
+.user-story-widget {
+  bottom: 20px;
+  right: 100px; /* Position next to Epic Chat */
+}
+
+.user-story-toggle {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 8px 32px rgba(240, 147, 251, 0.4);
+}
+
+.user-story-toggle:hover {
+  box-shadow: 0 12px 48px rgba(240, 147, 251, 0.6);
+}
+
+.user-story-avatar {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.user-story-widget .chat-header {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.user-story-widget .chat-messages::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.user-story-widget .send-btn {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.user-story-widget .send-btn:hover {
+  box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+}
+
+/* System Info Upload Styles */
+.system-info-section {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 16px 20px;
+}
+
+.upload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.upload-header h6 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.close-upload-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-upload-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.file-upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.file-upload-area:hover {
+  border-color: #f093fb;
+  background: #fef7ff;
+}
+
+.upload-icon {
+  margin-bottom: 8px;
+}
+
+.file-upload-area p {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.system-status {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.system-status.success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.system-status.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Responsive adjustments for User Story Chat */
+@media (max-width: 768px) {
+  .user-story-widget {
+    right: 20px;
+    bottom: 100px; /* Stack vertically on mobile */
+  }
+}
+
+@media (max-width: 520px) {
+  .user-story-widget {
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .user-story-widget .chat-panel {
+    width: calc(100vw - 40px);
+    height: calc(100vh - 120px);
+  }
+}
+
+/* Animation states for User Story Chat */
+.user-story-widget.opening .chat-panel {
+  animation: slideUpFade 0.3s ease-out forwards;
+}
+
+.user-story-widget.closing .chat-panel {
+  animation: slideDownFade 0.3s ease-in forwards;
+}
+</style>
 
 </body>
 </html>

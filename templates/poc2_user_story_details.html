@@ -7,96 +7,105 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
     body {
-      background-color: #f5f5f5;
-      color: #333;
+      background-color: #2f323a;
+      color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       margin: 0;
       padding: 0;
+      min-height: 100vh;
     }
     .main-container {
       max-width: 900px;
       margin: 20px auto;
-      background: white;
-      border: 1px solid #ddd;
+      background: #fff;
+      border: none;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       overflow: hidden;
     }
     .top-bar {
-      background-color: #dc3545;
+      background-color: #d0021b;
       color: white;
-      padding: 8px 16px;
+      padding: 12px 20px;
       font-size: 14px;
       font-weight: 500;
       position: relative;
     }
     .back-button {
-      background: none;
-      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       color: white;
       font-size: 14px;
       cursor: pointer;
-      padding: 4px 0;
+      padding: 8px 16px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
     }
     .back-button:hover {
-      text-decoration: underline;
+      background: rgba(255, 255, 255, 0.2);
       color: white;
+      transform: translateY(-1px);
     }
     .jira-notice {
       text-align: center;
-      background: #dc3545;
+      background-color: #d0021b;
       color: white;
-      padding: 8px;
+      padding: 12px;
       margin: 0;
-      font-weight: bold;
+      font-weight: 600;
+      font-size: 15px;
     }
     .story-header {
-      background-color: #4a5568;
+      background-color: #444;
       color: white;
-      padding: 12px 16px;
+      padding: 16px 20px;
       margin: 0;
-      font-size: 16px;
-      font-weight: 500;
-    }
-    .story-header {
-      background-color: #4a5568;
-      color: white;
-      padding: 12px 16px;
-      margin: 0;
-      font-size: 16px;
-      font-weight: 500;
+      font-size: 18px;
+      font-weight: 600;
     }
     .content-container {
       background: white;
       margin: 0;
-      padding: 24px;
+      padding: 28px;
+      color: #000;
     }
     .epic-info-section {
-      margin-bottom: 24px;
-      padding-bottom: 16px;
+      margin-bottom: 28px;
+      padding: 20px;
       border-bottom: 1px solid #e2e8f0;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border: 1px solid #ddd;
     }
     .epic-label {
-      color: #dc3545;
-      font-weight: 600;
+      color: #d0021b;
+      font-weight: 700;
       font-size: 14px;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     .epic-title {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 600;
       color: #333;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
+      line-height: 1.4;
     }
     .info-row {
       display: flex;
-      gap: 24px;
-      margin-bottom: 8px;
+      gap: 28px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
     }
     .info-item {
       display: flex;
       align-items: center;
       font-size: 14px;
+      background: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
     }
     .info-label {
       font-weight: 600;
@@ -104,46 +113,58 @@
       color: #666;
     }
     .priority-high {
-      color: #dc3545;
+      color: #d0021b;
       font-weight: 600;
+      padding: 2px 8px;
+      background: rgba(208, 2, 27, 0.1);
+      border-radius: 4px;
     }
     .section-container {
-      margin-bottom: 16px;
-      border: 1px solid #e2e8f0;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
       border-radius: 6px;
       background: white;
       overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .section-container:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     .section-header {
-      background-color: #4a5568;
+      background-color: #444;
       color: white;
-      padding: 10px 16px;
+      padding: 14px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 15px;
     }
     .section-content {
-      padding: 16px;
+      padding: 20px;
       line-height: 1.6;
       color: #333;
+      background: white;
     }
     .chat-btn {
-      background: none;
+      background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.3);
       color: white;
-      padding: 4px 12px;
+      padding: 8px 16px;
       border-radius: 4px;
       font-size: 12px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      transition: all 0.2s ease;
+      font-weight: 500;
     }
     .chat-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.2);
       color: white;
+      transform: translateY(-1px);
     }
     .requirements-list {
       list-style: none;
@@ -151,16 +172,26 @@
       margin: 0;
     }
     .requirements-list li {
-      padding: 8px 0;
+      padding: 12px 16px;
       border-bottom: 1px solid #f0f0f0;
       font-size: 14px;
       color: #333;
+      background: #f8f9fa;
+      margin-bottom: 2px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    .requirements-list li:hover {
+      background: #e9ecef;
+      transform: translateX(4px);
     }
     .requirements-list li:last-child {
       border-bottom: none;
     }
     .tagged-requirements-section .section-content {
-      background-color: #ffebee;
+      background: #fff5f5;
+      border: 1px solid #fed7d7;
+      border-radius: 4px;
     }
     .criteria-list {
       list-style: none;
@@ -168,42 +199,60 @@
       margin: 0;
     }
     .criteria-list li {
-      padding: 6px 0;
+      padding: 10px 16px;
       color: #333;
       font-size: 14px;
       position: relative;
-      padding-left: 16px;
+      padding-left: 28px;
+      background: #f8f9fa;
+      margin-bottom: 4px;
+      border-radius: 4px;
+      border-left: 3px solid #d0021b;
+      transition: all 0.2s ease;
+    }
+    .criteria-list li:hover {
+      background: #e9ecef;
+      border-left-color: #a0011a;
     }
     .criteria-list li:before {
-      content: "•";
+      content: "✓";
       position: absolute;
-      left: 0;
-      color: #666;
+      left: 8px;
+      color: #d0021b;
+      font-weight: bold;
     }
     .hardcoded-content {
       color: #007bff !important;
       font-style: italic;
+      font-weight: 500;
     }
     .story-header .hardcoded-content {
-      color: #87ceeb !important; /* Lighter blue for better contrast on dark background */
+      color: #e2e8f0 !important;
     }
     .epic-title .hardcoded-content {
       color: #007bff !important;
     }
     .submit-btn {
-      background-color: #dc3545;
+      background-color: #d0021b;
       color: white;
       border: none;
-      padding: 12px 24px;
+      padding: 16px 32px;
       border-radius: 4px;
       font-weight: 600;
       cursor: pointer;
       width: 100%;
-      margin-top: 20px;
+      margin-top: 24px;
+      font-size: 16px;
+      transition: all 0.3s ease;
     }
     .submit-btn:hover {
-      background-color: #c82333;
+      background-color: #a0011a;
       color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(208, 2, 27, 0.3);
+    }
+    .submit-btn:active {
+      transform: translateY(0);
     }
     .hidden {
       display: none;
@@ -212,23 +261,78 @@
     /* Responsive Design */
     @media (max-width: 1024px) {
       .main-container {
-        margin: 10px;
+        margin: 15px;
         max-width: none;
       }
     }
     
     @media (max-width: 768px) {
       .main-container {
-        margin: 5px;
+        margin: 10px;
         border-radius: 4px;
+      }
+      .content-container {
+        padding: 20px;
+      }
+      .info-row {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .info-item {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .chat-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .main-container {
+        margin: 5px;
       }
       .content-container {
         padding: 16px;
       }
-      .info-row {
-        flex-direction: column;
-        gap: 8px;
+      .epic-info-section {
+        padding: 16px;
       }
+      .section-header {
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+      .section-content {
+        padding: 16px;
+      }
+    }
+    
+    /* Story name section styling */
+    .story-name-section {
+      background: white;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    
+    /* Multiple stories summary styling */
+    .multiple-stories-summary {
+      background: #f8f9fa;
+      padding: 16px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    
+    .story-item {
+      background: white !important;
+      border-left: 3px solid #d0021b !important;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    .story-item:hover {
+      transform: translateX(4px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
@@ -263,7 +367,7 @@
     <!-- Epic Information Section -->
     <div class="epic-info-section">
       <div class="epic-label">Epic:</div>
-      <div class="epic-title">{{ epic_title or '<span class="hardcoded-content">End-to-End Customer Account Creation</span>' | safe }}</div>
+      <div class="epic-title">{{ epic_title or '<span class="hardcoded-content">*****</span>' | safe }}</div>
       
       <!-- Story Name Display -->
       <div class="story-name-section" style="margin-top: 12px;">
