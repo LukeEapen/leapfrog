@@ -320,11 +320,7 @@
           <input class="form-control" type="file" id="prdFile" name="prd_file">
         </div>
         <div class="mb-3">
-          <label for="additionalDocs" class="form-label">📎 Additional documents</label>
-          <input class="form-control" type="file" id="additionalDocs" name="additional_docs">
-        </div>
-        <div class="mb-3">
-          <label for="csvFile" class="form-label">📊 CSV Data (will be stored in Vector Database)</label>
+          <label for="csvFile" class="form-label">📎 Additional documents (i.e System Mapping)</label>
           <input class="form-control" type="file" id="csvFile" name="csv_file" accept=".csv">
           <div class="form-text">Upload a CSV file to be processed and stored in the Vector Database for enhanced context during epic generation.</div>
         </div>
@@ -670,7 +666,6 @@
     }    function disableUploadForm() {
       // Disable all form inputs
       document.getElementById('prdFile').disabled = true;
-      document.getElementById('additionalDocs').disabled = true;
       document.getElementById('csvFile').disabled = true;
       document.getElementById('context').disabled = true;
       

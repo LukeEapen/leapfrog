@@ -1031,7 +1031,7 @@ Please follow the instructions above and process the user's request accordingly.
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_prompt}
             ],
-            temperature=0.7,
+            temperature=0.2,
             max_tokens=4000
         )
         
@@ -1992,10 +1992,7 @@ def user_story_details():
             if 'responsible_systems' not in locals():
                 responsible_systems = "CAPS, CMS"  # Default value if not extracted from stories
             tagged_requirements = [
-                "F1. Capture Personal Information for New Customer Account",
-                "KDA2. Customer full name",
-                "KDA3. Customer date of birth", 
-                "KDA4. Customer SSN or equivalent"
+                "TBD"
             ]
             
             # Call the acceptance criteria agent - pass only story name
@@ -2154,10 +2151,7 @@ def user_story_details():
                 acceptance_criteria = session_data.get('acceptance_criteria', [])
                 responsible_systems = session_data.get('responsible_systems', 'CAPS, CMS')
                 tagged_requirements = session_data.get('tagged_requirements', [
-                    "F1. Capture Personal Information for New Customer Account",
-                    "KDA2. Customer full name",
-                    "KDA3. Customer date of birth", 
-                    "KDA4. Customer SSN or equivalent"
+                    "TBD"
                 ])
                 
                 # Clean up session data after use
@@ -2183,10 +2177,7 @@ def user_story_details():
                 # Generate additional data fields for the new UI
                 responsible_systems = "CAPS, CMS"  # Default value, could be enhanced later
                 tagged_requirements = [
-                    "F1. Capture Personal Information for New Customer Account",
-                    "KDA2. Customer full name",
-                    "KDA3. Customer date of birth", 
-                    "KDA4. Customer SSN or equivalent"
+                    "TBD"
                 ]
 
                 # Call the acceptance criteria agent - pass only story name

@@ -961,13 +961,44 @@
     // Show typing indicator
     showTypingIndicator();
 
-    // Send message to backend
+    // Get current epics context from the page
+    const epicsContainer = document.getElementById('epics-container');
+    let currentEpicsContext = '';
+    
+    if (epicsContainer) {
+      // Try to extract epic information from the displayed content
+      const epicCards = epicsContainer.querySelectorAll('.epic-card');
+      if (epicCards.length > 0) {
+        currentEpicsContext = 'Current Epics:\n';
+        epicCards.forEach((card, index) => {
+          const titleElement = card.querySelector('h5');
+          const descElement = card.querySelector('p');
+          
+          if (titleElement) {
+            const epicTitle = titleElement.textContent.replace(/^Epic \d+: /, '');
+            const epicDesc = descElement ? descElement.textContent.replace(/^Description: /, '') : '';
+            currentEpicsContext += `\nEpic ${index + 1}: ${epicTitle}\nDescription: ${epicDesc}\n`;
+          }
+        });
+      } else {
+        // If no epic cards, try to get raw text content
+        const rawContent = epicsContainer.textContent || epicsContainer.innerHTML;
+        if (rawContent && rawContent.trim().length > 0) {
+          currentEpicsContext = 'Current Epics Content:\n' + rawContent.trim();
+        }
+      }
+    }
+
+    // Send message to backend with epic context
     fetch('/epic-chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message: message })
+      body: JSON.stringify({ 
+        message: message,
+        current_epics: currentEpicsContext
+      })
     })
     .then(response => response.json())
     .then(data => {
@@ -1364,13 +1395,68 @@
     // Show typing indicator
     showUserStoryTypingIndicator();
 
-    // Send message to backend
+    // Get current user stories context from the page
+    const userStoriesContainer = document.getElementById('user-stories-container');
+    let currentUserStoriesContext = '';
+    
+    if (userStoriesContainer) {
+      // Try to extract user story information from the displayed content
+      const storyCheckboxes = userStoriesContainer.querySelectorAll('input[name="user_story_ids"]');
+      if (storyCheckboxes.length > 0) {
+        currentUserStoriesContext = 'Current User Stories:\n';
+        storyCheckboxes.forEach((checkbox, index) => {
+          const storyId = checkbox.value;
+          const storyName = checkbox.getAttribute('data-name');
+          const storyDescription = checkbox.getAttribute('data-description');
+          const storyPriority = checkbox.getAttribute('data-priority');
+          
+          if (storyName) {
+            currentUserStoriesContext += `\nStory ${index + 1} (${storyId}): ${storyName}\n`;
+            if (storyDescription) currentUserStoriesContext += `Description: ${storyDescription}\n`;
+            if (storyPriority) currentUserStoriesContext += `Priority: ${storyPriority}\n`;
+          }
+        });
+      } else {
+        // If no story checkboxes, try to get raw text content
+        const rawContent = userStoriesContainer.textContent || userStoriesContainer.innerHTML;
+        if (rawContent && rawContent.trim().length > 0) {
+          currentUserStoriesContext = 'Current User Stories Content:\n' + rawContent.trim();
+        }
+      }
+    }
+
+    // Also get epic context for better user story assistance
+    const epicsContainer = document.getElementById('epics-container');
+    let currentEpicsContext = '';
+    
+    if (epicsContainer) {
+      const epicCards = epicsContainer.querySelectorAll('.epic-card');
+      if (epicCards.length > 0) {
+        currentEpicsContext = 'Related Epics:\n';
+        epicCards.forEach((card, index) => {
+          const titleElement = card.querySelector('h5');
+          const descElement = card.querySelector('p');
+          
+          if (titleElement) {
+            const epicTitle = titleElement.textContent.replace(/^Epic \d+: /, '');
+            const epicDesc = descElement ? descElement.textContent.replace(/^Description: /, '') : '';
+            currentEpicsContext += `\nEpic ${index + 1}: ${epicTitle}\nDescription: ${epicDesc}\n`;
+          }
+        });
+      }
+    }
+
+    // Send message to backend with context
     fetch('/user-story-chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message: message })
+      body: JSON.stringify({ 
+        message: message,
+        current_user_stories: currentUserStoriesContext,
+        current_epics: currentEpicsContext
+      })
     })
     .then(response => response.json())
     .then(data => {
@@ -1551,6 +1637,51 @@
       }, 2000);
     }
   }
+
+  // Add keyboard event listeners for chat inputs
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize chat displays
+    setTimeout(() => {
+      updateChatDisplay();
+      updateUserStoryChatDisplay();
+    }, 100);
+    
+    // Epic Chat input event listeners
+    const epicChatInput = document.getElementById('epic-chat-input');
+    if (epicChatInput) {
+      epicChatInput.addEventListener('input', updateCharCounter);
+      epicChatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendEpicChatMessage();
+        }
+      });
+      
+      // Auto-resize textarea
+      epicChatInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+      });
+    }
+
+    // User Story Chat input event listeners
+    const userStoryChatInput = document.getElementById('user-story-chat-input');
+    if (userStoryChatInput) {
+      userStoryChatInput.addEventListener('input', updateUserStoryCharCounter);
+      userStoryChatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendUserStoryChatMessage();
+        }
+      });
+      
+      // Auto-resize textarea
+      userStoryChatInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+      });
+    }
+  });
 </script>
 
 <!-- Epic Chat Bot Widget -->
@@ -1598,21 +1729,7 @@
     
     <div class="chat-messages-container">
       <div id="epic-chat-messages" class="chat-messages">
-        <div class="welcome-message">
-          <div class="message-bubble agent-bubble">
-            <div class="message-content">
-              <span class="greeting">👋 Hi there!</span>
-              <p>I'm your Epic Agent. I can help you with:</p>
-              <ul>
-                <li>💡 Refining epic requirements</li>
-                <li>📋 Breaking down user stories</li>
-                <li>✅ Defining acceptance criteria</li>
-                <li>🎯 Optimizing project scope</li>
-              </ul>
-              <p>What would you like to discuss?</p>
-            </div>
-          </div>
-        </div>
+        <!-- Welcome message will be inserted by JavaScript -->
       </div>
     </div>
     

@@ -358,12 +358,6 @@
       <div class="epic-label">Epic:</div>
       <div class="epic-title">{{ epic_title or '<span class="hardcoded-content">******</span>' | safe }}</div>
 
-      <!-- Story Name Display -->
-      <div class="story-name-section" style="margin-top: 12px;">
-        <div class="epic-label">Story:</div>
-        <div class="epic-title" style="font-size: 15px; color: #555;">{{ user_story_name or '<span class="hardcoded-content">******</span>' | safe }}</div>
-      </div>
-
       <div class="info-row">
         <div class="info-item">
           <span class="info-label">Priority:</span>
@@ -447,10 +441,8 @@
             <li>{{ requirement }}</li>
             {% endfor %}
           {% else %}
-          <li><span class="hardcoded-content">F1. Capture Personal Information for New Customer Account</span></li>
-          <li><span class="hardcoded-content">KDA2. Customer full name</span></li>
-          <li><span class="hardcoded-content">KDA3. Customer date of birth</span></li>
-          <li><span class="hardcoded-content">KDA4. Customer SSN or equivalent</span></li>
+          <li><span class="hardcoded-content">TBD</span></li>
+
           {% endif %}
         </ul>
       </div>
@@ -471,7 +463,7 @@
     <input type="hidden" name="priority" value="{{ priority or 'High' }}">
     <input type="hidden" name="responsible_systems" value="{{ responsible_systems or 'CAPS, CMS' }}">
     <input type="hidden" name="acceptance_criteria" value="{% if acceptance_criteria %}{{ acceptance_criteria|join('|||') }}{% else %}System prompts for full name, date of birth, Social Security Number, email address, phone number, and residential address|||Mandatory fields must be completed before progressing|||Input formats are validated (e.g., MM/DD/YYYY for DOB, 9-digit SSN, phone with area code)|||Errors are surfaced clearly and immediately for any missing or invalid entries{% endif %}">
-    <input type="hidden" name="tagged_requirements" value="{% if tagged_requirements %}{{ tagged_requirements|join('|||') }}{% else %}F1. Capture Personal Information for New Customer Account|||KDA2. Customer full name|||KDA3. Customer date of birth|||KDA4. Customer SSN or equivalent{% endif %}">
+    <input type="hidden" name="tagged_requirements" value="{% if tagged_requirements %}{{ tagged_requirements|join('|||') }}{% else %}TBD {% endif %}">
   </form>
 
 <script>
