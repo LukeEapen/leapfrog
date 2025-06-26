@@ -314,7 +314,7 @@
   <div id="user-stories-section" class="{{ 'hidden' if not user_stories }}">
     <div class="section-header">
       <span>User stories</span>
-      <button class="btn btn-outline-light btn-sm">💬 Chat</button>
+      <button class="btn btn-outline-light btn-sm" id="userStoryChatBtn" onclick="openUserStoryChat()">� User Story Chat</button>
     </div>
     <p class="mb-3 text-light">
       Review this list of generated user stories for each epic, sorted by the solution’s ranking of priority based on industry and uploaded context. Select <strong>one</strong> story to proceed with generating a detailed user story.
@@ -661,8 +661,52 @@
       // Hide loading spinner and timer
       hideButtonLoading(approveBtn, approveSpinner, approveTimerEl, 'Approve Epic(s)', approveTimer);
     }
-  });  document.getElementById("proceed-form")?.addEventListener("submit", async function (e) {
+  });  // Debug function to inspect user stories
+  function debugUserStories() {
+    console.log('=== USER STORIES DEBUG ===');
+    const userStoriesContainer = document.getElementById('user-stories-container');
+    
+    if (!userStoriesContainer) {
+      console.log('User stories container not found');
+      return;
+    }
+    
+    console.log('Container HTML:', userStoriesContainer.innerHTML.substring(0, 500) + '...');
+    
+    // Find all radio buttons in the user stories section
+    const radios = userStoriesContainer.querySelectorAll('input[type="radio"]');
+    console.log(`Found ${radios.length} radio buttons`);
+    
+    radios.forEach((radio, index) => {
+      const dataName = radio.getAttribute('data-name');
+      const dataDescription = radio.getAttribute('data-description');
+      
+      console.log(`Radio ${index + 1}:`, {
+        id: radio.id,
+        value: radio.value,
+        name: radio.name,
+        dataName: dataName,
+        dataDescription: dataDescription ? dataDescription.substring(0, 100) + '...' : dataDescription,
+        isDataNameValid: dataName && dataName !== 'null' && dataName !== 'undefined',
+        isDataDescriptionValid: dataDescription && dataDescription !== 'null' && dataDescription !== 'undefined'
+      });
+      
+      if (!dataName || dataName === 'null' || dataName === 'undefined') {
+        console.error(`❌ Radio ${index + 1} has invalid data-name: "${dataName}"`);
+      }
+      if (!dataDescription || dataDescription === 'null' || dataDescription === 'undefined') {
+        console.error(`❌ Radio ${index + 1} has invalid data-description: "${dataDescription}"`);
+      }
+    });
+    
+    console.log('=== END USER STORIES DEBUG ===');
+  }
+
+  document.getElementById("proceed-form")?.addEventListener("submit", async function (e) {
     e.preventDefault(); // Prevent default form submission
+    
+    // Debug user stories if needed
+    debugUserStories();
     
     // Function to get proceed button elements with retry
     function getProceedButtonElements() {
@@ -696,12 +740,13 @@
       console.log('proceedBtn parent:', proceedBtn.parentElement);
       console.log('proceedBtn is connected to DOM:', proceedBtn.isConnected);
     }
-    
-    // Debug: Check what radio buttons exist
+      // Debug: Check what radio buttons exist
     const allRadios = document.querySelectorAll('input[type="radio"]');
     console.log('All radio buttons found:', allRadios);
     allRadios.forEach((radio, index) => {
       console.log(`Radio ${index}: name="${radio.name}", value="${radio.value}", checked=${radio.checked}`);
+      console.log(`  - data-name: "${radio.getAttribute('data-name')}"`);
+      console.log(`  - data-description: "${radio.getAttribute('data-description')}"`);
     });
     
     // Try multiple selectors to find the checked user story
@@ -714,12 +759,53 @@
     if (!checked) {
       checked = document.querySelector('#user-stories-container input[type="radio"]:checked');
     }
-    
-    console.log('Selected user story radio button:', checked);
-      if (checked) {
+      console.log('Selected user story radio button:', checked);
+      if (checked) {      
+      console.log('Extracting data from checked radio button:', {
+        value: checked.value,
+        dataName: checked.getAttribute('data-name'),
+        dataDescription: checked.getAttribute('data-description')
+      });
+        // Validate that the data attributes exist and are not empty
+      const dataName = checked.getAttribute('data-name');
+      const dataDescription = checked.getAttribute('data-description');
+      
+      // Decode HTML entities in case they were encoded
+      function decodeHtmlEntities(str) {
+        if (!str) return str;
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = str;
+        return textarea.value;
+      }
+      
+      const decodedName = decodeHtmlEntities(dataName);
+      const decodedDescription = decodeHtmlEntities(dataDescription);
+      
+      console.log('Data attribute decoding:', {
+        originalName: dataName,
+        decodedName: decodedName,
+        originalDescription: dataDescription,
+        decodedDescription: decodedDescription
+      });
+      
+      if (!dataName || dataName === 'null' || dataName === 'undefined') {
+        console.warn('Warning: data-name attribute is missing or invalid');
+      }
+      if (!dataDescription || dataDescription === 'null' || dataDescription === 'undefined') {
+        console.warn('Warning: data-description attribute is missing or invalid');
+      }
+      
       document.getElementById("selected_story_id").value = checked.value;
-      document.getElementById("selected_story_name").value = checked.getAttribute("data-name");
-      document.getElementById("selected_story_description").value = checked.getAttribute("data-description");      // Show loading spinner and start timer (with enhanced error handling)
+      document.getElementById("selected_story_name").value = decodedName || '';
+      document.getElementById("selected_story_description").value = decodedDescription || '';
+      
+      console.log('Hidden fields set:', {
+        id: checked.value,
+        name: dataName || '',
+        description: dataDescription || ''
+      });
+
+      // Show loading spinner and start timer (with enhanced error handling)
       let timerInterval = null;
       if (proceedBtn && proceedSpinner && proceedTimerEl) {
         console.log('Starting timer and spinner for proceed button');
@@ -741,62 +827,44 @@
             <span style="margin-left: 8px;">Processing...</span>
           `;
         }
-      }
-        try {
-        // Get the story details from data attributes
-        const storyName = checked.getAttribute('data-name') || '';
-        const storyDescription = checked.getAttribute('data-description') || '';
-        
-        // Create form data
-        const formData = new FormData();
-        formData.append('user_story_id', checked.value);
-        formData.append('selected_story_name', storyName);
-        formData.append('selected_story_description', storyDescription);
-        
-        console.log('Submitting user story selection:', {
-          id: checked.value,
-          name: storyName,
-          description: storyDescription
-        });
-          const response = await fetch("/user-story-details", {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            user_story_id: checked.value,
-            selected_story_name: storyName,
-            selected_story_description: storyDescription,
-            epic_title: document.querySelector('input[name="epic_title"]')?.value || '',
-            priority: document.querySelector('select[name="priority"]')?.value || 'High'
-          }),
-        });
-        
-        if (response.ok) {
-          const result = await response.json();
-          console.log('User story selection result:', result);
-          
-          if (result.success) {
-            // Replace the current page content with the returned HTML
-            document.open();
-            document.write(result.html);
-            document.close();
-            
-            // Update the browser URL without refresh
-            window.history.pushState({}, '', '/user-story-details');
-            
-            console.log(`User story ${result.story_id} processed and details page loaded!`);
-          } else {
-            console.error('Error in user story selection:', result.error);
-            alert(`Error: ${result.error}`);
-          }
-        } else {
-          console.error('Error submitting user story selection:', response.statusText);
-          alert('Error processing user story selection. Please try again.');
+      }        try {
+        // Use FormData to submit the form, which is more robust.
+        const form = document.getElementById('proceed-form');
+        const formData = new FormData(form);
+
+        // Log the form data to be sent for debugging
+        console.log('Submitting user story selection with FormData:');
+        for (let [key, value] of formData.entries()) {
+            // Truncate long values for cleaner logs
+            const displayValue = value.length > 100 ? value.substring(0, 97) + '...' : value;
+            console.log(`  - ${key}: "${displayValue}"`);
         }
+
+        const response = await fetch("/user-story-details", {
+            method: "POST",
+            body: formData, // Send as form data
+        });
+
+        if (response.ok) {
+            // The backend will return a full HTML page for form submissions,
+            // so we replace the current document content with the new page.
+            const html = await response.text();
+            document.open();
+            document.write(html);
+            document.close();
+            console.log('Successfully loaded user story details page.');
+        } else {
+            console.error('Error submitting user story selection:', response.status, response.statusText);
+            // Try to get more error details from the response body
+            const errorText = await response.text();
+            console.error('Server error response:', errorText);
+            alert(`Error processing user story selection. Status: ${response.status}. Please check the console for details.`);
+        }
+
       } catch (error) {
         console.error('Error submitting user story selection:', error);
-        alert('Network error. Please check your connection and try again.');      } finally {
+        alert('Network error. Please check your connection and try again.');      
+      } finally {
         // Hide loading spinner and timer (with enhanced error handling)
         if (proceedBtn && proceedSpinner && proceedTimerEl && timerInterval) {
           console.log('Hiding timer and spinner for proceed button');
@@ -821,6 +889,35 @@
       alert('Please select a user story to proceed. If you don\'t see any selectable options, try refreshing the page or checking the console for errors.');
     }
   });
+    // Function to validate and log user story data attributes
+  function validateUserStoryData(story, index) {
+    const storyName = story.name || story.title || 'Untitled Story';
+    const storyDescription = story.description || story.goal || 'No description available';
+    
+    console.log(`Validating user story ${index + 1}:`, {
+      story_id: story.story_id || `story_${index + 1}`,
+      name: storyName,
+      description: storyDescription,
+      originalStory: story
+    });
+    
+    // Check for null, undefined, or empty values
+    if (!storyName || storyName === 'null' || storyName === 'undefined') {
+      console.warn(`Warning: Story ${index + 1} has invalid name:`, storyName);
+    }
+    if (!storyDescription || storyDescription === 'null' || storyDescription === 'undefined') {
+      console.warn(`Warning: Story ${index + 1} has invalid description:`, storyDescription);
+    }
+    
+    return {
+      name: storyName,
+      description: storyDescription,
+      isValid: storyName && storyDescription && 
+               storyName !== 'null' && storyName !== 'undefined' &&
+               storyDescription !== 'null' && storyDescription !== 'undefined'
+    };
+  }
+
     // Function to parse and format user stories if they're in JSON format
   function parseAndFormatUserStories() {
     const userStoriesContainer = document.getElementById('user-stories-container');
@@ -864,7 +961,7 @@
           extractionMethod = 'markdown-json';
         }
       } 
-      // Strategy 2: Look for any code block with ```
+      // Strategy 2: Look for any code block with `````
       else if (cleanContent.includes('```')) {
         const codeBlockMatch = cleanContent.match(/```\s*([\s\S]*?)\s*```/);
         if (codeBlockMatch && codeBlockMatch[1]) {
@@ -915,22 +1012,35 @@
                 </tr>
               </thead>
               <tbody>
-        `;
-          userStoriesData.forEach((story, index) => {
+        `;          userStoriesData.forEach((story, index) => {
+          // Validate and get story data
+          const validatedData = validateUserStoryData(story, index);
+          
+          // Escape HTML for data attributes to prevent attribute breaking
+          const escapedName = validatedData.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          const escapedDescription = validatedData.description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          
+          // Log the escaped data for debugging
+          console.log(`Story ${index + 1} escaped data:`, {
+            escapedName,
+            escapedDescription,
+            isValid: validatedData.isValid
+          });
+          
           formattedHTML += `
             <tr>
               <td>
                 <div class="form-check">
                   <input class="form-check-input" type="radio" name="user_story_id" 
                   value="${story.story_id || `story_${index + 1}`}" id="story_${index + 1}"
-                  data-name="${story.name || story.title || 'Untitled Story'}" 
-                  data-description="${story.description || 'No description available'}">
+                  data-name="${escapedName}" 
+                  data-description="${escapedDescription}">
                   <label class="form-check-label" for="story_${index + 1}"></label>
                 </div>
               </td>
               <td><strong>${story.story_id || `US${index + 1}`}</strong></td>
-              <td><strong>${story.name || story.title || 'Untitled Story'}</strong></td>
-              <td>${story.description || 'No description available'}</td>
+              <td><strong>${validatedData.name}</strong></td>
+              <td>${validatedData.description}</td>
             </tr>
           `;
         });
@@ -955,6 +1065,16 @@
       } else if (userStoriesData && typeof userStoriesData === 'object') {
         // Handle single user story object
         console.log('Single user story object detected');
+        
+        // Validate single story data
+        const validatedData = validateUserStoryData(userStoriesData, 0);
+        
+        // Escape HTML for data attributes
+        const escapedName = validatedData.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const escapedDescription = validatedData.description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        
+        console.log('Single story escaped data:', { escapedName, escapedDescription, isValid: validatedData.isValid });
+        
         const formattedHTML = `
           <div class="table-responsive">
             <table class="table table-striped table-bordered">
@@ -967,18 +1087,17 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>                    <div class="form-check">
+                <tr>                  <td>                    <div class="form-check">
                       <input class="form-check-input" type="radio" name="user_story_id" 
                       value="${userStoriesData.story_id || 'story_1'}" id="story_1"
-                      data-name="${userStoriesData.name || userStoriesData.title || 'Untitled Story'}" 
-                      data-description="${userStoriesData.description || 'No description available'}" checked>
+                      data-name="${escapedName}" 
+                      data-description="${escapedDescription}" checked>
                       <label class="form-check-label" for="story_1"></label>
                     </div>
                   </td>
                   <td><strong>${userStoriesData.story_id || 'US1'}</strong></td>
-                  <td><strong>${userStoriesData.name || userStoriesData.title || 'Untitled Story'}</strong></td>
-                  <td>${userStoriesData.description || 'No description available'}</td>
+                  <td><strong>${validatedData.name}</strong></td>
+                  <td>${validatedData.description}</td>
                 </tr>
               </tbody>
             </table>
@@ -1086,20 +1205,32 @@
               </thead>
               <tbody>
         `;
-        
-        extractedData.forEach((story, index) => {
+          extractedData.forEach((story, index) => {
+          // Validate and get story data
+          const validatedData = validateUserStoryData(story, index);
+          
+          // Escape HTML for data attributes to prevent attribute breaking
+          const escapedName = validatedData.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          const escapedDescription = validatedData.description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          
+          console.log(`Extracted story ${index + 1} escaped data:`, {
+            escapedName,
+            escapedDescription,
+            isValid: validatedData.isValid
+          });
+          
           formattedHTML += `
             <tr>
               <td>
                 <div class="form-check">                  <input class="form-check-input" type="radio" name="user_story_id" 
                   value="${story.story_id || `story_${index + 1}`}" id="story_${index + 1}"
-                  data-name="${story.name || story.title || 'Untitled Story'}" 
-                  data-description="${story.description || 'No description available'}">
+                  data-name="${escapedName}" 
+                  data-description="${escapedDescription}">
                   <label class="form-check-label" for="story_${index + 1}"></label>
                 </div>
               </td>
-              <td><strong>${story.story_id || `US${index + 1}`}</strong></td>              <td><strong>${story.name || story.title || 'Untitled Story'}</strong></td>
-              <td>${story.description || 'No description available'}</td>
+              <td><strong>${story.story_id || `US${index + 1}`}</strong></td>              <td><strong>${validatedData.name}</strong></td>
+              <td>${validatedData.description}</td>
             </tr>
           `;
         });
@@ -1142,6 +1273,9 @@
             `;
             
             userStoriesData.forEach((story, index) => {
+              // Validate and get story data
+              const validatedData = validateUserStoryData(story, index);
+              
               // Format acceptance criteria as a bulleted list
               let acceptanceCriteria = '';
               if (story.acceptance_criteria && Array.isArray(story.acceptance_criteria)) {
@@ -1164,18 +1298,28 @@
                 priorityClass = 'badge-success';
               }
               
-              formattedHTML += `
+              // Escape HTML for data attributes
+              const escapedName = validatedData.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+              const escapedDescription = validatedData.description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+              
+              console.log(`Detailed story ${index + 1} escaped data:`, {
+                escapedName,
+                escapedDescription,
+                isValid: validatedData.isValid
+              });
+              
+                formattedHTML += `
                 <tr>
                   <td>
                     <div class="form-check">                      <input class="form-check-input" type="radio" name="user_story_id" 
                       value="${story.story_id || `story_${index + 1}`}" id="story_${index + 1}"
-                      data-name="${story.title || 'Untitled Story'}" 
-                      data-description="${story.description || story.goal || 'No description available'}">
+                      data-name="${escapedName}" 
+                      data-description="${escapedDescription}">
                       <label class="form-check-label" for="story_${index + 1}"></label>
                     </div>
                   </td>
                   <td><strong>${story.story_id || `US${index + 1}`}</strong></td>
-                  <td>${story.title || 'Untitled Story'}</td>
+                  <td>${validatedData.name}</td>
                   <td>${story.role || 'Not specified'}</td>
                   <td>${story.goal || 'Not specified'}</td>
                   <td>${story.benefit || 'Not specified'}</td>
@@ -1325,6 +1469,11 @@
         if (data.success) {
           epicChatHistory = data.chat_history || [];
           updateChatDisplay();
+          
+          // Show session info if there's chat history
+          if (epicChatHistory.length > 0) {
+            showNotification('Chat session loaded. Sessions auto-clear after 30 minutes of inactivity.', 'info');
+          }
         } else {
           console.error('Failed to load chat history:', data.error);
         }
@@ -1341,6 +1490,42 @@
       showNotification('Please enter a message', 'warning');
       return;
     }
+
+    // Get current epics content from the page for context
+    const epicsContainer = document.getElementById('epics-container');
+    let currentEpicsContent = '';
+    
+    if (epicsContainer) {
+      // Extract epic information from the current display
+      const epicCards = epicsContainer.querySelectorAll('.epic-card:not([data-chat-update])');
+      const epicsData = [];
+      
+      epicCards.forEach((card, index) => {
+        const titleElement = card.querySelector('h5');
+        const descElement = card.querySelector('p');
+        
+        let title = titleElement ? titleElement.textContent.replace(/^Epic \d+:\s*/, '') : `Epic ${index + 1}`;
+        let description = descElement ? descElement.textContent.replace(/^Description:\s*/, '') : 'No description';
+        
+        epicsData.push({
+          id: `epic_${index + 1}`,
+          title: title,
+          description: description
+        });
+      });
+      
+      if (epicsData.length > 0) {
+        currentEpicsContent = JSON.stringify(epicsData, null, 2);
+      } else {
+        // Fallback: get raw HTML content
+        currentEpicsContent = epicsContainer.innerHTML.trim();
+      }
+    }
+
+    console.log('Sending Epic Chat with current context:', {
+      message: message,
+      currentEpicsContent: currentEpicsContent.substring(0, 200) + '...'
+    });
 
     // Show loading state
     const sendBtn = document.querySelector('.send-btn');
@@ -1364,13 +1549,16 @@
     // Show typing indicator
     showTypingIndicator();
 
-    // Send message to backend
+    // Send message to backend with current epics context
     fetch('/epic-chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message: message })
+      body: JSON.stringify({ 
+        message: message,
+        current_epics_content: currentEpicsContent
+      })
     })
     .then(response => response.json())    .then(data => {
       hideTypingIndicator();
@@ -1666,87 +1854,120 @@
       // Clean up old chat updates before adding new ones
       cleanupOldChatUpdates();
 
-      // Try to parse if it's JSON format with new epics
+      // Be very strict about when to add new epics - only if explicitly mentioned
+      const userRequestedNew = responseText.includes('add new epic') || 
+                              responseText.includes('create new epic') ||
+                              responseText.includes('new epic') ||
+                              responseText.includes('additional epic') ||
+                              responseText.includes('more epics') ||
+                              responseText.includes('another epic');
+
+      // Try to parse if it's JSON format with epics
       try {
         const jsonMatch = agentResponse.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
         if (jsonMatch) {
           const epicData = JSON.parse(jsonMatch[0]);
           
           if (Array.isArray(epicData)) {
-            // Check if these are completely new epics or updates to existing ones
-            const isCompleteReplacement = epicData.length > 1 && 
-              epicData.every(epic => epic.epic_title || epic.title);
-            
-            if (isCompleteReplacement && existingEpicsCount === 0) {
-              // This appears to be initial epic generation
+            // ONLY add new epics if explicitly requested OR if no existing epics
+            if (userRequestedNew || existingEpicsCount === 0) {
+              // Add new epics (only when explicitly requested)
               let formattedHTML = '';
               epicData.forEach((epic, index) => {
                 formattedHTML += `
-                  <div class="epic-card" style="border-left: 4px solid #667eea; background: linear-gradient(135deg, #f8f9ff 0%, #e8ebff 100%);" data-chat-update="true">
-                    <h5 style="color: #667eea;">Epic ${index + 1}: ${epic.epic_title || epic.title || 'Generated Epic'}</h5>
+                  <div class="epic-card" style="border-left: 4px solid #28a745; background: linear-gradient(135deg, #f0fff4 0%, #d4edda 100%);" data-chat-update="true">
+                    <h5 style="color: #28a745;">New Epic ${index + 1}: ${epic.epic_title || epic.title || 'Generated Epic'}</h5>
                     <p><strong>Description:</strong> ${epic.epic_description || epic.description || 'Epic generated via chat'}</p>
-                    <div style="background: rgba(102, 126, 234, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px;">
-                      <small style="color: #667eea; font-weight: 600;">💬 Generated via Epic Chat</small>
+                    <div style="background: rgba(40, 167, 69, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px;">
+                      <small style="color: #28a745; font-weight: 600;">✨ New Epic Added via Chat</small>
                     </div>
-                    <input type="checkbox" name="epic_ids" value="epic_chat_${index + 1}" checked>
-                    <label for="epic_chat_${index + 1}">Include this epic</label>
+                    <input type="checkbox" name="epic_ids" value="epic_chat_new_${index + 1}" checked>
+                    <label for="epic_chat_new_${index + 1}">Include this epic</label>
                   </div>
                 `;
               });
               
-              // Add these as new epics
               epicsContainer.insertAdjacentHTML('afterbegin', formattedHTML);
-              showNotification(`Generated ${epicData.length} new epics via chat`, 'success');
-              scrollToEpicsSection();
-              return;
+              showNotification(`Added ${epicData.length} new epics via chat`, 'success');
             } else {
-              // Individual epic update - add as additional epic
-              const epic = Array.isArray(epicData) ? epicData[0] : epicData;
-              const chatUpdateCard = `
-                <div class="epic-card" style="border-left: 4px solid #28a745; background: linear-gradient(135deg, #f0fff4 0%, #e6ffed 100%);" data-chat-update="true">
-                  <h5 style="color: #28a745;">✨ New Epic from Chat: ${epic.epic_title || epic.title || 'Updated Epic'}</h5>
-                  <p><strong>Description:</strong> ${epic.epic_description || epic.description || 'Epic created via chat interaction'}</p>
-                  <div style="background: rgba(40, 167, 69, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px;">
-                    <small style="color: #28a745; font-weight: 600;">🕒 ${new Date().toLocaleString()}</small>
-                  </div>
-                  <input type="checkbox" name="epic_ids" value="epic_chat_new_${Date.now()}" checked>
-                  <label for="epic_chat_new_${Date.now()}">Include this new epic</label>
-                </div>
-              `;
-              
-              epicsContainer.insertAdjacentHTML('afterbegin', chatUpdateCard);
-              showNotification(`Added new epic: "${epic.epic_title || epic.title || 'New Epic'}"`, 'success');
-              scrollToEpicsSection();
-              return;
+              // DEFAULT BEHAVIOR: Update existing epics instead of adding new ones
+              const existingEpics = epicsContainer.querySelectorAll('.epic-card:not([data-chat-update])');
+              if (existingEpics.length > 0) {
+                const epicsToUpdate = Math.min(epicData.length, existingEpics.length);
+                
+                for (let i = 0; i < epicsToUpdate; i++) {
+                  const epic = epicData[i];
+                  const epicCard = existingEpics[i];
+                  
+                  // Update the epic with modified styling
+                  epicCard.style.borderLeft = '4px solid #ffc107';
+                  epicCard.style.background = 'linear-gradient(135deg, #fffdf0 0%, #fff3cd 100%)';
+                  epicCard.setAttribute('data-chat-update', 'true');
+                  
+                  // Update title and description
+                  const titleElement = epicCard.querySelector('h5');
+                  const descElement = epicCard.querySelector('p');
+                  
+                  if (titleElement) {
+                    titleElement.innerHTML = `Epic ${i + 1}: ${epic.epic_title || epic.title || 'Updated Epic'}`;
+                    titleElement.style.color = '#856404';
+                  }
+                  
+                  if (descElement) {
+                    descElement.innerHTML = `<strong>Description:</strong> ${epic.epic_description || epic.description || 'Epic updated via chat'}`;
+                  }
+                  
+                  // Add modification indicator
+                  let indicator = epicCard.querySelector('.chat-modification-indicator');
+                  if (!indicator) {
+                    indicator = document.createElement('div');
+                    indicator.className = 'chat-modification-indicator';
+                    indicator.style.cssText = 'background: rgba(255, 193, 7, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px;';
+                    indicator.innerHTML = '<small style="color: #856404; font-weight: 600;">✏️ Updated via Epic Chat</small>';
+                    epicCard.insertBefore(indicator, epicCard.lastElementChild.previousElementSibling);
+                  }
+                }
+                
+                showNotification(`Updated ${epicsToUpdate} existing epics via chat`, 'info');
+              } else {
+                // No existing epics to update, provide guidance
+                showNotification('No existing epics found to update. Please create epics first through the main workflow.', 'warning');
+              }
             }
+            
+            scrollToEpicsSection();
+            return;
           }
         }
       } catch (e) {
-        console.log('Response is not JSON, treating as text update');
+        console.log('Not JSON format, treating as text guidance');
       }
 
-      // If not JSON, add as a general chat response (preserve existing epics)
-      const chatUpdateCard = `
-        <div class="epic-card" style="border-left: 4px solid #6366f1; background: linear-gradient(135deg, #f0f0ff 0%, #e0e7ff 100%);" data-chat-update="true">
-          <h5 style="color: #6366f1;">💬 Epic Agent Response</h5>
-          <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #e0e7ff;">
-            <div style="max-height: 200px; overflow-y: auto;">
-              <pre style="white-space: pre-wrap; font-family: inherit; margin: 0; color: #374151; line-height: 1.5; font-size: 14px;">${agentResponse}</pre>
-            </div>
+      // DEFAULT: If not JSON and epics exist, provide guidance/commentary instead of adding content
+      if (existingEpicsCount > 0) {
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'epic-card';
+        commentDiv.style.cssText = 'border-left: 4px solid #6c757d; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);';
+        commentDiv.setAttribute('data-chat-update', 'true');
+        commentDiv.innerHTML = `
+          <h5 style="color: #6c757d;">💬 Epic Chat Guidance</h5>
+          <div style="background: rgba(108, 117, 125, 0.1); padding: 12px; border-radius: 4px; margin: 8px 0;">
+            <p style="margin: 0; white-space: pre-wrap;">${escapeHtml(agentResponse)}</p>
           </div>
-          <div style="background: rgba(99, 102, 241, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
-            <small style="color: #6366f1; font-weight: 600;">🕒 ${new Date().toLocaleString()}</small>
-            <small style="color: #6366f1; opacity: 0.8;">Existing epics preserved</small>
+          <div style="background: rgba(108, 117, 125, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px;">
+            <small style="color: #6c757d; font-weight: 600;">🎯 Feedback & Suggestions for Existing Epics</small>
           </div>
-        </div>
-      `;
-
-      // Add the chat response at the top, preserving existing epics
-      epicsContainer.insertAdjacentHTML('afterbegin', chatUpdateCard);
-      showNotification('Chat response added (existing epics preserved)', 'success');
-      scrollToEpicsSection();
+        `;
+        
+        epicsContainer.insertAdjacentElement('afterbegin', commentDiv);
+        showNotification('Epic Agent provided feedback for your existing epics', 'info');
+        scrollToEpicsSection();
+      } else {
+        showNotification('No existing epics found. Please create epics first through the main workflow.', 'warning');
+      }
     }
   }
+
   function scrollToEpicsSection() {
     const epicsContainer = document.getElementById('epics-container');
     if (epicsContainer) {
@@ -1809,6 +2030,587 @@
       }
     }
   }
+
+  // Debugging function to inspect user stories
+  function debugUserStories() {
+    console.log('=== USER STORIES DEBUG ===');
+    const container = document.getElementById('user-stories-container');
+    if (!container) {
+      console.log('User stories container not found');
+      return;
+    }
+    
+    console.log('Container HTML length:', container.innerHTML.length);
+    console.log('Container content preview:', container.innerHTML.substring(0, 500) + '...');
+    
+    const allRadios = container.querySelectorAll('input[type="radio"]');
+    console.log(`Found ${allRadios.length} radio buttons in user stories`);
+    
+    allRadios.forEach((radio, index) => {
+      console.log(`Radio ${index + 1}:`, {
+        name: radio.name,
+        value: radio.value,
+        id: radio.id,
+        dataName: radio.getAttribute('data-name'),
+        dataDescription: radio.getAttribute('data-description'),
+        checked: radio.checked
+      });
+    });
+    
+    const checked = container.querySelector('input[type="radio"]:checked');
+    console.log('Currently checked radio:', checked);
+    
+    console.log('=== END USER STORIES DEBUG ===');
+  }
+  
+  // Make it available globally for manual debugging
+  window.debugUserStories = debugUserStories;
+
+  // User Story Chat Bot functionality
+  let userStoryChatHistory = [];
+  let isUserStoryChatOpen = false;
+  let hasSystemInfo = false;
+
+  function toggleUserStoryChat() {
+    const panel = document.getElementById('user-story-chat-panel');
+    const widget = document.getElementById('user-story-chat-widget');
+    
+    if (isUserStoryChatOpen) {
+      // Close chat
+      widget.classList.add('closing');
+      panel.classList.remove('show');
+      setTimeout(() => {
+        panel.style.display = 'none';
+        widget.classList.remove('closing');
+        isUserStoryChatOpen = false;
+      }, 300);
+    } else {
+      // Open chat
+      panel.style.display = 'flex';
+      widget.classList.add('opening');
+      setTimeout(() => {
+        panel.classList.add('show');
+        widget.classList.remove('opening');
+        isUserStoryChatOpen = true;
+        // Load chat history and check system info
+        loadUserStoryChatHistory();
+        checkSystemInfo();
+        setTimeout(() => {
+          document.getElementById('user-story-chat-input')?.focus();
+        }, 100);
+      }, 10);
+    }
+  }
+
+  function openUserStoryChat() {
+    if (!isUserStoryChatOpen) {
+      toggleUserStoryChat();
+    }
+  }
+
+  function closeUserStoryChat() {
+    if (isUserStoryChatOpen) {
+      toggleUserStoryChat();
+    }
+  }
+
+  function clearUserStoryChat() {
+    if (confirm('Are you sure you want to clear the chat history?')) {
+      fetch('/user-story-chat-clear', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          userStoryChatHistory = [];
+          updateUserStoryChatDisplay();
+          showNotification('Chat history cleared', 'success');
+        } else {
+          showNotification('Failed to clear chat history: ' + (data.error || 'Unknown error'), 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error clearing chat:', error);
+        showNotification('Failed to clear chat history', 'error');
+      });
+    }
+  }
+
+  function loadUserStoryChatHistory() {
+    fetch('/user-story-chat-history')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          userStoryChatHistory = data.chat_history || [];
+          hasSystemInfo = data.has_system_info || false;
+          updateUserStoryChatDisplay();
+          updateSystemInfoStatus();
+          
+          // Show session info if there's chat history
+          if (userStoryChatHistory.length > 0) {
+            showNotification('User Story Chat session loaded. Sessions auto-clear after 30 minutes of inactivity.', 'info');
+          }
+        } else {
+          console.error('Failed to load User Story Chat history:', data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error loading User Story Chat history:', error);
+      });
+  }
+
+  function checkSystemInfo() {
+    fetch('/get-system-info')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          hasSystemInfo = data.has_system_info;
+          updateSystemInfoStatus();
+        }
+      })
+      .catch(error => {
+        console.error('Error checking system info:', error);
+      });
+  }
+
+  function updateSystemInfoStatus() {
+    const statusElement = document.getElementById('user-story-status');
+    if (statusElement) {
+      if (hasSystemInfo) {
+        statusElement.textContent = 'Online • System mapping enabled';
+        statusElement.style.color = '#22c55e';
+      } else {
+        statusElement.textContent = 'Online • Upload system info for mapping';
+        statusElement.style.color = 'rgba(255, 255, 255, 0.8)';
+      }
+    }
+  }
+
+  function showSystemInfoUpload() {
+    const uploadSection = document.getElementById('system-info-upload');
+    if (uploadSection) {
+      uploadSection.style.display = 'block';
+    }
+  }
+
+  function hideSystemInfoUpload() {
+    const uploadSection = document.getElementById('system-info-upload');
+    if (uploadSection) {
+      uploadSection.style.display = 'none';
+    }
+  }
+
+  function uploadSystemInfo(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const statusDiv = document.getElementById('system-info-status');
+    statusDiv.style.display = 'block';
+    statusDiv.className = 'system-status';
+    statusDiv.innerHTML = 'Uploading system information...';
+
+    fetch('/upload-system-info', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        statusDiv.className = 'system-status success';
+        statusDiv.innerHTML = `✅ ${data.message}<br><small>Preview: ${data.preview.substring(0, 100)}...</small>`;
+        hasSystemInfo = true;
+        updateSystemInfoStatus();
+        showNotification('System information uploaded successfully', 'success');
+        setTimeout(() => {
+          hideSystemInfoUpload();
+        }, 2000);
+      } else {
+        statusDiv.className = 'system-status error';
+        statusDiv.innerHTML = `❌ ${data.error}`;
+        showNotification('Failed to upload system information', 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Error uploading system info:', error);
+      statusDiv.className = 'system-status error';
+      statusDiv.innerHTML = '❌ Upload failed. Please try again.';
+      showNotification('Failed to upload system information', 'error');
+    });
+
+    // Reset file input
+    input.value = '';
+  }
+
+  function sendUserStoryChatMessage() {
+    const input = document.getElementById('user-story-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) {
+      showNotification('Please enter a message', 'warning');
+      return;
+    }
+
+    // Show loading state
+    const sendBtn = document.querySelector('#user-story-chat-panel .send-btn');
+    const originalHTML = sendBtn.innerHTML;
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = `
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    `;
+
+    // Clear input immediately
+    input.value = '';
+    updateUserStoryCharCounter();
+
+    // Add user message to display immediately
+    addUserStoryMessageToDisplay('user', message);
+
+    // Show typing indicator
+    showUserStoryTypingIndicator();
+
+    // Send message to backend
+    fetch('/user-story-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: message })
+    })
+    .then(response => response.json())
+    .then(data => {
+      hideUserStoryTypingIndicator();
+      
+      if (data.success) {
+        userStoryChatHistory = data.chat_history || [];
+        hasSystemInfo = data.has_system_info || false;
+        updateUserStoryChatDisplay();
+        updateSystemInfoStatus();
+        
+        // Update the main User Stories section with the latest response
+        updateUserStoriesSection(data.response);
+        
+        // Scroll to bottom
+        const chatMessages = document.getElementById('user-story-chat-messages');
+        setTimeout(() => {
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 100);
+      } else {
+        showNotification('Failed to send message: ' + (data.error || 'Unknown error'), 'error');
+        // Remove the user message we added optimistically
+        removeLastUserStoryMessage();
+      }
+    })
+    .catch(error => {
+      hideUserStoryTypingIndicator();
+      console.error('Error sending message:', error);
+      showNotification('Failed to send message', 'error');
+      removeLastUserStoryMessage();
+    })
+    .finally(() => {
+      // Reset button state
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = originalHTML;
+    });
+  }
+
+  function updateUserStoryChatDisplay() {
+    const chatMessages = document.getElementById('user-story-chat-messages');
+    
+    if (userStoryChatHistory.length === 0) {
+      chatMessages.innerHTML = `
+        <div class="welcome-message">
+          <div class="message-bubble agent-bubble">
+            <div class="message-content">
+              <span class="greeting">📋 Welcome to User Story Bot!</span>
+              <p>I can help you with:</p>
+              <ul>
+                <li>✍️ Creating detailed user stories</li>
+                <li>🎯 Defining acceptance criteria</li>
+                <li>🏗️ Mapping stories to systems</li>
+                <li>📊 Organizing story backlogs</li>
+              </ul>
+              <p>💡 <strong>Tip:</strong> Upload system information to automatically map user stories to the correct systems!</p>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    userStoryChatHistory.forEach((msg, index) => {
+      const isUser = msg.role === 'user';
+      const bubbleClass = isUser ? 'user-bubble' : 'agent-bubble';
+      
+      // Check if this is an agent message that might have updated the user stories section
+      const hasUserStoryUpdate = !isUser && (
+        msg.message.toLowerCase().includes('user story') || 
+        msg.message.toLowerCase().includes('story') ||
+        msg.message.toLowerCase().includes('requirement') ||
+        msg.message.toLowerCase().includes('system')
+      );
+      
+      html += `
+        <div class="message-bubble ${bubbleClass}">
+          <div class="message-content">${escapeHtml(msg.message)}</div>
+          ${hasUserStoryUpdate ? `
+            <div class="epic-update-indicator">
+              <span class="update-badge">📋 User Stories Updated</span>
+              <button class="view-update-btn" onclick="scrollToUserStoriesSection()">View Changes</button>
+            </div>
+          ` : ''}
+          <span class="message-time">${msg.timestamp}</span>
+        </div>
+      `;
+    });
+    
+    chatMessages.innerHTML = html;
+    setTimeout(() => {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 50);
+  }
+
+  function addUserStoryMessageToDisplay(role, message) {
+    const chatMessages = document.getElementById('user-story-chat-messages');
+    const timestamp = new Date().toLocaleString();
+    
+    // Remove welcome message if it exists
+    const welcomeMsg = chatMessages.querySelector('.welcome-message');
+    if (welcomeMsg) {
+      welcomeMsg.remove();
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message-bubble ${role === 'user' ? 'user-bubble' : 'agent-bubble'}`;
+    messageDiv.innerHTML = `
+      <div class="message-content">${escapeHtml(message)}</div>
+      <span class="message-time">${timestamp}</span>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function removeLastUserStoryMessage() {
+    const chatMessages = document.getElementById('user-story-chat-messages');
+    const userMessages = chatMessages.querySelectorAll('.user-bubble');
+    if (userMessages.length > 0) {
+      userMessages[userMessages.length - 1].remove();
+    }
+  }
+
+  function showUserStoryTypingIndicator() {
+    const chatMessages = document.getElementById('user-story-chat-messages');
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message-bubble agent-bubble typing-indicator-message';
+    typingDiv.innerHTML = `
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    `;
+    typingDiv.id = 'user-story-typing-indicator';
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function hideUserStoryTypingIndicator() {
+    const indicator = document.getElementById('user-story-typing-indicator');
+    if (indicator) {
+      indicator.remove();
+    }
+  }
+
+  function updateUserStoryCharCounter() {
+    const input = document.getElementById('user-story-chat-input');
+    const counter = document.getElementById('user-story-char-count');
+    if (input && counter) {
+      counter.textContent = input.value.length;
+      
+      // Change color based on usage
+      const percentage = input.value.length / 2000;
+      if (percentage > 0.9) {
+        counter.style.color = '#ef4444';
+      } else if (percentage > 0.7) {
+        counter.style.color = '#f59e0b';
+      } else {
+        counter.style.color = '#9ca3af';
+      }
+    }
+  }
+
+  function updateUserStoriesSection(agentResponse) {
+    const userStoriesContainer = document.getElementById('user-stories-container');
+    if (!userStoriesContainer) {
+      console.warn('User Stories container not found');
+      return;
+    }
+
+    // Try to parse if it's JSON format with user stories
+    try {
+      const jsonMatch = agentResponse.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const storyData = JSON.parse(jsonMatch[0]);
+        
+        if (Array.isArray(storyData) && storyData.length > 0) {
+          // Format user stories as a table with System Name column
+          let formattedHTML = `
+            <div class="table-responsive">
+              <table class="table table-striped table-hover">
+                <thead class="thead-dark">
+                  <tr>
+                    <th>Select</th>
+                    <th>User Story</th>
+                    <th>Description</th>
+                    <th>Priority</th>
+                    <th>Acceptance Criteria</th>
+                    ${hasSystemInfo ? '<th>System Name</th>' : ''}
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          
+          storyData.forEach((story, index) => {
+            const storyName = story.name || story.title || story.user_story || `User Story ${index + 1}`;
+            const storyDescription = story.description || story.goal || story.details || 'No description available';
+            const priority = story.priority || 'Medium';
+            const systemName = story.system_name || story.system || 'Unassigned';
+            
+            // Format acceptance criteria
+            let acceptanceCriteria = '';
+            if (story.acceptance_criteria && Array.isArray(story.acceptance_criteria)) {
+              acceptanceCriteria = '<ul>' + story.acceptance_criteria.map(criteria => `<li>${criteria}</li>`).join('') + '</ul>';
+            } else if (story.acceptance_criteria) {
+              acceptanceCriteria = story.acceptance_criteria;
+            } else {
+              acceptanceCriteria = 'To be defined';
+            }
+            
+            // Priority badge styling
+            let priorityClass = 'badge-secondary';
+            if (priority.toLowerCase() === 'high') {
+              priorityClass = 'badge-danger';
+            } else if (priority.toLowerCase() === 'medium') {
+              priorityClass = 'badge-warning';
+            } else if (priority.toLowerCase() === 'low') {
+              priorityClass = 'badge-success';
+            }
+            
+            // Escape HTML for data attributes
+            const escapedName = storyName.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const escapedDescription = storyDescription.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            
+            formattedHTML += `
+              <tr>
+                <td>
+                  <input type="radio" name="user_story_id" value="story_${index + 1}" 
+                         data-name="${escapedName}" 
+                         data-description="${escapedDescription}"
+                         data-system="${systemName}">
+                </td>
+                <td><strong>${storyName}</strong></td>
+                <td>${storyDescription}</td>
+                <td><span class="badge ${priorityClass}">${priority}</span></td>
+                <td>${acceptanceCriteria}</td>
+                ${hasSystemInfo ? `<td><span class="badge badge-info">${systemName}</span></td>` : ''}
+              </tr>
+            `;
+          });
+          
+          formattedHTML += `
+                </tbody>
+              </table>
+            </div>
+          `;
+          
+          userStoriesContainer.innerHTML = formattedHTML;
+          
+          // Show the user stories section
+          const userStoriesSection = document.getElementById('user-stories-section');
+          if (userStoriesSection) {
+            userStoriesSection.classList.remove('hidden');
+          }
+          
+          showNotification(`Generated ${storyData.length} user stories${hasSystemInfo ? ' with system mapping' : ''}`, 'success');
+          scrollToUserStoriesSection();
+          return;
+        }
+      }
+    } catch (e) {
+      console.log('Not JSON format, treating as text response');
+    }
+
+    // If not parseable JSON, add as guidance
+    showNotification('User Story Bot provided guidance. Use the main workflow to generate structured user stories.', 'info');
+  }
+
+  function scrollToUserStoriesSection() {
+    const userStoriesSection = document.getElementById('user-stories-section');
+    if (userStoriesSection) {
+      userStoriesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      // Highlight the user stories section
+      userStoriesSection.style.transition = 'all 0.3s ease';
+      userStoriesSection.style.boxShadow = '0 0 20px rgba(240, 147, 251, 0.3)';
+      setTimeout(() => {
+        userStoriesSection.style.boxShadow = '';
+      }, 2000);
+    }
+  }
+
+  // Enhanced event handlers for User Story Chat
+  document.addEventListener('DOMContentLoaded', function() {
+    const userStoryChatInput = document.getElementById('user-story-chat-input');
+    if (userStoryChatInput) {
+      // Handle Enter key
+      userStoryChatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendUserStoryChatMessage();
+        }
+      });
+      
+      // Auto-resize textarea
+      userStoryChatInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+        updateUserStoryCharCounter();
+      });
+      
+      // Character counter
+      userStoryChatInput.addEventListener('input', updateUserStoryCharCounter);
+    }
+
+    // Close chat when clicking outside
+    document.addEventListener('click', function(e) {
+      const chatWidget = document.getElementById('user-story-chat-widget');
+      const chatPanel = document.getElementById('user-story-chat-panel');
+      
+      if (isUserStoryChatOpen && chatWidget && chatPanel && 
+          !chatWidget.contains(e.target)) {
+        closeUserStoryChat();
+      }
+    });
+
+    // Prevent closing when clicking inside the chat panel
+    const userStoryChatPanel = document.getElementById('user-story-chat-panel');
+    if (userStoryChatPanel) {
+      userStoryChatPanel.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+    }
+  });
 </script>
 
 <!-- Epic Chat Floating Widget -->
@@ -1896,6 +2698,117 @@
   </div>
 </div>
 
+<!-- User Story Chat Bot Widget -->
+<div id="user-story-chat-widget" class="chat-widget user-story-widget">
+  <!-- Chat Toggle Button -->
+  <div id="user-story-chat-toggle-btn" class="chat-toggle user-story-toggle" onclick="toggleUserStoryChat()">
+    <div class="chat-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
+        <path d="M7 10H17V12H7V10Z" fill="currentColor"/>
+        <path d="M7 14H17V16H7V14Z" fill="currentColor"/>
+        <path d="M7 6H17V8H7V6Z" fill="currentColor"/>
+      </svg>
+    </div>
+    <div class="chat-badge" id="user-story-chat-badge" style="display: none;">1</div>
+  </div>
+  
+  <!-- Chat Panel -->
+  <div id="user-story-chat-panel" class="chat-panel" style="display: none;">
+    <div class="chat-header">
+      <div class="chat-header-content">
+        <div class="agent-avatar">
+          <div class="avatar-gradient user-story-avatar">
+            <span class="avatar-text">US</span>
+          </div>
+        </div>
+        <div class="agent-info">
+          <h6 class="agent-name">User Story Bot</h6>
+          <span class="agent-status" id="user-story-status">Online • Ready to help</span>
+        </div>
+      </div>
+      <div class="chat-actions">
+        <button class="action-btn" onclick="showSystemInfoUpload()" title="Upload system info">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button class="action-btn" onclick="clearUserStoryChat()" title="Clear chat">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 9V19H8V9H16ZM14.5 3H9.5L8.5 4H5V6H19V4H15.5L14.5 3ZM18 7H6V19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7Z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button class="action-btn minimize-btn" onclick="toggleUserStoryChat()" title="Minimize">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 13H5V11H19V13Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- System Info Upload Area -->
+    <div id="system-info-upload" class="system-info-section" style="display: none;">
+      <div class="upload-header">
+        <h6>Upload System Information</h6>
+        <button class="close-upload-btn" onclick="hideSystemInfoUpload()">×</button>
+      </div>
+      <div class="upload-content">
+        <div class="file-upload-area" onclick="document.getElementById('system-file-input').click()">
+          <div class="upload-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="#667eea"/>
+            </svg>
+          </div>
+          <p>Click to upload system information</p>
+          <span class="upload-hint">Supports TXT, JSON, CSV files (max 10MB)</span>
+        </div>
+        <input type="file" id="system-file-input" accept=".txt,.json,.csv" style="display: none;" onchange="uploadSystemInfo(this)">
+        <div id="system-info-status" class="system-status" style="display: none;"></div>
+      </div>
+    </div>
+    
+    <div class="chat-messages-container">
+      <div id="user-story-chat-messages" class="chat-messages">
+        <div class="welcome-message">
+          <div class="message-bubble agent-bubble">
+            <div class="message-content">
+              <span class="greeting">📋 Welcome to User Story Bot!</span>
+              <p>I can help you with:</p>
+              <ul>
+                <li>✍️ Creating detailed user stories</li>
+                <li>🎯 Defining acceptance criteria</li>
+                <li>🏗️ Mapping stories to systems</li>
+                <li>📊 Organizing story backlogs</li>
+              </ul>
+              <p>💡 <strong>Tip:</strong> Upload system information to automatically map user stories to the correct systems!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="chat-input-area">
+      <div class="input-container">
+        <textarea 
+          id="user-story-chat-input" 
+          class="chat-input" 
+          placeholder="Describe the user stories you need..."
+          rows="1"
+          maxlength="2000"></textarea>
+        <button class="send-btn" onclick="sendUserStoryChatMessage()" title="Send message">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-footer">
+        <span class="input-hint">Press Enter to send • Shift+Enter for new line</span>
+        <span class="char-counter"><span id="user-story-char-count">0</span>/2000</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <style>
 /* Epic Chat Floating Widget Styles */
 .chat-widget {
@@ -1970,7 +2883,7 @@
   position: absolute;
   bottom: 80px;
   right: 0;
-  width: 380px;
+  width: 480px;
   height: 520px;
   background: white;
   border-radius: 20px;
@@ -1981,6 +2894,22 @@
   transform: translateY(10px) scale(0.95);
   opacity: 0;
   transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Responsive width adjustments */
+@media (max-width: 768px) {
+  .chat-panel {
+    width: calc(100vw - 40px);
+    right: 20px;
+    left: 20px;
+  }
+}
+
+@media (max-width: 520px) {
+  .chat-panel {
+    bottom: 20px;
+    height: calc(100vh - 120px);
+  }
 }
 
 .chat-panel.show {
@@ -2387,6 +3316,163 @@
     transform: translateY(20px) scale(0.9);
   }
 }
+
+/* User Story Chat Bot Specific Styles */
+.user-story-widget {
+  bottom: 20px;
+  right: 100px; /* Position next to Epic Chat */
+}
+
+.user-story-toggle {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 8px 32px rgba(240, 147, 251, 0.4);
+}
+
+.user-story-toggle:hover {
+  box-shadow: 0 12px 48px rgba(240, 147, 251, 0.6);
+}
+
+.user-story-avatar {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.user-story-widget .chat-header {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.user-story-widget .chat-messages::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.user-story-widget .send-btn {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.user-story-widget .send-btn:hover {
+  box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+}
+
+/* System Info Upload Styles */
+.system-info-section {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 16px 20px;
+}
+
+.upload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.upload-header h6 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.close-upload-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-upload-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.file-upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.file-upload-area:hover {
+  border-color: #f093fb;
+  background: #fef7ff;
+}
+
+.upload-icon {
+  margin-bottom: 8px;
+}
+
+.file-upload-area p {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.system-status {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.system-status.success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.system-status.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Responsive adjustments for User Story Chat */
+@media (max-width: 768px) {
+  .user-story-widget {
+    right: 20px;
+    bottom: 100px; /* Stack vertically on mobile */
+  }
+}
+
+@media (max-width: 520px) {
+  .user-story-widget {
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .user-story-widget .chat-panel {
+    width: calc(100vw - 40px);
+    height: calc(100vh - 120px);
+  }
+}
+
+/* Animation states for User Story Chat */
+.user-story-widget.opening .chat-panel {
+  animation: slideUpFade 0.3s ease-out forwards;
+}
+
+.user-story-widget.closing .chat-panel {
+  animation: slideDownFade 0.3s ease-in forwards;
+}
+
 </style>
 
 </body>

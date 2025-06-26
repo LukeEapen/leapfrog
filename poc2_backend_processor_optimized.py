@@ -1543,6 +1543,11 @@ def approve_epics():
           # Get the current epics content to preserve it
         current_epics = request.form.get("current_epics", "")
         logger.info(f"Current epics content length: {len(current_epics)} characters")
+        
+        # Store current epics in session for Epic Chat context
+        session['current_epics'] = current_epics
+        session.modified = True
+        logger.info("Stored current epics in session for Epic Chat context")
           # Get the selected epic contents (actual epic data)
         selected_epic_contents_str = request.form.get("selected_epic_contents", "{}")
         try:
@@ -1725,6 +1730,15 @@ def user_story_details():
             
             logger.info(f"Successfully processed user story selection: {selected_story_id}")
             
+            # Generate additional data fields for the new UI
+            responsible_systems = "CAPS, CMS"  # Default value, could be enhanced later
+            tagged_requirements = [
+                "F1. Capture Personal Information for New Customer Account",
+                "KDA2. Customer full name",
+                "KDA3. Customer date of birth", 
+                "KDA4. Customer SSN or equivalent"
+            ]
+            
             # Call the acceptance criteria agent
             prompt = f"Generate acceptance criteria for: {story_name}. Description: {selected_story_description}"
             logger.info(f"Processing selected prompt ****Acceptance Criteria Prompt **** : {prompt}")
@@ -1734,8 +1748,30 @@ def user_story_details():
             # Parse criteria (assume response is a bullet list or parse JSON if needed)
             try:
                 acceptance_criteria = json.loads(acceptance_response)
+                if isinstance(acceptance_criteria, list):
+                    # If it's already a list, use it
+                    pass
+                elif isinstance(acceptance_criteria, dict) and 'criteria' in acceptance_criteria:
+                    # If it's a dict with criteria key, extract the list
+                    acceptance_criteria = acceptance_criteria['criteria']
+                else:
+                    # If it's some other format, convert to list
+                    acceptance_criteria = [str(acceptance_criteria)]
             except:
-                acceptance_criteria = acceptance_response.strip().split("\n")
+                # If JSON parsing fails, split by newlines and clean up
+                acceptance_criteria = [
+                    line.strip() 
+                    for line in acceptance_response.strip().split("\n") 
+                    if line.strip() and not line.strip().startswith('#')
+                ]
+                # Remove bullet points and numbering
+                cleaned_criteria = []
+                for criterion in acceptance_criteria:
+                    # Remove common bullet point patterns
+                    criterion = criterion.lstrip('•-*123456789. ').strip()
+                    if criterion:
+                        cleaned_criteria.append(criterion)
+                acceptance_criteria = cleaned_criteria
 
 
             logger.info(f"Processing selected prompt ****Acceptance Criteria **** : {acceptance_criteria}")
@@ -1751,7 +1787,9 @@ def user_story_details():
                         user_story_name=story_name,
                         user_story_description=selected_story_description,
                         priority=priority,
+                        responsible_systems=responsible_systems,
                         acceptance_criteria=acceptance_criteria,
+                        tagged_requirements=tagged_requirements,
                         story_id=selected_story_id
                     ),
                     "message": "User story processed successfully"
@@ -1764,7 +1802,9 @@ def user_story_details():
                 user_story_name=story_name,
                 user_story_description=selected_story_description,
                 priority=priority,
+                responsible_systems=responsible_systems,
                 acceptance_criteria=acceptance_criteria,
+                tagged_requirements=tagged_requirements,
                 story_id=selected_story_id
             )
             
@@ -1784,6 +1824,13 @@ def user_story_details():
                 priority = session_data.get('priority', 'High')
                 story_id = session_data.get('story_id', '')
                 acceptance_criteria = session_data.get('acceptance_criteria', [])
+                responsible_systems = session_data.get('responsible_systems', 'CAPS, CMS')
+                tagged_requirements = session_data.get('tagged_requirements', [
+                    "F1. Capture Personal Information for New Customer Account",
+                    "KDA2. Customer full name",
+                    "KDA3. Customer date of birth", 
+                    "KDA4. Customer SSN or equivalent"
+                ])
                 
                 # Clean up session data after use
                 session.pop('current_story', None)
@@ -1805,14 +1852,45 @@ def user_story_details():
                 logger.info(f"Processing story: {final_story_name}")
                 logger.info(f"Description: {final_story_description[:100]}...")
 
+                # Generate additional data fields for the new UI
+                responsible_systems = "CAPS, CMS"  # Default value, could be enhanced later
+                tagged_requirements = [
+                    "F1. Capture Personal Information for New Customer Account",
+                    "KDA2. Customer full name",
+                    "KDA3. Customer date of birth", 
+                    "KDA4. Customer SSN or equivalent"
+                ]
+
                 # Call the acceptance criteria agent
                 prompt = f"Generate acceptance criteria for: {final_story_name}. Description: {final_story_description}"
                 acceptance_response = ask_assistant_from_file_optimized("poc2_agent4_acceptanceCriteria_gen", prompt)
                   # Parse criteria (assume response is a bullet list or parse JSON if needed)
                 try:
                     acceptance_criteria = json.loads(acceptance_response)
+                    if isinstance(acceptance_criteria, list):
+                        # If it's already a list, use it
+                        pass
+                    elif isinstance(acceptance_criteria, dict) and 'criteria' in acceptance_criteria:
+                        # If it's a dict with criteria key, extract the list
+                        acceptance_criteria = acceptance_criteria['criteria']
+                    else:
+                        # If it's some other format, convert to list
+                        acceptance_criteria = [str(acceptance_criteria)]
                 except:
-                    acceptance_criteria = acceptance_response.strip().split("\n")
+                    # If JSON parsing fails, split by newlines and clean up
+                    acceptance_criteria = [
+                        line.strip() 
+                        for line in acceptance_response.strip().split("\n") 
+                        if line.strip() and not line.strip().startswith('#')
+                    ]
+                    # Remove bullet points and numbering
+                    cleaned_criteria = []
+                    for criterion in acceptance_criteria:
+                        # Remove common bullet point patterns
+                        criterion = criterion.lstrip('•-*123456789. ').strip()
+                        if criterion:
+                            cleaned_criteria.append(criterion)
+                    acceptance_criteria = cleaned_criteria
                 
                 user_story_title = final_story_name
                 user_story_description = final_story_description
@@ -1823,7 +1901,9 @@ def user_story_details():
                 user_story_name=user_story_title,
                 user_story_description=user_story_description,
                 priority=priority,
+                responsible_systems=responsible_systems,
                 acceptance_criteria=acceptance_criteria,
+                tagged_requirements=tagged_requirements,
                 story_id=story_id
             )
         
@@ -1842,7 +1922,7 @@ def user_story_details():
 
 @app.route("/epic-chat", methods=["POST"])
 def epic_chat():
-    """Handle Epic Chat interactions with session persistence."""
+    """Handle Epic Chat interactions with session persistence and automatic cleanup."""
     try:
         data = request.get_json()
         if not data:
@@ -1852,32 +1932,113 @@ def epic_chat():
         if not user_message:
             return jsonify({"success": False, "error": "Message cannot be empty"}), 400
         
-        # Initialize chat history in session if not exists
+        # Initialize chat history in session if not exists or if expired
+        current_time = datetime.now()
+        chat_session_timeout = 30 * 60  # 30 minutes in seconds
+        
         if 'epic_chat_history' not in session:
             session['epic_chat_history'] = []
+            session['epic_chat_last_activity'] = current_time.isoformat()
             logger.info("Initialized new Epic Chat session")
+        else:
+            # Check if session has expired (30 minutes of inactivity)
+            last_activity_str = session.get('epic_chat_last_activity')
+            if last_activity_str:
+                try:
+                    last_activity = datetime.fromisoformat(last_activity_str)
+                    time_diff = (current_time - last_activity).total_seconds()
+                    
+                    if time_diff > chat_session_timeout:
+                        # Clear expired session
+                        session['epic_chat_history'] = []
+                        logger.info(f"Cleared expired Epic Chat session (inactive for {time_diff/60:.1f} minutes)")
+                except Exception as e:
+                    logger.warning(f"Error parsing last activity time: {e}")
+                    session['epic_chat_history'] = []
+        
+        # Limit chat history to last 50 messages to prevent session bloat
+        if len(session['epic_chat_history']) > 50:
+            session['epic_chat_history'] = session['epic_chat_history'][-40:]  # Keep last 40 messages
+            logger.info("Trimmed Epic Chat history to prevent session bloat")
+        
+        # Update last activity time
+        session['epic_chat_last_activity'] = current_time.isoformat()
         
         # Add user message to chat history
         session['epic_chat_history'].append({
             "role": "user",
             "message": user_message,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "timestamp": current_time.strftime("%Y-%m-%d %H:%M:%S")
         })
         
-        # Prepare context for Epic Agent
-        chat_context = ""
+        # Get current epics from the frontend request (this is the displayed epics context)
+        current_epics = data.get('current_epics_content', '').strip()
+        
+        # Log the current epics context for debugging
+        logger.info(f"Epic Chat received current epics context: {current_epics[:500]}...")
+        
+        # Format current epics for better context understanding
+        epics_context = current_epics
+        if current_epics:
+            try:
+                # Try to parse as JSON first (structured format from frontend)
+                import json
+                epics_data = json.loads(current_epics)
+                if isinstance(epics_data, list):
+                    epics_context = "CURRENT EPICS (JSON FORMAT):\n" + json.dumps(epics_data, indent=2)
+                else:
+                    epics_context = current_epics
+            except:
+                # If not valid JSON, use as-is (might be HTML content)
+                epics_context = "CURRENT EPICS (HTML/TEXT FORMAT):\n" + current_epics
+        
+        # Prepare context for Epic Agent with focus on updating existing epics
+        chat_context = f"""You are an Epic Agent specializing in refining and improving existing epics. Your primary role is to help users update, correct, and enhance their current epics.
+
+{epics_context if epics_context else 'No epics currently defined. Please ask the user to create epics first through the main workflow.'}
+
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+- DEFAULT BEHAVIOR: Always focus on modifying/updating/correcting the EXISTING epics shown above
+- NEVER create new epics unless the user EXPLICITLY uses clear phrases like:
+  * "add new epic"
+  * "create additional epic" 
+  * "new epic"
+  * "more epics"
+  * "another epic"
+  * "additional epic"
+- When users ask questions, give feedback, or make requests, they want to CHANGE/UPDATE the existing epics, NOT add new ones
+- Provide UPDATED versions of the existing epics that incorporate the user's feedback
+- Keep the same epic IDs and structure when updating
+- If no current epics exist, guide user to the main workflow first
+
+COMMON USER REQUESTS (all should UPDATE existing epics):
+- "Make the epics more detailed" → Update existing epics with more detail
+- "Add acceptance criteria" → Update existing epics to include acceptance criteria
+- "Change the priority" → Update existing epic priorities
+- "The epic needs more clarity" → Update existing epic descriptions
+- "Fix the requirements" → Update existing epic requirements
+- "Improve the user stories" → Update existing epic user story breakdown
+- "These need work" → Update existing epics based on feedback
+
+RESPOND WITH: Updated versions of the EXISTING epics, not new ones.
+
+"""
         if session['epic_chat_history']:
-            chat_context = "Previous conversation:\n"
+            chat_context += "Previous conversation:\n"
             for msg in session['epic_chat_history'][-10:]:  # Last 10 messages for context
                 role = "User" if msg["role"] == "user" else "Assistant"
                 chat_context += f"{role}: {msg['message']}\n"
             chat_context += f"\nLatest user question: {user_message}"
         else:
-            chat_context = user_message
+            chat_context += f"User request: {user_message}"
         
         # Call Epic Agent
         logger.info(f"Calling Epic Agent with message: {user_message[:100]}...")
+        logger.info(f"Epic Agent context length: {len(chat_context)} characters")
         epic_response = ask_assistant_from_file_optimized("poc2_agent2_epic_generator", chat_context)
+        
+        logger.info(f"Epic Agent response length: {len(epic_response)} characters")
+        logger.info(f"Epic Agent response preview: {epic_response[:200]}...")
         
         if epic_response.startswith("Error:"):
             logger.error(f"Epic Agent error: {epic_response}")
@@ -1890,8 +2051,11 @@ def epic_chat():
         session['epic_chat_history'].append({
             "role": "assistant",
             "message": epic_response,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "timestamp": current_time.strftime("%Y-%m-%d %H:%M:%S")
         })
+        
+        # Update last activity time again
+        session['epic_chat_last_activity'] = current_time.isoformat()
         
         # Save session changes
         session.modified = True
@@ -1928,11 +2092,264 @@ def clear_epic_chat():
     try:
         if 'epic_chat_history' in session:
             del session['epic_chat_history']
+        if 'epic_chat_last_activity' in session:
+            del session['epic_chat_last_activity']
         session.modified = True
-        logger.info("Epic Chat history cleared")
+        logger.info("Epic Chat history and activity timestamp cleared")
         return jsonify({"success": True, "message": "Chat history cleared"})
     except Exception as e:
         logger.error(f"Error clearing Epic Chat history: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.route("/user-story-chat", methods=["POST"])
+def user_story_chat():
+    """Handle User Story Chat interactions with system mapping functionality."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No data provided"}), 400
+        
+        user_message = data.get("message", "").strip()
+        if not user_message:
+            return jsonify({"success": False, "error": "Message cannot be empty"}), 400
+        
+        # Initialize chat history in session if not exists or if expired
+        current_time = datetime.now()
+        chat_session_timeout = 30 * 60  # 30 minutes in seconds
+        
+        if 'user_story_chat_history' not in session:
+            session['user_story_chat_history'] = []
+            session['user_story_chat_last_activity'] = current_time.isoformat()
+            logger.info("Initialized new User Story Chat session")
+        else:
+            # Check if session has expired (30 minutes of inactivity)
+            last_activity_str = session.get('user_story_chat_last_activity')
+            if last_activity_str:
+                try:
+                    last_activity = datetime.fromisoformat(last_activity_str)
+                    time_diff = (current_time - last_activity).total_seconds()
+                    
+                    if time_diff > chat_session_timeout:
+                        # Clear expired session
+                        session['user_story_chat_history'] = []
+                        logger.info(f"Cleared expired User Story Chat session (inactive for {time_diff/60:.1f} minutes)")
+                except Exception as e:
+                    logger.warning(f"Error parsing last activity time: {e}")
+                    session['user_story_chat_history'] = []
+        
+        # Limit chat history to last 50 messages to prevent session bloat
+        if len(session['user_story_chat_history']) > 50:
+            session['user_story_chat_history'] = session['user_story_chat_history'][-40:]  # Keep last 40 messages
+            logger.info("Trimmed User Story Chat history to prevent session bloat")
+        
+        # Update last activity time
+        session['user_story_chat_last_activity'] = current_time.isoformat()
+        
+        # Add user message to chat history
+        session['user_story_chat_history'].append({
+            "role": "user",
+            "message": user_message,
+            "timestamp": current_time.strftime("%Y-%m-%d %H:%M:%S")
+        })
+        
+        # Get system information from session (if available)
+        system_info = session.get('system_info', '')
+        
+        # Prepare context for User Story Agent with system mapping
+        chat_context = f"""You are a User Story Agent helping to create, refine, and map user stories to specific systems.
+
+SYSTEM INFORMATION:
+{system_info if system_info else 'No system information provided. User stories will not include system mapping.'}
+
+INSTRUCTIONS:
+- Create detailed user stories following best practices
+- If system information is available, map each user story to the appropriate system based on the functionality described
+- Include a "System Name" for each user story when system mapping is possible
+- Format user stories with: Title, Description, Acceptance Criteria, and System Name (if applicable)
+- Focus on creating clear, actionable user stories that deliver business value
+
+"""
+        if session['user_story_chat_history']:
+            chat_context += "Previous conversation:\n"
+            for msg in session['user_story_chat_history'][-10:]:  # Last 10 messages for context
+                role = "User" if msg["role"] == "user" else "Assistant"
+                chat_context += f"{role}: {msg['message']}\n"
+            chat_context += f"\nLatest user question: {user_message}"
+        else:
+            chat_context += f"User request: {user_message}"
+        
+        # Call User Story Agent (using same agent as Epic for consistency)
+        logger.info(f"Calling User Story Agent with message: {user_message[:100]}...")
+        story_response = ask_assistant_from_file_optimized("poc2_agent3_basic_user_story", chat_context)
+        
+        if story_response.startswith("Error:"):
+            logger.error(f"User Story Agent error: {story_response}")
+            return jsonify({
+                "success": False,
+                "error": "Failed to get response from User Story Agent"
+            }), 500
+        
+        # Add assistant response to chat history
+        session['user_story_chat_history'].append({
+            "role": "assistant",
+            "message": story_response,
+            "timestamp": current_time.strftime("%Y-%m-%d %H:%M:%S")
+        })
+        
+        # Update last activity time again
+        session['user_story_chat_last_activity'] = current_time.isoformat()
+        
+        # Save session changes
+        session.modified = True
+        
+        logger.info(f"User Story Chat response generated successfully, history length: {len(session['user_story_chat_history'])}")
+        
+        return jsonify({
+            "success": True,
+            "response": story_response,
+            "chat_history": session['user_story_chat_history'],
+            "has_system_info": bool(system_info)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in User Story Chat: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.route("/user-story-chat-history", methods=["GET"])
+def get_user_story_chat_history():
+    """Get the current User Story Chat history from session."""
+    try:
+        chat_history = session.get('user_story_chat_history', [])
+        system_info = session.get('system_info', '')
+        return jsonify({
+            "success": True,
+            "chat_history": chat_history,
+            "has_system_info": bool(system_info)
+        })
+    except Exception as e:
+        logger.error(f"Error getting User Story Chat history: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.route("/user-story-chat-clear", methods=["POST"])
+def clear_user_story_chat():
+    """Clear the User Story Chat history from session."""
+    try:
+        if 'user_story_chat_history' in session:
+            del session['user_story_chat_history']
+        if 'user_story_chat_last_activity' in session:
+            del session['user_story_chat_last_activity']
+        session.modified = True
+        logger.info("User Story Chat history and activity timestamp cleared")
+        return jsonify({"success": True, "message": "Chat history cleared"})
+    except Exception as e:
+        logger.error(f"Error clearing User Story Chat history: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.route("/upload-system-info", methods=["POST"])
+def upload_system_info():
+    """Upload and process system information file for user story mapping."""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"success": False, "error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"success": False, "error": "No file selected"}), 400
+        
+        # Check file size (limit to 10MB)
+        file.seek(0, 2)  # Seek to end
+        file_size = file.tell()
+        file.seek(0)  # Reset to beginning
+        
+        if file_size > 10 * 1024 * 1024:  # 10MB limit
+            return jsonify({"success": False, "error": "File size too large (max 10MB)"}), 400
+        
+        # Read and process file content
+        content = ""
+        filename = file.filename.lower()
+        
+        try:
+            if filename.endswith('.txt'):
+                content = file.read().decode('utf-8')
+            elif filename.endswith('.json'):
+                json_data = json.load(file)
+                content = json.dumps(json_data, indent=2)
+            elif filename.endswith('.csv'):
+                content = file.read().decode('utf-8')
+            else:
+                # Try to read as text for other formats
+                content = file.read().decode('utf-8')
+        except UnicodeDecodeError:
+            return jsonify({"success": False, "error": "File encoding not supported. Please use UTF-8 encoded files."}), 400
+        except json.JSONDecodeError:
+            return jsonify({"success": False, "error": "Invalid JSON file format"}), 400
+        
+        if not content.strip():
+            return jsonify({"success": False, "error": "File appears to be empty"}), 400
+        
+        # Store system information in session
+        session['system_info'] = content
+        session['system_info_filename'] = file.filename
+        session['system_info_uploaded'] = datetime.now().isoformat()
+        session.modified = True
+        
+        # Parse basic system information for preview
+        lines = content.split('\n')[:10]  # First 10 lines for preview
+        preview = '\n'.join(lines)
+        if len(content.split('\n')) > 10:
+            preview += "\n... (file continues)"
+        
+        logger.info(f"System information uploaded: {file.filename} ({file_size} bytes)")
+        
+        return jsonify({
+            "success": True,
+            "message": f"System information uploaded successfully: {file.filename}",
+            "filename": file.filename,
+            "size": file_size,
+            "preview": preview[:500]  # Limit preview to 500 chars
+        })
+        
+    except Exception as e:
+        logger.error(f"Error uploading system info: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": "Failed to upload system information"}), 500
+
+@app.route("/get-system-info", methods=["GET"])
+def get_system_info():
+    """Get current system information status."""
+    try:
+        system_info = session.get('system_info', '')
+        filename = session.get('system_info_filename', '')
+        uploaded_time = session.get('system_info_uploaded', '')
+        
+        return jsonify({
+            "success": True,
+            "has_system_info": bool(system_info),
+            "filename": filename,
+            "uploaded_time": uploaded_time,
+            "preview": system_info[:500] if system_info else ""
+        })
+    except Exception as e:
+        logger.error(f"Error getting system info: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.route("/clear-system-info", methods=["POST"])
+def clear_system_info():
+    """Clear uploaded system information."""
+    try:
+        if 'system_info' in session:
+            del session['system_info']
+        if 'system_info_filename' in session:
+            del session['system_info_filename']
+        if 'system_info_uploaded' in session:
+            del session['system_info_uploaded']
+        session.modified = True
+        
+        logger.info("System information cleared from session")
+        return jsonify({"success": True, "message": "System information cleared"})
+    except Exception as e:
+        logger.error(f"Error clearing system info: {str(e)}")
         return jsonify({"success": False, "error": "Internal server error"}), 500
 
 @app.errorhandler(404)
