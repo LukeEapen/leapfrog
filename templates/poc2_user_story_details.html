@@ -238,7 +238,11 @@
 
     <!-- User Story Header -->
     <div class="story-header">
-      User story: {{ user_story_name or 'Capture personal information during onboarding' }}
+      {% if multiple_stories %}
+        Multiple User Stories: {{ story_count }} stories selected
+      {% else %}
+        User story: {{ user_story_name or 'Capture personal information during onboarding' }}
+      {% endif %}
     </div>
 
     <!-- Main Content -->
@@ -269,7 +273,21 @@
         </button>
       </div>
       <div class="section-content">
-        {{ user_story_description or 'As a new borrower, I want to input my personal information (e.g., name, SSN) so that the system can accurately create my customer profile and initiate the onboarding process. This ensures that downstream verification steps (e.g. KYC, credit checks) can proceed without manual data correction or re-entry.' }}
+        {% if multiple_stories %}
+          <!-- Multiple Stories Summary -->
+          <div class="multiple-stories-summary">
+            <h6>Selected Stories ({{ story_count }}):</h6>
+            {% for story in stories %}
+              <div class="story-item" style="margin-bottom: 12px; padding: 8px; border-left: 3px solid #dc3545; background: #f8f9fa;">
+                <strong>{{ story.name }}</strong>
+                <p style="margin: 4px 0; font-size: 14px; color: #666;">{{ story.description }}</p>
+                <small style="color: #999;">Priority: {{ story.priority }} | System: {{ story.system }}</small>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          {{ user_story_description or 'As a new borrower, I want to input my personal information (e.g., name, SSN) so that the system can accurately create my customer profile and initiate the onboarding process. This ensures that downstream verification steps (e.g. KYC, credit checks) can proceed without manual data correction or re-entry.' }}
+        {% endif %}
       </div>
     </div>
 

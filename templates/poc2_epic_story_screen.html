@@ -328,7 +328,7 @@
         <input type="hidden" name="selected_story_description" id="selected_story_description">
         <button type="submit" class="footer-btn" id="proceedBtn">
           <span class="btn-spinner" id="proceedSpinner"></span>
-          <span class="btn-text">Proceed with selection</span>
+          <span class="btn-text">Proceed with selection(s)</span>
           <span class="btn-timer" id="proceedTimer"></span>
         </button>
     </form>
@@ -740,64 +740,107 @@
       console.log('proceedBtn parent:', proceedBtn.parentElement);
       console.log('proceedBtn is connected to DOM:', proceedBtn.isConnected);
     }
-      // Debug: Check what radio buttons exist
-    const allRadios = document.querySelectorAll('input[type="radio"]');
-    console.log('All radio buttons found:', allRadios);
-    allRadios.forEach((radio, index) => {
-      console.log(`Radio ${index}: name="${radio.name}", value="${radio.value}", checked=${radio.checked}`);
-      console.log(`  - data-name: "${radio.getAttribute('data-name')}"`);
-      console.log(`  - data-description: "${radio.getAttribute('data-description')}"`);
+      // Debug: Check what checkboxes exist
+    const allCheckboxes = document.querySelectorAll('input[type="checkbox"][name="user_story_ids"]');
+    console.log('All user story checkboxes found:', allCheckboxes);
+    allCheckboxes.forEach((checkbox, index) => {
+      console.log(`Checkbox ${index}: name="${checkbox.name}", value="${checkbox.value}", checked=${checkbox.checked}`);
+      console.log(`  - data-name: "${checkbox.getAttribute('data-name')}"`);
+      console.log(`  - data-description: "${checkbox.getAttribute('data-description')}"`);
     });
     
-    // Try multiple selectors to find the checked user story
-    let checked = document.querySelector('input[name="user_story_id"]:checked');
+    // Get all checked user story checkboxes
+    const checkedBoxes = document.querySelectorAll('input[name="user_story_ids"]:checked');
     
-    // Fallback: try other possible names
-    if (!checked) {
-      checked = document.querySelector('input[name="story_id"]:checked');
+    // Fallback: try other possible selectors
+    if (checkedBoxes.length === 0) {
+      const fallbackChecked = document.querySelectorAll('#user-stories-container input[type="checkbox"]:checked');
+      console.log('Using fallback selector, found:', fallbackChecked.length, 'checked items');
     }
-    if (!checked) {
-      checked = document.querySelector('#user-stories-container input[type="radio"]:checked');
-    }
-      console.log('Selected user story radio button:', checked);
-      if (checked) {      
-      console.log('Extracting data from checked radio button:', {
-        value: checked.value,
-        dataName: checked.getAttribute('data-name'),
-        dataDescription: checked.getAttribute('data-description')
-      });
-        // Validate that the data attributes exist and are not empty
-      const dataName = checked.getAttribute('data-name');
-      const dataDescription = checked.getAttribute('data-description');
-      
-      // Decode HTML entities in case they were encoded
-      function decodeHtmlEntities(str) {
-        if (!str) return str;
-        const textarea = document.createElement('textarea');
-        textarea.innerHTML = str;
-        return textarea.value;
-      }
-      
-      const decodedName = decodeHtmlEntities(dataName);
-      const decodedDescription = decodeHtmlEntities(dataDescription);
-      
-      console.log('Data attribute decoding:', {
-        originalName: dataName,
-        decodedName: decodedName,
-        originalDescription: dataDescription,
-        decodedDescription: decodedDescription
-      });
-      
-      if (!dataName || dataName === 'null' || dataName === 'undefined') {
-        console.warn('Warning: data-name attribute is missing or invalid');
-      }
-      if (!dataDescription || dataDescription === 'null' || dataDescription === 'undefined') {
-        console.warn('Warning: data-description attribute is missing or invalid');
-      }
-      
-      document.getElementById("selected_story_id").value = checked.value;
-      document.getElementById("selected_story_name").value = decodedName || '';
-      document.getElementById("selected_story_description").value = decodedDescription || '';
+      console.log('Selected user story checkboxes:', checkedBoxes);
+      if (checkedBoxes.length > 0) {      
+        // Collect all selected stories data
+        const selectedStories = [];
+        
+        checkedBoxes.forEach((checkbox, index) => {
+          console.log(`Processing checkbox ${index + 1}:`, {
+            value: checkbox.value,
+            dataName: checkbox.getAttribute('data-name'),
+            dataDescription: checkbox.getAttribute('data-description')
+          });
+          
+          // Validate that the data attributes exist and are not empty
+          const dataName = checkbox.getAttribute('data-name');
+          const dataDescription = checkbox.getAttribute('data-description');
+          const dataEpicId = checkbox.getAttribute('data-epic-id') || '';
+          const dataPriority = checkbox.getAttribute('data-priority') || 'medium';
+          const dataRole = checkbox.getAttribute('data-role') || '';
+          const dataGoal = checkbox.getAttribute('data-goal') || '';
+          const dataSystem = checkbox.getAttribute('data-system') || '';
+          const dataSystems = checkbox.getAttribute('data-systems') || '';
+          
+          // Decode HTML entities in case they were encoded
+          function decodeHtmlEntities(str) {
+            if (!str) return str;
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = str;
+            return textarea.value;
+          }
+          
+          const decodedName = decodeHtmlEntities(dataName);
+          const decodedDescription = decodeHtmlEntities(dataDescription);
+          
+          console.log(`Story ${index + 1} data attribute decoding:`, {
+            originalName: dataName,
+            decodedName: decodedName,
+            originalDescription: dataDescription,
+            decodedDescription: decodedDescription
+          });
+          
+          if (!dataName || dataName === 'null' || dataName === 'undefined') {
+            console.warn(`Warning: checkbox ${index + 1} data-name attribute is missing or invalid`);
+          }
+          if (!dataDescription || dataDescription === 'null' || dataDescription === 'undefined') {
+            console.warn(`Warning: checkbox ${index + 1} data-description attribute is missing or invalid`);
+          }
+          
+          // Add story data to the collection
+          selectedStories.push({
+            id: checkbox.value,
+            name: decodedName || '',
+            description: decodedDescription || '',
+            epic_id: dataEpicId,
+            priority: dataPriority,
+            role: dataRole,
+            goal: dataGoal,
+            system: dataSystem,
+            systems: dataSystems
+          });
+        });
+        
+        // Set form data for multiple stories
+        document.getElementById("selected_story_id").value = selectedStories.map(s => s.id).join(',');
+        document.getElementById("selected_story_name").value = selectedStories.map(s => s.name).join(' | ');
+        document.getElementById("selected_story_description").value = selectedStories.map(s => s.description).join(' | ');
+        
+        // Add additional hidden field for complete story data
+        let storyDataInput = document.getElementById("selected_stories_data");
+        if (!storyDataInput) {
+          storyDataInput = document.createElement('input');
+          storyDataInput.type = 'hidden';
+          storyDataInput.name = 'selected_stories_data';
+          storyDataInput.id = 'selected_stories_data';
+          document.getElementById('proceed-form').appendChild(storyDataInput);
+        }
+        storyDataInput.value = JSON.stringify(selectedStories);
+        
+        console.log('Hidden fields set for multiple stories:', {
+          ids: selectedStories.map(s => s.id).join(','),
+          names: selectedStories.map(s => s.name).join(' | '),
+          descriptions: selectedStories.map(s => s.description).join(' | '),
+          totalSelected: selectedStories.length,
+          storiesData: selectedStories
+        });
       
       console.log('Hidden fields set:', {
         id: checked.value,
@@ -875,7 +918,7 @@
           proceedBtn.disabled = false;
           proceedBtn.innerHTML = `
             <span class="btn-spinner" id="proceedSpinner" style="display: none;"></span>
-            <span class="btn-text">Proceed with selection</span>
+            <span class="btn-text">Proceed with selection(s)</span>
             <span class="btn-timer" id="proceedTimer"></span>
           `;
         } else {
@@ -884,9 +927,9 @@
       }
     } else {
       // Enhanced error message with debugging info
-      console.error('No user story selected');
+      console.error('No user stories selected');
       console.log('User stories container content:', document.getElementById('user-stories-container')?.innerHTML);
-      alert('Please select a user story to proceed. If you don\'t see any selectable options, try refreshing the page or checking the console for errors.');
+      alert('Please select at least one user story to proceed. If you don\'t see any selectable options, try refreshing the page or checking the console for errors.');
     }
   });
     // Function to validate and log user story data attributes
@@ -999,7 +1042,7 @@
       
       if (Array.isArray(userStoriesData) && userStoriesData.length > 0) {
         console.log('Successfully parsed user stories array:', userStoriesData);
-          // Format the user stories as a table
+        // Format the user stories as a table with new agent response format
         let formattedHTML = `
           <div class="table-responsive">
             <table class="table table-striped table-bordered">
@@ -1008,13 +1051,27 @@
                   <th>Select</th>
                   <th>Story ID</th>
                   <th>Name</th>
-                  <th>Description</th>
+                  <th>Priority</th>
+                  <th>Systems</th>
                 </tr>
               </thead>
               <tbody>
         `;          userStoriesData.forEach((story, index) => {
+          // Handle the new agent response format
+          const storyId = story.story_id || `US-${index + 1}`;
+          const storyName = story.name || story.title || 'Untitled Story';
+          const storyPriority = story.priority || 'Medium';
+          const storySystems = Array.isArray(story.systems) ? story.systems.join(', ') : (story.systems || 'TBD');
+          
+          // Use the story name as description if no separate description field
+          const storyDescription = story.description || story.name || 'No description available';
+          
           // Validate and get story data
-          const validatedData = validateUserStoryData(story, index);
+          const validatedData = validateUserStoryData({
+            ...story,
+            name: storyName,
+            description: storyDescription
+          }, index);
           
           // Escape HTML for data attributes to prevent attribute breaking
           const escapedName = validatedData.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -1022,25 +1079,42 @@
           
           // Log the escaped data for debugging
           console.log(`Story ${index + 1} escaped data:`, {
+            storyId,
+            storyName,
+            storyPriority,
+            storySystems,
             escapedName,
             escapedDescription,
             isValid: validatedData.isValid
           });
           
+          // Determine priority badge color
+          let priorityClass = 'badge-secondary';
+          if (storyPriority.toLowerCase() === 'high') {
+            priorityClass = 'badge-danger';
+          } else if (storyPriority.toLowerCase() === 'medium') {
+            priorityClass = 'badge-warning';
+          } else if (storyPriority.toLowerCase() === 'low') {
+            priorityClass = 'badge-success';
+          }
+          
           formattedHTML += `
             <tr>
               <td>
                 <div class="form-check">
-                  <input class="form-check-input" type="radio" name="user_story_id" 
-                  value="${story.story_id || `story_${index + 1}`}" id="story_${index + 1}"
+                  <input class="form-check-input" type="checkbox" name="user_story_ids" 
+                  value="${storyId}" id="story_${index + 1}"
                   data-name="${escapedName}" 
-                  data-description="${escapedDescription}">
+                  data-description="${escapedDescription}"
+                  data-priority="${storyPriority}"
+                  data-systems="${storySystems}">
                   <label class="form-check-label" for="story_${index + 1}"></label>
                 </div>
               </td>
-              <td><strong>${story.story_id || `US${index + 1}`}</strong></td>
+              <td><strong>${storyId}</strong></td>
               <td><strong>${validatedData.name}</strong></td>
-              <td>${validatedData.description}</td>
+              <td><span class="badge ${priorityClass}">${storyPriority}</span></td>
+              <td>${storySystems}</td>
             </tr>
           `;
         });
@@ -1088,10 +1162,12 @@
               </thead>
               <tbody>
                 <tr>                  <td>                    <div class="form-check">
-                      <input class="form-check-input" type="radio" name="user_story_id" 
+                      <input class="form-check-input" type="checkbox" name="user_story_ids" 
                       value="${userStoriesData.story_id || 'story_1'}" id="story_1"
                       data-name="${escapedName}" 
-                      data-description="${escapedDescription}" checked>
+                      data-description="${escapedDescription}"
+                      data-epic-id="${userStoriesData.epic_id || ''}"
+                      data-priority="${userStoriesData.priority || 'medium'}" checked>
                       <label class="form-check-label" for="story_1"></label>
                     </div>
                   </td>
@@ -1222,10 +1298,12 @@
           formattedHTML += `
             <tr>
               <td>
-                <div class="form-check">                  <input class="form-check-input" type="radio" name="user_story_id" 
+                <div class="form-check">                  <input class="form-check-input" type="checkbox" name="user_story_ids" 
                   value="${story.story_id || `story_${index + 1}`}" id="story_${index + 1}"
                   data-name="${escapedName}" 
-                  data-description="${escapedDescription}">
+                  data-description="${escapedDescription}"
+                  data-epic-id="${story.epic_id || ''}"
+                  data-priority="${story.priority || 'medium'}">
                   <label class="form-check-label" for="story_${index + 1}"></label>
                 </div>
               </td>
@@ -1311,10 +1389,14 @@
                 formattedHTML += `
                 <tr>
                   <td>
-                    <div class="form-check">                      <input class="form-check-input" type="radio" name="user_story_id" 
+                    <div class="form-check">                      <input class="form-check-input" type="checkbox" name="user_story_ids" 
                       value="${story.story_id || `story_${index + 1}`}" id="story_${index + 1}"
                       data-name="${escapedName}" 
-                      data-description="${escapedDescription}">
+                      data-description="${escapedDescription}"
+                      data-epic-id="${story.epic_id || ''}"
+                      data-priority="${story.priority || 'medium'}"
+                      data-role="${story.role || ''}"
+                      data-goal="${story.goal || ''}">
                       <label class="form-check-label" for="story_${index + 1}"></label>
                     </div>
                   </td>
@@ -1349,8 +1431,32 @@
       }
       
       // If we reach here, no extraction method worked
-      // Only show error if content looks like it should be JSON but isn't
-      if (content.includes('[') || content.includes('{') || content.includes('story') || content.includes('```')) {
+      // Check if content looks like an agent refusal or contains refusal keywords
+      const refusalKeywords = ['cannot', 'sorry', 'unable', 'refuse', 'not possible', 'cannot provide', 'cannot assist', 'not able'];
+      const isRefusal = refusalKeywords.some(keyword => content.toLowerCase().includes(keyword.toLowerCase())) && 
+                       !content.includes('[') && !content.includes('{');
+      
+      if (isRefusal) {
+        console.log('Content appears to be an agent refusal');
+        userStoriesContainer.innerHTML = `
+          <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle"></i> Agent Response</h6>
+            <p><strong>The system has provided a response but did not generate structured user stories.</strong></p>
+            <details>
+              <summary>Click to view the response</summary>
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; color: #333; white-space: pre-wrap; max-height: 400px; overflow-y: auto; margin-top: 10px;">${content}</div>
+            </details>
+            <div class="mt-3">
+              <p class="mb-2"><strong>What you can do:</strong></p>
+              <ul class="mb-0">
+                <li>Try using the <strong>User Story Chat Bot</strong> below to generate stories in a different way</li>
+                <li>Use the Epic Chat Bot to refine your epic before generating user stories</li>
+                <li>Contact support if this issue persists</li>
+              </ul>
+            </div>
+          </div>
+        `;
+      } else if (content.includes('[') || content.includes('{') || content.includes('story') || content.includes('```')) {
         console.log('Content appears to be malformed user stories data, showing error');
         
         // Try to show a more user-friendly version of the content
@@ -1361,23 +1467,33 @@
         
         userStoriesContainer.innerHTML = `
           <div class="alert alert-warning">
-            <h6>User Stories Processing</h6>
+            <h6><i class="fas fa-exclamation-triangle"></i> Parsing Issue</h6>
             <p><strong>The system returned user stories but they could not be parsed into a table format.</strong></p>
             <details>
               <summary>Click to view raw response</summary>
               <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; color: #333; white-space: pre-wrap; max-height: 400px; overflow-y: auto; margin-top: 10px;">${displayContent}</pre>
             </details>
-            <p class="mt-2"><em>The content above contains the user stories but in a text format. Please contact support to improve the parsing.</em></p>
+            <div class="mt-3">
+              <p class="mb-2"><strong>What you can do:</strong></p>
+              <ul class="mb-0">
+                <li>Try using the <strong>User Story Chat Bot</strong> below to generate stories in a different format</li>
+                <li>Copy the content above and manually extract the user story information</li>
+                <li>Contact support to improve the parsing for this response format</li>
+              </ul>
+            </div>
           </div>
         `;
-        
-        // Still show the user stories section even if parsing failed
+      } else {
+        // If content doesn't look like JSON or refusal, leave it as is
+        console.log('User stories content does not appear to be JSON or refusal, leaving as is');
+      }
+      
+      // Always show the user stories section when there's content to display
+      if (content && content.trim()) {
         const userStoriesSection = document.getElementById('user-stories-section');
         if (userStoriesSection) {
           userStoriesSection.classList.remove('hidden');
         }
-      } else {        // If content doesn't look like JSON, leave it as is
-        console.log('User stories content does not appear to be JSON, leaving as is');
       }
     }
     // Parse user stories when epics are approved and user stories section is visible
@@ -2464,46 +2580,39 @@
         const storyData = JSON.parse(jsonMatch[0]);
         
         if (Array.isArray(storyData) && storyData.length > 0) {
-          // Format user stories as a table with System Name column
+          // Format user stories as a table with new agent response format
           let formattedHTML = `
             <div class="table-responsive">
               <table class="table table-striped table-hover">
                 <thead class="thead-dark">
                   <tr>
                     <th>Select</th>
+                    <th>Story ID</th>
                     <th>User Story</th>
-                    <th>Description</th>
                     <th>Priority</th>
-                    <th>Acceptance Criteria</th>
-                    ${hasSystemInfo ? '<th>System Name</th>' : ''}
+                    <th>Systems</th>
                   </tr>
                 </thead>
                 <tbody>
           `;
           
           storyData.forEach((story, index) => {
-            const storyName = story.name || story.title || story.user_story || `User Story ${index + 1}`;
-            const storyDescription = story.description || story.goal || story.details || 'No description available';
-            const priority = story.priority || 'Medium';
-            const systemName = story.system_name || story.system || 'Unassigned';
+            // Handle new agent response format  
+            const storyId = story.story_id || `US-${index + 1}`;
+            const storyName = story.name || story.title || `User Story ${index + 1}`;
+            const storyPriority = story.priority || 'Medium';
+            const storySystems = Array.isArray(story.systems) ? story.systems.join(', ') : (story.systems || 'TBD');
             
-            // Format acceptance criteria
-            let acceptanceCriteria = '';
-            if (story.acceptance_criteria && Array.isArray(story.acceptance_criteria)) {
-              acceptanceCriteria = '<ul>' + story.acceptance_criteria.map(criteria => `<li>${criteria}</li>`).join('') + '</ul>';
-            } else if (story.acceptance_criteria) {
-              acceptanceCriteria = story.acceptance_criteria;
-            } else {
-              acceptanceCriteria = 'To be defined';
-            }
+            // Use the story name as description if no separate description field
+            const storyDescription = story.description || story.name || 'No description available';
             
             // Priority badge styling
             let priorityClass = 'badge-secondary';
-            if (priority.toLowerCase() === 'high') {
+            if (storyPriority.toLowerCase() === 'high') {
               priorityClass = 'badge-danger';
-            } else if (priority.toLowerCase() === 'medium') {
+            } else if (storyPriority.toLowerCase() === 'medium') {
               priorityClass = 'badge-warning';
-            } else if (priority.toLowerCase() === 'low') {
+            } else if (storyPriority.toLowerCase() === 'low') {
               priorityClass = 'badge-success';
             }
             
@@ -2514,16 +2623,16 @@
             formattedHTML += `
               <tr>
                 <td>
-                  <input type="radio" name="user_story_id" value="story_${index + 1}" 
+                  <input type="checkbox" name="user_story_ids" value="${storyId}" 
                          data-name="${escapedName}" 
                          data-description="${escapedDescription}"
-                         data-system="${systemName}">
+                         data-priority="${storyPriority}"
+                         data-systems="${storySystems}">
                 </td>
+                <td><strong>${storyId}</strong></td>
                 <td><strong>${storyName}</strong></td>
-                <td>${storyDescription}</td>
-                <td><span class="badge ${priorityClass}">${priority}</span></td>
-                <td>${acceptanceCriteria}</td>
-                ${hasSystemInfo ? `<td><span class="badge badge-info">${systemName}</span></td>` : ''}
+                <td><span class="badge ${priorityClass}">${storyPriority}</span></td>
+                <td>${storySystems}</td>
               </tr>
             `;
           });
@@ -2542,7 +2651,7 @@
             userStoriesSection.classList.remove('hidden');
           }
           
-          showNotification(`Generated ${storyData.length} user stories${hasSystemInfo ? ' with system mapping' : ''}`, 'success');
+          showNotification(`Generated ${storyData.length} user stories with systems mapping`, 'success');
           scrollToUserStoriesSection();
           return;
         }

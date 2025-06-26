@@ -129,34 +129,34 @@ def home():
     <body>
         <div class="container">
             <div class="header">
-                <h1>🚀 RAG-Enhanced PRD to Epic Generator</h1>
+                <h1>RAG-Enhanced PRD to Epic Generator</h1>
                 <p>Transform your Product Requirements Documents into comprehensive epics and user stories using advanced RAG technology</p>
                 <div class="status">
-                    ✅ Vector Database Active | ✅ RAG Processing Ready | ✅ Epic Generator Online
+                    Vector Database Active | RAG Processing Ready | Epic Generator Online
                 </div>
             </div>
             
             <div class="feature-grid">
                 <div class="feature-card">
-                    <h3>📝 Generate Epics & User Stories</h3>
+                    <h3>Generate Epics & User Stories</h3>
                     <p>Upload your PRD and additional documentation to generate comprehensive epics and user stories using RAG-enhanced processing.</p>
                     <a href="/prd_parser" class="btn">Start Processing</a>
                 </div>
                 
                 <div class="feature-card">
-                    <h3>🗄️ Vector Database Status</h3>
+                    <h3>Vector Database Status</h3>
                     <p>View all documents stored in the vector database, including chunks, metadata, and content previews.</p>
                     <a href="/vector-db-status" class="btn btn-secondary">View Database</a>
                 </div>
                 
                 <div class="feature-card">
-                    <h3>🔍 Search Vector Database</h3>
+                    <h3>Search Vector Database</h3>
                     <p>Search through stored documents using semantic similarity to find relevant content for any query.</p>
                     <a href="/vector-db-search" class="btn btn-secondary">Search Database</a>
                 </div>
                 
                 <div class="feature-card">
-                    <h3>⚡ RAG Features</h3>
+                    <h3>RAG Features</h3>
                     <p>This system uses Retrieval Augmented Generation with:</p>
                     <ul>
                         <li>ChromaDB vector storage</li>
@@ -169,7 +169,7 @@ def home():
             </div>
             
             <div style="margin-top: 30px; text-align: center; color: #6c757d;">
-                <p>🎯 PRD Parser Agent replaced with RAG summaries | ⚡ 50%+ faster processing | 💰 Reduced token costs</p>
+                <p>PRD Parser Agent replaced with RAG summaries | 50%+ faster processing | Reduced token costs</p>
             </div>
         </div>
     </body>
@@ -1032,7 +1032,7 @@ def vector_db_status():
         </head>
         <body>
             <div class="header">
-                <h1>🗄️ Vector Database Status</h1>
+                <h1>Vector Database Status</h1>
                 <p><strong>Collection:</strong> {collection_info['name']}</p>
                 <p><strong>Total Documents:</strong> {collection_info['count']}</p>
                 <p><strong>Showing:</strong> {len(documents)} documents (limited to 50)</p>
@@ -1063,7 +1063,7 @@ def vector_db_status():
         
         html_content += """
             <div style="margin-top: 30px; padding: 15px; background-color: #e7f3ff; border-radius: 5px;">
-                <h3>🔍 How to Query the Vector Database</h3>
+                <h3>How to Query the Vector Database</h3>
                 <p>You can search the vector database by making a POST request to <code>/vector-db-search</code> with a JSON body:</p>
                 <pre>{"query": "your search query", "top_k": 5}</pre>
                 <p>Or use the search interface: <a href="/vector-db-search">Vector DB Search</a></p>
@@ -1108,7 +1108,7 @@ def vector_db_search():
             </style>
         </head>
         <body>
-            <h1>🔍 Vector Database Search</h1>
+            <h1>Vector Database Search</h1>
             <div class="search-form">
                 <form method="POST">
                     <label>Search Query:</label><br>
@@ -1159,7 +1159,7 @@ def vector_db_search():
             </head>
             <body>
                 <div class="header">
-                    <h1>🔍 Search Results</h1>
+                    <h1>Search Results</h1>
                     <p><strong>Query:</strong> "{query}"</p>
                     <p><strong>Results Found:</strong> {len(results)}</p>
                 </div>
@@ -1320,23 +1320,23 @@ def document_upload_preview():
         
         # Print RAG summaries to console for debugging
         print("\n" + "=" * 100)
-        print("📄 RAG-PROCESSED DOCUMENT SUMMARIES:")
+        print("RAG-PROCESSED DOCUMENT SUMMARIES:")
         print("=" * 100)
         
         if context:
-            print("🎯 USER CONTEXT:")
+            print("USER CONTEXT:")
             print("-" * 50)
             print(context)
             print("-" * 50)
         
         if prd_summary:
-            print("📋 PRD SUMMARY:")
+            print("PRD SUMMARY:")
             print("-" * 50)
             print(prd_summary)
             print("-" * 50)
         
         if docs_summary:
-            print("📎 ADDITIONAL DOCS SUMMARY:")
+            print("ADDITIONAL DOCS SUMMARY:")
             print("-" * 50)
             print(docs_summary)
             print("-" * 50)
@@ -1439,12 +1439,12 @@ def generate_epics_from_preview():
         
         # Print Enhanced Context being sent to Epic Agent
         print("\n" + "=" * 100)
-        print("🔥 ENHANCED CONTEXT INPUT TO EPIC AGENT:")
+        print("ENHANCED CONTEXT INPUT TO EPIC AGENT:")
         print("=" * 100)
         print(enhanced_context)  # Print the FULL content
         print("=" * 100)
-        print(f"📊 Total length: {len(enhanced_context)} characters")
-        print(f"📊 Total tokens: {count_tokens(enhanced_context, 'gpt-4o'):,} tokens")
+        print(f"Total length: {len(enhanced_context)} characters")
+        print(f"Total tokens: {count_tokens(enhanced_context, 'gpt-4o'):,} tokens")
         print("=" * 100 + "\n")
         
         # Also log to file (truncated for file logs)
@@ -1463,11 +1463,11 @@ def generate_epics_from_preview():
         logger.info(f"Epic Generator processing time: {epic_processing_time:.2f} seconds")
           # Print Epic Agent Response to console
         print("\n" + "=" * 100)
-        print("🎯 EPIC AGENT RESPONSE OUTPUT:")
+        print("EPIC AGENT RESPONSE OUTPUT:")
         print("=" * 100)
         print(epic_response)
         print("=" * 100)
-        print(f"📊 Response length: {len(epic_response)} characters")
+        print(f"Response length: {len(epic_response)} characters")
         print("=" * 100 + "\n")                
         # Print Epic Agent Response
         logger.info("=" * 80)
@@ -1570,48 +1570,38 @@ def approve_epics():
             logger.info(f"Epic {epic_id} - Title: {epic_title[:50]}...")
             logger.info(f"Epic {epic_id} - Description: {epic_description[:100]}...")
             
-            # Create a comprehensive prompt with the actual epic content
+            # Create a prompt that aligns with the agent's system instructions
             prompt = f"""
-            Generate detailed user stories for the following epic:
-            
             Epic Title: {epic_title}
             Epic Description: {epic_description}
             
-            Requirements:
-            1. Generate 3-5 user stories that break down this epic into actionable development tasks
-            2. Each user story should follow the format: "As a [user type], I want [goal] so that [benefit]"
-            3. Include acceptance criteria for each user story
-            4. Focus on deliverable functionality that supports the epic's objectives
-            5. Consider the technical implementation requirements
-            6. Ensure stories are properly sized for development sprints
-            
-            Please provide comprehensive user stories that fully cover the scope of this epic.
+            Generate user stories for this approved epic. Return ONLY the JSON array format with story_id, name, priority, and systems. Do not include descriptions or acceptance criteria.
             """
               # Print what's being sent to User Story Agent
-            print("\n" + "=" * 100)
-            print(f"📝 USER STORY AGENT INPUT FOR EPIC {i+1}:")
-            print("=" * 100)
-            print(f"Epic ID: {epic_id}")
-            print(f"Epic Title: {epic_title}")
-            print(f"Epic Description: {epic_description}")
-            print("-" * 50)
-            print("Full Prompt:")
-            print(prompt)
-            print("=" * 100)
-            print(f"📊 Prompt length: {len(prompt)} characters")
-            print("=" * 100 + "\n")
+            logger.info("=" * 80)
+            logger.info(f"USER STORY AGENT INPUT FOR EPIC {i+1}:")
+            logger.info("=" * 80)
+            logger.info(f"Epic ID: {epic_id}")
+            logger.info(f"Epic Title: {epic_title}")
+            logger.info(f"Epic Description: {epic_description}")
+            logger.info("-" * 50)
+            logger.info("Full Prompt:")
+            logger.info(prompt)
+            logger.info("=" * 80)
+            logger.info(f"Prompt length: {len(prompt)} characters")
+            logger.info("=" * 80 + "\n")
             
             try:
                 story_response = ask_assistant_from_file_optimized("poc2_agent3_basic_user_story", prompt)
                 
                 # Print User Story Agent Response
-                print("\n" + "=" * 100)
-                print(f"📚 USER STORY AGENT RESPONSE FOR EPIC {i+1}:")
-                print("=" * 100)
-                print(story_response)
-                print("=" * 100)
-                print(f"📊 Response length: {len(story_response)} characters")
-                print("=" * 100 + "\n")                
+                logger.info("=" * 80)
+                logger.info(f"USER STORY AGENT RESPONSE FOR EPIC {i+1}:")
+                logger.info("=" * 80)
+                logger.info(story_response)
+                logger.info("=" * 80)
+                logger.info(f"Response length: {len(story_response)} characters")
+                logger.info("=" * 80 + "\n")                
                 if story_response:
                     # Send the raw JSON response for frontend parsing instead of HTML cards
                     user_stories.append(story_response)
@@ -1685,36 +1675,51 @@ def user_story_details():
         if request.method == "POST":
             logger.info("POST request received for user story selection")
             
-            # Get the selected story ID and details
+            # Get the selected story IDs and details (now supporting multiple selections)
             if request.is_json:
                 data = request.get_json()
-                selected_story_id = data.get("user_story_id")
+                selected_story_id = data.get("selected_story_id", "")  # Comma-separated IDs
                 story_name = data.get("selected_story_name", "")
                 selected_story_description = data.get("selected_story_description", "")
+                selected_stories_data = data.get("selected_stories_data", "")  # JSON string of story objects
                 epic_title = data.get("epic_title", "")
                 priority = data.get("priority", "High")
-                logger.info(f"Processing selected user story ID (JSON): {selected_story_id}")
+                logger.info(f"Processing selected user story IDs (JSON): {selected_story_id}")
             else:
-                selected_story_id = request.form.get("user_story_id")
+                selected_story_id = request.form.get("selected_story_id", "")  # Comma-separated IDs
                 story_name = request.form.get("selected_story_name", "")
                 selected_story_description = request.form.get("selected_story_description", "")
+                selected_stories_data = request.form.get("selected_stories_data", "")  # JSON string of story objects
                 epic_title = request.form.get("epic_title", "")
                 priority = request.form.get("priority", "High")
-                logger.info(f"Processing selected user story ID (Form): {selected_story_id}")
+                logger.info(f"Processing selected user story IDs (Form): {selected_story_id}")
             
-            logger.info(f"Processing selected user story ID: {selected_story_id}")
-            logger.info(f"Processing selected story name: {story_name}")
-            logger.info(f"Processing selected story description: {selected_story_description[:100] if selected_story_description else 'N/A'}...")
+            # Parse multiple story IDs
+            story_ids = [id.strip() for id in selected_story_id.split(',') if id.strip()] if selected_story_id else []
+            logger.info(f"Processing {len(story_ids)} selected user stories: {story_ids}")
             
-            if not selected_story_id:
+            # Parse detailed story data if available
+            selected_stories = []
+            if selected_stories_data:
+                try:
+                    selected_stories = json.loads(selected_stories_data)
+                    logger.info(f"Parsed detailed data for {len(selected_stories)} stories")
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse selected stories data: {e}")
+                    selected_stories = []
+            
+            logger.info(f"Processing selected story names: {story_name}")
+            logger.info(f"Processing selected story descriptions: {selected_story_description[:100] if selected_story_description else 'N/A'}...")
+            
+            if not story_ids:
                 if request.is_json:
                     return jsonify({
                         "success": False,
-                        "error": "No user story selected"
+                        "error": "No user stories selected"
                     }), 400
                 else:
                     return render_template("poc2_user_story_details.html", 
-                                         error="No user story selected"), 400
+                                         error="No user stories selected"), 400
             
             # Provide default values if story details are missing
             if not story_name or not selected_story_description:
@@ -1730,8 +1735,48 @@ def user_story_details():
             
             logger.info(f"Successfully processed user story selection: {selected_story_id}")
             
+            # Extract data from selected stories for the new agent format
+            if selected_stories:
+                # Use data from the first selected story as primary, combine others
+                primary_story = selected_stories[0]
+                
+                # Extract systems information from all selected stories
+                all_systems = set()
+                all_priorities = []
+                combined_names = []
+                combined_descriptions = []
+                
+                for story in selected_stories:
+                    # Handle new agent response format
+                    story_name_field = story.get('name', story.get('title', 'Untitled Story'))
+                    story_desc_field = story.get('description', story_name_field)
+                    story_priority = story.get('priority', 'Medium')
+                    story_systems = story.get('systems', [])
+                    
+                    combined_names.append(story_name_field)
+                    combined_descriptions.append(story_desc_field)
+                    all_priorities.append(story_priority)
+                    
+                    # Handle systems field - can be array or string
+                    if isinstance(story_systems, list):
+                        all_systems.update(story_systems)
+                    elif isinstance(story_systems, str):
+                        all_systems.update([s.strip() for s in story_systems.split(',') if s.strip()])
+                
+                # Override with combined data
+                story_name = ' | '.join(combined_names) if len(combined_names) > 1 else combined_names[0] if combined_names else story_name
+                selected_story_description = ' | '.join(combined_descriptions) if len(combined_descriptions) > 1 else combined_descriptions[0] if combined_descriptions else selected_story_description
+                responsible_systems = ', '.join(sorted(all_systems)) if all_systems else "TBD"
+                priority = all_priorities[0] if all_priorities else "Medium"  # Use first story's priority
+                
+                logger.info(f"Extracted from {len(selected_stories)} stories:")
+                logger.info(f"  - Combined name: {story_name}")
+                logger.info(f"  - Systems: {responsible_systems}")
+                logger.info(f"  - Priority: {priority}")
+            
             # Generate additional data fields for the new UI
-            responsible_systems = "CAPS, CMS"  # Default value, could be enhanced later
+            if 'responsible_systems' not in locals():
+                responsible_systems = "CAPS, CMS"  # Default value if not extracted from stories
             tagged_requirements = [
                 "F1. Capture Personal Information for New Customer Account",
                 "KDA2. Customer full name",
@@ -1768,7 +1813,7 @@ def user_story_details():
                 cleaned_criteria = []
                 for criterion in acceptance_criteria:
                     # Remove common bullet point patterns
-                    criterion = criterion.lstrip('•-*123456789. ').strip()
+                    criterion = criterion.lstrip('•-*').lstrip('123456789.').strip()
                     if criterion:
                         cleaned_criteria.append(criterion)
                 acceptance_criteria = cleaned_criteria
@@ -1887,7 +1932,7 @@ def user_story_details():
                     cleaned_criteria = []
                     for criterion in acceptance_criteria:
                         # Remove common bullet point patterns
-                        criterion = criterion.lstrip('•-*123456789. ').strip()
+                        criterion = criterion.lstrip('•-*').lstrip('123456789.').strip()
                         if criterion:
                             cleaned_criteria.append(criterion)
                     acceptance_criteria = cleaned_criteria
