@@ -159,6 +159,9 @@
     .requirements-list li:last-child {
       border-bottom: none;
     }
+    .tagged-requirements-section .section-content {
+      background-color: #ffebee;
+    }
     .criteria-list {
       list-style: none;
       padding: 0;
@@ -176,6 +179,16 @@
       position: absolute;
       left: 0;
       color: #666;
+    }
+    .hardcoded-content {
+      color: #007bff !important;
+      font-style: italic;
+    }
+    .story-header .hardcoded-content {
+      color: #87ceeb !important; /* Lighter blue for better contrast on dark background */
+    }
+    .epic-title .hardcoded-content {
+      color: #007bff !important;
     }
     .submit-btn {
       background-color: #dc3545;
@@ -241,7 +254,7 @@
       {% if multiple_stories %}
         Multiple User Stories: {{ story_count }} stories selected
       {% else %}
-        User story: {{ user_story_name or 'Capture personal information during onboarding' }}
+        User story: {{ user_story_name or '<span class="hardcoded-content">Capture personal information during onboarding</span>' | safe }}
       {% endif %}
     </div>
 
@@ -250,16 +263,22 @@
     <!-- Epic Information Section -->
     <div class="epic-info-section">
       <div class="epic-label">Epic:</div>
-      <div class="epic-title">{{ epic_title or 'End-to-End Customer Account Creation' }}</div>
+      <div class="epic-title">{{ epic_title or '<span class="hardcoded-content">End-to-End Customer Account Creation</span>' | safe }}</div>
+      
+      <!-- Story Name Display -->
+      <div class="story-name-section" style="margin-top: 12px;">
+        <div class="epic-label">Story:</div>
+        <div class="epic-title" style="font-size: 15px; color: #555;">{{ user_story_name or '<span class="hardcoded-content">Lock critical fields for charged-off accounts</span>' | safe }}</div>
+      </div>
       
       <div class="info-row">
         <div class="info-item">
           <span class="info-label">Priority:</span>
-          <span class="priority-high">{{ priority or 'High' }}</span>
+          <span class="priority-high">{{ priority or '<span class="hardcoded-content">High</span>' | safe }}</span>
         </div>
         <div class="info-item">
           <span class="info-label">Responsible systems:</span>
-          <span>{{ responsible_systems or 'CAPS, CMS, ...' }}</span>
+          <span>{{ responsible_systems or '<span class="hardcoded-content">Customer acquisition platform, Financial ledger initializer ...</span>' | safe }}</span>
         </div>
       </div>
     </div>
@@ -286,7 +305,22 @@
             {% endfor %}
           </div>
         {% else %}
-          {{ user_story_description or 'As a new borrower, I want to input my personal information (e.g., name, SSN) so that the system can accurately create my customer profile and initiate the onboarding process. This ensures that downstream verification steps (e.g. KYC, credit checks) can proceed without manual data correction or re-entry.' }}
+          <!-- Enhanced Description from User Description Agent -->
+          <div class="enhanced-description">
+            {{ user_story_description or '<span class="hardcoded-content">As a new borrower, I want to input my personal information (e.g., name, SSN) so that the system can accurately create my customer profile and initiate the onboarding process. This ensures that downstream verification steps (e.g. KYC, credit checks) can proceed without manual data correction or re-entry.</span>' | safe }}
+          </div>
+          
+          {% if original_description and original_description != user_story_description %}
+          <!-- Show original description if different from enhanced -->
+          <details style="margin-top: 16px;">
+            <summary style="cursor: pointer; color: #666; font-size: 13px; border-top: 1px solid #eee; padding-top: 12px;">
+              View Original Description
+            </summary>
+            <div style="margin-top: 8px; padding: 12px; background: #f8f9fa; border-radius: 4px; font-size: 14px; color: #666; border-left: 3px solid #ccc;">
+              {{ original_description }}
+            </div>
+          </details>
+          {% endif %}
         {% endif %}
       </div>
     </div>
@@ -306,17 +340,17 @@
             <li>{{ criterion }}</li>
             {% endfor %}
           {% else %}
-          <li>System prompts for full name, date of birth, Social Security Number, email address, phone number, and residential address</li>
-          <li>Mandatory fields must be completed before progressing</li>
-          <li>Input formats are validated (e.g., MM/DD/YYYY for DOB, 9-digit SSN, phone with area code)</li>
-          <li>Errors are surfaced clearly and immediately for any missing or invalid entries</li>
+          <li><span class="hardcoded-content">System prompts for full name, date of birth, Social Security Number, email address, phone number, and residential address</span></li>
+          <li><span class="hardcoded-content">Mandatory fields must be completed before progressing</span></li>
+          <li><span class="hardcoded-content">Input formats are validated (e.g., MM/DD/YYYY for DOB, 9-digit SSN, phone with area code)</span></li>
+          <li><span class="hardcoded-content">Errors are surfaced clearly and immediately for any missing or invalid entries</span></li>
           {% endif %}
         </ul>
       </div>
     </div>
 
     <!-- Tagged Requirements Section -->
-    <div class="section-container">
+    <div class="section-container tagged-requirements-section">
       <div class="section-header">
         <span>Tagged requirements</span>
         <button class="chat-btn" onclick="openRequirementsChat()">
@@ -330,10 +364,10 @@
             <li>{{ requirement }}</li>
             {% endfor %}
           {% else %}
-          <li>F1. Capture Personal Information for New Customer Account</li>
-          <li>KDA2. Customer full name</li>
-          <li>KDA3. Customer date of birth</li>
-          <li>KDA4. Customer SSN or equivalent</li>
+          <li><span class="hardcoded-content">F1. Capture Personal Information for New Customer Account</span></li>
+          <li><span class="hardcoded-content">KDA2. Customer full name</span></li>
+          <li><span class="hardcoded-content">KDA3. Customer date of birth</span></li>
+          <li><span class="hardcoded-content">KDA4. Customer SSN or equivalent</span></li>
           {% endif %}
         </ul>
       </div>

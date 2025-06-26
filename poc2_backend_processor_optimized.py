@@ -109,28 +109,128 @@ def home():
     
     html_content = """
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>RAG-Enhanced PRD to Epic Generator</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
         <style>
-            body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
-            .container { max-width: 800px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-            .header { text-align: center; margin-bottom: 30px; }
-            .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; }
-            .feature-card { background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; }
-            .feature-card h3 { color: #007bff; margin-top: 0; }
-            .btn { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 5px 0; }
-            .btn:hover { background-color: #0056b3; }
-            .btn-secondary { background-color: #6c757d; }
-            .btn-secondary:hover { background-color: #545b62; }
-            .status { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 20px; }
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 20px; 
+                background-color: #2f323a; 
+                color: #fff;
+            }
+            .container { 
+                max-width: 1200px; 
+                margin: 0 auto; 
+                background-color: #2f323a; 
+                padding: 30px; 
+                border-radius: 10px; 
+            }
+            .header-bar {
+                background-color: #d0021b;
+                color: white;
+                text-align: center;
+                font-weight: bold;
+                padding: 15px;
+                border-radius: 6px;
+                margin-bottom: 20px;
+            }
+            .header { 
+                text-align: center; 
+                margin-bottom: 30px; 
+                color: #fff;
+            }
+            .header h1 {
+                color: #fff;
+                margin-bottom: 15px;
+            }
+            .header p {
+                color: #ccc;
+                font-size: 1.1rem;
+            }
+            .feature-grid { 
+                display: grid; 
+                grid-template-columns: 1fr 1fr; 
+                gap: 20px; 
+                margin-top: 30px; 
+            }
+            @media (max-width: 768px) {
+                .feature-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .feature-card { 
+                background-color: #f8f9fa; 
+                color: #000;
+                padding: 20px; 
+                border-radius: 8px; 
+                border: 1px solid #dee2e6;
+                transition: transform 0.2s ease;
+            }
+            .feature-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            }
+            .feature-card h3 { 
+                color: #d0021b; 
+                margin-top: 0; 
+                font-weight: bold;
+            }
+            .feature-card p, .feature-card ul {
+                color: #333;
+            }
+            .btn { 
+                display: inline-block; 
+                padding: 12px 24px; 
+                background-color: #d0021b; 
+                color: white; 
+                text-decoration: none; 
+                border-radius: 5px; 
+                margin: 10px 0; 
+                font-weight: bold;
+                transition: background-color 0.2s ease;
+            }
+            .btn:hover { 
+                background-color: #b0011a; 
+                color: white;
+                text-decoration: none;
+            }
+            .btn-secondary { 
+                background-color: #444; 
+            }
+            .btn-secondary:hover { 
+                background-color: #333; 
+            }
+            .status { 
+                background-color: #444; 
+                border: 1px solid #555; 
+                color: #fff; 
+                padding: 15px; 
+                border-radius: 8px; 
+                margin-bottom: 20px; 
+                text-align: center;
+                font-weight: bold;
+            }
+            .footer-text {
+                margin-top: 30px; 
+                text-align: center; 
+                color: #ccc;
+                font-style: italic;
+            }
         </style>
     </head>
     <body>
         <div class="container">
+            <div class="header-bar">
+                RAG-Enhanced PRD to Epic Generator
+            </div>
+            
             <div class="header">
-                <h1>RAG-Enhanced PRD to Epic Generator</h1>
-                <p>Transform your Product Requirements Documents into comprehensive epics and user stories using advanced RAG technology</p>
+                <h1>Transform PRDs into Comprehensive Epics & User Stories</h1>
+                <p>Advanced RAG technology for intelligent document processing and epic generation</p>
                 <div class="status">
                     Vector Database Active | RAG Processing Ready | Epic Generator Online
                 </div>
@@ -168,7 +268,7 @@ def home():
                 </div>
             </div>
             
-            <div style="margin-top: 30px; text-align: center; color: #6c757d;">
+            <div class="footer-text">
                 <p>PRD Parser Agent replaced with RAG summaries | 50%+ faster processing | Reduced token costs</p>
             </div>
         </div>
@@ -1711,20 +1811,20 @@ def user_story_details():
             logger.info(f"Processing selected story names: {story_name}")
             logger.info(f"Processing selected story descriptions: {selected_story_description[:100] if selected_story_description else 'N/A'}...")
             
+            # Always proceed - if no stories selected, use defaults to ensure agents are called
             if not story_ids:
-                if request.is_json:
-                    return jsonify({
-                        "success": False,
-                        "error": "No user stories selected"
-                    }), 400
-                else:
-                    return render_template("poc2_user_story_details.html", 
-                                         error="No user stories selected"), 400
+                logger.info("No user stories selected, using default values to ensure agents are called")
+                story_ids = ['default-story-1']
+                story_name = story_name or "Lock critical fields for charged-off accounts"
+                selected_story_description = selected_story_description or "As a system architect, I want to identify and classify the necessary data fields for charged-off accounts so that we can ensure only required and relevant data is transmitted securely."
+                selected_story_id = 'default-story-1'
+            else:
+                selected_story_id = ','.join(story_ids)
             
             # Provide default values if story details are missing
             if not story_name or not selected_story_description:
                 logger.info("Story name or description missing, using default values")
-                default_story_name = "Charged-Off Account Data Field Identification"
+                default_story_name = "Lock critical fields for charged-off accounts"
                 default_story_description = "As a system architect, I want to identify and classify the necessary data fields for charged-off accounts so that we can ensure only required and relevant data is transmitted securely."
 
                 story_name = story_name or default_story_name
@@ -1784,25 +1884,89 @@ def user_story_details():
                 "KDA4. Customer SSN or equivalent"
             ]
             
-            # Call the acceptance criteria agent
-            prompt = f"Generate acceptance criteria for: {story_name}. Description: {selected_story_description}"
+            # Call the acceptance criteria agent - pass only story name
+            prompt = story_name
             logger.info(f"Processing selected prompt ****Acceptance Criteria Prompt **** : {prompt}")
 
             acceptance_response = ask_assistant_from_file_optimized("poc2_agent4_acceptanceCriteria_gen", prompt)
 
+            # Call the new User Description Agent - pass only story name
+            description_prompt = story_name
+            logger.info(f"Processing User Description Agent prompt: {description_prompt}")
+            
+            description_response = ask_assistant_from_file_optimized("poc2_agent5_description", description_prompt)
+            
+            # Parse the description response
+            enhanced_description = selected_story_description  # Default fallback
+            try:
+                # Clean the response first - remove markdown code blocks if present
+                clean_response = description_response.strip()
+                
+                # Remove markdown JSON code blocks
+                if clean_response.startswith('```json') and clean_response.endswith('```'):
+                    clean_response = clean_response[7:-3].strip()
+                elif clean_response.startswith('```') and clean_response.endswith('```'):
+                    clean_response = clean_response[3:-3].strip()
+                
+                # Try to parse as JSON
+                description_data = json.loads(clean_response)
+                if isinstance(description_data, dict) and 'description' in description_data:
+                    enhanced_description = description_data['description']
+                    logger.info(f"Enhanced description generated: {enhanced_description[:100]}...")
+                else:
+                    logger.warning("User Description Agent did not return expected format")
+                    # If it's a dict but no 'description' key, try to get the first value
+                    if isinstance(description_data, dict):
+                        values = list(description_data.values())
+                        if values:
+                            enhanced_description = str(values[0])
+            except json.JSONDecodeError as e:
+                logger.warning(f"Failed to parse User Description Agent response: {e}")
+                # Use the raw response if it's not JSON, but try to extract content from markdown
+                if description_response and len(description_response.strip()) > 10:
+                    clean_response = description_response.strip()
+                    # Remove any remaining markdown artifacts
+                    if clean_response.startswith('```') and clean_response.endswith('```'):
+                        clean_response = clean_response[3:-3].strip()
+                    enhanced_description = clean_response
+
             # Parse criteria (assume response is a bullet list or parse JSON if needed)
             try:
-                acceptance_criteria = json.loads(acceptance_response)
+                # First, clean the response to remove markdown code blocks if present
+                clean_response = acceptance_response.strip()
+                if clean_response.startswith('```json') and clean_response.endswith('```'):
+                    clean_response = clean_response[7:-3].strip()
+                elif clean_response.startswith('```') and clean_response.endswith('```'):
+                    clean_response = clean_response[3:-3].strip()
+                
+                acceptance_criteria = json.loads(clean_response)
                 if isinstance(acceptance_criteria, list):
                     # If it's already a list, use it
                     pass
+                elif isinstance(acceptance_criteria, dict) and 'acceptance_criteria' in acceptance_criteria:
+                    # If it's a dict with 'acceptance_criteria' key, extract the list
+                    acceptance_criteria = acceptance_criteria['acceptance_criteria']
                 elif isinstance(acceptance_criteria, dict) and 'criteria' in acceptance_criteria:
-                    # If it's a dict with criteria key, extract the list
+                    # If it's a dict with 'criteria' key, extract the list
                     acceptance_criteria = acceptance_criteria['criteria']
+                elif isinstance(acceptance_criteria, dict):
+                    # If it's a dict but doesn't have expected keys, get the first list value
+                    for value in acceptance_criteria.values():
+                        if isinstance(value, list):
+                            acceptance_criteria = value
+                            break
+                    else:
+                        # If no list found in values, convert all values to list
+                        acceptance_criteria = list(acceptance_criteria.values())
                 else:
                     # If it's some other format, convert to list
                     acceptance_criteria = [str(acceptance_criteria)]
-            except:
+                
+                # Ensure we have a flat list of strings
+                if not isinstance(acceptance_criteria, list):
+                    acceptance_criteria = [str(acceptance_criteria)]
+                    
+            except json.JSONDecodeError:
                 # If JSON parsing fails, split by newlines and clean up
                 acceptance_criteria = [
                     line.strip() 
@@ -1812,9 +1976,11 @@ def user_story_details():
                 # Remove bullet points and numbering
                 cleaned_criteria = []
                 for criterion in acceptance_criteria:
-                    # Remove common bullet point patterns
+                    # Remove common bullet point patterns and JSON artifacts
                     criterion = criterion.lstrip('•-*').lstrip('123456789.').strip()
-                    if criterion:
+                    # Remove JSON brackets or quotes if they somehow leaked through
+                    criterion = criterion.strip('[]{}"\'\n\r\t')
+                    if criterion and not criterion.startswith('{') and not criterion.startswith('['):
                         cleaned_criteria.append(criterion)
                 acceptance_criteria = cleaned_criteria
 
@@ -1826,18 +1992,20 @@ def user_story_details():
                     "success": True,
                     "story_id": selected_story_id,
                     "story_name": story_name,
+                    "enhanced_description": enhanced_description,
                     "html": render_template(
                         "poc2_user_story_details.html",
                         epic_title=epic_title,
                         user_story_name=story_name,
-                        user_story_description=selected_story_description,
+                        user_story_description=enhanced_description,  # Use enhanced description
+                        original_description=selected_story_description,  # Keep original for reference
                         priority=priority,
                         responsible_systems=responsible_systems,
                         acceptance_criteria=acceptance_criteria,
                         tagged_requirements=tagged_requirements,
                         story_id=selected_story_id
                     ),
-                    "message": "User story processed successfully"
+                    "message": "User story processed successfully with enhanced description"
                 })
             
             # For regular form submission, render the template directly
@@ -1845,7 +2013,8 @@ def user_story_details():
                 "poc2_user_story_details.html",
                 epic_title=epic_title,
                 user_story_name=story_name,
-                user_story_description=selected_story_description,
+                user_story_description=enhanced_description,  # Use enhanced description
+                original_description=selected_story_description,  # Keep original for reference
                 priority=priority,
                 responsible_systems=responsible_systems,
                 acceptance_criteria=acceptance_criteria,
@@ -1889,8 +2058,8 @@ def user_story_details():
                 priority = request.args.get("priority", "High")
                 story_id = request.args.get("story_id", "")
                 
-                # Use consistent variable names
-                final_story_name = user_story_title or "Untitled Story"
+                # Use consistent variable names - with default fallback
+                final_story_name = user_story_title or "Lock critical fields for charged-off accounts"
                 final_story_description = user_story_description or "No description available"
                 
                 # Generate acceptance criteria if not in session
@@ -1906,9 +2075,49 @@ def user_story_details():
                     "KDA4. Customer SSN or equivalent"
                 ]
 
-                # Call the acceptance criteria agent
-                prompt = f"Generate acceptance criteria for: {final_story_name}. Description: {final_story_description}"
+                # Call the acceptance criteria agent - pass only story name
+                prompt = final_story_name
                 acceptance_response = ask_assistant_from_file_optimized("poc2_agent4_acceptanceCriteria_gen", prompt)
+                
+                # Call the new User Description Agent - pass only story name
+                description_prompt = final_story_name
+                logger.info(f"Processing User Description Agent prompt: {description_prompt}")
+                
+                description_response = ask_assistant_from_file_optimized("poc2_agent5_description", description_prompt)
+                
+                # Parse the description response
+                enhanced_description = final_story_description  # Default fallback
+                try:
+                    # Clean the response first - remove markdown code blocks if present
+                    clean_response = description_response.strip()
+                    
+                    # Remove markdown JSON code blocks
+                    if clean_response.startswith('```json') and clean_response.endswith('```'):
+                        clean_response = clean_response[7:-3].strip()
+                    elif clean_response.startswith('```') and clean_response.endswith('```'):
+                        clean_response = clean_response[3:-3].strip()
+                    
+                    # Try to parse as JSON
+                    description_data = json.loads(clean_response)
+                    if isinstance(description_data, dict) and 'description' in description_data:
+                        enhanced_description = description_data['description']
+                        logger.info(f"Enhanced description generated: {enhanced_description[:100]}...")
+                    else:
+                        logger.warning("User Description Agent did not return expected format")
+                        # If it's a dict but no 'description' key, try to get the first value
+                        if isinstance(description_data, dict):
+                            values = list(description_data.values())
+                            if values:
+                                enhanced_description = str(values[0])
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse User Description Agent response: {e}")
+                    # Use the raw response if it's not JSON, but try to extract content from markdown
+                    if description_response and len(description_response.strip()) > 10:
+                        clean_response = description_response.strip()
+                        # Remove any remaining markdown artifacts
+                        if clean_response.startswith('```') and clean_response.endswith('```'):
+                            clean_response = clean_response[3:-3].strip()
+                        enhanced_description = clean_response
                   # Parse criteria (assume response is a bullet list or parse JSON if needed)
                 try:
                     acceptance_criteria = json.loads(acceptance_response)
@@ -1918,6 +2127,9 @@ def user_story_details():
                     elif isinstance(acceptance_criteria, dict) and 'criteria' in acceptance_criteria:
                         # If it's a dict with criteria key, extract the list
                         acceptance_criteria = acceptance_criteria['criteria']
+                    elif isinstance(acceptance_criteria, dict):
+                        # If it's a dict but doesn't have 'criteria' key, convert to list of values
+                        acceptance_criteria = list(acceptance_criteria.values())
                     else:
                         # If it's some other format, convert to list
                         acceptance_criteria = [str(acceptance_criteria)]
@@ -1931,20 +2143,23 @@ def user_story_details():
                     # Remove bullet points and numbering
                     cleaned_criteria = []
                     for criterion in acceptance_criteria:
-                        # Remove common bullet point patterns
+                        # Remove common bullet point patterns and JSON artifacts
                         criterion = criterion.lstrip('•-*').lstrip('123456789.').strip()
-                        if criterion:
+                        # Remove JSON brackets or quotes if they somehow leaked through
+                        criterion = criterion.strip('[]{}"\'\n\r\t')
+                        if criterion and not criterion.startswith('{') and not criterion.startswith('['):
                             cleaned_criteria.append(criterion)
                     acceptance_criteria = cleaned_criteria
                 
                 user_story_title = final_story_name
-                user_story_description = final_story_description
+                user_story_description = enhanced_description  # Use enhanced description
         
             return render_template(
                 "poc2_user_story_details.html",
                 epic_title=epic_title,
                 user_story_name=user_story_title,
                 user_story_description=user_story_description,
+                original_description=final_story_description if 'final_story_description' in locals() else user_story_description,  # Keep original for reference
                 priority=priority,
                 responsible_systems=responsible_systems,
                 acceptance_criteria=acceptance_criteria,
