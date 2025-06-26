@@ -341,16 +341,34 @@
   let proceedTimer = null;
 
   function startTimer(timerId, buttonTimerElement) {
+    console.log('=== startTimer called ===');
+    console.log('Timer element:', !!buttonTimerElement);
+    
+    if (!buttonTimerElement) {
+      console.error('startTimer: buttonTimerElement is null');
+      return null;
+    }
+    
     let seconds = 0;
+    console.log('Creating timer interval');
     return setInterval(() => {
       seconds++;
       const minutes = Math.floor(seconds / 60);
       const remainingSeconds = seconds % 60;
       const timeString = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+      console.log('Timer tick:', timeString);
       buttonTimerElement.textContent = timeString;
     }, 1000);
   }
   function showButtonLoading(button, spinner, timer, buttonText, loadingText) {
+    console.log('=== showButtonLoading called ===');
+    console.log('Parameters:', { buttonText, loadingText });
+    console.log('Elements:', { 
+      button: !!button, 
+      spinner: !!spinner, 
+      timer: !!timer 
+    });
+    
     if (!button) {
       console.error('showButtonLoading: button element is null');
       return null;
@@ -365,19 +383,30 @@
     }
 
     try {
+      console.log('Setting button disabled to true');
       button.disabled = true;
+      
+      console.log('Setting spinner display to block');
       spinner.style.display = 'block';
+      console.log('Spinner display after setting:', spinner.style.display);
       
       const btnTextElement = button.querySelector('.btn-text');
       if (btnTextElement) {
+        console.log('Updating button text from "' + btnTextElement.textContent + '" to "' + loadingText + '"');
         btnTextElement.textContent = loadingText;
       } else {
         console.warn('showButtonLoading: .btn-text element not found in button');
       }
       
+      console.log('Setting timer initial content to "0:00"');
       timer.textContent = '0:00';
+      
+      console.log('Starting timer interval');
+      const intervalId = startTimer(null, timer);
+      console.log('Timer interval ID:', intervalId);
+      
       console.log('Button loading started successfully');
-      return startTimer(null, timer);
+      return intervalId;
     } catch (error) {
       console.error('Error in showButtonLoading:', error);
       return null;
@@ -462,10 +491,11 @@
         epicsData.forEach((epic, index) => {
           formattedHTML += `
             <div class="epic-card">
-              <h5>Epic ${index + 1}: ${epic.epic_title || 'Untitled Epic'}</h5>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" name="epic_ids" value="epic_${index + 1}" id="epic_${index + 1}">
+                <h5 style="margin: 0;">Epic ${index + 1}: ${epic.epic_title || 'Untitled Epic'}</h5>
+              </div>
               <p><strong>Description:</strong> ${epic.epic_description || 'No description available'}</p>
-              <input type="checkbox" name="epic_ids" value="epic_${index + 1}" checked>
-              <label for="epic_${index + 1}">Include this epic</label>
             </div>
           `;
         });
@@ -479,10 +509,11 @@
         console.log('Single epic object detected');
         const formattedHTML = `
           <div class="epic-card">
-            <h5>Epic 1: ${epicsData.epic_title || 'Untitled Epic'}</h5>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="checkbox" name="epic_ids" value="epic_1" id="epic_1">
+              <h5 style="margin: 0;">Epic 1: ${epicsData.epic_title || 'Untitled Epic'}</h5>
+            </div>
             <p><strong>Description:</strong> ${epicsData.epic_description || 'No description available'}</p>
-            <input type="checkbox" name="epic_ids" value="epic_1" checked>
-            <label for="epic_1">Include this epic</label>
           </div>
         `;
         epicsContainer.innerHTML = formattedHTML;
@@ -509,10 +540,11 @@
             epicsData.forEach((epic, index) => {
               formattedHTML += `
                 <div class="epic-card">
-                  <h5>Epic ${index + 1}: ${epic.epic_title || 'Untitled Epic'}</h5>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" name="epic_ids" value="epic_${index + 1}" id="epic_${index + 1}">
+                    <h5 style="margin: 0;">Epic ${index + 1}: ${epic.epic_title || 'Untitled Epic'}</h5>
+                  </div>
                   <p><strong>Description:</strong> ${epic.epic_description || 'No description available'}</p>
-                  <input type="checkbox" name="epic_ids" value="epic_${index + 1}" checked>
-                  <label for="epic_${index + 1}">Include this epic</label>
                 </div>
               `;
             });
@@ -779,12 +811,48 @@
         
         // Get data directly from the checkbox attributes
         const storyId = selectedCheckbox.value;
-        const storyName = selectedCheckbox.getAttribute('data-name');
-        const storyDescription = selectedCheckbox.getAttribute('data-description');
+        let storyName = selectedCheckbox.getAttribute('data-name');
+        let storyDescription = selectedCheckbox.getAttribute('data-description');
         const storyPriority = selectedCheckbox.getAttribute('data-priority') || 'Medium';
         const storySystems = selectedCheckbox.getAttribute('data-systems') || 'TBD';
         
-        console.log('Single story selection data:', {
+        console.log('Raw extracted data from checkbox:', {
+          id: storyId,
+          name: storyName,
+          description: storyDescription,
+          priority: storyPriority,
+          systems: storySystems
+        });
+        
+        // If story name is missing, try to extract from the table row
+        if (!storyName || storyName === 'null' || storyName === 'undefined' || storyName.trim() === '') {
+          console.warn('Story name is missing or invalid, trying to extract from table row');
+          const tableRow = selectedCheckbox.closest('tr');
+          if (tableRow && tableRow.cells && tableRow.cells.length > 2) {
+            const nameCell = tableRow.cells[2]; // Name is typically in the 3rd column (index 2)
+            if (nameCell) {
+              const nameFromCell = nameCell.textContent.trim();
+              if (nameFromCell && nameFromCell !== 'Name' && nameFromCell !== 'name') {
+                console.log('Successfully extracted story name from table cell:', nameFromCell);
+                storyName = nameFromCell;
+              }
+            }
+          }
+        }
+        
+        // Final fallback if still no story name
+        if (!storyName || storyName === 'null' || storyName === 'undefined' || storyName.trim() === '') {
+          console.warn('Still no story name found, using default fallback');
+          storyName = 'Lock critical fields for charged-off accounts';
+        }
+        
+        // Similar fallback for description
+        if (!storyDescription || storyDescription === 'null' || storyDescription === 'undefined' || storyDescription.trim() === '') {
+          console.warn('Story description is missing or invalid, using default');
+          storyDescription = 'As a system architect, I want to identify and classify the necessary data fields for charged-off accounts so that we can ensure only required and relevant data is transmitted securely.';
+        }
+        
+        console.log('Single story selection data after validation:', {
           id: storyId,
           name: storyName,
           description: storyDescription,
@@ -800,24 +868,12 @@
           return textarea.value;
         }
         
-        const decodedName = decodeHtmlEntities(storyName) || 'Lock critical fields for charged-off accounts';
-        const decodedDescription = decodeHtmlEntities(storyDescription) || 'As a system architect, I want to identify and classify the necessary data fields for charged-off accounts so that we can ensure only required and relevant data is transmitted securely.';
+        let decodedName = decodeHtmlEntities(storyName);
+        const decodedDescription = decodeHtmlEntities(storyDescription);
         
-        // Additional validation and fallback
-        if (!storyName || storyName === 'null' || storyName === 'undefined') {
-          console.warn('Story name is missing from checkbox data-name attribute, using fallback');
-          // Try to get the story name from the table cell text instead
-          const tableRow = selectedCheckbox.closest('tr');
-          if (tableRow) {
-            const nameCell = tableRow.cells[2]; // Name is in the 3rd column (index 2)
-            if (nameCell) {
-              const nameFromCell = nameCell.textContent.trim();
-              if (nameFromCell && nameFromCell !== 'Name') {
-                console.log('Extracted story name from table cell:', nameFromCell);
-                decodedName = nameFromCell;
-              }
-            }
-          }
+        // Ensure we have valid values after decoding
+        if (!decodedName || decodedName.trim() === '') {
+          decodedName = 'Lock critical fields for charged-off accounts';
         }
         
         console.log('Final story data after processing:', {
@@ -832,6 +888,13 @@
         document.getElementById("selected_story_id").value = storyId;
         document.getElementById("selected_story_name").value = decodedName;
         document.getElementById("selected_story_description").value = decodedDescription;
+        
+        // Debug: Log what we're actually setting in the form fields
+        console.log('=== FORM FIELD VALUES BEING SET ===');
+        console.log('selected_story_id:', document.getElementById("selected_story_id").value);
+        console.log('selected_story_name:', document.getElementById("selected_story_name").value);
+        console.log('selected_story_description:', document.getElementById("selected_story_description").value);
+        console.log('=== END FORM FIELD VALUES ===');
         
         // Add story data for backend processing
         let storyDataInput = document.getElementById("selected_stories_data");
@@ -902,10 +965,27 @@
 
       // Show loading spinner and start timer (with enhanced error handling)
       let timerInterval = null;
+      console.log('=== PROCEED BUTTON LOADING DEBUG ===');
+      console.log('Elements found:', {
+        proceedBtn: !!proceedBtn,
+        proceedSpinner: !!proceedSpinner,
+        proceedTimerEl: !!proceedTimerEl
+      });
+      
       if (proceedBtn && proceedSpinner && proceedTimerEl) {
-        console.log('Starting timer and spinner for proceed button');
+        console.log('All elements found - starting loading state');
+        console.log('Before showButtonLoading:');
+        console.log('  - Button disabled:', proceedBtn.disabled);
+        console.log('  - Spinner display:', proceedSpinner.style.display);
+        console.log('  - Timer content:', proceedTimerEl.textContent);
+        
         timerInterval = showButtonLoading(proceedBtn, proceedSpinner, proceedTimerEl, 'Proceed with selection', 'Processing...');
-        console.log('Timer interval started:', timerInterval);
+        
+        console.log('After showButtonLoading:');
+        console.log('  - Button disabled:', proceedBtn.disabled);
+        console.log('  - Spinner display:', proceedSpinner.style.display);
+        console.log('  - Timer content:', proceedTimerEl.textContent);
+        console.log('  - Timer interval ID:', timerInterval);
       } else {
         console.warn('Some proceed button elements not found - using fallback loading indicator');
         console.warn('Missing elements:', {
@@ -928,6 +1008,24 @@
         // Use FormData to submit the form, which is more robust.
         const form = document.getElementById('proceed-form');
         const formData = new FormData(form);
+
+        // Debug: Check form field values right before submission
+        console.log('=== FINAL FORM VALIDATION BEFORE SUBMISSION ===');
+        console.log('Form element found:', !!form);
+        console.log('selected_story_id element:', document.getElementById("selected_story_id"));
+        console.log('selected_story_name element:', document.getElementById("selected_story_name"));
+        console.log('selected_story_description element:', document.getElementById("selected_story_description"));
+        
+        if (document.getElementById("selected_story_id")) {
+          console.log('selected_story_id value:', document.getElementById("selected_story_id").value);
+        }
+        if (document.getElementById("selected_story_name")) {
+          console.log('selected_story_name value:', document.getElementById("selected_story_name").value);
+        }
+        if (document.getElementById("selected_story_description")) {
+          console.log('selected_story_description value:', document.getElementById("selected_story_description").value);
+        }
+        console.log('=== END FINAL FORM VALIDATION ===');
 
         // Log the form data to be sent for debugging
         console.log('Submitting user story selection with FormData:');
@@ -2040,13 +2138,14 @@
               epicData.forEach((epic, index) => {
                 formattedHTML += `
                   <div class="epic-card" style="border-left: 4px solid #28a745; background: linear-gradient(135deg, #f0fff4 0%, #d4edda 100%);" data-chat-update="true">
-                    <h5 style="color: #28a745;">New Epic ${index + 1}: ${epic.epic_title || epic.title || 'Generated Epic'}</h5>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <input type="checkbox" name="epic_ids" value="epic_chat_new_${index + 1}" id="epic_chat_new_${index + 1}">
+                      <h5 style="color: #28a745; margin: 0;">New Epic ${index + 1}: ${epic.epic_title || epic.title || 'Generated Epic'}</h5>
+                    </div>
                     <p><strong>Description:</strong> ${epic.epic_description || epic.description || 'Epic generated via chat'}</p>
                     <div style="background: rgba(40, 167, 69, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px;">
                       <small style="color: #28a745; font-weight: 600;">✨ New Epic Added via Chat</small>
                     </div>
-                    <input type="checkbox" name="epic_ids" value="epic_chat_new_${index + 1}" checked>
-                    <label for="epic_chat_new_${index + 1}">Include this epic</label>
                   </div>
                 `;
               });

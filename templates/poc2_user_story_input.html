@@ -323,6 +323,11 @@
           <label for="additionalDocs" class="form-label">📎 Additional documents</label>
           <input class="form-control" type="file" id="additionalDocs" name="additional_docs">
         </div>
+        <div class="mb-3">
+          <label for="csvFile" class="form-label">📊 CSV Data (will be stored in Vector Database)</label>
+          <input class="form-control" type="file" id="csvFile" name="csv_file" accept=".csv">
+          <div class="form-text">Upload a CSV file to be processed and stored in the Vector Database for enhanced context during epic generation.</div>
+        </div>
         <div class="mb-4">
           <label for="context" class="form-label">Additional context</label>
           <textarea class="form-control" id="context" name="context" placeholder="Insert any additional context not captured by the PRD or other uploaded documents here."></textarea>
@@ -362,6 +367,12 @@
       <div class="mb-3" id="contextSection" style="display: none;">
         <strong>Additional Context:</strong>
         <div class="summary-box" id="userContext"></div>
+      </div>
+      
+      <div class="mb-3" id="csvSection" style="display: none;">
+        <strong>CSV Data (stored in Vector Database):</strong>
+        <div id="csvFilename" class="mb-2"></div>
+        <div class="summary-box" id="csvSummary"></div>
       </div>
       
       <button type="button" class="submit-btn" id="generateEpicsBtn">
@@ -608,6 +619,15 @@
         document.getElementById('contextSection').style.display = 'block';
       }
       
+      // Show CSV summary if available
+      if (data.csv_summary && data.csv_summary.trim()) {
+        document.getElementById('csvSummary').textContent = data.csv_summary;
+        document.getElementById('csvSection').style.display = 'block';
+        if (data.csv_filename) {
+          document.getElementById('csvFilename').innerHTML = '<span class="filename-tag">' + data.csv_filename + '</span>';
+        }
+      }
+      
       // Show preview section
       document.getElementById('previewSection').style.display = 'block';
       
@@ -647,10 +667,11 @@
           if (alertElement) alertElement.remove();
         }, 5000);
       }
-    }function disableUploadForm() {
+    }    function disableUploadForm() {
       // Disable all form inputs
       document.getElementById('prdFile').disabled = true;
       document.getElementById('additionalDocs').disabled = true;
+      document.getElementById('csvFile').disabled = true;
       document.getElementById('context').disabled = true;
       
       // Update upload button

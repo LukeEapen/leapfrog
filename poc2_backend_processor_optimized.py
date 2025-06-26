@@ -17,6 +17,8 @@ import hashlib
 import json
 from cachetools import TTLCache
 import tenacity
+import csv
+import io
 
 # Vector Database and RAG imports
 import chromadb
@@ -906,6 +908,102 @@ def log_token_usage(prompt_text, response_text, model="gpt-4o", context=""):
     logger.info(f"  Total tokens: {total_tokens:,}")
     logger.info(f"  Estimated cost: ${total_cost:.4f}")
 
+def process_csv_to_vector_db(csv_file):
+    """Process CSV file and store it in the vector database."""
+    try:
+        logger.info(f"Processing CSV file: {csv_file.filename}")
+        
+        # Read CSV content with proper encoding handling
+        csv_content = csv_file.read().decode('utf-8-sig')  # utf-8-sig handles BOM
+        csv_file.seek(0)  # Reset file pointer
+        
+        # Clean up the content - remove non-breaking spaces and other problematic characters
+        csv_content = csv_content.replace('\xa0', ' ').replace('\ufeff', '')
+        
+        # Parse CSV
+        csv_reader = csv.DictReader(io.StringIO(csv_content))
+        rows = list(csv_reader)
+        
+        if not rows:
+            logger.warning("CSV file is empty or has no data rows")
+            return "CSV file is empty"
+        
+        # Clean column names
+        cleaned_rows = []
+        for row in rows:
+            cleaned_row = {}
+            for key, value in row.items():
+                # Clean column names and values
+                clean_key = key.strip().replace('\xa0', ' ').replace('\ufeff', '') if key else 'Unknown'
+                clean_value = value.strip().replace('\xa0', ' ').replace('\ufeff', '') if value else ''
+                cleaned_row[clean_key] = clean_value
+            cleaned_rows.append(cleaned_row)
+        
+        rows = cleaned_rows
+        logger.info(f"CSV contains {len(rows)} rows with columns: {list(rows[0].keys())}")
+        
+        # Convert CSV rows to text documents for vector storage
+        documents = []
+        metadatas = []
+        ids = []
+        
+        for i, row in enumerate(rows):
+            # Create a text representation of the row
+            row_text = f"CSV Record {i+1}:\n"
+            for key, value in row.items():
+                if value:  # Only include non-empty values
+                    row_text += f"{key}: {value}\n"
+            
+            documents.append(row_text.strip())
+            
+            # Ensure all metadata values are valid types for ChromaDB
+            clean_filename = str(csv_file.filename).strip() if csv_file.filename else "unknown.csv"
+            column_names = ", ".join(str(key).strip() for key in row.keys() if key)
+            
+            metadatas.append({
+                "source": clean_filename,
+                "type": "csv_row",
+                "row_number": int(i + 1),
+                "columns": column_names
+            })
+            ids.append(f"csv_{clean_filename.replace('.', '_')}_{i+1}")
+        
+        # Store in vector database
+        if prd_collection and documents:
+            try:
+                prd_collection.add(
+                    documents=documents,
+                    metadatas=metadatas,
+                    ids=ids
+                )
+                logger.info(f"Successfully stored {len(documents)} CSV rows in vector database")
+                
+                # Create a summary of the CSV content
+                csv_summary = f"CSV File: {csv_file.filename}\n"
+                csv_summary += f"Total Rows: {len(rows)}\n"
+                csv_summary += f"Columns: {', '.join(rows[0].keys())}\n\n"
+                
+                # Add sample data (first few rows)
+                csv_summary += "Sample Data:\n"
+                for i, row in enumerate(rows[:5]):  # Show first 5 rows
+                    csv_summary += f"Row {i+1}: {dict(row)}\n"
+                
+                if len(rows) > 5:
+                    csv_summary += f"... and {len(rows) - 5} more rows\n"
+                
+                return csv_summary
+                
+            except Exception as e:
+                logger.error(f"Error storing CSV in vector database: {e}")
+                return f"Error storing CSV in database: {str(e)}"
+        else:
+            logger.error("Vector database collection not available")
+            return "Vector database not available"
+            
+    except Exception as e:
+        logger.error(f"Error processing CSV file: {e}")
+        return f"Error processing CSV: {str(e)}"
+
 def ask_assistant_from_file_optimized(code_filepath, user_prompt):
     """Optimized assistant interaction using direct chat completion instead of deprecated Assistants API."""
     start_time = time.time()
@@ -1356,15 +1454,29 @@ def document_upload_preview():
         context = request.form.get("context", "")
         prd_file = request.files.get("prd_file")
         additional_docs = request.files.get("additional_docs")
+        csv_file = request.files.get("csv_file")
         
         logger.info(f"Context provided: {'Yes' if context else 'No'}")
         logger.info(f"PRD file uploaded: {'Yes' if prd_file else 'No'}")
         logger.info(f"Additional docs uploaded: {'Yes' if additional_docs else 'No'}")
+        logger.info(f"CSV file uploaded: {'Yes' if csv_file else 'No'}")
         
         if prd_file:
             logger.info(f"PRD file name: {prd_file.filename}")
         if additional_docs:
             logger.info(f"Additional docs file name: {additional_docs.filename}")
+        if csv_file:
+            logger.info(f"CSV file name: {csv_file.filename}")
+
+        # Process CSV file first if provided (store in vector DB)
+        csv_summary = ""
+        if csv_file and csv_file.filename.lower().endswith('.csv'):
+            logger.info("Processing CSV file for vector database storage")
+            csv_summary = process_csv_to_vector_db(csv_file)
+            logger.info(f"CSV processing completed: {csv_summary[:100]}...")
+        elif csv_file:
+            logger.warning(f"Uploaded file {csv_file.filename} is not a CSV file")
+            csv_summary = f"Warning: {csv_file.filename} is not a CSV file"
 
         # Parallel file reading for better performance
         logger.info("Reading uploaded files in parallel for preview")
@@ -1448,8 +1560,10 @@ def document_upload_preview():
             "user_context": context,
             "prd_summary": prd_summary,
             "docs_summary": docs_summary,
+            "csv_summary": csv_summary,
             "prd_filename": prd_file.filename if prd_file else None,
             "docs_filename": additional_docs.filename if additional_docs else None,
+            "csv_filename": csv_file.filename if csv_file else None,
             "processing_time": time.time() - start_time
         }
         
