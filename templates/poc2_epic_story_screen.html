@@ -29,7 +29,8 @@
       justify-content: space-between;
       align-items: center;
       margin-top: 20px;
-    }    .epic-card, .user-story-card {
+    }
+    .epic-card, .user-story-card {
       background-color: #f8f9fa;
       border-radius: 6px;
       padding: 15px;
@@ -65,7 +66,8 @@
     .priority-low {
       color: green;
       font-weight: bold;
-    }    .footer-btn {
+    }
+    .footer-btn {
       background-color: #d0021b;
       color: white;
       font-weight: bold;
@@ -110,6 +112,7 @@
     .hidden {
       display: none;
     }
+    
     /* User stories table styling */
     .table {
       background-color: white;
@@ -132,176 +135,26 @@
     }
     .badge {
       font-size: 0.8em;
-    }    .form-check-input:checked {
+    }
+    .form-check-input:checked {
       background-color: #d0021b;
       border-color: #d0021b;
-    }
-
-    /* Chat Modal Styles */
-    .chat-modal {
-      display: none;
-      position: fixed;
-      z-index: 1050;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-
-    .chat-modal-content {
-      background-color: #2f323a;
-      margin: 2% auto;
-      padding: 0;
-      border-radius: 8px;
-      width: 80%;
-      max-width: 800px;
-      height: 80vh;
-      display: flex;
-      flex-direction: column;
-      border: 1px solid #555;
-    }
-
-    .chat-header {
-      background-color: #d0021b;
-      color: white;
-      padding: 15px 20px;
-      border-radius: 8px 8px 0 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .chat-header h4 {
-      margin: 0;
-      font-size: 1.2rem;
-    }
-
-    .chat-close {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 1.5rem;
-      cursor: pointer;
-      padding: 0;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .chat-body {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      background-color: white;
-      color: #333;
-    }
-
-    .chat-messages {
-      min-height: 200px;
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 10px;
-      background-color: #f8f9fa;
-      margin-bottom: 15px;
-    }
-
-    .chat-message {
-      margin-bottom: 15px;
-      padding: 10px;
-      border-radius: 6px;
-    }
-
-    .chat-message.user {
-      background-color: #e3f2fd;
-      border-left: 4px solid #2196f3;
-    }
-
-    .chat-message.assistant {
-      background-color: #f3e5f5;
-      border-left: 4px solid #9c27b0;
-    }
-
-    .chat-message.system {
-      background-color: #fff3e0;
-      border-left: 4px solid #ff9800;
-      font-style: italic;
-    }
-
-    .chat-message .message-header {
-      font-weight: bold;
-      margin-bottom: 5px;
-      font-size: 0.9rem;
-    }
-
-    .chat-message .message-content {
-      line-height: 1.4;
-    }
-
-    .chat-input-area {
-      display: flex;
-      gap: 10px;
-    }
-
-    .chat-input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      resize: vertical;
-      min-height: 40px;
-      max-height: 120px;
-    }
-
-    .chat-send-btn {
-      background-color: #d0021b;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 4px;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .chat-send-btn:hover {
-      background-color: #b8001a;
-    }
-
-    .chat-send-btn:disabled {
-      background-color: #666;
-      cursor: not-allowed;
-    }
-
-    .chat-loading {
-      display: none;
-      text-align: center;
-      padding: 10px;
-      color: #666;
-    }
-
-    .chat-spinner {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #f3f3f3;
-      border-top: 2px solid #d0021b;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
     }
   </style>
 </head>
 <body>
 <div class="container mt-4">
-  <div class="header-bar">Epic generation & list of user stories</div>  <div class="section-header">
+  <div class="header-bar">Epic generation & list of user stories</div>
+  
+  <div class="section-header">
     <span>Epics</span>
     <button class="btn btn-outline-light btn-sm" id="epicChatBtn" onclick="openEpicChat()">💬 Chat</button>
-  </div><div id="epics-container">
+  </div>
+  
+  <div id="epics-container">
     {{ epics|safe }}
   </div>
+  
   <form id="approve-epics-form" method="POST" action="/approve-epics">
     <input type="hidden" name="epic_ids" id="epic_ids" value="epic_1,epic_2">
     <button type="submit" class="footer-btn" id="approveEpicsBtn">
@@ -314,23 +167,23 @@
   <div id="user-stories-section" class="{{ 'hidden' if not user_stories }}">
     <div class="section-header">
       <span>User stories</span>
-      <button class="btn btn-outline-light btn-sm" id="userStoryChatBtn" onclick="openUserStoryChat()">� User Story Chat</button>
+      <button class="btn btn-outline-light btn-sm" id="userStoryChatBtn" onclick="openUserStoryChat()">💬 User Story Chat</button>
     </div>
     <p class="mb-3 text-light">
-      Review this list of generated user stories for each epic, sorted by the solution’s ranking of priority based on industry and uploaded context. Select <strong>one</strong> story to proceed with generating a detailed user story.
+      Review this list of generated user stories for each epic, sorted by the solution's ranking of priority based on industry and uploaded context. Select <strong>one</strong> story to proceed with generating a detailed user story.
     </p>
     <form id="proceed-form" method="POST" action="/user-story-details">
       <div id="user-stories-container">
         {{ user_stories|safe }}
       </div>    
-        <input type="hidden" name="selected_story_id" id="selected_story_id">
-        <input type="hidden" name="selected_story_name" id="selected_story_name">
-        <input type="hidden" name="selected_story_description" id="selected_story_description">
-        <button type="submit" class="footer-btn" id="proceedBtn">
-          <span class="btn-spinner" id="proceedSpinner"></span>
-          <span class="btn-text">Proceed with selection(s)</span>
-          <span class="btn-timer" id="proceedTimer"></span>
-        </button>
+      <input type="hidden" name="selected_story_id" id="selected_story_id">
+      <input type="hidden" name="selected_story_name" id="selected_story_name">
+      <input type="hidden" name="selected_story_description" id="selected_story_description">
+      <button type="submit" class="footer-btn" id="proceedBtn">
+        <span class="btn-spinner" id="proceedSpinner"></span>
+        <span class="btn-text">Proceed To Selection</span>
+        <span class="btn-timer" id="proceedTimer"></span>
+      </button>
     </form>
   </div>
 </div>
@@ -341,84 +194,49 @@
   let proceedTimer = null;
 
   function startTimer(timerId, buttonTimerElement) {
-    console.log('=== startTimer called ===');
-    console.log('Timer element:', !!buttonTimerElement);
-    
     if (!buttonTimerElement) {
       console.error('startTimer: buttonTimerElement is null');
       return null;
     }
     
     let seconds = 0;
-    console.log('Creating timer interval');
     return setInterval(() => {
       seconds++;
       const minutes = Math.floor(seconds / 60);
       const remainingSeconds = seconds % 60;
       const timeString = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-      console.log('Timer tick:', timeString);
       buttonTimerElement.textContent = timeString;
     }, 1000);
   }
+
   function showButtonLoading(button, spinner, timer, buttonText, loadingText) {
-    console.log('=== showButtonLoading called ===');
-    console.log('Parameters:', { buttonText, loadingText });
-    console.log('Elements:', { 
-      button: !!button, 
-      spinner: !!spinner, 
-      timer: !!timer 
-    });
-    
-    if (!button) {
-      console.error('showButtonLoading: button element is null');
-      return null;
-    }
-    if (!spinner) {
-      console.error('showButtonLoading: spinner element is null');
-      return null;
-    }
-    if (!timer) {
-      console.error('showButtonLoading: timer element is null');
+    if (!button || !spinner || !timer) {
+      console.error('showButtonLoading: missing elements');
       return null;
     }
 
     try {
-      console.log('Setting button disabled to true');
       button.disabled = true;
-      
-      console.log('Setting spinner display to block');
       spinner.style.display = 'block';
-      console.log('Spinner display after setting:', spinner.style.display);
       
       const btnTextElement = button.querySelector('.btn-text');
       if (btnTextElement) {
-        console.log('Updating button text from "' + btnTextElement.textContent + '" to "' + loadingText + '"');
         btnTextElement.textContent = loadingText;
-      } else {
-        console.warn('showButtonLoading: .btn-text element not found in button');
       }
       
-      console.log('Setting timer initial content to "0:00"');
       timer.textContent = '0:00';
-      
-      console.log('Starting timer interval');
       const intervalId = startTimer(null, timer);
-      console.log('Timer interval ID:', intervalId);
       
-      console.log('Button loading started successfully');
       return intervalId;
     } catch (error) {
       console.error('Error in showButtonLoading:', error);
       return null;
     }
   }
+
   function hideButtonLoading(button, spinner, timer, originalText, timerInterval) {
     if (!button || !spinner || !timer) {
-      console.warn('hideButtonLoading: some elements are null', {
-        button: !!button,
-        spinner: !!spinner,
-        timer: !!timer
-      });
+      console.warn('hideButtonLoading: some elements are null');
       return;
     }
 
@@ -429,15 +247,12 @@
       const btnTextElement = button.querySelector('.btn-text');
       if (btnTextElement) {
         btnTextElement.textContent = originalText;
-      } else {
-        console.warn('hideButtonLoading: .btn-text element not found in button');
       }
       
       timer.textContent = '';
       if (timerInterval) {
         clearInterval(timerInterval);
       }
-      console.log('Button loading hidden successfully');
     } catch (error) {
       console.error('Error in hideButtonLoading:', error);
     }
@@ -450,7 +265,6 @@
     
     // If content is already formatted (contains epic-card divs), don't reprocess
     if (content.includes('epic-card')) {
-      console.log('Content already formatted, skipping parsing');
       return;
     }
     
@@ -460,11 +274,8 @@
     content = tempDiv.textContent || tempDiv.innerText || '';
     content = content.trim();
     
-    console.log('Raw content to parse:', content);
-    
     // If content is empty or very short, leave it as is
     if (!content || content.length < 5) {
-      console.log('Content too short or empty, skipping parsing');
       return;
     }
     
@@ -478,14 +289,10 @@
         cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```\s*$/, '');
       }
       
-      console.log('Cleaned content:', cleanContent);
-      
       // Try to parse as JSON
       const epicsData = JSON.parse(cleanContent);
       
       if (Array.isArray(epicsData)) {
-        console.log('Successfully parsed epics array:', epicsData);
-        
         // Format the epics nicely
         let formattedHTML = '';
         epicsData.forEach((epic, index) => {
@@ -501,12 +308,9 @@
         });
         
         epicsContainer.innerHTML = formattedHTML;
-        console.log('Epics formatted successfully');
-        return; // Exit successfully
-        
+        return;
       } else if (epicsData && typeof epicsData === 'object') {
         // Handle single epic object
-        console.log('Single epic object detected');
         const formattedHTML = `
           <div class="epic-card">
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -517,25 +321,15 @@
           </div>
         `;
         epicsContainer.innerHTML = formattedHTML;
-        console.log('Single epic formatted successfully');
-        return; // Exit successfully
+        return;
       }
-      
-      // If we reach here, the JSON was valid but not in expected format
-      console.log('JSON parsed but not in expected epic format:', epicsData);
-      
     } catch (e) {
-      // If it's not JSON, check if it looks like JSON that needs cleaning
-      console.log('JSON parse error:', e.message);
-      console.log('Content that failed to parse:', content);
-      
       // Try to extract JSON from text that might have extra content
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         try {
           const epicsData = JSON.parse(jsonMatch[0]);
           if (Array.isArray(epicsData)) {
-            console.log('Extracted JSON from text successfully');
             let formattedHTML = '';
             epicsData.forEach((epic, index) => {
               formattedHTML += `
@@ -549,68 +343,316 @@
               `;
             });
             epicsContainer.innerHTML = formattedHTML;
-            console.log('Extracted epics formatted successfully');
-            return; // Exit successfully
+            return;
           }
         } catch (e2) {
-          console.log('Failed to parse extracted JSON:', e2.message);
+          // If all parsing fails, leave content as is
         }
-      }
-      
-      // Only show error if content looks like it should be JSON but isn't
-      if (content.includes('[') || content.includes('{') || content.includes('epic')) {
-        console.log('Content appears to be malformed epic data, showing error');
-        epicsContainer.innerHTML = `
-          <div class="epic-card">
-            <h5>Epic Processing Error</h5>
-            <p><strong>Raw response:</strong></p>
-            <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; color: #333; white-space: pre-wrap;">${content}</pre>
-            <p><em>The system returned data in an unexpected format. Please contact support if this issue persists.</em></p>
-          </div>
-        `;
-      } else {
-        // If content doesn't look like JSON, leave it as is
-        console.log('Content does not appear to be JSON, leaving as is');
       }
     }
   }
+
+  // Function to set up event listeners for user story checkboxes
+  function setupUserStoryCheckboxListeners() {
+    console.log('Setting up user story checkbox event listeners');
+    
+    // Get all user story checkboxes
+    const checkboxes = document.querySelectorAll('input[name="user_story_ids"]');
+    console.log(`Found ${checkboxes.length} user story checkboxes`);
+    
+    checkboxes.forEach((checkbox, index) => {
+      checkbox.addEventListener('change', function() {
+        console.log(`Checkbox ${index} changed, checked: ${this.checked}`);
+        
+        if (this.checked) {
+          // Uncheck other checkboxes (single selection)
+          checkboxes.forEach(cb => {
+            if (cb !== this) cb.checked = false;
+          });
+          
+          // Update hidden form fields
+          const storyId = this.value;
+          const storyName = this.getAttribute('data-name');
+          const storyDescription = this.getAttribute('data-description');
+          
+          console.log('Updating hidden form fields with:', {
+            id: storyId,
+            name: storyName,
+            description: storyDescription ? storyDescription.substring(0, 50) + '...' : 'N/A'
+          });
+          
+          // Set hidden form field values
+          const storyIdField = document.getElementById('selected_story_id');
+          const storyNameField = document.getElementById('selected_story_name');
+          const storyDescField = document.getElementById('selected_story_description');
+          
+          if (storyIdField) storyIdField.value = storyId || '';
+          if (storyNameField) storyNameField.value = storyName || '';
+          if (storyDescField) storyDescField.value = storyDescription || '';
+          
+          console.log('Hidden form fields updated successfully');
+        }
+      });
+    });
+    
+    console.log('User story checkbox event listeners set up successfully');
+  }
+
+  // Function to parse and format user stories if they're in JSON format
+  function parseAndFormatUserStories() {
+    const userStoriesContainer = document.getElementById('user-stories-container');
+    if (!userStoriesContainer) {
+      return;
+    }
+    
+    let content = userStoriesContainer.innerHTML.trim();
+    
+    // If content is already formatted (contains user-story-card or table), don't reprocess
+    if (content.includes('user-story-card') || content.includes('<table')) {
+      return;
+    }
+    
+    // Remove any HTML tags and get plain text
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    content = tempDiv.textContent || tempDiv.innerText || '';
+    content = content.trim();
+    
+    // If content is empty or very short, leave it as is
+    if (!content || content.length < 5) {
+      return;
+    }
+
+    try {
+      // Multiple strategies to extract JSON from text
+      let cleanContent = content;
+      let extractionMethod = 'direct';
+      
+      // Strategy 1: Look for markdown-wrapped JSON
+      if (cleanContent.includes('```json')) {
+        const jsonMatch = cleanContent.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonMatch && jsonMatch[1]) {
+          cleanContent = jsonMatch[1].trim();
+          extractionMethod = 'markdown-json';
+        }
+      } 
+      // Strategy 2: Look for any code block with ```
+      else if (cleanContent.includes('```')) {
+        const codeBlockMatch = cleanContent.match(/```\s*([\s\S]*?)\s*```/);
+        if (codeBlockMatch && codeBlockMatch[1]) {
+          cleanContent = codeBlockMatch[1].trim();
+          extractionMethod = 'markdown-code';
+        }
+      }
+      
+      // Strategy 3: Look for JSON array pattern (most robust)
+      const jsonArrayPattern = /\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/;
+      const jsonArrayMatch = cleanContent.match(jsonArrayPattern);
+      if (jsonArrayMatch) {
+        cleanContent = jsonArrayMatch[0];
+        extractionMethod = 'regex-array';
+      }
+      
+      console.log(`User stories extraction method: ${extractionMethod}`);
+      
+      // Try to parse as JSON
+      const userStoriesData = JSON.parse(cleanContent);
+      
+      if (Array.isArray(userStoriesData) && userStoriesData.length > 0) {
+        console.log('Successfully parsed user stories array:', userStoriesData);
+        
+        // Format the user stories as a table
+        let formattedHTML = `
+          <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+              <thead class="thead-dark">
+                <tr>
+                  <th>Select</th>
+                  <th>Story ID</th>
+                  <th>Name</th>
+                  <th>Priority</th>
+                  <th>Systems</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+        
+        userStoriesData.forEach((story, index) => {
+          // Handle the new agent response format
+          const storyId = story.story_id || `US-${index + 1}`;
+          const storyName = story.name || story.title || 'Untitled Story';
+          const storyPriority = story.priority || 'Medium';
+          const storySystems = Array.isArray(story.systems) ? story.systems.join(', ') : (story.systems || 'TBD');
+          
+          // Use the story name as description if no separate description field
+          const storyDescription = story.description || story.name || 'No description available';
+          
+          // Escape HTML for data attributes to prevent attribute breaking
+          const escapedName = storyName.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          const escapedDescription = storyDescription.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          
+          // Determine priority badge color
+          let priorityClass = 'badge-secondary';
+          if (storyPriority.toLowerCase() === 'high') {
+            priorityClass = 'badge-danger';
+          } else if (storyPriority.toLowerCase() === 'medium') {
+            priorityClass = 'badge-warning';
+          } else if (storyPriority.toLowerCase() === 'low') {
+            priorityClass = 'badge-success';
+          }
+          
+          formattedHTML += `
+            <tr>
+              <td>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="user_story_ids" 
+                  value="${storyId}" id="story_${index + 1}"
+                  data-name="${escapedName}" 
+                  data-description="${escapedDescription}"
+                  data-priority="${storyPriority}"
+                  data-systems="${storySystems}"${index === 0 ? ' checked' : ''}>
+                  <label class="form-check-label" for="story_${index + 1}"></label>
+                </div>
+              </td>
+              <td><strong>${storyId}</strong></td>
+              <td><strong>${storyName}</strong></td>
+              <td><span class="badge ${priorityClass}">${storyPriority}</span></td>
+              <td>${storySystems}</td>
+            </tr>
+          `;
+        });
+        
+        formattedHTML += `
+              </tbody>
+            </table>
+          </div>
+        `;
+        
+        userStoriesContainer.innerHTML = formattedHTML;
+        console.log('User stories formatted successfully as table');
+        
+        // Add event listeners to checkboxes to update hidden form fields
+        setupUserStoryCheckboxListeners();
+        
+        // Trigger change event on the first checkbox to populate hidden fields
+        setTimeout(() => {
+          const firstCheckbox = document.querySelector('input[name="user_story_ids"]:checked');
+          if (firstCheckbox) {
+            console.log('Triggering change event on first checkbox');
+            firstCheckbox.dispatchEvent(new Event('change'));
+          }
+        }, 100);
+        
+        // Show the user stories section
+        const userStoriesSection = document.getElementById('user-stories-section');
+        if (userStoriesSection) {
+          userStoriesSection.classList.remove('hidden');
+        }
+        
+        return;
+      } else if (userStoriesData && typeof userStoriesData === 'object') {
+        // Handle single user story object
+        console.log('Single user story object detected');
+        
+        const storyName = userStoriesData.name || userStoriesData.title || 'Untitled Story';
+        const storyDescription = userStoriesData.description || storyName || 'No description available';
+        
+        // Escape HTML for data attributes
+        const escapedName = storyName.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const escapedDescription = storyDescription.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        
+        const formattedHTML = `
+          <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+              <thead class="thead-dark">
+                <tr>
+                  <th>Select</th>
+                  <th>Story ID</th>
+                  <th>Name</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="user_story_ids" 
+                      value="${userStoriesData.story_id || 'story_1'}" id="story_1"
+                      data-name="${escapedName}" 
+                      data-description="${escapedDescription}"
+                      data-epic-id="${userStoriesData.epic_id || ''}"
+                      data-priority="${userStoriesData.priority || 'medium'}" checked>
+                      <label class="form-check-label" for="story_1"></label>
+                    </div>
+                  </td>
+                  <td><strong>${userStoriesData.story_id || 'US1'}</strong></td>
+                  <td><strong>${storyName}</strong></td>
+                  <td>${storyDescription}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+        userStoriesContainer.innerHTML = formattedHTML;
+        console.log('Single user story formatted successfully');
+        
+        // Add event listeners to checkboxes to update hidden form fields
+        setupUserStoryCheckboxListeners();
+        
+        // Trigger change event on the first checkbox to populate hidden fields
+        setTimeout(() => {
+          const firstCheckbox = document.querySelector('input[name="user_story_ids"]:checked');
+          if (firstCheckbox) {
+            console.log('Triggering change event on single story checkbox');
+            firstCheckbox.dispatchEvent(new Event('change'));
+          }
+        }, 100);
+        
+        // Show the user stories section
+        const userStoriesSection = document.getElementById('user-stories-section');
+        if (userStoriesSection) {
+          userStoriesSection.classList.remove('hidden');
+        }
+        
+        return;
+      }
+    } catch (e) {
+      console.log('User stories JSON parse error:', e.message);
+      // Leave content as is if parsing fails
+    }
+  }
+
   // Parse epics when page loads
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, checking for epics content...');
     const epicsContainer = document.getElementById('epics-container');
     if (epicsContainer) {
-      console.log('Epics container found, content:', epicsContainer.innerHTML);
       parseAndFormatEpics();
-    } else {
-      console.log('Epics container not found');
     }
     
     // Also check for user stories content
     console.log('DOM loaded, checking for user stories content...');
     const userStoriesContainer = document.getElementById('user-stories-container');
     if (userStoriesContainer && userStoriesContainer.innerHTML.trim()) {
-      console.log('User stories container found with content');
       parseAndFormatUserStories();
     }
   });
   
   // Also try after a slight delay in case content is loaded asynchronously
   setTimeout(function() {
-    console.log('Timeout triggered, checking epics again...');
     const epicsContainer = document.getElementById('epics-container');
     if (epicsContainer && epicsContainer.innerHTML.trim()) {
-      console.log('Delayed check - content found:', epicsContainer.innerHTML);
       parseAndFormatEpics();
     }
     
-    // Check user stories again too
-    console.log('Timeout triggered, checking user stories again...');
     const userStoriesContainer = document.getElementById('user-stories-container');
     if (userStoriesContainer && userStoriesContainer.innerHTML.trim()) {
-      console.log('Delayed check - user stories content found');
       parseAndFormatUserStories();
     }
-  }, 500);document.getElementById("approve-epics-form")?.addEventListener("submit", async function (e) {
+  }, 500);
+
+  // Epic approval form submission
+  document.getElementById("approve-epics-form")?.addEventListener("submit", async function (e) {
     e.preventDefault();
     
     const approveBtn = document.getElementById('approveEpicsBtn');
@@ -645,8 +687,6 @@
           description: epicDescription,
           fullContent: epicCard.textContent || ''
         };
-        
-        console.log(`Extracted content for ${epicId}:`, selectedEpicContents[epicId]);
       }
     });
     
@@ -666,13 +706,13 @@
     
     try {
       console.log('Submitting epic approval with selected epics:', selectedEpics);
-      console.log('Epic contents:', selectedEpicContents);
       
       const response = await fetch("/approve-epics", {
         method: "POST",
         body: formData,
       });
-        if (response.ok) {
+      
+      if (response.ok) {
         const html = await response.text();
         document.open();
         document.write(html);
@@ -693,3043 +733,137 @@
       // Hide loading spinner and timer
       hideButtonLoading(approveBtn, approveSpinner, approveTimerEl, 'Approve Epic(s)', approveTimer);
     }
-  });  // Debug function to inspect user stories
-  function debugUserStories() {
-    console.log('=== USER STORIES DEBUG ===');
-    const userStoriesContainer = document.getElementById('user-stories-container');
-    
-    if (!userStoriesContainer) {
-      console.log('User stories container not found');
-      return;
-    }
-    
-    console.log('Container HTML:', userStoriesContainer.innerHTML.substring(0, 500) + '...');
-    
-    // Find all radio buttons in the user stories section
-    const radios = userStoriesContainer.querySelectorAll('input[type="radio"]');
-    console.log(`Found ${radios.length} radio buttons`);
-    
-    radios.forEach((radio, index) => {
-      const dataName = radio.getAttribute('data-name');
-      const dataDescription = radio.getAttribute('data-description');
-      
-      console.log(`Radio ${index + 1}:`, {
-        id: radio.id,
-        value: radio.value,
-        name: radio.name,
-        dataName: dataName,
-        dataDescription: dataDescription ? dataDescription.substring(0, 100) + '...' : dataDescription,
-        isDataNameValid: dataName && dataName !== 'null' && dataName !== 'undefined',
-        isDataDescriptionValid: dataDescription && dataDescription !== 'null' && dataDescription !== 'undefined'
-      });
-      
-      if (!dataName || dataName === 'null' || dataName === 'undefined') {
-        console.error(`❌ Radio ${index + 1} has invalid data-name: "${dataName}"`);
-      }
-      if (!dataDescription || dataDescription === 'null' || dataDescription === 'undefined') {
-        console.error(`❌ Radio ${index + 1} has invalid data-description: "${dataDescription}"`);
-      }
-    });
-    
-    console.log('=== END USER STORIES DEBUG ===');
-  }
-
-  document.getElementById("proceed-form")?.addEventListener("submit", async function (e) {
-    e.preventDefault(); // Prevent default form submission
-    
-    // Debug user stories if needed
-    debugUserStories();
-    
-    // Function to get proceed button elements with retry
-    function getProceedButtonElements() {
-      const elements = {
-        proceedBtn: document.getElementById('proceedBtn'),
-        proceedSpinner: document.getElementById('proceedSpinner'),
-        proceedTimerEl: document.getElementById('proceedTimer')
-      };
-      
-      console.log('Getting proceed button elements:', elements);
-      return elements;
-    }
-    
-    let { proceedBtn, proceedSpinner, proceedTimerEl } = getProceedButtonElements();
-    
-    // Retry mechanism if elements are not found initially
-    if (!proceedBtn || !proceedSpinner || !proceedTimerEl) {
-      console.warn('Some proceed button elements not found on first attempt, retrying...');
-      await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
-      ({ proceedBtn, proceedSpinner, proceedTimerEl } = getProceedButtonElements());
-    }
-    
-    // Debug: Check if elements are found
-    console.log('Proceed button elements found:');
-    console.log('proceedBtn:', proceedBtn);
-    console.log('proceedSpinner:', proceedSpinner);
-    console.log('proceedTimerEl:', proceedTimerEl);
-    
-    // Additional check: verify elements are actually in the DOM
-    if (proceedBtn) {
-      console.log('proceedBtn parent:', proceedBtn.parentElement);
-      console.log('proceedBtn is connected to DOM:', proceedBtn.isConnected);
-    }
-      // Debug: Check what checkboxes exist
-    const allCheckboxes = document.querySelectorAll('input[type="checkbox"][name="user_story_ids"]');
-    console.log('All user story checkboxes found:', allCheckboxes);
-    allCheckboxes.forEach((checkbox, index) => {
-      console.log(`Checkbox ${index}: name="${checkbox.name}", value="${checkbox.value}", checked=${checkbox.checked}`);
-      console.log(`  - data-name: "${checkbox.getAttribute('data-name')}"`);
-      console.log(`  - data-description: "${checkbox.getAttribute('data-description')}"`);
-    });
-    
-    // Get all checked user story checkboxes
-    const checkedBoxes = document.querySelectorAll('input[name="user_story_ids"]:checked');
-    
-    // Fallback: try other possible selectors
-    if (checkedBoxes.length === 0) {
-      const fallbackChecked = document.querySelectorAll('#user-stories-container input[type="checkbox"]:checked');
-      console.log('Using fallback selector, found:', fallbackChecked.length, 'checked items');
-    }
-      console.log('Selected user story checkboxes:', checkedBoxes);
-      
-      // Debug: Log all attributes of selected checkboxes
-      checkedBoxes.forEach((checkbox, index) => {
-        console.log(`Selected checkbox ${index + 1} all attributes:`, {
-          id: checkbox.id,
-          value: checkbox.value,
-          name: checkbox.name,
-          'data-name': checkbox.getAttribute('data-name'),
-          'data-description': checkbox.getAttribute('data-description'),
-          'data-priority': checkbox.getAttribute('data-priority'),
-          'data-systems': checkbox.getAttribute('data-systems'),
-          outerHTML: checkbox.outerHTML
-        });
-      });
-      
-      if (checkedBoxes.length > 0) {      
-        // For single checkbox selection (as specified by user)
-        const selectedCheckbox = checkedBoxes[0]; // Take the first (and likely only) selected checkbox
-        
-        // Get data directly from the checkbox attributes
-        const storyId = selectedCheckbox.value;
-        let storyName = selectedCheckbox.getAttribute('data-name');
-        let storyDescription = selectedCheckbox.getAttribute('data-description');
-        const storyPriority = selectedCheckbox.getAttribute('data-priority') || 'Medium';
-        const storySystems = selectedCheckbox.getAttribute('data-systems') || 'TBD';
-        
-        console.log('Raw extracted data from checkbox:', {
-          id: storyId,
-          name: storyName,
-          description: storyDescription,
-          priority: storyPriority,
-          systems: storySystems
-        });
-        
-        // If story name is missing, try to extract from the table row
-        if (!storyName || storyName === 'null' || storyName === 'undefined' || storyName.trim() === '') {
-          console.warn('Story name is missing or invalid, trying to extract from table row');
-          const tableRow = selectedCheckbox.closest('tr');
-          if (tableRow && tableRow.cells && tableRow.cells.length > 2) {
-            const nameCell = tableRow.cells[2]; // Name is typically in the 3rd column (index 2)
-            if (nameCell) {
-              const nameFromCell = nameCell.textContent.trim();
-              if (nameFromCell && nameFromCell !== 'Name' && nameFromCell !== 'name') {
-                console.log('Successfully extracted story name from table cell:', nameFromCell);
-                storyName = nameFromCell;
-              }
-            }
-          }
-        }
-        
-        // Final fallback if still no story name
-        if (!storyName || storyName === 'null' || storyName === 'undefined' || storyName.trim() === '') {
-          console.warn('Still no story name found, using default fallback');
-          storyName = 'Lock critical fields for charged-off accounts';
-        }
-        
-        // Similar fallback for description
-        if (!storyDescription || storyDescription === 'null' || storyDescription === 'undefined' || storyDescription.trim() === '') {
-          console.warn('Story description is missing or invalid, using default');
-          storyDescription = 'As a system architect, I want to identify and classify the necessary data fields for charged-off accounts so that we can ensure only required and relevant data is transmitted securely.';
-        }
-        
-        console.log('Single story selection data after validation:', {
-          id: storyId,
-          name: storyName,
-          description: storyDescription,
-          priority: storyPriority,
-          systems: storySystems
-        });
-        
-        // Decode HTML entities if needed
-        function decodeHtmlEntities(str) {
-          if (!str) return str;
-          const textarea = document.createElement('textarea');
-          textarea.innerHTML = str;
-          return textarea.value;
-        }
-        
-        let decodedName = decodeHtmlEntities(storyName);
-        const decodedDescription = decodeHtmlEntities(storyDescription);
-        
-        // Ensure we have valid values after decoding
-        if (!decodedName || decodedName.trim() === '') {
-          decodedName = 'Lock critical fields for charged-off accounts';
-        }
-        
-        console.log('Final story data after processing:', {
-          id: storyId,
-          name: decodedName,
-          description: decodedDescription,
-          priority: storyPriority,
-          systems: storySystems
-        });
-        
-        // Set form fields directly with decoded values
-        document.getElementById("selected_story_id").value = storyId;
-        document.getElementById("selected_story_name").value = decodedName;
-        document.getElementById("selected_story_description").value = decodedDescription;
-        
-        // Debug: Log what we're actually setting in the form fields
-        console.log('=== FORM FIELD VALUES BEING SET ===');
-        console.log('selected_story_id:', document.getElementById("selected_story_id").value);
-        console.log('selected_story_name:', document.getElementById("selected_story_name").value);
-        console.log('selected_story_description:', document.getElementById("selected_story_description").value);
-        console.log('=== END FORM FIELD VALUES ===');
-        
-        // Add story data for backend processing
-        let storyDataInput = document.getElementById("selected_stories_data");
-        if (!storyDataInput) {
-          storyDataInput = document.createElement('input');
-          storyDataInput.type = 'hidden';
-          storyDataInput.name = 'selected_stories_data';
-          storyDataInput.id = 'selected_stories_data';
-          document.getElementById('proceed-form').appendChild(storyDataInput);
-        }
-        storyDataInput.value = JSON.stringify([{
-          id: storyId,
-          name: decodedName,
-          description: decodedDescription,
-          epic_id: '',
-          priority: storyPriority,
-          role: '',
-          goal: '',
-          system: '',
-          systems: storySystems
-        }]);
-        
-        console.log('Hidden fields set for single story:', {
-          id: storyId,
-          name: decodedName,
-          description: decodedDescription
-        });
-      } else {
-        // No stories selected - proceed with default values to ensure agents are called
-        console.log('No user stories selected, proceeding with default values');
-        
-        // Set default values to ensure agents are called
-        const defaultStoryId = 'default-story-1';
-        const defaultStoryName = 'Lock critical fields for charged-off accounts';
-        const defaultStoryDescription = 'As a system architect, I want to identify and classify the necessary data fields for charged-off accounts so that we can ensure only required and relevant data is transmitted securely.';
-        
-        document.getElementById("selected_story_id").value = defaultStoryId;
-        document.getElementById("selected_story_name").value = defaultStoryName;
-        document.getElementById("selected_story_description").value = defaultStoryDescription;
-        
-        // Add default story data
-        let storyDataInput = document.getElementById("selected_stories_data");
-        if (!storyDataInput) {
-          storyDataInput = document.createElement('input');
-          storyDataInput.type = 'hidden';
-          storyDataInput.name = 'selected_stories_data';
-          storyDataInput.id = 'selected_stories_data';
-          document.getElementById('proceed-form').appendChild(storyDataInput);
-        }
-        storyDataInput.value = JSON.stringify([{
-          id: defaultStoryId,
-          name: defaultStoryName,
-          description: defaultStoryDescription,
-          epic_id: '',
-          priority: 'High',
-          role: '',
-          goal: '',
-          system: '',
-          systems: 'CAPS, CMS'
-        }]);
-        
-        console.log('Hidden fields set for default story:', {
-          id: defaultStoryId,
-          name: defaultStoryName,
-          description: defaultStoryDescription
-        });
-      }
-
-      // Show loading spinner and start timer (with enhanced error handling)
-      let timerInterval = null;
-      console.log('=== PROCEED BUTTON LOADING DEBUG ===');
-      console.log('Elements found:', {
-        proceedBtn: !!proceedBtn,
-        proceedSpinner: !!proceedSpinner,
-        proceedTimerEl: !!proceedTimerEl
-      });
-      
-      if (proceedBtn && proceedSpinner && proceedTimerEl) {
-        console.log('All elements found - starting loading state');
-        console.log('Before showButtonLoading:');
-        console.log('  - Button disabled:', proceedBtn.disabled);
-        console.log('  - Spinner display:', proceedSpinner.style.display);
-        console.log('  - Timer content:', proceedTimerEl.textContent);
-        
-        timerInterval = showButtonLoading(proceedBtn, proceedSpinner, proceedTimerEl, 'Proceed with selection', 'Processing...');
-        
-        console.log('After showButtonLoading:');
-        console.log('  - Button disabled:', proceedBtn.disabled);
-        console.log('  - Spinner display:', proceedSpinner.style.display);
-        console.log('  - Timer content:', proceedTimerEl.textContent);
-        console.log('  - Timer interval ID:', timerInterval);
-      } else {
-        console.warn('Some proceed button elements not found - using fallback loading indicator');
-        console.warn('Missing elements:', {
-          proceedBtn: !proceedBtn,
-          proceedSpinner: !proceedSpinner,
-          proceedTimerEl: !proceedTimerEl
-        });
-        
-        // Fallback: Create a temporary loading indicator
-        if (proceedBtn) {
-          proceedBtn.disabled = true;
-          proceedBtn.innerHTML = `
-            <span style="display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite;"></span>
-            <span style="margin-left: 8px;">Processing...</span>
-          `;
-        }
-      }        
-
-      try {
-        // Use FormData to submit the form, which is more robust.
-        const form = document.getElementById('proceed-form');
-        const formData = new FormData(form);
-
-        // Debug: Check form field values right before submission
-        console.log('=== FINAL FORM VALIDATION BEFORE SUBMISSION ===');
-        console.log('Form element found:', !!form);
-        console.log('selected_story_id element:', document.getElementById("selected_story_id"));
-        console.log('selected_story_name element:', document.getElementById("selected_story_name"));
-        console.log('selected_story_description element:', document.getElementById("selected_story_description"));
-        
-        if (document.getElementById("selected_story_id")) {
-          console.log('selected_story_id value:', document.getElementById("selected_story_id").value);
-        }
-        if (document.getElementById("selected_story_name")) {
-          console.log('selected_story_name value:', document.getElementById("selected_story_name").value);
-        }
-        if (document.getElementById("selected_story_description")) {
-          console.log('selected_story_description value:', document.getElementById("selected_story_description").value);
-        }
-        console.log('=== END FINAL FORM VALIDATION ===');
-
-        // Log the form data to be sent for debugging
-        console.log('Submitting user story selection with FormData:');
-        for (let [key, value] of formData.entries()) {
-            // Truncate long values for cleaner logs
-            const displayValue = value.length > 100 ? value.substring(0, 97) + '...' : value;
-            console.log(`  - ${key}: "${displayValue}"`);
-        }
-
-        const response = await fetch("/user-story-details", {
-            method: "POST",
-            body: formData, // Send as form data
-        });
-
-        if (response.ok) {
-            // The backend will return a full HTML page for form submissions,
-            // so we replace the current document content with the new page.
-            const html = await response.text();
-            document.open();
-            document.write(html);
-            document.close();
-            console.log('Successfully loaded user story details page.');
-        } else {
-            console.error('Error submitting user story selection:', response.status, response.statusText);
-            // Try to get more error details from the response body
-            const errorText = await response.text();
-            console.error('Server error response:', errorText);
-            alert(`Error processing user story selection. Status: ${response.status}. Please check the console for details.`);
-        }
-
-      } catch (error) {
-        console.error('Error submitting user story selection:', error);
-        alert('Network error. Please check your connection and try again.');
-      } finally {
-        // Hide loading spinner and timer (with enhanced error handling)
-        if (proceedBtn && proceedSpinner && proceedTimerEl && timerInterval) {
-          console.log('Hiding timer and spinner for proceed button');
-          hideButtonLoading(proceedBtn, proceedSpinner, proceedTimerEl, 'Proceed with selection', timerInterval);
-        } else if (proceedBtn) {
-          // Fallback cleanup: restore original button
-          console.log('Using fallback cleanup for proceed button');
-          proceedBtn.disabled = false;
-          proceedBtn.innerHTML = `
-            <span class="btn-spinner" id="proceedSpinner" style="display: none;"></span>
-            <span class="btn-text">Proceed with selection(s)</span>
-            <span class="btn-timer" id="proceedTimer"></span>
-          `;
-        } else {
-          console.warn('No proceed button found during cleanup');
-        }
-      }
   });
-    // Function to validate and log user story data attributes
-  function validateUserStoryData(story, index) {
-    const storyName = story.name || story.title || 'Untitled Story';
-    const storyDescription = story.description || story.goal || 'No description available';
-    
-    console.log(`Validating user story ${index + 1}:`, {
-      story_id: story.story_id || `story_${index + 1}`,
-      name: storyName,
-      description: storyDescription,
-      originalStory: story
-    });
-    
-    // Check for null, undefined, or empty values
-    if (!storyName || storyName === 'null' || storyName === 'undefined') {
-      console.warn(`Warning: Story ${index + 1} has invalid name:`, storyName);
-    }
-    if (!storyDescription || storyDescription === 'null' || storyDescription === 'undefined') {
-      console.warn(`Warning: Story ${index + 1} has invalid description:`, storyDescription);
-    }
-    
-    return {
-      name: storyName,
-      description: storyDescription,
-      isValid: storyName && storyDescription && 
-               storyName !== 'null' && storyName !== 'undefined' &&
-               storyDescription !== 'null' && storyDescription !== 'undefined'
-    };
-  }
 
-    // Function to parse and format user stories if they're in JSON format
-  function parseAndFormatUserStories() {
-    const userStoriesContainer = document.getElementById('user-stories-container');
-    if (!userStoriesContainer) {
-      console.log('User stories container not found');
-      return;
+  // User story selection form submission
+  document.getElementById("proceed-form")?.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    
+    console.log('🔥 FORM SUBMISSION STARTED');
+    
+    const proceedBtn = document.getElementById('proceedBtn');
+    const proceedSpinner = document.getElementById('proceedSpinner');
+    const proceedTimerEl = document.getElementById('proceedTimer');
+    
+    // Check current form field values
+    const storyIdField = document.getElementById("selected_story_id");
+    const storyNameField = document.getElementById("selected_story_name");
+    const storyDescField = document.getElementById("selected_story_description");
+    
+    console.log('Current hidden form field values:');
+    console.log('  - selected_story_id:', storyIdField ? storyIdField.value : 'FIELD NOT FOUND');
+    console.log('  - selected_story_name:', storyNameField ? storyNameField.value : 'FIELD NOT FOUND');
+    console.log('  - selected_story_description:', storyDescField ? storyDescField.value : 'FIELD NOT FOUND');
+    
+    // If form fields are empty, use default values
+    if (!storyIdField?.value || !storyNameField?.value) {
+      console.log('Form fields are empty, setting default values');
+      
+      const defaultStoryId = 'default-story-1';
+      const defaultStoryName = 'Lock critical fields for charged-off accounts';
+      const defaultStoryDescription = 'As a system architect, I want to identify and classify the necessary data fields for charged-off accounts so that we can ensure only required and relevant data is transmitted securely.';
+      
+      if (storyIdField) storyIdField.value = defaultStoryId;
+      if (storyNameField) storyNameField.value = defaultStoryName;
+      if (storyDescField) storyDescField.value = defaultStoryDescription;
+      
+      console.log('Default values set:', {
+        id: defaultStoryId,
+        name: defaultStoryName,
+        description: defaultStoryDescription.substring(0, 50) + '...'
+      });
+    } else {
+      console.log('✅ Form fields already have values, proceeding with current values');
     }
     
-    let content = userStoriesContainer.innerHTML.trim();
-    
-    // If content is already formatted (contains user-story-card or table), don't reprocess
-    if (content.includes('user-story-card') || content.includes('<table')) {
-      console.log('User stories already formatted, skipping parsing');
-      return;
-    }
-    
-    // Remove any HTML tags and get plain text
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = content;
-    content = tempDiv.textContent || tempDiv.innerText || '';
-    content = content.trim();
-    
-    console.log('Raw user stories content to parse:', content);
-    
-    // If content is empty or very short, leave it as is
-    if (!content || content.length < 5) {
-      console.log('User stories content too short or empty, skipping parsing');
-      return;
+    // Show loading spinner and start timer
+    let timerInterval = null;
+    if (proceedBtn && proceedSpinner && proceedTimerEl) {
+      timerInterval = showButtonLoading(proceedBtn, proceedSpinner, proceedTimerEl, 'Proceed To Selection', 'Processing...');
+    } else {
+      console.warn('Some proceed button elements not found');
+      if (proceedBtn) {
+        proceedBtn.disabled = true;
+        proceedBtn.innerHTML = `
+          <span style="display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+          <span style="margin-left: 8px;">Processing...</span>
+        `;
+      }
     }
 
     try {
-      // Multiple strategies to extract JSON from text
-      let cleanContent = content;
-      let extractionMethod = 'direct';
+      // Get the form and create FormData
+      const form = document.getElementById('proceed-form');
+      if (!form) {
+        console.error('CRITICAL ERROR: Proceed form not found!');
+        alert('Form not found. Please refresh the page and try again.');
+        return;
+      }
       
-      // Strategy 1: Look for markdown-wrapped JSON
-      if (cleanContent.includes('```json')) {
-        const jsonMatch = cleanContent.match(/```json\s*([\s\S]*?)\s*```/);
-        if (jsonMatch && jsonMatch[1]) {
-          cleanContent = jsonMatch[1].trim();
-          extractionMethod = 'markdown-json';
-        }
-      } 
-      // Strategy 2: Look for any code block with `````
-      else if (cleanContent.includes('```')) {
-        const codeBlockMatch = cleanContent.match(/```\s*([\s\S]*?)\s*```/);
-        if (codeBlockMatch && codeBlockMatch[1]) {
-          cleanContent = codeBlockMatch[1].trim();
-          extractionMethod = 'markdown-code';
+      // Use FormData to submit the form
+      const formData = new FormData(form);
+
+      // Debug: Check form field values right before submission
+      console.log('FINAL FORM VALIDATION BEFORE SUBMISSION');
+      let hasStoryName = false;
+      for (let [key, value] of formData.entries()) {
+        const displayValue = value.length > 100 ? value.substring(0, 97) + '...' : value;
+        console.log(`  - ${key}: "${displayValue}"`);
+        if (key === 'selected_story_name' && value && value.trim() !== '') {
+          hasStoryName = true;
+          console.log(`✅ STORY NAME FOUND IN FORM DATA: "${value}"`);
         }
       }
       
-      // Strategy 3: Look for JSON array pattern (most robust)
-      // This regex finds arrays that start with [ and end with ] and contain objects
-      const jsonArrayPattern = /\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/;
-      const jsonArrayMatch = cleanContent.match(jsonArrayPattern);
-      if (jsonArrayMatch) {
-        cleanContent = jsonArrayMatch[0];
-        extractionMethod = 'regex-array';
-        console.log(`Found JSON array using ${extractionMethod}:`, cleanContent.substring(0, 200) + '...');
+      if (!hasStoryName) {
+        console.error('❌ CRITICAL ERROR: NO STORY NAME IN FORM DATA!');
       }
-      
-      // Strategy 4: Look for single object pattern
-      if (!jsonArrayMatch) {
-        const singleObjectPattern = /\{\s*"[\s\S]*?\}/;
-        const singleObjectMatch = cleanContent.match(singleObjectPattern);
-        if (singleObjectMatch) {
-          cleanContent = singleObjectMatch[0];
-          extractionMethod = 'regex-object';
-          console.log(`Found JSON object using ${extractionMethod}:`, cleanContent.substring(0, 200) + '...');
-        }
-      }
-      
-      console.log(`Extraction method: ${extractionMethod}`);
-      console.log('Cleaned user stories content:', cleanContent.substring(0, 500) + '...');
-      
-      // Try to parse as JSON
-      const userStoriesData = JSON.parse(cleanContent);
-      
-      if (Array.isArray(userStoriesData) && userStoriesData.length > 0) {
-        console.log('Successfully parsed user stories array:', userStoriesData);
-        // Format the user stories as a table with new agent response format
-        let formattedHTML = `
-          <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-              <thead class="thead-dark">
-                <tr>
-                  <th>Select</th>
-                  <th>Story ID</th>
-                  <th>Name</th>
-                  <th>Priority</th>
-                  <th>Systems</th>
-                </tr>
-              </thead>
-              <tbody>
-        `;          userStoriesData.forEach((story, index) => {
-          // Handle the new agent response format
-          const storyId = story.story_id || `US-${index + 1}`;
-          const storyName = story.name || story.title || 'Untitled Story';
-          const storyPriority = story.priority || 'Medium';
-          const storySystems = Array.isArray(story.systems) ? story.systems.join(', ') : (story.systems || 'TBD');
-          
-          // Use the story name as description if no separate description field
-          const storyDescription = story.description || story.name || 'No description available';
-          
-          // Validate and get story data
-          const validatedData = validateUserStoryData({
-            ...story,
-            name: storyName,
-            description: storyDescription
-          }, index);
-          
-          // Escape HTML for data attributes to prevent attribute breaking
-          const escapedName = validatedData.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-          const escapedDescription = validatedData.description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-          
-          // Log the escaped data for debugging
-          console.log(`Story ${index + 1} escaped data:`, {
-            storyId,
-            storyName,
-            storyPriority,
-            storySystems,
-            escapedName,
-            escapedDescription,
-            isValid: validatedData.isValid
-          });
-          
-          // Determine priority badge color
-          let priorityClass = 'badge-secondary';
-          if (storyPriority.toLowerCase() === 'high') {
-            priorityClass = 'badge-danger';
-          } else if (storyPriority.toLowerCase() === 'medium') {
-            priorityClass = 'badge-warning';
-          } else if (storyPriority.toLowerCase() === 'low') {
-            priorityClass = 'badge-success';
-          }
-          
-          formattedHTML += `
-            <tr>
-              <td>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="user_story_ids" 
-                  value="${storyId}" id="story_${index + 1}"
-                  data-name="${escapedName}" 
-                  data-description="${escapedDescription}"
-                  data-priority="${storyPriority}"
-                  data-systems="${storySystems}">
-                  <label class="form-check-label" for="story_${index + 1}"></label>
-                </div>
-              </td>
-              <td><strong>${storyId}</strong></td>
-              <td><strong>${validatedData.name}</strong></td>
-              <td><span class="badge ${priorityClass}">${storyPriority}</span></td>
-              <td>${storySystems}</td>
-            </tr>
-          `;
-        });
-        
-        formattedHTML += `
-              </tbody>
-            </table>
-          </div>
-        `;
-        
-        userStoriesContainer.innerHTML = formattedHTML;
-        console.log('User stories formatted successfully as table');
-        
-        // Show the user stories section
-        const userStoriesSection = document.getElementById('user-stories-section');
-        if (userStoriesSection) {
-          userStoriesSection.classList.remove('hidden');
-        }
-        
-        return; // Exit successfully
-        
-      } else if (userStoriesData && typeof userStoriesData === 'object') {
-        // Handle single user story object
-        console.log('Single user story object detected');
-        
-        // Validate single story data
-        const validatedData = validateUserStoryData(userStoriesData, 0);
-        
-        // Escape HTML for data attributes
-        const escapedName = validatedData.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        const escapedDescription = validatedData.description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        
-        console.log('Single story escaped data:', { escapedName, escapedDescription, isValid: validatedData.isValid });
-        
-        const formattedHTML = `
-          <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-              <thead class="thead-dark">
-                <tr>
-                  <th>Select</th>
-                  <th>Story ID</th>
-                  <th>Name</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>                  <td>                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="user_story_ids" 
-                      value="${userStoriesData.story_id || 'story_1'}" id="story_1"
-                      data-name="${escapedName}" 
-                      data-description="${escapedDescription}"
-                      data-epic-id="${userStoriesData.epic_id || ''}"
-                      data-priority="${userStoriesData.priority || 'medium'}" checked>
-                      <label class="form-check-label" for="story_1"></label>
-                    </div>
-                  </td>
-                  <td><strong>${userStoriesData.story_id || 'US1'}</strong></td>
-                  <td><strong>${validatedData.name}</strong></td>
-                  <td>${validatedData.description}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        `;
-        userStoriesContainer.innerHTML = formattedHTML;
-        console.log('Single user story formatted successfully');
-        
-        // Show the user stories section
-        const userStoriesSection = document.getElementById('user-stories-section');
-        if (userStoriesSection) {
-          userStoriesSection.classList.remove('hidden');
-        }
-        
-        return; // Exit successfully
-      }
-      
-      // If we reach here, the JSON was valid but not in expected format
-      console.log('JSON parsed but not in expected user stories format:', userStoriesData);
-        } catch (e) {
-      // If it's not JSON, try more aggressive extraction methods
-      console.log('User stories JSON parse error:', e.message);
-      console.log('Content that failed to parse:', content.substring(0, 1000) + '...');
-      
-      // Try multiple extraction strategies in sequence
-      let extractedData = null;
-      let successMethod = null;
-      
-      // Strategy 1: More flexible array extraction with nested braces
-      const flexibleArrayPattern = /\[(?:[^[\]{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\]/g;
-      const arrayMatches = content.match(flexibleArrayPattern);
-      if (arrayMatches) {
-        for (let match of arrayMatches) {
-          try {
-            const parsed = JSON.parse(match);
-            if (Array.isArray(parsed) && parsed.length > 0 && 
-                parsed[0] && (parsed[0].title || parsed[0].story_id || parsed[0].role)) {
-              extractedData = parsed;
-              successMethod = 'flexible-array';
-              break;
-            }
-          } catch (e2) {
-            continue;
-          }
-        }
-      }
-      
-      // Strategy 2: Extract from "User Stories for:" pattern
-      if (!extractedData) {
-        const userStoriesPattern = /User Stories for:[\s\S]*?(\[[\s\S]*?\])/i;
-        const userStoriesMatch = content.match(userStoriesPattern);
-        if (userStoriesMatch && userStoriesMatch[1]) {
-          try {
-            const parsed = JSON.parse(userStoriesMatch[1]);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              extractedData = parsed;
-              successMethod = 'user-stories-pattern';
-            }
-          } catch (e2) {
-            console.log('Failed to parse user stories pattern match:', e2.message);
-          }
-        }
-      }
-      
-      // Strategy 3: Find largest JSON-like structure
-      if (!extractedData) {
-        const jsonLikePattern = /[\[{][\s\S]*?[\]}]/g;
-        const jsonLikeMatches = content.match(jsonLikePattern);
-        if (jsonLikeMatches) {
-          // Sort by length (longest first) to get the most complete structure
-          jsonLikeMatches.sort((a, b) => b.length - a.length);
-          
-          for (let match of jsonLikeMatches) {
-            try {
-              const parsed = JSON.parse(match);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                extractedData = parsed;
-                successMethod = 'largest-json';
-                break;
-              } else if (parsed && typeof parsed === 'object' && 
-                        (parsed.title || parsed.story_id || parsed.role)) {
-                extractedData = [parsed]; // Wrap single object in array
-                successMethod = 'single-object-wrapped';
-                break;
-              }
-            } catch (e2) {
-              continue;
-            }
-          }
-        }
-      }
-        if (extractedData) {
-        console.log(`Successfully extracted user stories using ${successMethod}:`, extractedData);
-          // Use the same table formatting logic as above
-        let formattedHTML = `
-          <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-              <thead class="thead-dark">
-                <tr>
-                  <th>Select</th>
-                  <th>Story ID</th>
-                  <th>Name</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-        `;
-          extractedData.forEach((story, index) => {
-          // Validate and get story data
-          const validatedData = validateUserStoryData(story, index);
-          
-          // Escape HTML for data attributes to prevent attribute breaking
-          const escapedName = validatedData.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-          const escapedDescription = validatedData.description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-          
-          console.log(`Extracted story ${index + 1} escaped data:`, {
-            escapedName,
-            escapedDescription,
-            isValid: validatedData.isValid
-          });
-          
-          formattedHTML += `
-            <tr>
-              <td>
-                <div class="form-check">                  <input class="form-check-input" type="checkbox" name="user_story_ids" 
-                  value="${story.story_id || `story_${index + 1}`}" id="story_${index + 1}"
-                  data-name="${escapedName}" 
-                  data-description="${escapedDescription}"
-                  data-epic-id="${story.epic_id || ''}"
-                  data-priority="${story.priority || 'medium'}">
-                  <label class="form-check-label" for="story_${index + 1}"></label>
-                </div>
-              </td>
-              <td><strong>${story.story_id || `US${index + 1}`}</strong></td>              <td><strong>${validatedData.name}</strong></td>
-              <td>${validatedData.description}</td>
-            </tr>
-          `;
-        });
-        
-        formattedHTML += `
-              </tbody>
-            </table>
-          </div>
-        `;
-        
-        userStoriesContainer.innerHTML = formattedHTML;
-        console.log('User stories extracted and formatted successfully as table');
-        
-        // Show the user stories section
-        const userStoriesSection = document.getElementById('user-stories-section');
-        if (userStoriesSection) {
-          userStoriesSection.classList.remove('hidden');
-        }
-        
-        return; // Exit successfully
-      }
-            
-            // Use the same table formatting logic as above
-            let formattedHTML = `
-              <div class="table-responsive">
-                <table class="table table-striped table-bordered">
-                  <thead class="thead-dark">
-                    <tr>
-                      <th>Select</th>
-                      <th>Story ID</th>
-                      <th>Title</th>
-                      <th>User Role</th>
-                      <th>Goal</th>
-                      <th>Benefit</th>
-                      <th>Priority</th>
-                      <th>Acceptance Criteria</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-            `;
-            
-            userStoriesData.forEach((story, index) => {
-              // Validate and get story data
-              const validatedData = validateUserStoryData(story, index);
-              
-              // Format acceptance criteria as a bulleted list
-              let acceptanceCriteria = '';
-              if (story.acceptance_criteria && Array.isArray(story.acceptance_criteria)) {
-                acceptanceCriteria = '<ul class="mb-0">';
-                story.acceptance_criteria.forEach(criteria => {
-                  acceptanceCriteria += `<li>${criteria}</li>`;
-                });
-                acceptanceCriteria += '</ul>';
-              } else if (story.acceptance_criteria) {
-                acceptanceCriteria = story.acceptance_criteria;
-              }
-              
-              // Determine priority badge color
-              let priorityClass = 'badge-secondary';
-              if (story.priority && story.priority.toLowerCase() === 'high') {
-                priorityClass = 'badge-danger';
-              } else if (story.priority && story.priority.toLowerCase() === 'medium') {
-                priorityClass = 'badge-warning';
-              } else if (story.priority && story.priority.toLowerCase() === 'low') {
-                priorityClass = 'badge-success';
-              }
-              
-              // Escape HTML for data attributes
-              const escapedName = validatedData.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-              const escapedDescription = validatedData.description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-              
-              console.log(`Detailed story ${index + 1} escaped data:`, {
-                escapedName,
-                escapedDescription,
-                isValid: validatedData.isValid
-              });
-              
-                formattedHTML += `
-                <tr>
-                  <td>
-                    <div class="form-check">                      <input class="form-check-input" type="checkbox" name="user_story_ids" 
-                      value="${story.story_id || `story_${index + 1}`}" id="story_${index + 1}"
-                      data-name="${escapedName}" 
-                      data-description="${escapedDescription}"
-                      data-epic-id="${story.epic_id || ''}"
-                      data-priority="${story.priority || 'medium'}"
-                      data-role="${story.role || ''}"
-                      data-goal="${story.goal || ''}">
-                      <label class="form-check-label" for="story_${index + 1}"></label>
-                    </div>
-                  </td>
-                  <td><strong>${story.story_id || `US${index + 1}`}</strong></td>
-                  <td>${validatedData.name}</td>
-                  <td>${story.role || 'Not specified'}</td>
-                  <td>${story.goal || 'Not specified'}</td>
-                  <td>${story.benefit || 'Not specified'}</td>
-                  <td>
-                    <span class="badge ${priorityClass}">${story.priority || 'Not set'}</span>
-                  </td>
-                  <td>${acceptanceCriteria || 'Not specified'}</td>
-                </tr>
-              `;
-            });
-            
-            formattedHTML += `
-                  </tbody>
-                </table>
-              </div>
-            `;
-            
-            userStoriesContainer.innerHTML = formattedHTML;
-            console.log('User stories extracted and formatted successfully as table');
-            
-            // Show the user stories section
-            const userStoriesSection = document.getElementById('user-stories-section');
-            if (userStoriesSection) {
-              userStoriesSection.classList.remove('hidden');
-            }
-          return; // Exit successfully
-      }
-      
-      // If we reach here, no extraction method worked
-      // Check if content looks like an agent refusal or contains refusal keywords
-      const refusalKeywords = ['cannot', 'sorry', 'unable', 'refuse', 'not possible', 'cannot provide', 'cannot assist', 'not able'];
-      const isRefusal = refusalKeywords.some(keyword => content.toLowerCase().includes(keyword.toLowerCase())) && 
-                       !content.includes('[') && !content.includes('{');
-      
-      if (isRefusal) {
-        console.log('Content appears to be an agent refusal');
-        userStoriesContainer.innerHTML = `
-          <div class="alert alert-info">
-            <h6><i class="fas fa-info-circle"></i> Agent Response</h6>
-            <p><strong>The system has provided a response but did not generate structured user stories.</strong></p>
-            <details>
-              <summary>Click to view the response</summary>
-              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; color: #333; white-space: pre-wrap; max-height: 400px; overflow-y: auto; margin-top: 10px;">${content}</div>
-            </details>
-            <div class="mt-3">
-              <p class="mb-2"><strong>What you can do:</strong></p>
-              <ul class="mb-0">
-                <li>Try using the <strong>User Story Chat Bot</strong> below to generate stories in a different way</li>
-                <li>Use the Epic Chat Bot to refine your epic before generating user stories</li>
-                <li>Contact support if this issue persists</li>
-              </ul>
-            </div>
-          </div>
-        `;
-      } else if (content.includes('[') || content.includes('{') || content.includes('story') || content.includes('```')) {
-        console.log('Content appears to be malformed user stories data, showing error');
-        
-        // Try to show a more user-friendly version of the content
-        let displayContent = content;
-        if (displayContent.length > 2000) {
-          displayContent = displayContent.substring(0, 2000) + '... [Content truncated]';
-        }
-        
-        userStoriesContainer.innerHTML = `
-          <div class="alert alert-warning">
-            <h6><i class="fas fa-exclamation-triangle"></i> Parsing Issue</h6>
-            <p><strong>The system returned user stories but they could not be parsed into a table format.</strong></p>
-            <details>
-              <summary>Click to view raw response</summary>
-              <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; color: #333; white-space: pre-wrap; max-height: 400px; overflow-y: auto; margin-top: 10px;">${displayContent}</pre>
-            </details>
-            <div class="mt-3">
-              <p class="mb-2"><strong>What you can do:</strong></p>
-              <ul class="mb-0">
-                <li>Try using the <strong>User Story Chat Bot</strong> below to generate stories in a different format</li>
-                <li>Copy the content above and manually extract the user story information</li>
-                <li>Contact support to improve the parsing for this response format</li>
-              </ul>
-            </div>
-          </div>
-        `;
+
+      const response = await fetch("/user-story-details", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const html = await response.text();
+        document.open();
+        document.write(html);
+        document.close();
+        console.log('Successfully loaded user story details page.');
       } else {
-        // If content doesn't look like JSON or refusal, leave it as is
-        console.log('User stories content does not appear to be JSON or refusal, leaving as is');
+        console.error('Error submitting user story selection:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+        alert(`Error processing user story selection. Status: ${response.status}. Please check the console for details.`);
       }
-      
-      // Always show the user stories section when there's content to display
-      if (content && content.trim()) {
-        const userStoriesSection = document.getElementById('user-stories-section');
-        if (userStoriesSection) {
-          userStoriesSection.classList.remove('hidden');
-        }
+
+    } catch (error) {
+      console.error('Error submitting user story selection:', error);
+      alert('Network error. Please check your connection and try again.');
+    } finally {
+      // Hide loading spinner and timer
+      if (proceedBtn && proceedSpinner && proceedTimerEl && timerInterval) {
+        hideButtonLoading(proceedBtn, proceedSpinner, proceedTimerEl, 'Proceed To Selection', timerInterval);
+      } else if (proceedBtn) {
+        proceedBtn.disabled = false;
+        proceedBtn.innerHTML = `
+          <span class="btn-spinner" id="proceedSpinner" style="display: none;"></span>
+          <span class="btn-text">Proceed To Selection</span>
+          <span class="btn-timer" id="proceedTimer"></span>
+        `;
       }
     }
-    // Parse user stories when epics are approved and user stories section is visible
-  document.getElementById("approve-epics-form")?.addEventListener("submit", function () {
-    setTimeout(function() {
-      const userStoriesSection = document.getElementById('user-stories-section');
-      if (userStoriesSection && !userStoriesSection.classList.contains('hidden')) {
-        console.log('User stories section is visible, parsing user stories...');
-        parseAndFormatUserStories();
-      } else {
-        console.log('User stories section is not visible yet');
-      }
-    }, 500); // Delay to allow section to become visible
   });
-  // Epic Chat functionality
-  let epicChatHistory = [];
-  let isEpicChatOpen = false;
 
-  function toggleEpicChat() {
-    const panel = document.getElementById('epic-chat-panel');
-    const widget = document.getElementById('epic-chat-widget');
-    
-    if (isEpicChatOpen) {
-      // Close chat
-      widget.classList.add('closing');
-      panel.classList.remove('show');
-      setTimeout(() => {
-        panel.style.display = 'none';
-        widget.classList.remove('closing');
-        isEpicChatOpen = false;
-      }, 300);
-    } else {
-      // Open chat
-      panel.style.display = 'flex';
-      widget.classList.add('opening');
-      setTimeout(() => {
-        panel.classList.add('show');
-        widget.classList.remove('opening');
-        isEpicChatOpen = true;
-        // Load chat history and focus input
-        loadEpicChatHistory();
-        setTimeout(() => {
-          document.getElementById('epic-chat-input')?.focus();
-        }, 100);
-      }, 10);
-    }
-  }
-
+  // Placeholder functions for chat functionality
   function openEpicChat() {
-    if (!isEpicChatOpen) {
-      toggleEpicChat();
-    }
-  }
-  function closeEpicChat() {
-    if (isEpicChatOpen) {
-      toggleEpicChat();
-    }
-  }
-
-  function clearEpicChat() {
-    if (confirm('Are you sure you want to clear the chat history?')) {
-      fetch('/epic-chat-clear', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          epicChatHistory = [];
-          updateChatDisplay();
-          showNotification('Chat history cleared', 'success');
-        } else {
-          showNotification('Failed to clear chat history: ' + (data.error || 'Unknown error'), 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error clearing chat:', error);
-        showNotification('Failed to clear chat history', 'error');
-      });
-    }
-  }
-
-  function loadEpicChatHistory() {
-    fetch('/epic-chat-history')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          epicChatHistory = data.chat_history || [];
-          updateChatDisplay();
-          
-          // Show session info if there's chat history
-          if (epicChatHistory.length > 0) {
-            showNotification('Chat session loaded. Sessions auto-clear after 30 minutes of inactivity.', 'info');
-          }
-        } else {
-          console.error('Failed to load chat history:', data.error);
-        }
-      })
-      .catch(error => {
-        console.error('Error loading chat history:', error);
-      });
-  }
-  function sendEpicChatMessage() {
-    const input = document.getElementById('epic-chat-input');
-    const message = input.value.trim();
-    
-    if (!message) {
-      showNotification('Please enter a message', 'warning');
-      return;
-    }
-
-    // Get current epics content from the page for context
-    const epicsContainer = document.getElementById('epics-container');
-    let currentEpicsContent = '';
-    
-    if (epicsContainer) {
-      // Extract epic information from the current display
-      const epicCards = epicsContainer.querySelectorAll('.epic-card:not([data-chat-update])');
-      const epicsData = [];
-      
-      epicCards.forEach((card, index) => {
-        const titleElement = card.querySelector('h5');
-        const descElement = card.querySelector('p');
-        
-        let title = titleElement ? titleElement.textContent.replace(/^Epic \d+:\s*/, '') : `Epic ${index + 1}`;
-        let description = descElement ? descElement.textContent.replace(/^Description:\s*/, '') : 'No description';
-        
-        epicsData.push({
-          id: `epic_${index + 1}`,
-          title: title,
-          description: description
-        });
-      });
-      
-      if (epicsData.length > 0) {
-        currentEpicsContent = JSON.stringify(epicsData, null, 2);
-      } else {
-        // Fallback: get raw HTML content
-        currentEpicsContent = epicsContainer.innerHTML.trim();
-      }
-    }
-
-    console.log('Sending Epic Chat with current context:', {
-      message: message,
-      currentEpicsContent: currentEpicsContent.substring(0, 200) + '...'
-    });
-
-    // Show loading state
-    const sendBtn = document.querySelector('.send-btn');
-    const originalHTML = sendBtn.innerHTML;
-    sendBtn.disabled = true;
-    sendBtn.innerHTML = `
-      <div class="typing-indicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>
-    `;
-
-    // Clear input immediately
-    input.value = '';
-    updateCharCounter();
-
-    // Add user message to display immediately
-    addMessageToDisplay('user', message);
-
-    // Show typing indicator
-    showTypingIndicator();
-
-    // Send message to backend with current epics context
-    fetch('/epic-chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        message: message,
-        current_epics_content: currentEpicsContent
-      })
-    })
-    .then(response => response.json())    .then(data => {
-      hideTypingIndicator();
-      
-      if (data.success) {
-        epicChatHistory = data.chat_history || [];
-        updateChatDisplay();
-        
-        // Update the main Epics section with the latest response
-        updateEpicsSection(data.response);
-        
-        // Scroll to bottom
-        const chatMessages = document.getElementById('epic-chat-messages');
-        setTimeout(() => {
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 100);
-      } else {
-        showNotification('Failed to send message: ' + (data.error || 'Unknown error'), 'error');
-        // Remove the user message we added optimistically
-        removeLastUserMessage();
-      }
-    })
-    .catch(error => {
-      hideTypingIndicator();
-      console.error('Error sending message:', error);
-      showNotification('Failed to send message', 'error');
-      removeLastUserMessage();
-    })
-    .finally(() => {
-      // Reset button state
-      sendBtn.disabled = false;
-      sendBtn.innerHTML = originalHTML;
-    });
-  }
-  function updateChatDisplay() {
-    const chatMessages = document.getElementById('epic-chat-messages');
-    
-    if (epicChatHistory.length === 0) {
-      chatMessages.innerHTML = `
-        <div class="welcome-message">
-          <div class="message-bubble agent-bubble">
-            <div class="message-content">
-              <span class="greeting">👋 Hi there!</span>
-              <p>I'm your Epic Agent. I can help you with:</p>
-              <ul>
-                <li>💡 Refining epic requirements</li>
-                <li>📋 Breaking down user stories</li>
-                <li>✅ Defining acceptance criteria</li>
-                <li>🎯 Optimizing project scope</li>
-              </ul>
-              <p>What would you like to discuss?</p>
-            </div>
-          </div>
-        </div>
-      `;
-      return;
-    }    let html = '';
-    epicChatHistory.forEach((msg, index) => {
-      const isUser = msg.role === 'user';
-      const bubbleClass = isUser ? 'user-bubble' : 'agent-bubble';
-      
-      // Check if this is an agent message that might have updated the epics section
-      const hasEpicUpdate = !isUser && (
-        msg.message.toLowerCase().includes('epic') || 
-        msg.message.toLowerCase().includes('requirement') ||
-        msg.message.toLowerCase().includes('user story') ||
-        msg.message.toLowerCase().includes('feature')
-      );
-      
-      html += `
-        <div class="message-bubble ${bubbleClass}">
-          <div class="message-content">${escapeHtml(msg.message)}</div>
-          ${hasEpicUpdate ? `
-            <div class="epic-update-indicator">
-              <span class="update-badge">📋 Epics Section Updated</span>
-              <button class="view-update-btn" onclick="scrollToEpicsSection()">View Changes</button>
-            </div>
-          ` : ''}
-          <span class="message-time">${msg.timestamp}</span>
-        </div>
-      `;
-    });
-    
-    chatMessages.innerHTML = html;
-    setTimeout(() => {
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 50);
-  }
-
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-  // Enhanced event handlers
-  document.addEventListener('DOMContentLoaded', function() {
-    const chatInput = document.getElementById('epic-chat-input');
-    if (chatInput) {
-      // Handle Enter key
-      chatInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendEpicChatMessage();
-        }
-      });
-      
-      // Auto-resize textarea
-      chatInput.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 80) + 'px';
-        updateCharCounter();
-      });
-      
-      // Character counter
-      chatInput.addEventListener('input', updateCharCounter);
-    }
-
-    // Close chat when clicking outside
-    document.addEventListener('click', function(e) {
-      const chatWidget = document.getElementById('epic-chat-widget');
-      const chatPanel = document.getElementById('epic-chat-panel');
-      
-      if (isEpicChatOpen && chatWidget && chatPanel && 
-          !chatWidget.contains(e.target)) {
-        closeEpicChat();
-      }
-    });
-
-    // Prevent closing when clicking inside the chat panel
-    const chatPanel = document.getElementById('epic-chat-panel');
-    if (chatPanel) {
-      chatPanel.addEventListener('click', function(e) {
-        e.stopPropagation();
-      });
-    }
-  });
-
-  function addMessageToDisplay(role, message) {
-    const chatMessages = document.getElementById('epic-chat-messages');
-    const timestamp = new Date().toLocaleString();
-    
-    // Remove welcome message if it exists
-    const welcomeMsg = chatMessages.querySelector('.welcome-message');
-    if (welcomeMsg) {
-      welcomeMsg.remove();
-    }
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message-bubble ${role === 'user' ? 'user-bubble' : 'agent-bubble'}`;
-    messageDiv.innerHTML = `
-      <div class="message-content">${escapeHtml(message)}</div>
-      <span class="message-time">${timestamp}</span>
-    `;
-    
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  function removeLastUserMessage() {
-    const chatMessages = document.getElementById('epic-chat-messages');
-    const userMessages = chatMessages.querySelectorAll('.user-bubble');
-    if (userMessages.length > 0) {
-      userMessages[userMessages.length - 1].remove();
-    }
-  }
-
-  function showTypingIndicator() {
-    const chatMessages = document.getElementById('epic-chat-messages');
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'message-bubble agent-bubble typing-indicator-message';
-    typingDiv.innerHTML = `
-      <div class="typing-indicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>
-    `;
-    typingDiv.id = 'typing-indicator';
-    chatMessages.appendChild(typingDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  function hideTypingIndicator() {
-    const indicator = document.getElementById('typing-indicator');
-    if (indicator) {
-      indicator.remove();
-    }
-  }
-
-  function updateCharCounter() {
-    const input = document.getElementById('epic-chat-input');
-    const counter = document.getElementById('char-count');
-    if (input && counter) {
-      counter.textContent = input.value.length;
-      
-      // Change color based on usage
-      const percentage = input.value.length / 2000;
-      if (percentage > 0.9) {
-        counter.style.color = '#ef4444';
-      } else if (percentage > 0.7) {
-        counter.style.color = '#f59e0b';
-      } else {
-        counter.style.color = '#9ca3af';
-      }
-    }
-  }
-  function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-      <div class="notification-content">
-        <span class="notification-icon">
-          ${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}
-        </span>
-        <span class="notification-message">${message}</span>
-      </div>
-    `;
-    
-    // Add styles if not already added
-    if (!document.querySelector('#notification-styles')) {
-      const style = document.createElement('style');
-      style.id = 'notification-styles';
-      style.innerHTML = `
-        .notification {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: white;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-          z-index: 2000;
-          transform: translateX(400px);
-          transition: transform 0.3s ease;
-          max-width: 300px;
-        }
-        .notification.show {
-          transform: translateX(0);
-        }
-        .notification-content {
-          padding: 12px 16px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .notification-success {
-          border-left: 4px solid #22c55e;
-        }
-        .notification-error {
-          border-left: 4px solid #ef4444;
-        }
-        .notification-warning {
-          border-left: 4px solid #f59e0b;
-        }
-        .notification-info {
-          border-left: 4px solid #3b82f6;
-        }
-        .notification-message {
-          font-size: 14px;
-          color: #374151;
-        }
-      `;
-      document.head.appendChild(style);
-    }
-    
-    document.body.appendChild(notification);
-    
-    // Show notification
-    setTimeout(() => notification.classList.add('show'), 50);
-    
-    // Hide and remove notification
-    setTimeout(() => {
-      notification.classList.remove('show');
-      setTimeout(() => notification.remove(), 300);
-    }, 3000);
-  }  function updateEpicsSection(agentResponse) {
-    const epicsContainer = document.getElementById('epics-container');
-    if (!epicsContainer) {
-      console.warn('Epics container not found');
-      return;
-    }
-
-    // Check if the response contains epic-related content that should update the main section
-    const responseText = agentResponse.toLowerCase();
-    const isEpicUpdate = responseText.includes('epic') || 
-                        responseText.includes('requirement') || 
-                        responseText.includes('user story') ||
-                        responseText.includes('feature');
-
-    if (isEpicUpdate) {
-      const existingEpicsCount = getExistingEpicsCount();
-      
-      // Clean up old chat updates before adding new ones
-      cleanupOldChatUpdates();
-
-      // Be very strict about when to add new epics - only if explicitly mentioned
-      const userRequestedNew = responseText.includes('add new epic') || 
-                              responseText.includes('create new epic') ||
-                              responseText.includes('new epic') ||
-                              responseText.includes('additional epic') ||
-                              responseText.includes('more epics') ||
-                              responseText.includes('another epic');
-
-      // Try to parse if it's JSON format with epics
-      try {
-        const jsonMatch = agentResponse.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const epicData = JSON.parse(jsonMatch[0]);
-          
-          if (Array.isArray(epicData)) {
-            // ONLY add new epics if explicitly requested OR if no existing epics
-            if (userRequestedNew || existingEpicsCount === 0) {
-              // Add new epics (only when explicitly requested)
-              let formattedHTML = '';
-              epicData.forEach((epic, index) => {
-                formattedHTML += `
-                  <div class="epic-card" style="border-left: 4px solid #28a745; background: linear-gradient(135deg, #f0fff4 0%, #d4edda 100%);" data-chat-update="true">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                      <input type="checkbox" name="epic_ids" value="epic_chat_new_${index + 1}" id="epic_chat_new_${index + 1}">
-                      <h5 style="color: #28a745; margin: 0;">New Epic ${index + 1}: ${epic.epic_title || epic.title || 'Generated Epic'}</h5>
-                    </div>
-                    <p><strong>Description:</strong> ${epic.epic_description || epic.description || 'Epic generated via chat'}</p>
-                    <div style="background: rgba(40, 167, 69, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px;">
-                      <small style="color: #28a745; font-weight: 600;">✨ New Epic Added via Chat</small>
-                    </div>
-                  </div>
-                `;
-              });
-              
-              epicsContainer.insertAdjacentHTML('afterbegin', formattedHTML);
-              showNotification(`Added ${epicData.length} new epics via chat`, 'success');
-            } else {
-              // DEFAULT BEHAVIOR: Update existing epics instead of adding new ones
-              const existingEpics = epicsContainer.querySelectorAll('.epic-card:not([data-chat-update])');
-              if (existingEpics.length > 0) {
-                const epicsToUpdate = Math.min(epicData.length, existingEpics.length);
-                
-                for (let i = 0; i < epicsToUpdate; i++) {
-                  const epic = epicData[i];
-                  const epicCard = existingEpics[i];
-                  
-                  // Update the epic with modified styling
-                  epicCard.style.borderLeft = '4px solid #ffc107';
-                  epicCard.style.background = 'linear-gradient(135deg, #fffdf0 0%, #fff3cd 100%)';
-                  epicCard.setAttribute('data-chat-update', 'true');
-                  
-                  // Update title and description
-                  const titleElement = epicCard.querySelector('h5');
-                  const descElement = epicCard.querySelector('p');
-                  
-                  if (titleElement) {
-                    titleElement.innerHTML = `Epic ${i + 1}: ${epic.epic_title || epic.title || 'Updated Epic'}`;
-                    titleElement.style.color = '#856404';
-                  }
-                  
-                  if (descElement) {
-                    descElement.innerHTML = `<strong>Description:</strong> ${epic.epic_description || epic.description || 'Epic updated via chat'}`;
-                  }
-                  
-                  // Add modification indicator
-                  let indicator = epicCard.querySelector('.chat-modification-indicator');
-                  if (!indicator) {
-                    indicator = document.createElement('div');
-                    indicator.className = 'chat-modification-indicator';
-                    indicator.style.cssText = 'background: rgba(255, 193, 7, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px;';
-                    indicator.innerHTML = '<small style="color: #856404; font-weight: 600;">✏️ Updated via Epic Chat</small>';
-                    epicCard.insertBefore(indicator, epicCard.lastElementChild.previousElementSibling);
-                  }
-                }
-                
-                showNotification(`Updated ${epicsToUpdate} existing epics via chat`, 'info');
-              } else {
-                // No existing epics to update, provide guidance
-                showNotification('No existing epics found to update. Please create epics first through the main workflow.', 'warning');
-              }
-            }
-            
-            scrollToEpicsSection();
-            return;
-          }
-        }
-      } catch (e) {
-        console.log('Not JSON format, treating as text guidance');
-      }
-
-      // DEFAULT: If not JSON and epics exist, provide guidance/commentary instead of adding content
-      if (existingEpicsCount > 0) {
-        const commentDiv = document.createElement('div');
-        commentDiv.className = 'epic-card';
-        commentDiv.style.cssText = 'border-left: 4px solid #6c757d; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);';
-        commentDiv.setAttribute('data-chat-update', 'true');
-        commentDiv.innerHTML = `
-          <h5 style="color: #6c757d;">💬 Epic Chat Guidance</h5>
-          <div style="background: rgba(108, 117, 125, 0.1); padding: 12px; border-radius: 4px; margin: 8px 0;">
-            <p style="margin: 0; white-space: pre-wrap;">${escapeHtml(agentResponse)}</p>
-          </div>
-          <div style="background: rgba(108, 117, 125, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px;">
-            <small style="color: #6c757d; font-weight: 600;">🎯 Feedback & Suggestions for Existing Epics</small>
-          </div>
-        `;
-        
-        epicsContainer.insertAdjacentElement('afterbegin', commentDiv);
-        showNotification('Epic Agent provided feedback for your existing epics', 'info');
-        scrollToEpicsSection();
-      } else {
-        showNotification('No existing epics found. Please create epics first through the main workflow.', 'warning');
-      }
-    }
-  }
-
-  function scrollToEpicsSection() {
-    const epicsContainer = document.getElementById('epics-container');
-    if (epicsContainer) {
-      // Scroll to the epics section
-      const sectionHeader = document.querySelector('.section-header');
-      if (sectionHeader) {
-        sectionHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
-        epicsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-      
-      // Highlight the latest chat update card
-      const latestChatCard = epicsContainer.querySelector('.epic-card[data-chat-update="true"]');
-      if (latestChatCard) {
-        latestChatCard.style.transition = 'all 0.5s ease';
-        latestChatCard.style.transform = 'scale(1.02)';
-        latestChatCard.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.3)';
-        
-        setTimeout(() => {
-          latestChatCard.style.transform = '';
-          latestChatCard.style.boxShadow = '';
-        }, 2000);
-      } else {
-        // Highlight entire epics container if no specific chat card
-        epicsContainer.style.transition = 'all 0.3s ease';
-        epicsContainer.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.3)';
-        setTimeout(() => {
-          epicsContainer.style.boxShadow = '';
-        }, 2000);
-      }
-    }
-  }
-
-  // Helper function to count existing epics (excluding chat updates)
-  function getExistingEpicsCount() {
-    const epicsContainer = document.getElementById('epics-container');
-    if (!epicsContainer) return 0;
-    
-    const allEpicCards = epicsContainer.querySelectorAll('.epic-card');
-    const chatUpdateCards = epicsContainer.querySelectorAll('.epic-card[data-chat-update="true"]');
-    
-    return allEpicCards.length - chatUpdateCards.length;
-  }
-
-  // Helper function to clean up old chat updates (keep only the last 3)
-  function cleanupOldChatUpdates() {
-    const epicsContainer = document.getElementById('epics-container');
-    if (!epicsContainer) return;
-    
-    const chatUpdateCards = epicsContainer.querySelectorAll('.epic-card[data-chat-update="true"]');
-    
-    // Keep only the 3 most recent chat updates
-    if (chatUpdateCards.length > 3) {
-      for (let i = 3; i < chatUpdateCards.length; i++) {
-        chatUpdateCards[i].remove();
-      }
-      
-      if (chatUpdateCards.length > 3) {
-        showNotification(`Cleaned up ${chatUpdateCards.length - 3} old chat updates`, 'info');
-      }
-    }
-  }
-
-  // Debugging function to inspect user stories
-  function debugUserStories() {
-    console.log('=== USER STORIES DEBUG ===');
-    const container = document.getElementById('user-stories-container');
-    if (!container) {
-      console.log('User stories container not found');
-      return;
-    }
-    
-    console.log('Container HTML length:', container.innerHTML.length);
-    console.log('Container content preview:', container.innerHTML.substring(0, 500) + '...');
-    
-    const allRadios = container.querySelectorAll('input[type="radio"]');
-    console.log(`Found ${allRadios.length} radio buttons in user stories`);
-    
-    allRadios.forEach((radio, index) => {
-      console.log(`Radio ${index + 1}:`, {
-        name: radio.name,
-        value: radio.value,
-        id: radio.id,
-        dataName: radio.getAttribute('data-name'),
-        dataDescription: radio.getAttribute('data-description'),
-        checked: radio.checked
-      });
-    });
-    
-    const checked = container.querySelector('input[type="radio"]:checked');
-    console.log('Currently checked radio:', checked);
-    
-    console.log('=== END USER STORIES DEBUG ===');
-  }
-  
-  // Make it available globally for manual debugging
-  window.debugUserStories = debugUserStories;
-
-  // User Story Chat Bot functionality
-  let userStoryChatHistory = [];
-  let isUserStoryChatOpen = false;
-  let hasSystemInfo = false;
-
-  function toggleUserStoryChat() {
-    const panel = document.getElementById('user-story-chat-panel');
-    const widget = document.getElementById('user-story-chat-widget');
-    
-    if (isUserStoryChatOpen) {
-      // Close chat
-      widget.classList.add('closing');
-      panel.classList.remove('show');
-      setTimeout(() => {
-        panel.style.display = 'none';
-        widget.classList.remove('closing');
-        isUserStoryChatOpen = false;
-      }, 300);
-    } else {
-      // Open chat
-      panel.style.display = 'flex';
-      widget.classList.add('opening');
-      setTimeout(() => {
-        panel.classList.add('show');
-        widget.classList.remove('opening');
-        isUserStoryChatOpen = true;
-        // Load chat history and check system info
-        loadUserStoryChatHistory();
-        checkSystemInfo();
-        setTimeout(() => {
-          document.getElementById('user-story-chat-input')?.focus();
-        }, 100);
-      }, 10);
-    }
+    console.log('Epic chat functionality not implemented in this fixed version');
   }
 
   function openUserStoryChat() {
-    if (!isUserStoryChatOpen) {
-      toggleUserStoryChat();
-    }
+    console.log('User story chat functionality not implemented in this fixed version');
   }
-
-  function closeUserStoryChat() {
-    if (isUserStoryChatOpen) {
-      toggleUserStoryChat();
-    }
-  }
-
-  function clearUserStoryChat() {
-    if (confirm('Are you sure you want to clear the chat history?')) {
-      fetch('/user-story-chat-clear', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          userStoryChatHistory = [];
-          updateUserStoryChatDisplay();
-          showNotification('Chat history cleared', 'success');
-        } else {
-          showNotification('Failed to clear chat history: ' + (data.error || 'Unknown error'), 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error clearing chat:', error);
-        showNotification('Failed to clear chat history', 'error');
-      });
-    }
-  }
-
-  function loadUserStoryChatHistory() {
-    fetch('/user-story-chat-history')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          userStoryChatHistory = data.chat_history || [];
-          hasSystemInfo = data.has_system_info || false;
-          updateUserStoryChatDisplay();
-          updateSystemInfoStatus();
-          
-          // Show session info if there's chat history
-          if (userStoryChatHistory.length > 0) {
-            showNotification('User Story Chat session loaded. Sessions auto-clear after 30 minutes of inactivity.', 'info');
-          }
-        } else {
-          console.error('Failed to load User Story Chat history:', data.error);
-        }
-      })
-      .catch(error => {
-        console.error('Error loading User Story Chat history:', error);
-      });
-  }
-
-  function checkSystemInfo() {
-    fetch('/get-system-info')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          hasSystemInfo = data.has_system_info;
-          updateSystemInfoStatus();
-        }
-      })
-      .catch(error => {
-        console.error('Error checking system info:', error);
-      });
-  }
-
-  function updateSystemInfoStatus() {
-    const statusElement = document.getElementById('user-story-status');
-    if (statusElement) {
-      if (hasSystemInfo) {
-        statusElement.textContent = 'Online • System mapping enabled';
-        statusElement.style.color = '#22c55e';
-      } else {
-        statusElement.textContent = 'Online • Upload system info for mapping';
-        statusElement.style.color = 'rgba(255, 255, 255, 0.8)';
-      }
-    }
-  }
-
-  function showSystemInfoUpload() {
-    const uploadSection = document.getElementById('system-info-upload');
-    if (uploadSection) {
-      uploadSection.style.display = 'block';
-    }
-  }
-
-  function hideSystemInfoUpload() {
-    const uploadSection = document.getElementById('system-info-upload');
-    if (uploadSection) {
-      uploadSection.style.display = 'none';
-    }
-  }
-
-  function uploadSystemInfo(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const statusDiv = document.getElementById('system-info-status');
-    statusDiv.style.display = 'block';
-    statusDiv.className = 'system-status';
-    statusDiv.innerHTML = 'Uploading system information...';
-
-    fetch('/upload-system-info', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        statusDiv.className = 'system-status success';
-        statusDiv.innerHTML = `✅ ${data.message}<br><small>Preview: ${data.preview.substring(0, 100)}...</small>`;
-        hasSystemInfo = true;
-        updateSystemInfoStatus();
-        showNotification('System information uploaded successfully', 'success');
-        setTimeout(() => {
-          hideSystemInfoUpload();
-        }, 2000);
-      } else {
-        statusDiv.className = 'system-status error';
-        statusDiv.innerHTML = `❌ ${data.error}`;
-        showNotification('Failed to upload system information', 'error');
-      }
-    })
-    .catch(error => {
-      console.error('Error uploading system info:', error);
-      statusDiv.className = 'system-status error';
-      statusDiv.innerHTML = '❌ Upload failed. Please try again.';
-      showNotification('Failed to upload system information', 'error');
-    });
-
-    // Reset file input
-    input.value = '';
-  }
-
-  function sendUserStoryChatMessage() {
-    const input = document.getElementById('user-story-chat-input');
-    const message = input.value.trim();
-    
-    if (!message) {
-      showNotification('Please enter a message', 'warning');
-      return;
-    }
-
-    // Show loading state
-    const sendBtn = document.querySelector('#user-story-chat-panel .send-btn');
-    const originalHTML = sendBtn.innerHTML;
-    sendBtn.disabled = true;
-    sendBtn.innerHTML = `
-      <div class="typing-indicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>
-    `;
-
-    // Clear input immediately
-    input.value = '';
-    updateUserStoryCharCounter();
-
-    // Add user message to display immediately
-    addUserStoryMessageToDisplay('user', message);
-
-    // Show typing indicator
-    showUserStoryTypingIndicator();
-
-    // Send message to backend
-    fetch('/user-story-chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ message: message })
-    })
-    .then(response => response.json())
-    .then(data => {
-      hideUserStoryTypingIndicator();
-      
-      if (data.success) {
-        userStoryChatHistory = data.chat_history || [];
-        hasSystemInfo = data.has_system_info || false;
-        updateUserStoryChatDisplay();
-        updateSystemInfoStatus();
-        
-        // Update the main User Stories section with the latest response
-        updateUserStoriesSection(data.response);
-        
-        // Scroll to bottom
-        const chatMessages = document.getElementById('user-story-chat-messages');
-        setTimeout(() => {
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 100);
-      } else {
-        showNotification('Failed to send message: ' + (data.error || 'Unknown error'), 'error');
-        // Remove the user message we added optimistically
-        removeLastUserStoryMessage();
-      }
-    })
-    .catch(error => {
-      hideUserStoryTypingIndicator();
-      console.error('Error sending message:', error);
-      showNotification('Failed to send message', 'error');
-      removeLastUserStoryMessage();
-    })
-    .finally(() => {
-      // Reset button state
-      sendBtn.disabled = false;
-      sendBtn.innerHTML = originalHTML;
-    });
-  }
-
-  function updateUserStoryChatDisplay() {
-    const chatMessages = document.getElementById('user-story-chat-messages');
-    
-    if (userStoryChatHistory.length === 0) {
-      chatMessages.innerHTML = `
-        <div class="welcome-message">
-          <div class="message-bubble agent-bubble">
-            <div class="message-content">
-              <span class="greeting">📋 Welcome to User Story Bot!</span>
-              <p>I can help you with:</p>
-              <ul>
-                <li>✍️ Creating detailed user stories</li>
-                <li>🎯 Defining acceptance criteria</li>
-                <li>🏗️ Mapping stories to systems</li>
-                <li>📊 Organizing story backlogs</li>
-              </ul>
-              <p>💡 <strong>Tip:</strong> Upload system information to automatically map user stories to the correct systems!</p>
-            </div>
-          </div>
-        </div>
-      `;
-      return;
-    }
-    
-    let html = '';
-    userStoryChatHistory.forEach((msg, index) => {
-      const isUser = msg.role === 'user';
-      const bubbleClass = isUser ? 'user-bubble' : 'agent-bubble';
-      
-      // Check if this is an agent message that might have updated the user stories section
-      const hasUserStoryUpdate = !isUser && (
-        msg.message.toLowerCase().includes('user story') || 
-        msg.message.toLowerCase().includes('story') ||
-        msg.message.toLowerCase().includes('requirement') ||
-        msg.message.toLowerCase().includes('system')
-      );
-      
-      html += `
-        <div class="message-bubble ${bubbleClass}">
-          <div class="message-content">${escapeHtml(msg.message)}</div>
-          ${hasUserStoryUpdate ? `
-            <div class="epic-update-indicator">
-              <span class="update-badge">📋 User Stories Updated</span>
-              <button class="view-update-btn" onclick="scrollToUserStoriesSection()">View Changes</button>
-            </div>
-          ` : ''}
-          <span class="message-time">${msg.timestamp}</span>
-        </div>
-      `;
-    });
-    
-    chatMessages.innerHTML = html;
-    setTimeout(() => {
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 50);
-  }
-
-  function addUserStoryMessageToDisplay(role, message) {
-    const chatMessages = document.getElementById('user-story-chat-messages');
-    const timestamp = new Date().toLocaleString();
-    
-    // Remove welcome message if it exists
-    const welcomeMsg = chatMessages.querySelector('.welcome-message');
-    if (welcomeMsg) {
-      welcomeMsg.remove();
-    }
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message-bubble ${role === 'user' ? 'user-bubble' : 'agent-bubble'}`;
-    messageDiv.innerHTML = `
-      <div class="message-content">${escapeHtml(message)}</div>
-      <span class="message-time">${timestamp}</span>
-    `;
-    
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  function removeLastUserStoryMessage() {
-    const chatMessages = document.getElementById('user-story-chat-messages');
-    const userMessages = chatMessages.querySelectorAll('.user-bubble');
-    if (userMessages.length > 0) {
-      userMessages[userMessages.length - 1].remove();
-    }
-  }
-
-  function showUserStoryTypingIndicator() {
-    const chatMessages = document.getElementById('user-story-chat-messages');
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'message-bubble agent-bubble typing-indicator-message';
-    typingDiv.innerHTML = `
-      <div class="typing-indicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>
-    `;
-    typingDiv.id = 'user-story-typing-indicator';
-    chatMessages.appendChild(typingDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  function hideUserStoryTypingIndicator() {
-    const indicator = document.getElementById('user-story-typing-indicator');
-    if (indicator) {
-      indicator.remove();
-    }
-  }
-
-  function updateUserStoryCharCounter() {
-    const input = document.getElementById('user-story-chat-input');
-    const counter = document.getElementById('user-story-char-count');
-    if (input && counter) {
-      counter.textContent = input.value.length;
-      
-      // Change color based on usage
-      const percentage = input.value.length / 2000;
-      if (percentage > 0.9) {
-        counter.style.color = '#ef4444';
-      } else if (percentage > 0.7) {
-        counter.style.color = '#f59e0b';
-      } else {
-        counter.style.color = '#9ca3af';
-      }
-    }
-  }
-
-  function updateUserStoriesSection(agentResponse) {
-    const userStoriesContainer = document.getElementById('user-stories-container');
-    if (!userStoriesContainer) {
-      console.warn('User Stories container not found');
-      return;
-    }
-
-    // Try to parse if it's JSON format with user stories
-    try {
-      const jsonMatch = agentResponse.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const storyData = JSON.parse(jsonMatch[0]);
-        
-        if (Array.isArray(storyData) && storyData.length > 0) {
-          // Format user stories as a table with new agent response format
-          let formattedHTML = `
-            <div class="table-responsive">
-              <table class="table table-striped table-hover">
-                <thead class="thead-dark">
-                  <tr>
-                    <th>Select</th>
-                    <th>Story ID</th>
-                    <th>User Story</th>
-                    <th>Priority</th>
-                    <th>Systems</th>
-                  </tr>
-                </thead>
-                <tbody>
-          `;
-          
-          storyData.forEach((story, index) => {
-            // Handle new agent response format  
-            const storyId = story.story_id || `US-${index + 1}`;
-            const storyName = story.name || story.title || `User Story ${index + 1}`;
-            const storyPriority = story.priority || 'Medium';
-            const storySystems = Array.isArray(story.systems) ? story.systems.join(', ') : (story.systems || 'TBD');
-            
-            // Use the story name as description if no separate description field
-            const storyDescription = story.description || story.name || 'No description available';
-            
-            // Priority badge styling
-            let priorityClass = 'badge-secondary';
-            if (storyPriority.toLowerCase() === 'high') {
-              priorityClass = 'badge-danger';
-            } else if (storyPriority.toLowerCase() === 'medium') {
-              priorityClass = 'badge-warning';
-            } else if (storyPriority.toLowerCase() === 'low') {
-              priorityClass = 'badge-success';
-            }
-            
-            // Escape HTML for data attributes
-            const escapedName = storyName.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-            const escapedDescription = storyDescription.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-            
-            formattedHTML += `
-              <tr>
-                <td>
-                  <input type="checkbox" name="user_story_ids" value="${storyId}" 
-                         data-name="${escapedName}" 
-                         data-description="${escapedDescription}"
-                         data-priority="${storyPriority}"
-                         data-systems="${storySystems}">
-                </td>
-                <td><strong>${storyId}</strong></td>
-                <td><strong>${storyName}</strong></td>
-                <td><span class="badge ${priorityClass}">${storyPriority}</span></td>
-                <td>${storySystems}</td>
-              </tr>
-            `;
-          });
-          
-          formattedHTML += `
-                </tbody>
-              </table>
-            </div>
-          `;
-          
-          userStoriesContainer.innerHTML = formattedHTML;
-          
-          // Show the user stories section
-          const userStoriesSection = document.getElementById('user-stories-section');
-          if (userStoriesSection) {
-            userStoriesSection.classList.remove('hidden');
-          }
-          
-          showNotification(`Generated ${storyData.length} user stories with systems mapping`, 'success');
-          scrollToUserStoriesSection();
-          return;
-        }
-      }
-    } catch (e) {
-      console.log('Not JSON format, treating as text response');
-    }
-
-    // If not parseable JSON, add as guidance
-    showNotification('User Story Bot provided guidance. Use the main workflow to generate structured user stories.', 'info');
-  }
-
-  function scrollToUserStoriesSection() {
-    const userStoriesSection = document.getElementById('user-stories-section');
-    if (userStoriesSection) {
-      userStoriesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      
-      // Highlight the user stories section
-      userStoriesSection.style.transition = 'all 0.3s ease';
-      userStoriesSection.style.boxShadow = '0 0 20px rgba(240, 147, 251, 0.3)';
-      setTimeout(() => {
-        userStoriesSection.style.boxShadow = '';
-      }, 2000);
-    }
-  }
-
-  // Enhanced event handlers for User Story Chat
-  document.addEventListener('DOMContentLoaded', function() {
-    const userStoryChatInput = document.getElementById('user-story-chat-input');
-    if (userStoryChatInput) {
-      // Handle Enter key
-      userStoryChatInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendUserStoryChatMessage();
-        }
-      });
-      
-      // Auto-resize textarea
-      userStoryChatInput.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 80) + 'px';
-        updateUserStoryCharCounter();
-      });
-      
-      // Character counter
-      userStoryChatInput.addEventListener('input', updateUserStoryCharCounter);
-    }
-
-    // Close chat when clicking outside
-    document.addEventListener('click', function(e) {
-      const chatWidget = document.getElementById('user-story-chat-widget');
-      const chatPanel = document.getElementById('user-story-chat-panel');
-      
-      if (isUserStoryChatOpen && chatWidget && chatPanel && 
-          !chatWidget.contains(e.target)) {
-        closeUserStoryChat();
-      }
-    });
-
-    // Prevent closing when clicking inside the chat panel
-    const userStoryChatPanel = document.getElementById('user-story-chat-panel');
-    if (userStoryChatPanel) {
-      userStoryChatPanel.addEventListener('click', function(e) {
-        e.stopPropagation();
-      });
-    }
-  });
 </script>
-
-<!-- Epic Chat Floating Widget -->
-<div id="epic-chat-widget" class="chat-widget">
-  <!-- Chat Toggle Button -->
-  <div id="chat-toggle-btn" class="chat-toggle" onclick="toggleEpicChat()">
-    <div class="chat-icon">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z" fill="currentColor"/>
-        <circle cx="7" cy="9" r="1" fill="currentColor"/>
-        <circle cx="12" cy="9" r="1" fill="currentColor"/>
-        <circle cx="17" cy="9" r="1" fill="currentColor"/>
-      </svg>
-    </div>
-    <div class="chat-badge" id="chat-badge" style="display: none;">1</div>
-  </div>
-  
-  <!-- Chat Panel -->
-  <div id="epic-chat-panel" class="chat-panel" style="display: none;">
-    <div class="chat-header">
-      <div class="chat-header-content">
-        <div class="agent-avatar">
-          <div class="avatar-gradient">
-            <span class="avatar-text">EA</span>
-          </div>
-        </div>
-        <div class="agent-info">
-          <h6 class="agent-name">Epic Agent</h6>
-          <span class="agent-status">Online • Ready to help</span>
-        </div>
-      </div>
-      <div class="chat-actions">
-        <button class="action-btn" onclick="clearEpicChat()" title="Clear chat">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 9V19H8V9H16ZM14.5 3H9.5L8.5 4H5V6H19V4H15.5L14.5 3ZM18 7H6V19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7Z" fill="currentColor"/>
-          </svg>
-        </button>
-        <button class="action-btn minimize-btn" onclick="toggleEpicChat()" title="Minimize">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 13H5V11H19V13Z" fill="currentColor"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-    
-    <div class="chat-messages-container">
-      <div id="epic-chat-messages" class="chat-messages">
-        <div class="welcome-message">
-          <div class="message-bubble agent-bubble">
-            <div class="message-content">
-              <span class="greeting">👋 Hi there!</span>
-              <p>I'm your Epic Agent. I can help you with:</p>
-              <ul>
-                <li>💡 Refining epic requirements</li>
-                <li>📋 Breaking down user stories</li>
-                <li>✅ Defining acceptance criteria</li>
-                <li>🎯 Optimizing project scope</li>
-              </ul>
-              <p>What would you like to discuss?</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="chat-input-area">
-      <div class="input-container">
-        <textarea 
-          id="epic-chat-input" 
-          class="chat-input" 
-          placeholder="Type your message here..."
-          rows="1"
-          maxlength="2000"></textarea>
-        <button class="send-btn" onclick="sendEpicChatMessage()" title="Send message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
-          </svg>
-        </button>
-      </div>
-      <div class="input-footer">
-        <span class="input-hint">Press Enter to send • Shift+Enter for new line</span>
-        <span class="char-counter"><span id="char-count">0</span>/2000</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- User Story Chat Bot Widget -->
-<div id="user-story-chat-widget" class="chat-widget user-story-widget">
-  <!-- Chat Toggle Button -->
-  <div id="user-story-chat-toggle-btn" class="chat-toggle user-story-toggle" onclick="toggleUserStoryChat()">
-    <div class="chat-icon">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
-        <path d="M7 10H17V12H7V10Z" fill="currentColor"/>
-        <path d="M7 14H17V16H7V14Z" fill="currentColor"/>
-        <path d="M7 6H17V8H7V6Z" fill="currentColor"/>
-      </svg>
-    </div>
-    <div class="chat-badge" id="user-story-chat-badge" style="display: none;">1</div>
-  </div>
-  
-  <!-- Chat Panel -->
-  <div id="user-story-chat-panel" class="chat-panel" style="display: none;">
-    <div class="chat-header">
-      <div class="chat-header-content">
-        <div class="agent-avatar">
-          <div class="avatar-gradient user-story-avatar">
-            <span class="avatar-text">US</span>
-          </div>
-        </div>
-        <div class="agent-info">
-          <h6 class="agent-name">User Story Bot</h6>
-          <span class="agent-status" id="user-story-status">Online • Ready to help</span>
-        </div>
-      </div>
-      <div class="chat-actions">
-        <button class="action-btn" onclick="showSystemInfoUpload()" title="Upload system info">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="currentColor"/>
-          </svg>
-        </button>
-        <button class="action-btn" onclick="clearUserStoryChat()" title="Clear chat">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 9V19H8V9H16ZM14.5 3H9.5L8.5 4H5V6H19V4H15.5L14.5 3ZM18 7H6V19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7Z" fill="currentColor"/>
-          </svg>
-        </button>
-        <button class="action-btn minimize-btn" onclick="toggleUserStoryChat()" title="Minimize">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 13H5V11H19V13Z" fill="currentColor"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-    
-    <!-- System Info Upload Area -->
-    <div id="system-info-upload" class="system-info-section" style="display: none;">
-      <div class="upload-header">
-        <h6>Upload System Information</h6>
-        <button class="close-upload-btn" onclick="hideSystemInfoUpload()">×</button>
-      </div>
-      <div class="upload-content">
-        <div class="file-upload-area" onclick="document.getElementById('system-file-input').click()">
-          <div class="upload-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="#667eea"/>
-            </svg>
-          </div>
-          <p>Click to upload system information</p>
-          <span class="upload-hint">Supports TXT, JSON, CSV files (max 10MB)</span>
-        </div>
-        <input type="file" id="system-file-input" accept=".txt,.json,.csv" style="display: none;" onchange="uploadSystemInfo(this)">
-        <div id="system-info-status" class="system-status" style="display: none;"></div>
-      </div>
-    </div>
-    
-    <div class="chat-messages-container">
-      <div id="user-story-chat-messages" class="chat-messages">
-        <div class="welcome-message">
-          <div class="message-bubble agent-bubble">
-            <div class="message-content">
-              <span class="greeting">📋 Welcome to User Story Bot!</span>
-              <p>I can help you with:</p>
-              <ul>
-                <li>✍️ Creating detailed user stories</li>
-                <li>🎯 Defining acceptance criteria</li>
-                <li>🏗️ Mapping stories to systems</li>
-                <li>📊 Organizing story backlogs</li>
-              </ul>
-              <p>💡 <strong>Tip:</strong> Upload system information to automatically map user stories to the correct systems!</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="chat-input-area">
-      <div class="input-container">
-        <textarea 
-          id="user-story-chat-input" 
-          class="chat-input" 
-          placeholder="Describe the user stories you need..."
-          rows="1"
-          maxlength="2000"></textarea>
-        <button class="send-btn" onclick="sendUserStoryChatMessage()" title="Send message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
-          </svg>
-        </button>
-      </div>
-      <div class="input-footer">
-        <span class="input-hint">Press Enter to send • Shift+Enter for new line</span>
-        <span class="char-counter"><span id="user-story-char-count">0</span>/2000</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style>
-/* Epic Chat Floating Widget Styles */
-.chat-widget {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* Chat Toggle Button */
-.chat-toggle {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
-  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  position: relative;
-  border: none;
-  outline: none;
-}
-
-.chat-toggle:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 12px 48px rgba(102, 126, 234, 0.6);
-}
-
-.chat-toggle:active {
-  transform: translateY(0) scale(0.95);
-}
-
-.chat-icon {
-  color: white;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.chat-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: linear-gradient(135deg, #ff416c 0%, #ff4757 100%);
-  color: white;
-  border-radius: 12px;
-  min-width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 600;
-  border: 2px solid white;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-/* Chat Panel */
-.chat-panel {
-  position: absolute;
-  bottom: 80px;
-  right: 0;
-  width: 480px;
-  height: 520px;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transform: translateY(10px) scale(0.95);
-  opacity: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-}
-
-/* Responsive width adjustments */
-@media (max-width: 768px) {
-  .chat-panel {
-    width: calc(100vw - 40px);
-    right: 20px;
-    left: 20px;
-  }
-}
-
-@media (max-width: 520px) {
-  .chat-panel {
-    bottom: 20px;
-    height: calc(100vh - 120px);
-  }
-}
-
-.chat-panel.show {
-  transform: translateY(0) scale(1);
-  opacity: 1;
-}
-
-/* Chat Header */
-.chat-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: white;
-  border-radius: 20px 20px 0 0;
-}
-
-.chat-header-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.agent-avatar {
-  position: relative;
-}
-
-.avatar-gradient {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  position: relative;
-}
-
-.avatar-gradient::after {
-  content: '';
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background: #4ade80;
-  border: 2px solid white;
-  border-radius: 50%;
-  bottom: 2px;
-  right: 2px;
-}
-
-.avatar-text {
-  font-weight: 700;
-  font-size: 14px;
-  color: #333;
-}
-
-.agent-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.agent-name {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
-  color: white;
-}
-
-.agent-status {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.chat-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
-}
-
-/* Messages Container */
-.chat-messages-container {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-messages {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  scroll-behavior: smooth;
-}
-
-.chat-messages::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-messages::-webkit-scrollbar-track {
-  background: #f1f3f4;
-  border-radius: 3px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 3px;
-}
-
-.welcome-message {
-  margin-bottom: 16px;
-}
-
-.message-bubble {
-  max-width: 85%;
-  margin-bottom: 16px;
-  border-radius: 18px;
-  padding: 12px 16px;
-  position: relative;
-  word-wrap: break-word;
-  animation: messageSlide 0.3s ease-out;
-}
-
-@keyframes messageSlide {
-  from { 
-    opacity: 0; 
-    transform: translateY(10px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-.user-bubble {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  margin-left: auto;
-  border-bottom-right-radius: 6px;
-}
-
-.agent-bubble {
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-  color: #333;
-  margin-right: auto;
-  border-bottom-left-radius: 6px;
-}
-
-.message-content {
-  line-height: 1.4;
-}
-
-.message-content .greeting {
-  font-size: 18px;
-  font-weight: 600;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.message-content p {
-  margin: 8px 0;
-  font-size: 14px;
-}
-
-.message-content ul {
-  margin: 8px 0;
-  padding-left: 16px;
-}
-
-.message-content li {
-  margin: 4px 0;
-  font-size: 14px;
-}
-
-.message-time {
-  font-size: 11px;
-  opacity: 0.7;
-  margin-top: 6px;
-  display: block;
-}
-
-.epic-update-indicator {
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: rgba(102, 126, 234, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.update-badge {
-  font-size: 11px;
-  color: #667eea;
-  font-weight: 600;
-  flex: 1;
-}
-
-.view-update-btn {
-  background: #667eea;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.view-update-btn:hover {
-  background: #5a67d8;
-}
-
-/* Chat Input Area */
-.chat-input-area {
-  padding: 16px 20px 20px;
-  background: #f8f9fa;
-  border-radius: 0 0 20px 20px;
-}
-
-.input-container {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  background: white;
-  border-radius: 12px;
-  padding: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 2px solid transparent;
-  transition: border-color 0.2s ease;
-}
-
-.input-container:focus-within {
-  border-color: #667eea;
-}
-
-.chat-input {
-  flex: 1;
-  border: none;
-  outline: none;
-  resize: none;
-  font-size: 14px;
-  line-height: 1.4;
-  padding: 8px 0;
-  max-height: 80px;
-  min-height: 20px;
-  font-family: inherit;
-  background: transparent;
-}
-
-.chat-input::placeholder {
-  color: #9ca3af;
-}
-
-.send-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.send-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.send-btn:active {
-  transform: scale(0.95);
-}
-
-.send-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.input-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.input-hint {
-  font-size: 11px;
-  color: #6b7280;
-}
-
-.char-counter {
-  font-size: 11px;
-  color: #9ca3af;
-}
-
-/* Responsive Design */
-@media (max-width: 480px) {
-  .chat-panel {
-    width: calc(100vw - 40px);
-    height: calc(100vh - 140px);
-    bottom: 80px;
-    right: 20px;
-    left: 20px;
-  }
-  
-  .chat-toggle {
-    width: 56px;
-    height: 56px;
-  }
-}
-
-/* Loading States */
-.message-bubble.loading {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.typing-indicator {
-  display: flex;
-  gap: 4px;
-  padding: 16px;
-}
-
-.typing-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #667eea;
-  animation: typing 1.4s infinite ease-in-out;
-}
-
-.typing-dot:nth-child(1) { animation-delay: -0.32s; }
-.typing-dot:nth-child(2) { animation-delay: -0.16s; }
-
-@keyframes typing {
-  0%, 80%, 100% { 
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  40% { 
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* Animation for opening/closing */
-.chat-widget.opening .chat-panel {
-  animation: slideUpFade 0.3s ease-out forwards;
-}
-
-.chat-widget.closing .chat-panel {
-  animation: slideDownFade 0.3s ease-in forwards;
-}
-
-@keyframes slideUpFade {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes slideDownFade {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(20px) scale(0.9);
-  }
-}
-
-/* User Story Chat Bot Specific Styles */
-.user-story-widget {
-  bottom: 20px;
-  right: 100px; /* Position next to Epic Chat */
-}
-
-.user-story-toggle {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  box-shadow: 0 8px 32px rgba(240, 147, 251, 0.4);
-}
-
-.user-story-toggle:hover {
-  box-shadow: 0 12px 48px rgba(240, 147, 251, 0.6);
-}
-
-.user-story-avatar {
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-}
-
-.user-story-widget .chat-header {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.user-story-widget .chat-messages::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.user-story-widget .send-btn {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.user-story-widget .send-btn:hover {
-  box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
-}
-
-/* System Info Upload Styles */
-.system-info-section {
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 16px 20px;
-}
-
-.upload-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.upload-header h6 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.close-upload-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.close-upload-btn:hover {
-  background: #e5e7eb;
-  color: #374151;
-}
-
-.file-upload-area {
-  border: 2px dashed #d1d5db;
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: white;
-}
-
-.file-upload-area:hover {
-  border-color: #f093fb;
-  background: #fef7ff;
-}
-
-.upload-icon {
-  margin-bottom: 8px;
-}
-
-.file-upload-area p {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-}
-
-.upload-hint {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.system-status {
-  margin-top: 12px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-}
-
-.system-status.success {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-}
-
-.system-status.error {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
-}
-
-/* Responsive adjustments for User Story Chat */
-@media (max-width: 768px) {
-  .user-story-widget {
-    right: 20px;
-    bottom: 100px; /* Stack vertically on mobile */
-  }
-}
-
-@media (max-width: 520px) {
-  .user-story-widget {
-    bottom: 20px;
-    right: 20px;
-  }
-  
-  .user-story-widget .chat-panel {
-    width: calc(100vw - 40px);
-    height: calc(100vh - 120px);
-  }
-}
-
-/* Animation states for User Story Chat */
-.user-story-widget.opening .chat-panel {
-  animation: slideUpFade 0.3s ease-out forwards;
-}
-
-.user-story-widget.closing .chat-panel {
-  animation: slideDownFade 0.3s ease-in forwards;
-}
-
-</style>
 
 </body>
 </html>
