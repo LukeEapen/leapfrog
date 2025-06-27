@@ -1897,16 +1897,22 @@ def user_story_details():
                 selected_story_description = data.get("selected_story_description", "")
                 selected_stories_data = data.get("selected_stories_data", "")  # JSON string of story objects
                 epic_title = data.get("epic_title", "")
-                priority = data.get("priority", "High")
+                priority = data.get("selected_story_priority", data.get("priority", "High"))
+                responsible_systems = data.get("selected_story_systems", "")
                 logger.info(f"Processing selected user story IDs (JSON): {selected_story_id}")
+                logger.info(f"Processing priority (JSON): {priority}")
+                logger.info(f"Processing systems (JSON): {responsible_systems}")
             else:
                 selected_story_id = request.form.get("selected_story_id", "")  # Comma-separated IDs
                 story_name = request.form.get("selected_story_name", "")
                 selected_story_description = request.form.get("selected_story_description", "")
                 selected_stories_data = request.form.get("selected_stories_data", "")  # JSON string of story objects
                 epic_title = request.form.get("epic_title", "")
-                priority = request.form.get("priority", "High")
+                priority = request.form.get("selected_story_priority", request.form.get("priority", "High"))
+                responsible_systems = request.form.get("selected_story_systems", "")
                 logger.info(f"Processing selected user story IDs (Form): {selected_story_id}")
+                logger.info(f"Processing priority (Form): {priority}")
+                logger.info(f"Processing systems (Form): {responsible_systems}")
             
             # Parse multiple story IDs
             story_ids = [id.strip() for id in selected_story_id.split(',') if id.strip()] if selected_story_id else []
@@ -1977,11 +1983,25 @@ def user_story_details():
                     elif isinstance(story_systems, str):
                         all_systems.update([s.strip() for s in story_systems.split(',') if s.strip()])
                 
-                # Override with combined data
+                # Override with combined data, but preserve form values as fallback
                 story_name = ' | '.join(combined_names) if len(combined_names) > 1 else combined_names[0] if combined_names else story_name
                 selected_story_description = ' | '.join(combined_descriptions) if len(combined_descriptions) > 1 else combined_descriptions[0] if combined_descriptions else selected_story_description
-                responsible_systems = ', '.join(sorted(all_systems)) if all_systems else "TBD"
-                priority = all_priorities[0] if all_priorities else "Medium"  # Use first story's priority
+                
+                # Use extracted systems if available, otherwise keep form value
+                extracted_systems = ', '.join(sorted(all_systems)) if all_systems else ""
+                if not extracted_systems and responsible_systems:
+                    # Keep the form value if no systems were extracted from stories
+                    pass  # responsible_systems already has form value
+                else:
+                    responsible_systems = extracted_systems or responsible_systems or "TBD"
+                
+                # Use extracted priority if available, otherwise keep form value  
+                extracted_priority = all_priorities[0] if all_priorities else ""
+                if not extracted_priority and priority:
+                    # Keep the form value if no priority was extracted from stories
+                    pass  # priority already has form value
+                else:
+                    priority = extracted_priority or priority or "Medium"
                 
                 logger.info(f"Extracted from {len(selected_stories)} stories:")
                 logger.info(f"  - Combined name: {story_name}")
@@ -1989,8 +2009,11 @@ def user_story_details():
                 logger.info(f"  - Priority: {priority}")
             
             # Generate additional data fields for the new UI
-            if 'responsible_systems' not in locals():
-                responsible_systems = "CAPS, CMS"  # Default value if not extracted from stories
+            # Ensure we have values for responsible_systems and priority
+            if 'responsible_systems' not in locals() or not responsible_systems:
+                responsible_systems = "CAPS, CMS"  # Default value if not set from form or stories
+            if 'priority' not in locals() or not priority:
+                priority = "High"  # Default value if not set from form or stories
             tagged_requirements = [
                 "TBD"
             ]

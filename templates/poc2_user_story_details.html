@@ -365,7 +365,7 @@
         </div>
         <div class="info-item">
           <span class="info-label">Responsible systems:</span>
-          <span>********</span>
+          <span>{{ responsible_systems or '<span class="hardcoded-content">CAPS, CMS</span>' | safe }}</span>
         </div>
       </div>
     </div>

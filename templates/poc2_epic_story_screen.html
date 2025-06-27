@@ -179,6 +179,8 @@
       <input type="hidden" name="selected_story_id" id="selected_story_id">
       <input type="hidden" name="selected_story_name" id="selected_story_name">
       <input type="hidden" name="selected_story_description" id="selected_story_description">
+      <input type="hidden" name="selected_story_priority" id="selected_story_priority">
+      <input type="hidden" name="selected_story_systems" id="selected_story_systems">
       <button type="submit" class="footer-btn" id="proceedBtn">
         <span class="btn-spinner" id="proceedSpinner"></span>
         <span class="btn-text">Proceed To Selection</span>
@@ -374,21 +376,29 @@
           const storyId = this.value;
           const storyName = this.getAttribute('data-name');
           const storyDescription = this.getAttribute('data-description');
+          const storyPriority = this.getAttribute('data-priority');
+          const storySystems = this.getAttribute('data-systems');
           
           console.log('Updating hidden form fields with:', {
             id: storyId,
             name: storyName,
-            description: storyDescription ? storyDescription.substring(0, 50) + '...' : 'N/A'
+            description: storyDescription ? storyDescription.substring(0, 50) + '...' : 'N/A',
+            priority: storyPriority,
+            systems: storySystems
           });
           
           // Set hidden form field values
           const storyIdField = document.getElementById('selected_story_id');
           const storyNameField = document.getElementById('selected_story_name');
           const storyDescField = document.getElementById('selected_story_description');
+          const storyPriorityField = document.getElementById('selected_story_priority');
+          const storySystemsField = document.getElementById('selected_story_systems');
           
           if (storyIdField) storyIdField.value = storyId || '';
           if (storyNameField) storyNameField.value = storyName || '';
           if (storyDescField) storyDescField.value = storyDescription || '';
+          if (storyPriorityField) storyPriorityField.value = storyPriority || 'Medium';
+          if (storySystemsField) storySystemsField.value = storySystems || '';
           
           console.log('Hidden form fields updated successfully');
         }
