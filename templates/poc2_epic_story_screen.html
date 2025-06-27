@@ -181,6 +181,7 @@
       <input type="hidden" name="selected_story_description" id="selected_story_description">
       <input type="hidden" name="selected_story_priority" id="selected_story_priority">
       <input type="hidden" name="selected_story_systems" id="selected_story_systems">
+      <input type="hidden" name="epic_title" id="selected_epic_title">
       <button type="submit" class="footer-btn" id="proceedBtn">
         <span class="btn-spinner" id="proceedSpinner"></span>
         <span class="btn-text">Proceed To Selection</span>
@@ -393,12 +394,55 @@
           const storyDescField = document.getElementById('selected_story_description');
           const storyPriorityField = document.getElementById('selected_story_priority');
           const storySystemsField = document.getElementById('selected_story_systems');
+          const epicTitleField = document.getElementById('selected_epic_title');
           
           if (storyIdField) storyIdField.value = storyId || '';
           if (storyNameField) storyNameField.value = storyName || '';
           if (storyDescField) storyDescField.value = storyDescription || '';
           if (storyPriorityField) storyPriorityField.value = storyPriority || 'Medium';
           if (storySystemsField) storySystemsField.value = storySystems || '';
+          
+          // Populate epic title from the currently selected/visible epic
+          if (epicTitleField) {
+            // Try to get epic title from the currently selected epic
+            const selectedEpicCheckbox = document.querySelector('input[name="epic_ids"]:checked');
+            let epicTitle = '';
+            
+            if (selectedEpicCheckbox) {
+              const epicCard = selectedEpicCheckbox.closest('.epic-card');
+              if (epicCard) {
+                const titleElement = epicCard.querySelector('h5');
+                if (titleElement) {
+                  epicTitle = titleElement.textContent.replace(/^Epic \d+: /, '').trim();
+                }
+              }
+            }
+            
+            // Fallback: try to get from first epic if none selected
+            if (!epicTitle) {
+              const firstEpicCard = document.querySelector('.epic-card');
+              if (firstEpicCard) {
+                const titleElement = firstEpicCard.querySelector('h5');
+                if (titleElement) {
+                  epicTitle = titleElement.textContent.replace(/^Epic \d+: /, '').trim();
+                }
+              }
+            }
+               // Final fallback: extract from epic container text content
+            if (!epicTitle) {
+              const epicsContainer = document.getElementById('epics-container');
+              if (epicsContainer) {
+                const epicText = epicsContainer.textContent || '';
+                // Try to extract epic title from text content
+                const epicMatch = epicText.match(/Epic \d+:\s*([^Description\n]+)/);
+                if (epicMatch && epicMatch[1]) {
+                  epicTitle = epicMatch[1].trim();
+                }
+              }
+            }
+            epicTitleField.value = epicTitle || 'User Story Epic';
+            console.log('Epic title set to:', epicTitle);
+          }
           
           console.log('Hidden form fields updated successfully');
         }
