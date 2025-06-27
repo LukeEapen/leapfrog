@@ -325,6 +325,257 @@
       transform: translateX(4px);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
+    
+    /* Chat Modal Styles */
+    .chat-modal {
+      display: none !important;
+      position: fixed !important;
+      z-index: 99999 !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      background-color: rgba(0, 0, 0, 0.5) !important;
+      backdrop-filter: blur(4px);
+    }
+    
+    .chat-modal[style*="display: block"] {
+      display: block !important;
+    }
+    
+    .chat-modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 0;
+      border: none;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 800px;
+      height: 80vh;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .chat-header {
+      background-color: #d0021b;
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    
+    .chat-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+    
+    .chat-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .chat-message {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      max-width: 80%;
+    }
+    
+    .chat-message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    
+    .chat-message.assistant {
+      align-self: flex-start;
+    }
+    
+    .chat-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    
+    .chat-avatar.user {
+      background: #d0021b;
+      color: white;
+    }
+    
+    .chat-avatar.assistant {
+      background: #007bff;
+      color: white;
+    }
+    
+    .chat-bubble {
+      background: white;
+      border-radius: 12px;
+      padding: 12px 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
+      word-wrap: break-word;
+      line-height: 1.5;
+    }
+    
+    .chat-message.user .chat-bubble {
+      background: #d0021b;
+      color: white;
+      border-color: #d0021b;
+    }
+    
+    .chat-input-area {
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    
+    .chat-input {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      resize: none;
+      min-height: 44px;
+      max-height: 120px;
+      font-family: inherit;
+    }
+    
+    .chat-input:focus {
+      outline: none;
+      border-color: #d0021b;
+      box-shadow: 0 0 0 2px rgba(208, 2, 27, 0.1);
+    }
+    
+    .chat-send-btn {
+      background: #d0021b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .chat-send-btn:hover:not(:disabled) {
+      background: #a0011a;
+      transform: translateY(-1px);
+    }
+    
+    .chat-send-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .chat-loading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #666;
+      font-style: italic;
+    }
+    
+    .chat-loading-dots {
+      display: inline-block;
+    }
+    
+    .chat-loading-dots::after {
+      content: '';
+      animation: chatLoading 1.5s infinite;
+    }
+    
+    @keyframes chatLoading {
+      0%, 33% { content: '.'; }
+      34%, 66% { content: '..'; }
+      67%, 100% { content: '...'; }
+    }
+    
+    .current-description {
+      background: #fff5f5;
+      border: 1px solid #fed7d7;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .current-description h6 {
+      color: #d0021b;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .current-description-text {
+      color: #333;
+      line-height: 1.6;
+      margin: 0;
+    }
+    
+    /* Responsive Chat Modal */
+    @media (max-width: 768px) {
+      .chat-modal-content {
+        margin: 0;
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+      }
+      
+      .chat-message {
+        max-width: 90%;
+      }
+      
+      .chat-input-area {
+        padding: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -381,6 +632,12 @@
         <div class="info-item">
           <span class="info-label">Responsible systems:</span>
           <span>{{ responsible_systems or '<span class="hardcoded-content">CAPS, CMS</span>' | safe }}</span>
+        </div>
+        <!-- Temporary Test Button -->
+        <div class="info-item">
+          <button onclick="testDescriptionModal()" style="background: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 3px; font-size: 12px;">
+            🧪 Test Modal
+          </button>
         </div>
       </div>
     </div>
@@ -486,6 +743,132 @@
     <input type="hidden" name="acceptance_criteria" value="{% if acceptance_criteria %}{{ acceptance_criteria|join('|||') }}{% else %}System prompts for full name, date of birth, Social Security Number, email address, phone number, and residential address|||Mandatory fields must be completed before progressing|||Input formats are validated (e.g., MM/DD/YYYY for DOB, 9-digit SSN, phone with area code)|||Errors are surfaced clearly and immediately for any missing or invalid entries{% endif %}">
     <input type="hidden" name="tagged_requirements" value="{% if tagged_requirements %}{{ tagged_requirements|join('|||') }}{% else %}TBD {% endif %}">
   </form>
+
+  <!-- Description Chat Modal -->
+  <div id="description-chat-modal" class="chat-modal">
+    <div class="chat-modal-content">
+      <div class="chat-header">
+        <span>💬 Edit Description</span>
+        <button class="chat-close" onclick="closeDescriptionChat()">&times;</button>
+      </div>
+      <div class="chat-container">
+        <!-- Current Description Display -->
+        <div class="current-description">
+          <h6>Current Description:</h6>
+          <p class="current-description-text" id="current-description-display"></p>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="description-chat-messages">
+          <div class="chat-message assistant">
+            <div class="chat-avatar assistant">AI</div>
+            <div class="chat-bubble">
+              Hello! I'm here to help you refine your user story description. You can ask me to:
+              <br>• Make it more detailed or concise
+              <br>• Improve clarity and technical accuracy
+              <br>• Add specific business context
+              <br>• Adjust the tone or format
+              <br><br>What would you like to change about the current description?
+            </div>
+          </div>
+        </div>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-area">
+          <textarea id="description-chat-input" class="chat-input" placeholder="Ask me to revise the description..." rows="1"></textarea>
+          <button class="chat-send-btn" onclick="sendDescriptionMessage()" id="description-send-btn">
+            <span>📤</span>
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acceptance Criteria Chat Modal -->
+  <div id="acceptance-criteria-chat-modal" class="chat-modal">
+    <div class="chat-modal-content">
+      <div class="chat-header">
+        <span>💬 Edit Acceptance Criteria</span>
+        <button class="chat-close" onclick="closeAcceptanceCriteriaChat()">&times;</button>
+      </div>
+      <div class="chat-container">
+        <!-- Current Criteria Display -->
+        <div class="current-description">
+          <h6>Current Acceptance Criteria:</h6>
+          <ul id="current-criteria-display" class="criteria-list"></ul>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="criteria-chat-messages">
+          <div class="chat-message assistant">
+            <div class="chat-avatar assistant">AI</div>
+            <div class="chat-bubble">
+              Hello! I'm here to help you refine your acceptance criteria. You can ask me to:
+              <br>• Make them more detailed and specific
+              <br>• Add security, performance, or accessibility requirements
+              <br>• Format them using Given/When/Then structure
+              <br>• Simplify or reorganize the criteria
+              <br>• Add edge cases and negative scenarios
+              <br><br>What would you like to change about the current criteria?
+            </div>
+          </div>
+        </div>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-area">
+          <textarea id="criteria-chat-input" class="chat-input" placeholder="Ask me to improve the acceptance criteria..." rows="1"></textarea>
+          <button class="chat-send-btn" onclick="sendAcceptanceCriteriaMessage()" id="criteria-send-btn">
+            <span>📤</span>
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tagged Requirements Chat Modal -->
+  <div id="requirements-chat-modal" class="chat-modal">
+    <div class="chat-modal-content">
+      <div class="chat-header">
+        <span>💬 Edit Tagged Requirements</span>
+        <button class="chat-close" onclick="closeRequirementsChat()">&times;</button>
+      </div>
+      <div class="chat-container">
+        <!-- Current Requirements Display -->
+        <div class="current-description">
+          <h6>Current Tagged Requirements:</h6>
+          <ul id="current-requirements-display" class="requirements-list"></ul>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="requirements-chat-messages">
+          <div class="chat-message assistant">
+            <div class="chat-avatar assistant">AI</div>
+            <div class="chat-bubble">
+              Hello! I'm here to help you refine your tagged requirements. You can ask me to:
+              <br>• Add compliance and regulatory requirements
+              <br>• Include security and privacy standards
+              <br>• Add performance and scalability requirements
+              <br>• Include integration and API requirements
+              <br>• Add accessibility standards
+              <br>• Include audit and monitoring requirements
+              <br><br>What type of requirements would you like to add or modify?
+            </div>
+          </div>
+        </div>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-area">
+          <textarea id="requirements-chat-input" class="chat-input" placeholder="Ask me to improve the tagged requirements..." rows="1"></textarea>
+          <button class="chat-send-btn" onclick="sendRequirementsMessage()" id="requirements-send-btn">
+            <span>📤</span>
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
   function goBack() {
@@ -631,15 +1014,722 @@ Do you want to proceed?`;
   }
 
   function openDescriptionChat() {
-    alert('Description chat functionality will be implemented soon');
+    console.log('openDescriptionChat called'); // Debug log
+    
+    // First, show an alert to confirm the function is being called
+    // alert('Description chat function called!'); // Uncomment for testing
+    
+    const modal = document.getElementById('description-chat-modal');
+    console.log('Modal element:', modal); // Debug log
+    
+    if (!modal) {
+      console.error('Modal element not found!');
+      alert('❌ Error: Chat modal not found. Please reload the page and try again.');
+      return;
+    }
+    
+    const currentDescriptionDisplay = document.getElementById('current-description-display');
+    console.log('Current description display element:', currentDescriptionDisplay); // Debug log
+    
+    // Get current description from the form or display
+    let currentDescription = '';
+    const hiddenInput = document.querySelector('input[name="user_story_description"]');
+    const displayElement = document.querySelector('.enhanced-description');
+    
+    if (hiddenInput && hiddenInput.value) {
+      currentDescription = hiddenInput.value;
+    } else if (displayElement) {
+      currentDescription = displayElement.textContent.trim();
+    } else {
+      currentDescription = 'No description available';
+    }
+    
+    console.log('Current description:', currentDescription); // Debug log
+    
+    // Update the current description display in the modal
+    if (currentDescriptionDisplay) {
+      currentDescriptionDisplay.textContent = currentDescription;
+    }
+    
+    // Show the modal with extra styling to ensure visibility
+    modal.style.display = 'block';
+    modal.style.zIndex = '9999';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    
+    console.log('Modal should now be visible with computed style:', window.getComputedStyle(modal).display);
+    
+    // Focus on the input after a short delay
+    setTimeout(() => {
+      const inputElement = document.getElementById('description-chat-input');
+      if (inputElement) {
+        inputElement.focus();
+        console.log('Input focused');
+      } else {
+        console.error('Chat input element not found');
+      }
+    }, 200);
+    
+    // Add event listener for Enter key (only add once)
+    const chatInput = document.getElementById('description-chat-input');
+    if (chatInput && !chatInput.hasAttribute('data-listener-added')) {
+      chatInput.setAttribute('data-listener-added', 'true');
+      chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendDescriptionMessage();
+        }
+      });
+    }
   }
+  
+  // Test function to debug modal issues
+  function testDescriptionModal() {
+    console.log('Test function called');
+    alert('Test button clicked! Now trying to open modal...');
+    
+    const modal = document.getElementById('description-chat-modal');
+    console.log('Modal found:', !!modal);
+    
+    if (modal) {
+      modal.style.display = 'block';
+      modal.style.zIndex = '99999';
+      console.log('Modal display set to block');
+      alert('Modal should be visible now. Check if you can see it behind this alert.');
+    } else {
+      alert('❌ Modal element not found!');
+    }
+  }
+  
+  function closeDescriptionChat() {
+    const modal = document.getElementById('description-chat-modal');
+    modal.style.display = 'none';
+  }
+  
+  function sendDescriptionMessage() {
+    const input = document.getElementById('description-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addDescriptionChatMessage(message, 'user');
+    
+    // Clear input
+    input.value = '';
+    
+    // Show loading state
+    const sendBtn = document.getElementById('description-send-btn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<span class="chat-loading-dots"></span> Processing';
+    
+    // Add loading message
+    const loadingMessageId = addDescriptionChatMessage('', 'assistant', true);
+    
+    // Get current description
+    const currentDescription = document.querySelector('input[name="user_story_description"]').value || 
+                              document.querySelector('.enhanced-description').textContent.trim();
+    
+    // Call backend API
+    fetch('/chat-description', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message,
+        current_description: currentDescription
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Remove loading message
+      const loadingMsg = document.getElementById(loadingMessageId);
+      if (loadingMsg) loadingMsg.remove();
+      
+      if (data.success) {
+        // Add AI response
+        addDescriptionChatMessage(data.message, 'assistant');
+        
+        // If there's an updated description, offer to apply it
+        if (data.updated_description && data.updated_description !== currentDescription) {
+          const buttonId = 'apply-btn-' + Date.now();
+          addDescriptionChatMessage(
+            `Here's the updated description. Would you like me to apply this change?
+            
+            <div style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; font-style: italic;">
+              "${data.updated_description}"
+            </div>
+            
+            <button id="${buttonId}" 
+                    style="background: #d0021b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
+              ✓ Apply This Description
+            </button>`, 
+            'assistant'
+          );
+          
+          // Add click event listener to the button
+          setTimeout(() => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+              button.addEventListener('click', () => {
+                applyDescriptionUpdate(data.updated_description);
+              });
+            }
+          }, 100);
+        }
+      } else {
+        addDescriptionChatMessage('Sorry, I encountered an error processing your request. Please try again.', 'assistant');
+      }
+      
+      // Reset send button
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<span>📤</span> Send';
+    })
+    .catch(error => {
+      console.error('Error calling chat API:', error);
+      
+      // Remove loading message
+      const loadingMsg = document.getElementById(loadingMessageId);
+      if (loadingMsg) loadingMsg.remove();
+      
+      // Show error message
+      addDescriptionChatMessage('Sorry, I encountered a connection error. Please check your internet connection and try again.', 'assistant');
+      
+      // Reset send button
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<span>📤</span> Send';
+    });
+  }
+  
+  function addDescriptionChatMessage(message, sender, isLoading = false) {
+    const messagesContainer = document.getElementById('description-chat-messages');
+    const messageDiv = document.createElement('div');
+    const messageId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    messageDiv.id = messageId;
+    messageDiv.className = `chat-message ${sender}`;
+    
+    if (isLoading) {
+      messageDiv.innerHTML = `
+        <div class="chat-avatar ${sender}">${sender === 'user' ? 'U' : 'AI'}</div>
+        <div class="chat-bubble">
+          <div class="chat-loading">
+            <span class="chat-loading-dots"></span>
+            Thinking about your request
+          </div>
+        </div>
+      `;
+    } else {
+      messageDiv.innerHTML = `
+        <div class="chat-avatar ${sender}">${sender === 'user' ? 'U' : 'AI'}</div>
+        <div class="chat-bubble">${message}</div>
+      `;
+    }
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    return messageId;
+  }
+  
+  
+  function applyDescriptionUpdate(newDescription) {
+    // Decode HTML entities first
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = newDescription;
+    const decodedDescription = textarea.value;
+    
+    // Update the hidden form field
+    const hiddenInput = document.querySelector('input[name="user_story_description"]');
+    if (hiddenInput) {
+      hiddenInput.value = decodedDescription;
+    }
+    
+    // Update the visible description on the page
+    const descriptionDisplay = document.querySelector('.enhanced-description');
+    if (descriptionDisplay) {
+      descriptionDisplay.textContent = decodedDescription;
+    }
+    
+    // Update the current description display in the modal
+    const currentDescriptionDisplay = document.getElementById('current-description-display');
+    if (currentDescriptionDisplay) {
+      currentDescriptionDisplay.textContent = decodedDescription;
+    }
+    
+    // Show success message
+    addDescriptionChatMessage('✅ Description updated successfully! The changes are now applied to your user story.', 'assistant');
+    
+    // Auto-save the changes
+    saveUserStoryData();
+  }
+  
+  // Close modal when clicking outside
+  window.addEventListener('click', function(e) {
+    const descriptionModal = document.getElementById('description-chat-modal');
+    const criteriaModal = document.getElementById('acceptance-criteria-chat-modal');
+    const requirementsModal = document.getElementById('requirements-chat-modal');
+    
+    if (e.target === descriptionModal) {
+      closeDescriptionChat();
+    }
+    if (e.target === criteriaModal) {
+      closeAcceptanceCriteriaChat();
+    }
+    if (e.target === requirementsModal) {
+      closeRequirementsChat();
+    }
+  });
 
   function openAcceptanceCriteriaChat() {
-    alert('Acceptance criteria chat functionality will be implemented soon');
+    const modal = document.getElementById('acceptance-criteria-chat-modal');
+    const currentCriteriaDisplay = document.getElementById('current-criteria-display');
+    
+    // Get current acceptance criteria
+    const acceptanceCriteriaInput = document.querySelector('input[name="acceptance_criteria"]');
+    let currentCriteria = [];
+    
+    if (acceptanceCriteriaInput && acceptanceCriteriaInput.value) {
+      currentCriteria = acceptanceCriteriaInput.value.split('|||').filter(c => c.trim());
+    } else {
+      // Fallback: extract from displayed criteria
+      const criteriaElements = document.querySelectorAll('.criteria-list li');
+      currentCriteria = Array.from(criteriaElements).map(li => li.textContent.trim());
+    }
+    
+    // Update the current criteria display in the modal
+    currentCriteriaDisplay.innerHTML = '';
+    currentCriteria.forEach(criterion => {
+      const li = document.createElement('li');
+      li.textContent = criterion;
+      currentCriteriaDisplay.appendChild(li);
+    });
+    
+    // Show the modal
+    modal.style.display = 'block';
+    
+    // Focus on the input
+    setTimeout(() => {
+      document.getElementById('criteria-chat-input').focus();
+    }, 100);
+    
+    // Add event listener for Enter key
+    const chatInput = document.getElementById('criteria-chat-input');
+    chatInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendAcceptanceCriteriaMessage();
+      }
+    });
+  }
+  
+  function closeAcceptanceCriteriaChat() {
+    const modal = document.getElementById('acceptance-criteria-chat-modal');
+    modal.style.display = 'none';
+  }
+  
+  function sendAcceptanceCriteriaMessage() {
+    const input = document.getElementById('criteria-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addAcceptanceCriteriaChatMessage(message, 'user');
+    
+    // Clear input
+    input.value = '';
+    
+    // Show loading state
+    const sendBtn = document.getElementById('criteria-send-btn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<span class="chat-loading-dots"></span> Processing';
+    
+    // Add loading message
+    const loadingMessageId = addAcceptanceCriteriaChatMessage('', 'assistant', true);
+    
+    // Get current criteria and story context
+    const acceptanceCriteriaInput = document.querySelector('input[name="acceptance_criteria"]');
+    let currentCriteria = [];
+    
+    if (acceptanceCriteriaInput && acceptanceCriteriaInput.value) {
+      currentCriteria = acceptanceCriteriaInput.value.split('|||').filter(c => c.trim());
+    } else {
+      const criteriaElements = document.querySelectorAll('.criteria-list li');
+      currentCriteria = Array.from(criteriaElements).map(li => li.textContent.trim());
+    }
+    
+    const storyContext = document.querySelector('input[name="user_story_name"]').value + ': ' + 
+                        document.querySelector('input[name="user_story_description"]').value;
+    
+    // Call backend API
+    fetch('/chat-acceptance-criteria', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message,
+        current_criteria: currentCriteria,
+        story_context: storyContext
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Remove loading message
+      const loadingMsg = document.getElementById(loadingMessageId);
+      if (loadingMsg) loadingMsg.remove();
+      
+      if (data.success) {
+        // Add AI response
+        addAcceptanceCriteriaChatMessage(data.message, 'assistant');
+        
+        // If there are updated criteria, offer to apply them
+        if (data.updated_criteria && Array.isArray(data.updated_criteria) && data.updated_criteria.length > 0) {
+          const criteriaPreview = data.updated_criteria.map(c => `• ${c}`).join('<br>');
+          const buttonId = 'apply-criteria-btn-' + Date.now();
+          
+          addAcceptanceCriteriaChatMessage(
+            `Here are the updated acceptance criteria. Would you like me to apply these changes?
+            
+            <div style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; font-style: italic;">
+              ${criteriaPreview}
+            </div>
+            
+            <button id="${buttonId}" 
+                    style="background: #d0021b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
+              ✓ Apply These Criteria
+            </button>`, 
+            'assistant'
+          );
+          
+          // Add click event listener to the button
+          setTimeout(() => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+              button.addEventListener('click', () => {
+                applyAcceptanceCriteriaUpdate(data.updated_criteria);
+              });
+            }
+          }, 100);
+        }
+      } else {
+        addAcceptanceCriteriaChatMessage('Sorry, I encountered an error processing your request. Please try again.', 'assistant');
+      }
+      
+      // Reset send button
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<span>📤</span> Send';
+    })
+    .catch(error => {
+      console.error('Error calling acceptance criteria chat API:', error);
+      
+      // Remove loading message
+      const loadingMsg = document.getElementById(loadingMessageId);
+      if (loadingMsg) loadingMsg.remove();
+      
+      // Show error message
+      addAcceptanceCriteriaChatMessage('Sorry, I encountered a connection error. Please check your internet connection and try again.', 'assistant');
+      
+      // Reset send button
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<span>📤</span> Send';
+    });
+  }
+  
+  function addAcceptanceCriteriaChatMessage(message, sender, isLoading = false) {
+    const messagesContainer = document.getElementById('criteria-chat-messages');
+    const messageDiv = document.createElement('div');
+    const messageId = 'criteria-msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    messageDiv.id = messageId;
+    messageDiv.className = `chat-message ${sender}`;
+    
+    if (isLoading) {
+      messageDiv.innerHTML = `
+        <div class="chat-avatar ${sender}">${sender === 'user' ? 'U' : 'AI'}</div>
+        <div class="chat-bubble">
+          <div class="chat-loading">
+            <span class="chat-loading-dots"></span>
+            Analyzing your acceptance criteria
+          </div>
+        </div>
+      `;
+    } else {
+      messageDiv.innerHTML = `
+        <div class="chat-avatar ${sender}">${sender === 'user' ? 'U' : 'AI'}</div>
+        <div class="chat-bubble">${message}</div>
+      `;
+    }
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    return messageId;
+  }
+  
+  function applyAcceptanceCriteriaUpdate(newCriteria) {
+    if (!Array.isArray(newCriteria)) return;
+    
+    // Update the hidden form field
+    const hiddenInput = document.querySelector('input[name="acceptance_criteria"]');
+    if (hiddenInput) {
+      hiddenInput.value = newCriteria.join('|||');
+    }
+    
+    // Update the visible criteria on the page
+    const criteriaList = document.querySelector('.criteria-list');
+    if (criteriaList) {
+      criteriaList.innerHTML = '';
+      newCriteria.forEach(criterion => {
+        const li = document.createElement('li');
+        li.textContent = criterion;
+        criteriaList.appendChild(li);
+      });
+    }
+    
+    // Update the current criteria display in the modal
+    const currentCriteriaDisplay = document.getElementById('current-criteria-display');
+    if (currentCriteriaDisplay) {
+      currentCriteriaDisplay.innerHTML = '';
+      newCriteria.forEach(criterion => {
+        const li = document.createElement('li');
+        li.textContent = criterion;
+        currentCriteriaDisplay.appendChild(li);
+      });
+    }
+    
+    // Show success message
+    addAcceptanceCriteriaChatMessage('✅ Acceptance criteria updated successfully! The changes are now applied to your user story.', 'assistant');
+    
+    // Auto-save the changes
+    saveUserStoryData();
   }
 
   function openRequirementsChat() {
-    alert('Requirements chat functionality will be implemented soon');
+    const modal = document.getElementById('requirements-chat-modal');
+    const currentRequirementsDisplay = document.getElementById('current-requirements-display');
+    
+    // Get current tagged requirements
+    const requirementsInput = document.querySelector('input[name="tagged_requirements"]');
+    let currentRequirements = [];
+    
+    if (requirementsInput && requirementsInput.value) {
+      currentRequirements = requirementsInput.value.split('|||').filter(r => r.trim());
+    } else {
+      // Fallback: extract from displayed requirements
+      const requirementElements = document.querySelectorAll('.requirements-list li');
+      currentRequirements = Array.from(requirementElements).map(li => li.textContent.trim());
+    }
+    
+    // Update the current requirements display in the modal
+    currentRequirementsDisplay.innerHTML = '';
+    currentRequirements.forEach(requirement => {
+      const li = document.createElement('li');
+      li.textContent = requirement;
+      currentRequirementsDisplay.appendChild(li);
+    });
+    
+    // Show the modal
+    modal.style.display = 'block';
+    
+    // Focus on the input
+    setTimeout(() => {
+      document.getElementById('requirements-chat-input').focus();
+    }, 100);
+    
+    // Add event listener for Enter key
+    const chatInput = document.getElementById('requirements-chat-input');
+    chatInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendRequirementsMessage();
+      }
+    });
+  }
+  
+  function closeRequirementsChat() {
+    const modal = document.getElementById('requirements-chat-modal');
+    modal.style.display = 'none';
+  }
+  
+  function sendRequirementsMessage() {
+    const input = document.getElementById('requirements-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addRequirementsChatMessage(message, 'user');
+    
+    // Clear input
+    input.value = '';
+    
+    // Show loading state
+    const sendBtn = document.getElementById('requirements-send-btn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<span class="chat-loading-dots"></span> Processing';
+    
+    // Add loading message
+    const loadingMessageId = addRequirementsChatMessage('', 'assistant', true);
+    
+    // Get current requirements and story context
+    const requirementsInput = document.querySelector('input[name="tagged_requirements"]');
+    let currentRequirements = [];
+    
+    if (requirementsInput && requirementsInput.value) {
+      currentRequirements = requirementsInput.value.split('|||').filter(r => r.trim());
+    } else {
+      const requirementElements = document.querySelectorAll('.requirements-list li');
+      currentRequirements = Array.from(requirementElements).map(li => li.textContent.trim());
+    }
+    
+    const storyContext = document.querySelector('input[name="user_story_name"]').value + ': ' + 
+                        document.querySelector('input[name="user_story_description"]').value;
+    
+    // Call backend API
+    fetch('/chat-requirements', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message,
+        current_requirements: currentRequirements,
+        story_context: storyContext
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Remove loading message
+      const loadingMsg = document.getElementById(loadingMessageId);
+      if (loadingMsg) loadingMsg.remove();
+      
+      if (data.success) {
+        // Add AI response
+        addRequirementsChatMessage(data.message, 'assistant');
+        
+        // If there are updated requirements, offer to apply them
+        if (data.updated_requirements && Array.isArray(data.updated_requirements) && data.updated_requirements.length > 0) {
+          const requirementsPreview = data.updated_requirements.map(r => `• ${r}`).join('<br>');
+          const buttonId = 'apply-requirements-btn-' + Date.now();
+          
+          addRequirementsChatMessage(
+            `Here are the updated tagged requirements. Would you like me to apply these changes?
+            
+            <div style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; font-style: italic;">
+              ${requirementsPreview}
+            </div>
+            
+            <button id="${buttonId}" 
+                    style="background: #d0021b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
+              ✓ Apply These Requirements
+            </button>`, 
+            'assistant'
+          );
+          
+          // Add click event listener to the button
+          setTimeout(() => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+              button.addEventListener('click', () => {
+                applyRequirementsUpdate(data.updated_requirements);
+              });
+            }
+          }, 100);
+        }
+      } else {
+        addRequirementsChatMessage('Sorry, I encountered an error processing your request. Please try again.', 'assistant');
+      }
+      
+      // Reset send button
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<span>📤</span> Send';
+    })
+    .catch(error => {
+      console.error('Error calling requirements chat API:', error);
+      
+      // Remove loading message
+      const loadingMsg = document.getElementById(loadingMessageId);
+      if (loadingMsg) loadingMsg.remove();
+      
+      // Show error message
+      addRequirementsChatMessage('Sorry, I encountered a connection error. Please check your internet connection and try again.', 'assistant');
+      
+      // Reset send button
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<span>📤</span> Send';
+    });
+  }
+  
+  function addRequirementsChatMessage(message, sender, isLoading = false) {
+    const messagesContainer = document.getElementById('requirements-chat-messages');
+    const messageDiv = document.createElement('div');
+    const messageId = 'requirements-msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    messageDiv.id = messageId;
+    messageDiv.className = `chat-message ${sender}`;
+    
+    if (isLoading) {
+      messageDiv.innerHTML = `
+        <div class="chat-avatar ${sender}">${sender === 'user' ? 'U' : 'AI'}</div>
+        <div class="chat-bubble">
+          <div class="chat-loading">
+            <span class="chat-loading-dots"></span>
+            Analyzing your requirements
+          </div>
+        </div>
+      `;
+    } else {
+      messageDiv.innerHTML = `
+        <div class="chat-avatar ${sender}">${sender === 'user' ? 'U' : 'AI'}</div>
+        <div class="chat-bubble">${message}</div>
+      `;
+    }
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    return messageId;
+  }
+  
+  function applyRequirementsUpdate(newRequirements) {
+    if (!Array.isArray(newRequirements)) return;
+    
+    // Update the hidden form field
+    const hiddenInput = document.querySelector('input[name="tagged_requirements"]');
+    if (hiddenInput) {
+      hiddenInput.value = newRequirements.join('|||');
+    }
+    
+    // Update the visible requirements on the page
+    const requirementsList = document.querySelector('.requirements-list');
+    if (requirementsList) {
+      requirementsList.innerHTML = '';
+      newRequirements.forEach(requirement => {
+        const li = document.createElement('li');
+        li.textContent = requirement;
+        requirementsList.appendChild(li);
+      });
+    }
+    
+    // Update the current requirements display in the modal
+    const currentRequirementsDisplay = document.getElementById('current-requirements-display');
+    if (currentRequirementsDisplay) {
+      currentRequirementsDisplay.innerHTML = '';
+      newRequirements.forEach(requirement => {
+        const li = document.createElement('li');
+        li.textContent = requirement;
+        currentRequirementsDisplay.appendChild(li);
+      });
+    }
+    
+    // Show success message
+    addRequirementsChatMessage('✅ Tagged requirements updated successfully! The changes are now applied to your user story.', 'assistant');
+    
+    // Auto-save the changes
+    saveUserStoryData();
   }
   
   // Save user story data to localStorage for persistence

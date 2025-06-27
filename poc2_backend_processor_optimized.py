@@ -2910,6 +2910,526 @@ def clear_system_info():
         logger.error(f"Error clearing system info: {str(e)}")
         return jsonify({"success": False, "error": "Internal server error"}), 500
 
+@app.route("/chat-description", methods=["POST"])
+def chat_description():
+    """Handle chat requests for description refinement."""
+    logger.info("Request received for description chat")
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No JSON data provided"}), 400
+            
+        user_message = data.get("message", "").strip()
+        current_description = data.get("current_description", "").strip()
+        
+        if not user_message:
+            return jsonify({"success": False, "error": "Message is required"}), 400
+            
+        if not current_description:
+            return jsonify({"success": False, "error": "Current description is required"}), 400
+        
+        logger.info(f"Processing chat request: {user_message[:100]}...")
+        
+        # Create a prompt for the AI to refine the description
+        system_prompt = """You are an expert business analyst helping to refine user story descriptions. 
+        Based on the user's request, improve the given description while maintaining its core meaning.
+        
+        Guidelines:
+        - Keep the description clear and actionable
+        - Maintain focus on user value and business outcomes
+        - Use professional but accessible language
+        - Ensure the description supports downstream development activities
+        - Be specific about what the user wants to achieve
+        
+        Return only the improved description without additional commentary."""
+        
+        user_prompt = f"""Current Description: {current_description}
+
+User Request: {user_message}
+
+Please provide an improved version of the description based on the user's request."""
+
+        # Use OpenAI to generate the improved description
+        try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=500,
+                temperature=0.7
+            )
+            
+            improved_description = response.choices[0].message.content.strip()
+            
+            logger.info("Successfully generated improved description")
+            
+            return jsonify({
+                "success": True,
+                "message": "I've improved the description based on your request.",
+                "updated_description": improved_description
+            })
+            
+        except Exception as ai_error:
+            logger.error(f"OpenAI API error: {str(ai_error)}")
+            
+            # Fallback to rule-based processing
+            fallback_response = process_description_fallback(user_message, current_description)
+            return jsonify({
+                "success": True,
+                "message": fallback_response["message"],
+                "updated_description": fallback_response["updated_description"]
+            })
+            
+    except Exception as e:
+        logger.error(f"Error in description chat: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+def process_description_fallback(user_message, current_description):
+    """Fallback processing when AI is not available."""
+    lowerMessage = user_message.lower()
+    
+    if any(word in lowerMessage for word in ['shorter', 'concise', 'brief']):
+        # Make it more concise
+        sentences = current_description.split('.')
+        shortened = '. '.join(sentences[:2]).strip()
+        if not shortened.endswith('.'):
+            shortened += '.'
+        return {
+            "message": "I've made the description more concise while keeping the key information.",
+            "updated_description": shortened
+        }
+    elif any(word in lowerMessage for word in ['longer', 'detailed', 'elaborate', 'expand']):
+        # Make it more detailed
+        expanded = current_description + " This functionality ensures data accuracy and supports downstream processes including identity verification, credit checks, and compliance reporting. The system should provide clear feedback for any validation errors and guide users through successful completion."
+        return {
+            "message": "I've expanded the description with more detail and context.",
+            "updated_description": expanded
+        }
+    elif any(word in lowerMessage for word in ['technical', 'specific', 'implementation']):
+        # Add technical details
+        technical = current_description + " The system should implement real-time validation using industry-standard APIs, secure data encryption during transmission, and integration with existing customer management systems (CMS) and credit assessment platform (CAPS)."
+        return {
+            "message": "I've added more technical details and specific requirements.",
+            "updated_description": technical
+        }
+    elif any(word in lowerMessage for word in ['business', 'user focused', 'value']):
+        # Add business context
+        business = current_description + " This feature directly supports our customer acquisition strategy by reducing onboarding friction while ensuring regulatory compliance. Accurate data capture at this stage prevents costly corrections later and improves overall customer experience."
+        return {
+            "message": "I've focused more on the business value and user perspective.",
+            "updated_description": business
+        }
+    else:
+        return {
+            "message": "I understand you want to modify the description. Could you be more specific about what changes you'd like? For example: 'Make it shorter', 'Add more technical details', 'Focus on business value', etc.",
+            "updated_description": current_description
+        }
+
+@app.route("/chat-acceptance-criteria", methods=["POST"])
+def chat_acceptance_criteria():
+    """Handle chat requests for acceptance criteria refinement."""
+    logger.info("Request received for acceptance criteria chat")
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No JSON data provided"}), 400
+            
+        user_message = data.get("message", "").strip()
+        current_criteria = data.get("current_criteria", [])
+        story_context = data.get("story_context", "").strip()
+        
+        if not user_message:
+            return jsonify({"success": False, "error": "Message is required"}), 400
+        
+        logger.info(f"Processing acceptance criteria chat request: {user_message[:100]}...")
+        
+        # Format current criteria for AI context
+        criteria_text = ""
+        if current_criteria and isinstance(current_criteria, list):
+            criteria_text = "\n".join([f"• {criterion}" for criterion in current_criteria])
+        elif isinstance(current_criteria, str):
+            criteria_text = current_criteria
+        
+        # Create a prompt for the AI to refine acceptance criteria
+        system_prompt = """You are an expert business analyst specializing in acceptance criteria for user stories. 
+        Your role is to help refine, improve, and enhance acceptance criteria based on user requests.
+        
+        Guidelines for good acceptance criteria:
+        - Use clear, specific, and testable language
+        - Follow the Given/When/Then format when appropriate
+        - Focus on user behavior and system responses
+        - Include both positive and negative test cases
+        - Ensure criteria are measurable and verifiable
+        - Address security, performance, and accessibility when relevant
+        - Keep criteria independent and atomic
+        
+        Return the improved acceptance criteria as a JSON array of strings.
+        Format: ["criterion 1", "criterion 2", "criterion 3"]"""
+        
+        user_prompt = f"""User Story Context: {story_context}
+
+Current Acceptance Criteria:
+{criteria_text}
+
+User Request: {user_message}
+
+Please provide improved acceptance criteria based on the user's request. Return as a JSON array of strings."""
+
+        # Use OpenAI to generate improved acceptance criteria
+        try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=800,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content.strip()
+            
+            # Try to parse the JSON response
+            try:
+                import json
+                improved_criteria = json.loads(ai_response)
+                if not isinstance(improved_criteria, list):
+                    # If not a list, try to extract from the response
+                    lines = ai_response.split('\n')
+                    improved_criteria = [line.strip('• -').strip() for line in lines if line.strip() and not line.startswith('[') and not line.startswith(']')]
+            except json.JSONDecodeError:
+                # Fallback: parse as bullet points
+                lines = ai_response.split('\n')
+                improved_criteria = [line.strip('• -').strip() for line in lines if line.strip() and not line.startswith('[') and not line.startswith(']')]
+            
+            logger.info("Successfully generated improved acceptance criteria")
+            
+            return jsonify({
+                "success": True,
+                "message": "I've improved the acceptance criteria based on your request.",
+                "updated_criteria": improved_criteria
+            })
+            
+        except Exception as ai_error:
+            logger.error(f"OpenAI API error: {str(ai_error)}")
+            
+            # Fallback to rule-based processing
+            fallback_response = process_criteria_fallback(user_message, current_criteria, story_context)
+            return jsonify({
+                "success": True,
+                "message": fallback_response["message"],
+                "updated_criteria": fallback_response["updated_criteria"]
+            })
+            
+    except Exception as e:
+        logger.error(f"Error in acceptance criteria chat: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+def process_criteria_fallback(user_message, current_criteria, story_context):
+    """Fallback processing for acceptance criteria when AI is not available."""
+    lowerMessage = user_message.lower()
+    
+    # Ensure current_criteria is a list
+    if isinstance(current_criteria, str):
+        current_criteria = [current_criteria] if current_criteria.strip() else []
+    elif not isinstance(current_criteria, list):
+        current_criteria = []
+    
+    if any(word in lowerMessage for word in ['more detailed', 'specific', 'elaborate']):
+        # Make criteria more detailed
+        enhanced_criteria = []
+        for criterion in current_criteria:
+            enhanced_criteria.append(criterion)
+            if 'input' in criterion.lower() or 'enter' in criterion.lower():
+                enhanced_criteria.append("System validates input format in real-time")
+                enhanced_criteria.append("Clear error messages are displayed for invalid inputs")
+        return {
+            "message": "I've made the acceptance criteria more detailed and specific.",
+            "updated_criteria": enhanced_criteria
+        }
+    elif any(word in lowerMessage for word in ['security', 'secure', 'validation']):
+        # Add security-focused criteria
+        security_criteria = current_criteria.copy()
+        security_criteria.extend([
+            "All data inputs are validated and sanitized",
+            "System logs security-relevant events",
+            "Unauthorized access attempts are blocked and logged",
+            "Data is encrypted during transmission and storage"
+        ])
+        return {
+            "message": "I've added security-focused acceptance criteria.",
+            "updated_criteria": security_criteria
+        }
+    elif any(word in lowerMessage for word in ['performance', 'speed', 'fast']):
+        # Add performance criteria
+        performance_criteria = current_criteria.copy()
+        performance_criteria.extend([
+            "System responds within 2 seconds for normal operations",
+            "Page load time does not exceed 3 seconds",
+            "System handles concurrent users without degradation"
+        ])
+        return {
+            "message": "I've added performance-related acceptance criteria.",
+            "updated_criteria": performance_criteria
+        }
+    elif any(word in lowerMessage for word in ['accessibility', 'a11y', 'screen reader']):
+        # Add accessibility criteria
+        accessibility_criteria = current_criteria.copy()
+        accessibility_criteria.extend([
+            "Interface is compatible with screen readers",
+            "All interactive elements are keyboard accessible",
+            "Color contrast meets WCAG 2.1 AA standards",
+            "Form fields have proper labels and descriptions"
+        ])
+        return {
+            "message": "I've added accessibility-focused acceptance criteria.",
+            "updated_criteria": accessibility_criteria
+        }
+    elif any(word in lowerMessage for word in ['given when then', 'gherkin', 'format']):
+        # Convert to Given/When/Then format
+        formatted_criteria = []
+        for criterion in current_criteria:
+            if not criterion.startswith(('Given', 'When', 'Then')):
+                formatted_criteria.append(f"Given a user wants to {criterion.lower()}")
+                formatted_criteria.append(f"When they perform the required action")
+                formatted_criteria.append(f"Then the system should {criterion.lower()}")
+            else:
+                formatted_criteria.append(criterion)
+        return {
+            "message": "I've formatted the acceptance criteria using Given/When/Then structure.",
+            "updated_criteria": formatted_criteria
+        }
+    elif any(word in lowerMessage for word in ['shorter', 'concise', 'simplify']):
+        # Simplify criteria
+        simplified_criteria = []
+        for criterion in current_criteria:
+            # Keep only essential parts
+            simplified = criterion.split('.')[0] if '.' in criterion else criterion
+            simplified_criteria.append(simplified.strip())
+        return {
+            "message": "I've simplified the acceptance criteria to be more concise.",
+            "updated_criteria": list(set(simplified_criteria))  # Remove duplicates
+        }
+    else:
+        return {
+            "message": "I understand you want to modify the acceptance criteria. Could you be more specific? For example: 'Make them more detailed', 'Add security requirements', 'Include performance criteria', 'Use Given/When/Then format', etc.",
+            "updated_criteria": current_criteria
+        }
+
+@app.route("/chat-requirements", methods=["POST"])
+def chat_requirements():
+    """Handle chat requests for tagged requirements refinement."""
+    logger.info("Request received for tagged requirements chat")
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No JSON data provided"}), 400
+            
+        user_message = data.get("message", "").strip()
+        current_requirements = data.get("current_requirements", [])
+        story_context = data.get("story_context", "").strip()
+        
+        if not user_message:
+            return jsonify({"success": False, "error": "Message is required"}), 400
+        
+        logger.info(f"Processing tagged requirements chat request: {user_message[:100]}...")
+        
+        # Format current requirements for AI context
+        requirements_text = ""
+        if current_requirements and isinstance(current_requirements, list):
+            requirements_text = "\n".join([f"• {req}" for req in current_requirements])
+        elif isinstance(current_requirements, str):
+            requirements_text = current_requirements
+        
+        # Create a prompt for the AI to refine tagged requirements
+        system_prompt = """You are an expert business analyst specializing in tagged requirements for user stories. 
+        Tagged requirements typically include regulatory, compliance, technical, and business requirements that support the user story.
+        
+        Guidelines for good tagged requirements:
+        - Include relevant regulatory and compliance requirements
+        - Add technical constraints and dependencies
+        - Specify security and privacy requirements
+        - Include performance and scalability requirements
+        - Address integration and interoperability needs
+        - Consider audit, logging, and monitoring requirements
+        - Include accessibility and usability standards
+        
+        Return the improved tagged requirements as a JSON array of strings.
+        Format: ["requirement 1", "requirement 2", "requirement 3"]"""
+        
+        user_prompt = f"""User Story Context: {story_context}
+
+Current Tagged Requirements:
+{requirements_text}
+
+User Request: {user_message}
+
+Please provide improved tagged requirements based on the user's request. Return as a JSON array of strings."""
+
+        # Use OpenAI to generate improved tagged requirements
+        try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=800,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content.strip()
+            
+            # Try to parse the JSON response
+            try:
+                import json
+                improved_requirements = json.loads(ai_response)
+                if not isinstance(improved_requirements, list):
+                    # If not a list, try to extract from the response
+                    lines = ai_response.split('\n')
+                    improved_requirements = [line.strip('• -').strip() for line in lines if line.strip() and not line.startswith('[') and not line.startswith(']')]
+            except json.JSONDecodeError:
+                # Fallback: parse as bullet points
+                lines = ai_response.split('\n')
+                improved_requirements = [line.strip('• -').strip() for line in lines if line.strip() and not line.startswith('[') and not line.startswith(']')]
+            
+            logger.info("Successfully generated improved tagged requirements")
+            
+            return jsonify({
+                "success": True,
+                "message": "I've improved the tagged requirements based on your request.",
+                "updated_requirements": improved_requirements
+            })
+            
+        except Exception as ai_error:
+            logger.error(f"OpenAI API error: {str(ai_error)}")
+            
+            # Fallback to rule-based processing
+            fallback_response = process_requirements_fallback(user_message, current_requirements, story_context)
+            return jsonify({
+                "success": True,
+                "message": fallback_response["message"],
+                "updated_requirements": fallback_response["updated_requirements"]
+            })
+            
+    except Exception as e:
+        logger.error(f"Error in tagged requirements chat: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+def process_requirements_fallback(user_message, current_requirements, story_context):
+    """Fallback processing for tagged requirements when AI is not available."""
+    lowerMessage = user_message.lower()
+    
+    # Ensure current_requirements is a list
+    if isinstance(current_requirements, str):
+        current_requirements = [current_requirements] if current_requirements.strip() else []
+    elif not isinstance(current_requirements, list):
+        current_requirements = []
+    
+    if any(word in lowerMessage for word in ['compliance', 'regulatory', 'regulation']):
+        # Add compliance requirements
+        compliance_requirements = current_requirements.copy()
+        compliance_requirements.extend([
+            "Must comply with GDPR data protection requirements",
+            "SOX compliance for financial data handling",
+            "PCI DSS compliance for payment card data",
+            "Audit trail must be maintained for all transactions"
+        ])
+        return {
+            "message": "I've added compliance and regulatory requirements.",
+            "updated_requirements": compliance_requirements
+        }
+    elif any(word in lowerMessage for word in ['security', 'secure', 'encryption']):
+        # Add security requirements
+        security_requirements = current_requirements.copy()
+        security_requirements.extend([
+            "All data must be encrypted in transit and at rest",
+            "Multi-factor authentication required for sensitive operations",
+            "Security audit logging must be implemented",
+            "Role-based access control must be enforced"
+        ])
+        return {
+            "message": "I've added security-focused requirements.",
+            "updated_requirements": security_requirements
+        }
+    elif any(word in lowerMessage for word in ['performance', 'scalability', 'load']):
+        # Add performance requirements
+        performance_requirements = current_requirements.copy()
+        performance_requirements.extend([
+            "System must support 1000+ concurrent users",
+            "Response time must be under 2 seconds",
+            "99.9% uptime availability required",
+            "Horizontal scaling capability must be supported"
+        ])
+        return {
+            "message": "I've added performance and scalability requirements.",
+            "updated_requirements": performance_requirements
+        }
+    elif any(word in lowerMessage for word in ['integration', 'api', 'interoperability']):
+        # Add integration requirements
+        integration_requirements = current_requirements.copy()
+        integration_requirements.extend([
+            "RESTful API endpoints must be provided",
+            "Real-time data synchronization with existing systems",
+            "Backward compatibility with legacy systems",
+            "Standard data formats (JSON/XML) must be supported"
+        ])
+        return {
+            "message": "I've added integration and interoperability requirements.",
+            "updated_requirements": integration_requirements
+        }
+    elif any(word in lowerMessage for word in ['accessibility', 'wcag', 'a11y']):
+        # Add accessibility requirements
+        accessibility_requirements = current_requirements.copy()
+        accessibility_requirements.extend([
+            "WCAG 2.1 Level AA compliance required",
+            "Screen reader compatibility must be ensured",
+            "Keyboard navigation support required",
+            "Color contrast standards must be met"
+        ])
+        return {
+            "message": "I've added accessibility requirements.",
+            "updated_requirements": accessibility_requirements
+        }
+    elif any(word in lowerMessage for word in ['audit', 'logging', 'monitoring']):
+        # Add audit and monitoring requirements
+        audit_requirements = current_requirements.copy()
+        audit_requirements.extend([
+            "Comprehensive audit logging must be implemented",
+            "Real-time monitoring and alerting required",
+            "Data retention policies must be enforced",
+            "Change tracking for all data modifications"
+        ])
+        return {
+            "message": "I've added audit, logging, and monitoring requirements.",
+            "updated_requirements": audit_requirements
+        }
+    else:
+        # Generic enhancement
+        if not current_requirements or current_requirements == ["TBD"]:
+            generic_requirements = [
+                "Data validation and sanitization required",
+                "Error handling and user feedback mechanisms",
+                "Performance monitoring and logging",
+                "Security best practices implementation"
+            ]
+        else:
+            generic_requirements = current_requirements.copy()
+            generic_requirements.append("Additional requirements to be defined based on detailed analysis")
+        
+        return {
+            "message": "I understand you want to enhance the tagged requirements. Could you be more specific? For example: 'Add compliance requirements', 'Include security standards', 'Add performance requirements', etc.",
+            "updated_requirements": generic_requirements
+        }
+
 @app.route("/submit-jira-ticket", methods=["POST"])
 def submit_jira_ticket():
     """Submit user story details to Jira as a ticket."""
