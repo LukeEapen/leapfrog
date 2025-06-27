@@ -326,17 +326,18 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     
-    /* Chat Modal Styles */
+    /* Chat Modal Styles - Right Bottom Corner Positioning */
+    /* Chat Modal Styles - Right Side Full Height */
     .chat-modal {
       display: none !important;
       position: fixed !important;
       z-index: 99999 !important;
-      left: 0 !important;
-      top: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      background-color: rgba(0, 0, 0, 0.5) !important;
-      backdrop-filter: blur(4px);
+      right: 0px !important;
+      top: 0px !important;
+      width: 600px !important;
+      height: 100vh !important;
+      background-color: rgba(0, 0, 0, 0.1) !important;
+      backdrop-filter: blur(2px);
     }
     
     .chat-modal[style*="display: block"] {
@@ -345,17 +346,18 @@
     
     .chat-modal-content {
       background-color: white;
-      margin: 5% auto;
+      margin: 0;
       padding: 0;
       border: none;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 800px;
-      height: 80vh;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      border-radius: 12px 0 0 12px;
+      width: 100%;
+      height: 100%;
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.2);
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      position: relative;
+      border-left: 1px solid #e2e8f0;
     }
     
     .chat-header {
@@ -373,16 +375,17 @@
       background: none;
       border: none;
       color: white;
-      font-size: 24px;
+      font-size: 28px;
       cursor: pointer;
       padding: 0;
-      width: 30px;
-      height: 30px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 50%;
       transition: all 0.2s ease;
+      font-weight: normal;
     }
     
     .chat-close:hover {
@@ -398,12 +401,12 @@
     
     .chat-messages {
       flex: 1;
-      padding: 20px;
+      padding: 24px;
       overflow-y: auto;
       background: #f8f9fa;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
     }
     
     .chat-message {
@@ -440,18 +443,20 @@
     }
     
     .chat-avatar.assistant {
-      background: #007bff;
-      color: white;
+      background: #f8f9fa;
+      color: #8B4513;
+      border: 2px solid #007bff;
     }
     
     .chat-bubble {
-      background: white;
+      background: rgb(140, 138, 236);
       border-radius: 12px;
       padding: 12px 16px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       border: 1px solid #e2e8f0;
       word-wrap: break-word;
       line-height: 1.5;
+      color: #8B4513;
     }
     
     .chat-message.user .chat-bubble {
@@ -461,11 +466,11 @@
     }
     
     .chat-input-area {
-      padding: 20px;
+      padding: 24px;
       background: white;
       border-top: 1px solid #e2e8f0;
       display: flex;
-      gap: 12px;
+      gap: 16px;
       align-items: flex-end;
     }
     
@@ -540,8 +545,8 @@
       background: #fff5f5;
       border: 1px solid #fed7d7;
       border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
+      padding: 20px;
+      margin-bottom: 24px;
     }
     
     .current-description h6 {
@@ -561,11 +566,18 @@
     
     /* Responsive Chat Modal */
     @media (max-width: 768px) {
+      .chat-modal {
+        right: 0px !important;
+        top: 0px !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background-color: rgba(0, 0, 0, 0.3) !important;
+      }
+      
       .chat-modal-content {
-        margin: 0;
-        width: 100%;
-        height: 100vh;
         border-radius: 0;
+        box-shadow: none;
+        border: none;
       }
       
       .chat-message {
@@ -573,7 +585,48 @@
       }
       
       .chat-input-area {
-        padding: 16px;
+        padding: 12px;
+      }
+      
+      .chat-input {
+        font-size: 13px;
+        padding: 8px 12px;
+      }
+      
+      .chat-send-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .chat-modal {
+        right: 0px !important;
+        top: 0px !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background-color: rgba(0, 0, 0, 0.5) !important;
+      }
+      
+      .chat-header {
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+      
+      .chat-messages {
+        padding: 15px;
+        gap: 12px;
+      }
+      
+      .chat-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+      }
+      
+      .chat-bubble {
+        padding: 10px 12px;
+        font-size: 13px;
       }
     }
   </style>
@@ -599,6 +652,9 @@
         Multiple User Stories: {{ story_count }} stories selected
       {% else %}
         User story: {{ user_story_name or '<span class="hardcoded-content">Capture personal information during onboarding</span>' | safe }}
+        <button class="chat-btn" onclick="openUserStoryChat()" style="margin-left: 10px; float: right;">
+          <span>💬 Chat</span>
+        </button>
       {% endif %}
     </div>
 
@@ -622,7 +678,12 @@
     <!-- Epic Information Section -->
     <div class="epic-info-section">
       <div class="epic-label">Epic:</div>
-      <div class="epic-title">{{ epic_title or '<span class="hardcoded-content">******</span>' | safe }}</div>
+      <div class="epic-title">
+        {{ epic_title or '<span class="hardcoded-content">******</span>' | safe }}
+        <button class="chat-btn" onclick="openEpicChat()" style="margin-left: 10px;">
+          <span>💬 Chat</span>
+        </button>
+      </div>
 
       <div class="info-row">
         <div class="info-item">
@@ -632,12 +693,6 @@
         <div class="info-item">
           <span class="info-label">Responsible systems:</span>
           <span>{{ responsible_systems or '<span class="hardcoded-content">CAPS, CMS</span>' | safe }}</span>
-        </div>
-        <!-- Temporary Test Button -->
-        <div class="info-item">
-          <button onclick="testDescriptionModal()" style="background: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 3px; font-size: 12px;">
-            🧪 Test Modal
-          </button>
         </div>
       </div>
     </div>
@@ -862,6 +917,90 @@
         <div class="chat-input-area">
           <textarea id="requirements-chat-input" class="chat-input" placeholder="Ask me to improve the tagged requirements..." rows="1"></textarea>
           <button class="chat-send-btn" onclick="sendRequirementsMessage()" id="requirements-send-btn">
+            <span>📤</span>
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Epic Chat Modal -->
+  <div id="epic-chat-modal" class="chat-modal">
+    <div class="chat-modal-content">
+      <div class="chat-header">
+        <span>💬 Edit Epic</span>
+        <button class="chat-close" onclick="closeEpicChat()">&times;</button>
+      </div>
+      <div class="chat-container">
+        <!-- Current Epic Display -->
+        <div class="current-description">
+          <h6>Current Epic:</h6>
+          <p class="current-epic-text" id="current-epic-display"></p>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="epic-chat-messages">
+          <div class="chat-message assistant">
+            <div class="chat-avatar assistant">AI</div>
+            <div class="chat-bubble">
+              Hello! I'm here to help you refine your epic. You can ask me to:
+              <br>• Make it more strategic and high-level
+              <br>• Improve alignment with business objectives
+              <br>• Add context about user value and benefits
+              <br>• Adjust scope and structure
+              <br>• Make it more actionable for the development team
+              <br><br>What would you like to change about the current epic?
+            </div>
+          </div>
+        </div>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-area">
+          <textarea id="epic-chat-input" class="chat-input" placeholder="Ask me to revise the epic..." rows="1"></textarea>
+          <button class="chat-send-btn" onclick="sendEpicMessage()" id="epic-send-btn">
+            <span>📤</span>
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Story Chat Modal -->
+  <div id="user-story-chat-modal" class="chat-modal">
+    <div class="chat-modal-content">
+      <div class="chat-header">
+        <span>💬 Edit User Story</span>
+        <button class="chat-close" onclick="closeUserStoryChat()">&times;</button>
+      </div>
+      <div class="chat-container">
+        <!-- Current User Story Display -->
+        <div class="current-description">
+          <h6>Current User Story:</h6>
+          <p class="current-user-story-text" id="current-user-story-display"></p>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="user-story-chat-messages">
+          <div class="chat-message assistant">
+            <div class="chat-avatar assistant">AI</div>
+            <div class="chat-bubble">
+              Hello! I'm here to help you refine your user story. You can ask me to:
+              <br>• Improve the user story format (As a... I want... So that...)
+              <br>• Make it more specific and actionable
+              <br>• Add clarity about user needs and goals
+              <br>• Ensure it's testable and deliverable
+              <br>• Add context about user personas or scenarios
+              <br><br>What would you like to change about the current user story?
+            </div>
+          </div>
+        </div>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-area">
+          <textarea id="user-story-chat-input" class="chat-input" placeholder="Ask me to improve the user story..." rows="1"></textarea>
+          <button class="chat-send-btn" onclick="sendUserStoryMessage()" id="user-story-send-btn">
             <span>📤</span>
             Send
           </button>
@@ -1146,13 +1285,19 @@ Do you want to proceed?`;
     })
     .then(response => response.json())
     .then(data => {
+      console.log('Description Chat API Response:', data);
+      
       // Remove loading message
       const loadingMsg = document.getElementById(loadingMessageId);
       if (loadingMsg) loadingMsg.remove();
       
       if (data.success) {
+        // Get the AI response - check both possible response properties
+        const aiResponse = data.message || data.response || 'No response received';
+        console.log('AI Response:', aiResponse);
+        
         // Add AI response
-        addDescriptionChatMessage(data.message, 'assistant');
+        addDescriptionChatMessage(aiResponse, 'assistant');
         
         // If there's an updated description, offer to apply it
         if (data.updated_description && data.updated_description !== currentDescription) {
@@ -1272,6 +1417,8 @@ Do you want to proceed?`;
     const descriptionModal = document.getElementById('description-chat-modal');
     const criteriaModal = document.getElementById('acceptance-criteria-chat-modal');
     const requirementsModal = document.getElementById('requirements-chat-modal');
+    const epicModal = document.getElementById('epic-chat-modal');
+    const userStoryModal = document.getElementById('user-story-chat-modal');
     
     if (e.target === descriptionModal) {
       closeDescriptionChat();
@@ -1281,6 +1428,12 @@ Do you want to proceed?`;
     }
     if (e.target === requirementsModal) {
       closeRequirementsChat();
+    }
+    if (e.target === epicModal) {
+      closeEpicChat();
+    }
+    if (e.target === userStoryModal) {
+      closeUserStoryChat();
     }
   });
 
@@ -1379,13 +1532,19 @@ Do you want to proceed?`;
     })
     .then(response => response.json())
     .then(data => {
+      console.log('Acceptance Criteria Chat API Response:', data);
+      
       // Remove loading message
       const loadingMsg = document.getElementById(loadingMessageId);
       if (loadingMsg) loadingMsg.remove();
       
       if (data.success) {
+        // Get the AI response - check both possible response properties
+        const aiResponse = data.message || data.response || 'No response received';
+        console.log('AI Response:', aiResponse);
+        
         // Add AI response
-        addAcceptanceCriteriaChatMessage(data.message, 'assistant');
+        addAcceptanceCriteriaChatMessage(aiResponse, 'assistant');
         
         // If there are updated criteria, offer to apply them
         if (data.updated_criteria && Array.isArray(data.updated_criteria) && data.updated_criteria.length > 0) {
@@ -1603,13 +1762,19 @@ Do you want to proceed?`;
     })
     .then(response => response.json())
     .then(data => {
+      console.log('Requirements Chat API Response:', data);
+      
       // Remove loading message
       const loadingMsg = document.getElementById(loadingMessageId);
       if (loadingMsg) loadingMsg.remove();
       
       if (data.success) {
+        // Get the AI response - check both possible response properties
+        const aiResponse = data.message || data.response || 'No response received';
+        console.log('AI Response:', aiResponse);
+        
         // Add AI response
-        addRequirementsChatMessage(data.message, 'assistant');
+        addRequirementsChatMessage(aiResponse, 'assistant');
         
         // If there are updated requirements, offer to apply them
         if (data.updated_requirements && Array.isArray(data.updated_requirements) && data.updated_requirements.length > 0) {
@@ -1772,6 +1937,468 @@ Do you want to proceed?`;
       addDebugButton();
     }
   });
+  
+  // Epic Chat Functions
+  function openEpicChat() {
+    const modal = document.getElementById('epic-chat-modal');
+    if (!modal) {
+      alert('❌ Error: Epic chat modal not found. Please reload the page and try again.');
+      return;
+    }
+    
+    const currentEpicDisplay = document.getElementById('current-epic-display');
+    
+    // Get current epic title
+    let currentEpic = '';
+    const hiddenInput = document.querySelector('input[name="epic_title"]');
+    const displayElement = document.querySelector('.epic-title');
+    
+    if (hiddenInput && hiddenInput.value) {
+      currentEpic = hiddenInput.value;
+    } else if (displayElement) {
+      currentEpic = displayElement.textContent.trim();
+    } else {
+      currentEpic = 'No epic available';
+    }
+    
+    // Update the current epic display in the modal
+    if (currentEpicDisplay) {
+      currentEpicDisplay.textContent = currentEpic;
+    }
+    
+    // Show the modal
+    modal.style.display = 'block';
+    
+    // Focus on the input
+    setTimeout(() => {
+      const inputElement = document.getElementById('epic-chat-input');
+      if (inputElement) {
+        inputElement.focus();
+      }
+    }, 100);
+    
+    // Add event listener for Enter key
+    const chatInput = document.getElementById('epic-chat-input');
+    if (chatInput && !chatInput.hasAttribute('data-listener-added')) {
+      chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendEpicMessage();
+        }
+      });
+      chatInput.setAttribute('data-listener-added', 'true');
+    }
+  }
+  
+  function closeEpicChat() {
+    const modal = document.getElementById('epic-chat-modal');
+    modal.style.display = 'none';
+  }
+  
+  function sendEpicMessage() {
+    const input = document.getElementById('epic-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addEpicChatMessage(message, 'user');
+    
+    // Clear input
+    input.value = '';
+    
+    // Show loading state
+    const sendBtn = document.getElementById('epic-send-btn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<span class="chat-loading-dots"></span> Processing';
+    
+    // Add loading message
+    const loadingMessageId = addEpicChatMessage('', 'assistant', true);
+    
+    // Get current epic and story context
+    const epicInput = document.querySelector('input[name="epic_title"]');
+    const currentEpic = epicInput ? epicInput.value : '';
+    
+    const storyContext = document.querySelector('input[name="user_story_name"]').value + ': ' + 
+                        document.querySelector('input[name="user_story_description"]').value;
+    
+    // Call backend API
+    fetch('/epic-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message,
+        current_epic: currentEpic,
+        story_context: storyContext
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Epic Chat API Response:', data);
+      
+      // Remove loading message
+      const loadingMsg = document.getElementById(loadingMessageId);
+      if (loadingMsg) loadingMsg.remove();
+      
+      if (data.success) {
+        // Get the AI response - check both possible response properties
+        const aiResponse = data.message || data.response || 'No response received';
+        console.log('AI Response:', aiResponse);
+        
+        // Add AI response
+        addEpicChatMessage(aiResponse, 'assistant');
+        
+        // If there's an updated epic, offer to apply it
+        if (data.updated_epic && data.updated_epic.trim()) {
+          const buttonId = 'apply-epic-btn-' + Date.now();
+          
+          addEpicChatMessage(
+            `Here's the updated epic. Would you like me to apply this change?
+            
+            <div style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; font-style: italic;">
+              ${data.updated_epic}
+            </div>
+            
+            <button id="${buttonId}" 
+                    style="background: #d0021b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
+              ✓ Apply This Epic
+            </button>`, 
+            'assistant'
+          );
+          
+          // Add click event listener to the button
+          setTimeout(() => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+              button.addEventListener('click', () => {
+                applyEpicUpdate(data.updated_epic);
+              });
+            }
+          }, 100);
+        }
+      } else {
+        addEpicChatMessage('Sorry, I encountered an error processing your request. Please try again.', 'assistant');
+      }
+      
+      // Reset send button
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<span>📤</span> Send';
+    })
+    .catch(error => {
+      console.error('Error calling epic chat API:', error);
+      
+      // Remove loading message
+      const loadingMsg = document.getElementById(loadingMessageId);
+      if (loadingMsg) loadingMsg.remove();
+      
+      // Show error message
+      addEpicChatMessage('Sorry, I encountered a connection error. Please check your internet connection and try again.', 'assistant');
+      
+      // Reset send button
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<span>📤</span> Send';
+    });
+  }
+  
+  function addEpicChatMessage(message, sender, isLoading = false) {
+    const messagesContainer = document.getElementById('epic-chat-messages');
+    const messageDiv = document.createElement('div');
+    const messageId = 'epic-msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    messageDiv.id = messageId;
+    
+    if (isLoading) {
+      messageDiv.className = 'chat-message assistant';
+      messageDiv.innerHTML = `
+        <div class="chat-avatar assistant">AI</div>
+        <div class="chat-bubble">
+          <div class="chat-loading-dots"></div>
+        </div>
+      `;
+    } else {
+      messageDiv.className = `chat-message ${sender}`;
+      
+      if (sender === 'user') {
+        messageDiv.innerHTML = `
+          <div class="chat-bubble">${message}</div>
+          <div class="chat-avatar user">You</div>
+        `;
+      } else {
+        messageDiv.innerHTML = `
+          <div class="chat-avatar assistant">AI</div>
+          <div class="chat-bubble">${message}</div>
+        `;
+      }
+    }
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    return messageId;
+  }
+  
+  function applyEpicUpdate(newEpic) {
+    // Update the hidden input
+    const epicInput = document.querySelector('input[name="epic_title"]');
+    if (epicInput) {
+      epicInput.value = newEpic;
+    }
+    
+    // Update the display
+    const epicDisplay = document.querySelector('.epic-title');
+    if (epicDisplay) {
+      epicDisplay.innerHTML = newEpic;
+    }
+    
+    // Update the modal display
+    const currentEpicDisplay = document.getElementById('current-epic-display');
+    if (currentEpicDisplay) {
+      currentEpicDisplay.textContent = newEpic;
+    }
+    
+    // Save to localStorage
+    saveUserStoryData();
+    
+    // Show success message
+    addEpicChatMessage('✅ Epic updated successfully! The changes are now applied to your story.', 'assistant');
+  }
+  
+  // User Story Chat Functions
+  function openUserStoryChat() {
+    const modal = document.getElementById('user-story-chat-modal');
+    if (!modal) {
+      alert('❌ Error: User story chat modal not found. Please reload the page and try again.');
+      return;
+    }
+    
+    const currentUserStoryDisplay = document.getElementById('current-user-story-display');
+    
+    // Get current user story
+    let currentUserStory = '';
+    const hiddenInput = document.querySelector('input[name="user_story_name"]');
+    const displayElement = document.querySelector('.story-header');
+    
+    if (hiddenInput && hiddenInput.value) {
+      currentUserStory = hiddenInput.value;
+    } else if (displayElement) {
+      currentUserStory = displayElement.textContent.replace('User story: ', '').trim();
+    } else {
+      currentUserStory = 'No user story available';
+    }
+    
+    // Update the current user story display in the modal
+    if (currentUserStoryDisplay) {
+      currentUserStoryDisplay.textContent = currentUserStory;
+    }
+    
+    // Show the modal
+    modal.style.display = 'block';
+    
+    // Focus on the input
+    setTimeout(() => {
+      const inputElement = document.getElementById('user-story-chat-input');
+      if (inputElement) {
+        inputElement.focus();
+      }
+    }, 100);
+    
+    // Add event listener for Enter key
+    const chatInput = document.getElementById('user-story-chat-input');
+    if (chatInput && !chatInput.hasAttribute('data-listener-added')) {
+      chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendUserStoryMessage();
+        }
+      });
+      chatInput.setAttribute('data-listener-added', 'true');
+    }
+  }
+  
+  function closeUserStoryChat() {
+    const modal = document.getElementById('user-story-chat-modal');
+    modal.style.display = 'none';
+  }
+  
+  function sendUserStoryMessage() {
+    const input = document.getElementById('user-story-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addUserStoryChatMessage(message, 'user');
+    
+    // Clear input
+    input.value = '';
+    
+    // Show loading state
+    const sendBtn = document.getElementById('user-story-send-btn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<span class="chat-loading-dots"></span> Processing';
+    
+    // Add loading message
+    const loadingMessageId = addUserStoryChatMessage('', 'assistant', true);
+    
+    // Get current user story and context
+    const userStoryInput = document.querySelector('input[name="user_story_name"]');
+    const currentUserStory = userStoryInput ? userStoryInput.value : '';
+    
+    const epicTitle = document.querySelector('input[name="epic_title"]').value;
+    const description = document.querySelector('input[name="user_story_description"]').value;
+    
+    // Call backend API
+    fetch('/user-story-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message,
+        current_user_story: currentUserStory,
+        epic_title: epicTitle,
+        description: description
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('User Story Chat API Response:', data);
+      
+      // Remove loading message
+      const loadingMsg = document.getElementById(loadingMessageId);
+      if (loadingMsg) loadingMsg.remove();
+      
+      if (data.success) {
+        // Get the AI response - check both possible response properties
+        const aiResponse = data.message || data.response || 'No response received';
+        console.log('AI Response:', aiResponse);
+        
+        // Add AI response
+        addUserStoryChatMessage(aiResponse, 'assistant');
+        
+        // If there's an updated user story, offer to apply it
+        if (data.updated_user_story && data.updated_user_story.trim()) {
+          const buttonId = 'apply-user-story-btn-' + Date.now();
+          
+          addUserStoryChatMessage(
+            `Here's the updated user story. Would you like me to apply this change?
+            
+            <div style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; font-style: italic;">
+              ${data.updated_user_story}
+            </div>
+            
+            <button id="${buttonId}" 
+                    style="background: #d0021b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
+              ✓ Apply This User Story
+            </button>`, 
+            'assistant'
+          );
+          
+          // Add click event listener to the button
+          setTimeout(() => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+              button.addEventListener('click', () => {
+                applyUserStoryUpdate(data.updated_user_story);
+              });
+            }
+          }, 100);
+        }
+      } else {
+        console.error('API returned error:', data);
+        const errorMsg = data.error || 'Sorry, I encountered an error processing your request. Please try again.';
+        addUserStoryChatMessage(errorMsg, 'assistant');
+      }
+      
+      // Reset send button
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<span>📤</span> Send';
+    })
+    .catch(error => {
+      console.error('Error calling user story chat API:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
+      
+      // Remove loading message
+      const loadingMsg = document.getElementById(loadingMessageId);
+      if (loadingMsg) loadingMsg.remove();
+      
+      // Show error message
+      addUserStoryChatMessage('Sorry, I encountered a connection error. Please check your internet connection and try again.', 'assistant');
+      
+      // Reset send button
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<span>📤</span> Send';
+    });
+  }
+  
+  function addUserStoryChatMessage(message, sender, isLoading = false) {
+    const messagesContainer = document.getElementById('user-story-chat-messages');
+    const messageDiv = document.createElement('div');
+    const messageId = 'user-story-msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    messageDiv.id = messageId;
+    
+    if (isLoading) {
+      messageDiv.className = 'chat-message assistant';
+      messageDiv.innerHTML = `
+        <div class="chat-avatar assistant">AI</div>
+        <div class="chat-bubble">
+          <div class="chat-loading-dots"></div>
+        </div>
+      `;
+    } else {
+      messageDiv.className = `chat-message ${sender}`;
+      
+      if (sender === 'user') {
+        messageDiv.innerHTML = `
+          <div class="chat-bubble">${message}</div>
+          <div class="chat-avatar user">You</div>
+        `;
+      } else {
+        messageDiv.innerHTML = `
+          <div class="chat-avatar assistant">AI</div>
+          <div class="chat-bubble">${message}</div>
+        `;
+      }
+    }
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    return messageId;
+  }
+  
+  function applyUserStoryUpdate(newUserStory) {
+    // Update the hidden input
+    const userStoryInput = document.querySelector('input[name="user_story_name"]');
+    if (userStoryInput) {
+      userStoryInput.value = newUserStory;
+    }
+    
+    // Update the display
+    const storyDisplay = document.querySelector('.story-header');
+    if (storyDisplay) {
+      storyDisplay.innerHTML = `User story: ${newUserStory}
+        <button class="chat-btn" onclick="openUserStoryChat()" style="margin-left: 10px; float: right;">
+          <span>💬 Chat</span>
+        </button>`;
+    }
+    
+    // Update the modal display
+    const currentUserStoryDisplay = document.getElementById('current-user-story-display');
+    if (currentUserStoryDisplay) {
+      currentUserStoryDisplay.textContent = newUserStory;
+    }
+    
+    // Save to localStorage
+    saveUserStoryData();
+    
+    // Show success message
+    addUserStoryChatMessage('✅ User story updated successfully! The changes are now applied.', 'assistant');
+  }
   
   function addDebugButton() {
     const debugBtn = document.createElement('button');
