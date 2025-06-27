@@ -1098,7 +1098,7 @@
       },
       body: JSON.stringify({ 
         message: message,
-        current_epics: currentEpicsContext
+        current_epics_content: currentEpicsContext
       })
     })
     .then(response => {
@@ -1116,9 +1116,20 @@
         epicChatHistory.push({ role: 'assistant', message: data.response });
         
         // Check if this response updates the epics section
+        console.log('Epic Chat: Checking response for epic updates');
+        console.log('Epic Chat: epics_updated flag:', data.epics_updated);
+        console.log('Epic Chat: Response contains JSON:', data.response.includes('```json'));
+        
         if (data.epics_updated) {
-          console.log('Epic Chat: Epics updated, refreshing section');
+          console.log('Epic Chat: Epics updated detected via flag, updating section');
           updateEpicsSection(data.response);
+        } else if (data.response.includes('```json') || 
+                  (data.response.includes('[') && data.response.includes('{') && 
+                   (data.response.includes('epic') || data.response.includes('Epic')))) {
+          console.log('Epic Chat: Possible epic content detected in response, attempting update');
+          updateEpicsSection(data.response);
+        } else {
+          console.log('Epic Chat: No epic update content detected in response');
         }
         
         setTimeout(() => {
@@ -1215,11 +1226,23 @@
       welcomeMsg.remove();
     }
     
+    // Check if this message contains epic updates
+    const hasEpicUpdate = role === 'assistant' && (
+      message.includes('```json') || 
+      (message.includes('[') && message.includes('{') && message.includes('epic'))
+    );
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = `message-bubble ${role === 'user' ? 'user-bubble' : 'agent-bubble'}`;
     messageDiv.innerHTML = `
       <div class="message-content">${escapeHtml(message)}</div>
       <span class="message-time">${timestamp}</span>
+      ${hasEpicUpdate ? `
+        <div class="epic-update-indicator">
+          <span class="update-badge">✨ Epics section updated</span>
+          <button class="view-update-btn" onclick="scrollToEpicsSection()">View Changes</button>
+        </div>
+      ` : ''}
     `;
     
     chatMessages.appendChild(messageDiv);
@@ -1309,48 +1332,89 @@ function updateEpicsSection(agentResponse) {
 
   const epicsContainer = document.getElementById('epics-container');
   if (!epicsContainer) {
+    console.error('Could not find epics container.');
     showNotification('Could not find epics container.', 'error');
     return;
   }
 
+  console.log('Updating epics section with response:', agentResponse.substring(0, 200) + '...');
+
   let epicsData = null;
   try {
-    // Try to extract JSON from markdown/code block or plain text
-    let cleanContent = agentResponse;
-    const jsonMatch = cleanContent.match(/```json\s*([\s\S]*?)\s*```/);
+    // Try multiple approaches to extract epic data
+    let cleanContent = agentResponse.trim();
+    
+    // 1. Try to extract JSON from markdown code block
+    const jsonMatch = cleanContent.match(/```json\s*([\s\S]*?)\s*```/i);
     if (jsonMatch && jsonMatch[1]) {
       cleanContent = jsonMatch[1].trim();
+      console.log('Found JSON in code block');
     } else {
+      // 2. Try to find JSON array pattern
       const jsonArrayMatch = cleanContent.match(/\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/);
       if (jsonArrayMatch) {
         cleanContent = jsonArrayMatch[0];
+        console.log('Found JSON array pattern');
+      } else {
+        // 3. Try to find JSON object pattern and wrap in array
+        const jsonObjectMatch = cleanContent.match(/\{\s*["'](?:epic_)?(?:title|name)["'][\s\S]*?\}/);
+        if (jsonObjectMatch) {
+          cleanContent = '[' + jsonObjectMatch[0] + ']';
+          console.log('Found single JSON object, wrapped in array');
+        }
       }
     }
+    
+    console.log('Attempting to parse:', cleanContent.substring(0, 100) + '...');
     epicsData = JSON.parse(cleanContent);
+    console.log('Successfully parsed epic data:', epicsData);
+    
   } catch (e) {
-    showNotification('Could not parse epics from chat response.', 'error');
+    console.log('JSON parsing failed:', e.message);
+    console.log('Response content:', agentResponse);
+    showNotification('Could not parse epic data from chat response. Please ensure the response contains valid JSON format.', 'error');
     return;
   }
 
-  if (Array.isArray(epicsData) && epicsData.length > 0) {
+  // Ensure we have an array
+  if (!Array.isArray(epicsData)) {
+    if (typeof epicsData === 'object' && epicsData !== null) {
+      epicsData = [epicsData];
+      console.log('Converted single object to array');
+    } else {
+      console.error('Invalid epic data type:', typeof epicsData);
+      showNotification('Invalid epic data format received.', 'error');
+      return;
+    }
+  }
+
+  if (epicsData.length > 0) {
+    console.log(`Formatting ${epicsData.length} epics for display`);
     let formattedHTML = '';
+    
     epicsData.forEach((epic, index) => {
-      const epicTitle = epic.epic_title || `Untitled Epic ${index + 1}`;
-      const epicDescription = epic.epic_description || 'No description available.';
+      // Handle different possible field names
+      const epicTitle = epic.epic_title || epic.title || epic.name || `Untitled Epic ${index + 1}`;
+      const epicDescription = epic.epic_description || epic.description || epic.desc || 'No description available.';
+      const epicId = epic.epic_id || epic.id || `epic_${index + 1}`;
+      
       formattedHTML += `
         <div class="epic-card">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <input type="checkbox" name="epic_ids" value="epic_${index + 1}" id="epic_${index + 1}">
+            <input type="checkbox" name="epic_ids" value="${epicId}" id="${epicId}" checked>
             <h5 style="margin: 0;">Epic ${index + 1}: ${escapeHtml(epicTitle)}</h5>
           </div>
           <p><strong>Description:</strong> ${escapeHtml(epicDescription)}</p>
         </div>
       `;
     });
+    
     epicsContainer.innerHTML = formattedHTML;
+    console.log('Epics section updated successfully');
     showNotification('✨ Epics have been updated!', 'success');
     scrollToEpicsSection();
   } else {
+    console.log('No epics found in parsed data');
     showNotification('No valid epic data found in chat response.', 'info');
   }
 }

@@ -1733,9 +1733,124 @@ def show_epic_results():
     """Display the epic results page after generation."""
     if request.method == "POST":
         epics = request.form.get("epics", "")
-        return render_template("poc2_epic_story_screen.html", epics=epics)
+        user_stories = request.form.get("user_stories", "")
+        return render_template("poc2_epic_story_screen.html", epics=epics, user_stories=user_stories)
     else:
-        return render_template("poc2_epic_story_screen.html", epics="")
+        # Provide sample epics for testing Epic Chat functionality
+        sample_epics = """
+        <div class="epic-card" data-epic-id="epic_1">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" name="epic_ids" value="epic_1" id="epic_1" checked>
+            <h5 style="margin: 0;">Epic 1: User Authentication and Security</h5>
+          </div>
+          <p><strong>Description:</strong> Implement comprehensive user authentication system with multi-factor authentication, secure password policies, and role-based access control to ensure platform security and user data protection.</p>
+          <p><strong>Business Value:</strong> Enhanced security reduces risk of data breaches and builds user trust, essential for regulatory compliance and business reputation.</p>
+          <p><strong>Acceptance Criteria:</strong></p>
+          <ul>
+            <li>Users can register with email verification</li>
+            <li>Multi-factor authentication is required for admin roles</li>
+            <li>Password policies enforce strong passwords</li>
+            <li>Session management with automatic timeout</li>
+            <li>Role-based permissions control feature access</li>
+          </ul>
+        </div>
+        
+        <div class="epic-card" data-epic-id="epic_2">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" name="epic_ids" value="epic_2" id="epic_2">
+            <h5 style="margin: 0;">Epic 2: Data Analytics Dashboard</h5>
+          </div>
+          <p><strong>Description:</strong> Create a comprehensive analytics dashboard that provides real-time insights into user behavior, system performance, and business metrics with customizable reporting capabilities.</p>
+          <p><strong>Business Value:</strong> Data-driven decision making capabilities will improve operational efficiency and enable better strategic planning.</p>
+          <p><strong>Acceptance Criteria:</strong></p>
+          <ul>
+            <li>Real-time data visualization with charts and graphs</li>
+            <li>Customizable dashboard layouts</li>
+            <li>Export functionality for reports</li>
+            <li>Performance metrics tracking</li>
+            <li>User activity analytics</li>
+          </ul>
+        </div>
+        
+        <div class="epic-card" data-epic-id="epic_3">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" name="epic_ids" value="epic_3" id="epic_3">
+            <h5 style="margin: 0;">Epic 3: Mobile Application Development</h5>
+          </div>
+          <p><strong>Description:</strong> Develop a responsive mobile application that provides core platform functionality with offline capabilities and push notifications for enhanced user engagement.</p>
+          <p><strong>Business Value:</strong> Mobile accessibility increases user engagement and market reach, providing competitive advantage in mobile-first market.</p>
+          <p><strong>Acceptance Criteria:</strong></p>
+          <ul>
+            <li>Native iOS and Android applications</li>
+            <li>Offline functionality for core features</li>
+            <li>Push notification system</li>
+            <li>Responsive design for various screen sizes</li>
+            <li>Integration with existing web platform</li>
+          </ul>
+        </div>
+        """
+        
+        # Provide sample user stories for testing User Story Chat functionality
+        sample_user_stories = """[
+          {
+            "story_id": "US-001",
+            "name": "Secure User Registration",
+            "priority": "High",
+            "systems": "Authentication Service, Email Service",
+            "description": "As a new user, I want to register for an account with email verification so that I can securely access the platform"
+          },
+          {
+            "story_id": "US-002", 
+            "name": "Multi-Factor Authentication Setup",
+            "priority": "High",
+            "systems": "Authentication Service, SMS Service",
+            "description": "As a user, I want to enable multi-factor authentication so that my account has an additional layer of security"
+          },
+          {
+            "story_id": "US-003",
+            "name": "Password Policy Enforcement", 
+            "priority": "Medium",
+            "systems": "Authentication Service",
+            "description": "As a system, I want to enforce strong password policies so that user accounts are protected from common attacks"
+          },
+          {
+            "story_id": "US-004",
+            "name": "Real-time Dashboard Creation",
+            "priority": "High", 
+            "systems": "Analytics Engine, Dashboard Service",
+            "description": "As a business user, I want to create customizable real-time dashboards so that I can monitor key metrics and KPIs"
+          },
+          {
+            "story_id": "US-005",
+            "name": "Data Visualization Charts",
+            "priority": "Medium",
+            "systems": "Visualization Service, Chart Library", 
+            "description": "As an analyst, I want to create various chart types (bar, line, pie) so that I can visualize data in the most appropriate format"
+          },
+          {
+            "story_id": "US-006",
+            "name": "Mobile App User Interface",
+            "priority": "High",
+            "systems": "Mobile Frontend, API Gateway",
+            "description": "As a mobile user, I want an intuitive and responsive interface so that I can easily navigate and use the app on my device"
+          },
+          {
+            "story_id": "US-007",
+            "name": "Offline Data Synchronization", 
+            "priority": "Medium",
+            "systems": "Mobile App, Sync Service",
+            "description": "As a mobile user, I want the app to work offline and sync data when reconnected so that I can use core features without internet"
+          },
+          {
+            "story_id": "US-008",
+            "name": "Push Notification System",
+            "priority": "Low", 
+            "systems": "Notification Service, Mobile App",
+            "description": "As a user, I want to receive push notifications for important updates so that I stay informed about relevant activities"
+          }
+        ]"""
+        
+        return render_template("poc2_epic_story_screen.html", epics=sample_epics, user_stories=sample_user_stories)
 
 @app.route("/approve-epics", methods=["POST"])
 def approve_epics():
@@ -2409,7 +2524,31 @@ COMMON USER REQUESTS (all should UPDATE existing epics):
 - "Improve the user stories" → Update existing epic user story breakdown
 - "These need work" → Update existing epics based on feedback
 
-RESPOND WITH: Updated versions of the EXISTING epics, not new ones.
+OUTPUT FORMAT REQUIREMENTS:
+When providing updated epics, use this EXACT format:
+
+```json
+[
+  {{
+    "epic_id": "epic_1",
+    "epic_title": "Updated Epic Title",
+    "epic_description": "Updated detailed description of what this epic covers and accomplishes"
+  }},
+  {{
+    "epic_id": "epic_2", 
+    "epic_title": "Another Updated Epic Title",
+    "epic_description": "Updated detailed description for the second epic"
+  }}
+]
+```
+
+IMPORTANT: 
+- Always wrap the JSON in ```json code blocks
+- Use "epic_id", "epic_title", and "epic_description" as field names
+- Preserve existing epic_id values when updating
+- If just providing conversational response without updates, don't include JSON
+
+RESPOND WITH: Updated versions of the EXISTING epics using the JSON format above, or conversational response if no updates are needed.
 
 """
         if session['epic_chat_history']:
@@ -2436,6 +2575,35 @@ RESPOND WITH: Updated versions of the EXISTING epics, not new ones.
                 "error": "Failed to get response from Epic Agent"
             }), 500
         
+        # Check if the response contains structured epic data (JSON format)
+        epics_updated = False
+        try:
+            # Try to detect if response contains JSON with epic data
+            import re
+            json_match = re.search(r'```json\s*([\s\S]*?)\s*```', epic_response, re.MULTILINE)
+            if json_match:
+                json_content = json_match.group(1).strip()
+                epic_data = json.loads(json_content)
+                if isinstance(epic_data, list) and len(epic_data) > 0:
+                    # Check if it looks like epic data
+                    first_item = epic_data[0]
+                    if isinstance(first_item, dict) and any(key in first_item for key in ['title', 'name', 'description', 'epic_id']):
+                        epics_updated = True
+                        logger.info("Epic Chat: Detected updated epic data in response")
+            else:
+                # Try parsing the entire response as JSON
+                try:
+                    epic_data = json.loads(epic_response.strip())
+                    if isinstance(epic_data, list) and len(epic_data) > 0:
+                        first_item = epic_data[0]
+                        if isinstance(first_item, dict) and any(key in first_item for key in ['title', 'name', 'description', 'epic_id']):
+                            epics_updated = True
+                            logger.info("Epic Chat: Detected epic data in plain JSON response")
+                except:
+                    pass
+        except Exception as e:
+            logger.debug(f"Epic detection parsing error (normal): {e}")
+        
         # Add assistant response to chat history
         session['epic_chat_history'].append({
             "role": "assistant",
@@ -2454,6 +2622,7 @@ RESPOND WITH: Updated versions of the EXISTING epics, not new ones.
         return jsonify({
             "success": True,
             "response": epic_response,
+            "epics_updated": epics_updated,
             "chat_history": session['epic_chat_history']
         })
         
