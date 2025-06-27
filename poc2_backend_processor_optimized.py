@@ -1675,7 +1675,8 @@ def generate_epics_from_preview():
         
         logger.info("################Epic Generator response received")
         logger.info(f"Epic Generator processing time: {epic_processing_time:.2f} seconds")
-          # Print Epic Agent Response to console
+        
+        # Print Epic Agent Response to console
         print("\n" + "=" * 100)
         print("EPIC AGENT RESPONSE OUTPUT:")
         print("=" * 100)
@@ -2277,7 +2278,7 @@ def user_story_details():
                         criterion = criterion.strip('[]{}"\'\n\r\t')
                         if criterion and not criterion.startswith('{') and not criterion.startswith('['):
                             cleaned_criteria.append(criterion)
-                    acceptance_criteria = cleaned_criteria
+                acceptance_criteria = cleaned_criteria
                 
                 user_story_title = final_story_name
                 user_story_description = enhanced_description  # Use enhanced description
@@ -2740,43 +2741,138 @@ def clear_system_info():
         logger.error(f"Error clearing system info: {str(e)}")
         return jsonify({"success": False, "error": "Internal server error"}), 500
 
-@app.errorhandler(404)
-def not_found(error):
-    logger.warning(f"404 error for URL: {request.url}")
-    return jsonify({"success": False, "error": "Endpoint not found"}), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    logger.error(f"500 error: {str(error)}")
-    return jsonify({"success": False, "error": "Internal server error"}), 500
-
-@app.errorhandler(Exception)
-def handle_exception(e):
-    logger.error(f"Unhandled exception: {str(e)}")
-    logger.error(f"Exception type: {type(e).__name__}")
-    logger.error(f"Request URL: {request.url}")
-    logger.error(f"Request method: {request.method}")
-    logger.error(f"Traceback: {traceback.format_exc()}")
-    return jsonify({"success": False, "error": f"Unexpected error: {str(e)}"}), 500
-
-if __name__ == "__main__":
-    logger.info("Starting Flask application...")
-    logger.info("RAG-Enhanced PRD to Epic/User Story Generator")
-    logger.info("=" * 60)
-    logger.info("Features:")
-    logger.info("- RAG-based document processing with ChromaDB")
-    logger.info("- SentenceTransformers embeddings for semantic search")
-    logger.info("- PRD Parser Agent replaced with intelligent RAG summaries")
-    logger.info("- Single-agent workflow using only Epic Generator")
-    logger.info("- Advanced caching and performance optimizations")
-    logger.info("=" * 60)
+@app.route("/submit-jira-ticket", methods=["POST"])
+def submit_jira_ticket():
+    """Submit user story details to Jira as a ticket."""
+    logger.info("Request received for Jira ticket submission")
     
     try:
-        # Run Flask app in debug mode for development
+        # Get form data
+        epic_title = request.form.get("epic_title", "")
+        user_story_name = request.form.get("user_story_name", "")
+        user_story_description = request.form.get("user_story_description", "")
+        priority = request.form.get("priority", "High")
+        responsible_systems = request.form.get("responsible_systems", "")
+        acceptance_criteria_raw = request.form.get("acceptance_criteria", "")
+        tagged_requirements_raw = request.form.get("tagged_requirements", "")
+        
+        logger.info(f"Submitting Jira ticket for story: {user_story_name}")
+        logger.info(f"Epic: {epic_title}")
+        logger.info(f"Priority: {priority}")
+        logger.info(f"Systems: {responsible_systems}")
+        
+        # Parse acceptance criteria (split by |||)
+        acceptance_criteria = []
+        if acceptance_criteria_raw:
+            acceptance_criteria = [criteria.strip() for criteria in acceptance_criteria_raw.split('|||') if criteria.strip()]
+        
+        # Parse tagged requirements (split by |||)
+        tagged_requirements = []
+        if tagged_requirements_raw:
+            tagged_requirements = [req.strip() for req in tagged_requirements_raw.split('|||') if req.strip()]
+        
+        # Format the description for Jira
+        jira_description = user_story_description
+        
+        # Add acceptance criteria to description
+        if acceptance_criteria:
+            jira_description += "\n\n*Acceptance Criteria:*\n"
+            for i, criterion in enumerate(acceptance_criteria, 1):
+                jira_description += f"• {criterion}\n"
+        
+        # Add tagged requirements to description
+        if tagged_requirements:
+            jira_description += "\n\n*Tagged Requirements:*\n"
+            for i, requirement in enumerate(tagged_requirements, 1):
+                jira_description += f"• {requirement}\n"
+        
+        # Add system information
+        if responsible_systems:
+            jira_description += f"\n\n*Responsible Systems:* {responsible_systems}"
+        
+        # Prepare Jira ticket data
+        jira_data = {
+            'epic_title': epic_title,
+            'summary': user_story_name,
+            'description': jira_description,
+            'priority': priority,
+            'responsible_systems': responsible_systems,
+            'acceptance_criteria': acceptance_criteria,
+            'tagged_requirements': tagged_requirements
+        }
+        
+        # Try to create Jira ticket using the Jira connector
+        try:
+            # Import and use Jira connector
+            from jira import JIRA
+            import os
+            from dotenv import load_dotenv
+            
+            load_dotenv()
+            
+            # Jira configuration
+            JIRA_SERVER = 'https://lalluluke.atlassian.net/'
+            EMAIL = 'lalluluke@gmail.com'
+            API_TOKEN = os.getenv("JIRA_API_TOKEN")
+            
+            if not API_TOKEN:
+                logger.error("JIRA_API_TOKEN not found in environment variables")
+                return render_template('poc2_user_story_details.html', 
+                                     error_message="Jira API token not configured. Please contact administrator.",
+                                     **jira_data)
+            
+            # Connect to Jira
+            jira = JIRA(server=JIRA_SERVER, basic_auth=(EMAIL, API_TOKEN))
+            
+            # Create issue dictionary (removed priority field due to Jira screen configuration)
+            issue_dict = {
+                'project': {'key': 'SCRUM'},  # Default project key
+                'summary': user_story_name,
+                'description': jira_description,
+                'issuetype': {'name': 'Story'}
+            }
+            
+            # Create the Jira issue
+            new_issue = jira.create_issue(fields=issue_dict)
+            
+            logger.info(f"Successfully created Jira ticket: {new_issue.key}")
+            
+            # Store the ticket information for display
+            success_data = {
+                'ticket_key': new_issue.key,
+                'ticket_url': f"{JIRA_SERVER}browse/{new_issue.key}",
+                'success_message': f"Jira ticket {new_issue.key} created successfully!"
+            }
+            
+            # Return success page with ticket details
+            return render_template('jira_success.html', **success_data, **jira_data)
+            
+        except ImportError as e:
+            logger.error(f"Jira library not available: {e}")
+            error_msg = "Jira integration not available. Please install the required dependencies."
+            return render_template('poc2_user_story_details.html', 
+                                 error_message=error_msg,
+                                 **jira_data)
+            
+        except Exception as e:
+            logger.error(f"Error creating Jira ticket: {e}")
+            error_msg = f"Failed to create Jira ticket: {str(e)}"
+            return render_template('poc2_user_story_details.html', 
+                                 error_message=error_msg,
+                                 **jira_data)
+    
+    except Exception as e:
+        logger.error(f"Error in Jira ticket submission: {str(e)}")
+        return render_template('poc2_user_story_details.html', 
+                             error_message=f"Error submitting to Jira: {str(e)}")
+
+if __name__ == "__main__":
+    try:
+        logger.info("Starting Flask application...")
         app.run(
-            host="0.0.0.0",
+            debug=False,  # Set to False for production
+            host="0.0.0.0",  # Allow external connections
             port=5000,
-            debug=True,
             threaded=True,
             use_reloader=False  # Disable reloader to prevent double initialization
         )

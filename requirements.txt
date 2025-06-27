@@ -61,6 +61,9 @@ multiprocessing-logging>=0.3.4  # Thread-safe logging
 # Web UI & Visualization
 streamlit>=1.32.0
 
+# Jira Integration
+jira>=3.5.0            # For Jira API integration
+
 # Testing & Development (optional)
 pytest==7.4.3
 pytest-asyncio==0.21.1

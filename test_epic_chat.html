@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Epic Chat Test</title>
+  <style>
+    body { background-color: #2f323a; color: #fff; margin: 0; padding: 20px; }
+    .test-container { max-width: 800px; margin: 0 auto; }
+    .epic-container { background: white; color: black; padding: 20px; margin: 20px 0; border-radius: 6px; }
+    .epic-card { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 6px; }
+    .chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+    .chat-toggle { 
+      width: 64px; height: 64px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: white; border: none;
+    }
+    .chat-panel { 
+      display: none; position: absolute; bottom: 80px; right: 0;
+      width: 400px; height: 500px; background: white; border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.1); color: black;
+    }
+    .chat-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px; color: white; }
+    .chat-messages { padding: 20px; height: 300px; overflow-y: auto; }
+    .chat-input-area { padding: 16px; }
+    .chat-input { width: 80%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    .send-btn { padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>Epic Chat Test Page</h1>
+    
+    <div class="section-header">
+      <span>Epics</span>
+      <button onclick="openEpicChat()">💬 Chat</button>
+    </div>
+    
+    <div id="epics-container" class="epic-container">
+      <div class="epic-card">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <input type="checkbox" name="epic_ids" value="epic_1" id="epic_1">
+          <h5 style="margin: 0;">Epic 1: User Authentication System</h5>
+        </div>
+        <p><strong>Description:</strong> Implement secure user login and authentication</p>
+      </div>
+      <div class="epic-card">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <input type="checkbox" name="epic_ids" value="epic_2" id="epic_2">
+          <h5 style="margin: 0;">Epic 2: Data Migration Framework</h5>
+        </div>
+        <p><strong>Description:</strong> Create framework for migrating legacy data</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Epic Chat Widget -->
+  <div id="epic-chat-widget" class="chat-widget">
+    <button class="chat-toggle" onclick="toggleEpicChat()">💬</button>
+    
+    <div id="epic-chat-panel" class="chat-panel">
+      <div class="chat-header">
+        <h6>Epic Assistant</h6>
+        <button onclick="toggleEpicChat()">×</button>
+      </div>
+      
+      <div id="epic-chat-messages" class="chat-messages">
+        <div>👋 Hi! I'm your Epic Assistant. How can I help you with your epics?</div>
+      </div>
+      
+      <div class="chat-input-area">
+        <input type="text" id="epic-chat-input" class="chat-input" placeholder="Type your message...">
+        <button class="send-btn" onclick="sendEpicChatMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let isEpicChatOpen = false;
+
+    function toggleEpicChat() {
+      console.log('toggleEpicChat called, current state:', isEpicChatOpen);
+      const panel = document.getElementById('epic-chat-panel');
+      
+      if (isEpicChatOpen) {
+        panel.style.display = 'none';
+        isEpicChatOpen = false;
+        console.log('Chat closed');
+      } else {
+        panel.style.display = 'block';
+        isEpicChatOpen = true;
+        console.log('Chat opened');
+      }
+    }
+
+    function openEpicChat() {
+      console.log('openEpicChat called');
+      if (!isEpicChatOpen) {
+        toggleEpicChat();
+      }
+    }
+
+    function sendEpicChatMessage() {
+      const input = document.getElementById('epic-chat-input');
+      const message = input.value.trim();
+      
+      if (!message) {
+        console.log('No message to send');
+        return;
+      }
+
+      console.log('Sending message:', message);
+      
+      // Get current epics context
+      const epicsContainer = document.getElementById('epics-container');
+      let currentEpicsContext = '';
+      
+      if (epicsContainer) {
+        const epicCards = epicsContainer.querySelectorAll('.epic-card');
+        if (epicCards.length > 0) {
+          currentEpicsContext = 'Current Epics:\n';
+          epicCards.forEach((card, index) => {
+            const titleElement = card.querySelector('h5');
+            const descElement = card.querySelector('p');
+            
+            if (titleElement) {
+              const epicTitle = titleElement.textContent.replace(/^Epic \d+: /, '');
+              const epicDesc = descElement ? descElement.textContent.replace(/^Description: /, '') : '';
+              currentEpicsContext += `\nEpic ${index + 1}: ${epicTitle}\nDescription: ${epicDesc}\n`;
+            }
+          });
+        }
+      }
+
+      console.log('Epic context:', currentEpicsContext);
+
+      // Add message to chat (simulate response)
+      const chatMessages = document.getElementById('epic-chat-messages');
+      chatMessages.innerHTML += `<div style="margin: 10px 0; text-align: right; background: #667eea; color: white; padding: 8px; border-radius: 8px;">You: ${message}</div>`;
+      chatMessages.innerHTML += `<div style="margin: 10px 0; background: #f0f0f0; padding: 8px; border-radius: 8px;">Assistant: I received your message "${message}". In a real implementation, I would process this with the epic context and provide helpful insights.</div>`;
+      
+      input.value = '';
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Test the Epic Chat when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Page loaded, Epic Chat should be ready');
+    });
+  </script>
+</body>
+</html>

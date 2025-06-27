@@ -353,6 +353,21 @@
 
     <!-- Main Content -->
     <div class="content-container">
+    
+    <!-- Error Message Display -->
+    {% if error_message %}
+    <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
+      <strong>⚠️ Error:</strong> {{ error_message }}
+    </div>
+    {% endif %}
+    
+    <!-- Success Message Display -->
+    {% if success_message %}
+    <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
+      <strong>✅ Success:</strong> {{ success_message }}
+    </div>
+    {% endif %}
+    
     <!-- Epic Information Section -->
     <div class="epic-info-section">
       <div class="epic-label">Epic:</div>
@@ -449,9 +464,15 @@
     </div>
 
     <!-- Submit Button -->
-    <button type="submit" class="submit-btn" onclick="submitToJira()">
+    <button type="button" class="submit-btn" onclick="submitToJira()" id="jira-submit-btn">
       Submit & export to Jira
     </button>
+    
+    <!-- Data Validation Summary -->
+    <div id="validation-summary" style="margin-top: 16px; padding: 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ddd; display: none;">
+      <h6 style="margin-bottom: 8px; color: #333;">📋 Submission Summary:</h6>
+      <div id="validation-details" style="font-size: 14px; color: #666;"></div>
+    </div>
     </div>
   </div>
 
@@ -472,8 +493,141 @@
   }
 
   function submitToJira() {
-    // Simply submit the hidden form
-    document.getElementById('jira-form').submit();
+    console.log('Submitting to Jira...');
+    
+    // Show validation summary
+    showValidationSummary();
+    
+    // Show loading state
+    const submitBtn = document.querySelector('.submit-btn');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `
+      <span style="display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></span>
+      Submitting to Jira...
+    `;
+    
+    // Add CSS animation for spinner
+    if (!document.getElementById('spinner-style')) {
+      const style = document.createElement('style');
+      style.id = 'spinner-style';
+      style.textContent = `
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Get form data and validate
+    const form = document.getElementById('jira-form');
+    const formData = new FormData(form);
+    
+    // Log form data for debugging
+    console.log('Form data being submitted:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+    
+    // Validate required fields
+    const userStoryName = formData.get('user_story_name');
+    const userStoryDescription = formData.get('user_story_description');
+    
+    if (!userStoryName || userStoryName.trim() === '') {
+      alert('Error: User story name is required');
+      resetSubmitButton(submitBtn, originalText);
+      return;
+    }
+    
+    if (!userStoryDescription || userStoryDescription.trim() === '') {
+      alert('Error: User story description is required');
+      resetSubmitButton(submitBtn, originalText);
+      return;
+    }
+    
+    // Ask for final confirmation
+    const confirmMessage = `You are about to create a Jira ticket with the following details:
+
+📋 Story: ${userStoryName}
+🎯 Epic: ${formData.get('epic_title') || 'N/A'}
+⚡ Priority: ${formData.get('priority') || 'High'}
+🔧 Systems: ${formData.get('responsible_systems') || 'N/A'}
+
+Do you want to proceed?`;
+    
+    if (!confirm(confirmMessage)) {
+      resetSubmitButton(submitBtn, originalText);
+      return;
+    }
+    
+    // Submit the form
+    fetch('/submit-jira-ticket', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => {
+      if (response.ok) {
+        console.log('Jira submission successful');
+        // Show success message briefly before redirect
+        submitBtn.innerHTML = `
+          <span style="margin-right: 8px;">✅</span>
+          Success! Redirecting...
+        `;
+        
+        // Redirect to the response page after a brief delay
+        setTimeout(() => {
+          return response.text().then(html => {
+            document.open();
+            document.write(html);
+            document.close();
+          });
+        }, 1000);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    })
+    .catch(error => {
+      console.error('Error submitting to Jira:', error);
+      alert(`Failed to submit to Jira: ${error.message}\n\nPlease check the console for more details and try again.`);
+      resetSubmitButton(submitBtn, originalText);
+    });
+  }
+  
+  function showValidationSummary() {
+    const form = document.getElementById('jira-form');
+    const formData = new FormData(form);
+    
+    const summary = document.getElementById('validation-summary');
+    const details = document.getElementById('validation-details');
+    
+    let html = '';
+    html += `<strong>Story:</strong> ${formData.get('user_story_name') || 'Not provided'}<br>`;
+    html += `<strong>Epic:</strong> ${formData.get('epic_title') || 'Not provided'}<br>`;
+    html += `<strong>Priority:</strong> ${formData.get('priority') || 'High'}<br>`;
+    html += `<strong>Systems:</strong> ${formData.get('responsible_systems') || 'Not provided'}<br>`;
+    
+    const acceptanceCriteria = formData.get('acceptance_criteria');
+    const criteriaCount = acceptanceCriteria ? acceptanceCriteria.split('|||').filter(c => c.trim()).length : 0;
+    html += `<strong>Acceptance Criteria:</strong> ${criteriaCount} items<br>`;
+    
+    const requirements = formData.get('tagged_requirements');
+    const reqCount = requirements ? requirements.split('|||').filter(r => r.trim()).length : 0;
+    html += `<strong>Tagged Requirements:</strong> ${reqCount} items`;
+    
+    details.innerHTML = html;
+    summary.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      summary.style.display = 'none';
+    }, 5000);
+  }
+  
+  function resetSubmitButton(button, originalText) {
+    button.disabled = false;
+    button.innerHTML = originalText;
   }
 
   function openDescriptionChat() {
@@ -486,6 +640,72 @@
 
   function openRequirementsChat() {
     alert('Requirements chat functionality will be implemented soon');
+  }
+  
+  // Save user story data to localStorage for persistence
+  function saveUserStoryData() {
+    const data = {
+      epic_title: document.querySelector('input[name="epic_title"]').value,
+      user_story_name: document.querySelector('input[name="user_story_name"]').value,
+      user_story_description: document.querySelector('input[name="user_story_description"]').value,
+      priority: document.querySelector('input[name="priority"]').value,
+      responsible_systems: document.querySelector('input[name="responsible_systems"]').value,
+      acceptance_criteria: document.querySelector('input[name="acceptance_criteria"]').value,
+      tagged_requirements: document.querySelector('input[name="tagged_requirements"]').value,
+      timestamp: new Date().toISOString()
+    };
+    
+    localStorage.setItem('current_user_story', JSON.stringify(data));
+    console.log('User story data saved to localStorage');
+  }
+  
+  // Auto-save data when form changes
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('jira-form');
+    if (form) {
+      // Save data every 30 seconds
+      setInterval(saveUserStoryData, 30000);
+      
+      // Save data when user leaves the page
+      window.addEventListener('beforeunload', saveUserStoryData);
+    }
+    
+    // Log current form data for debugging
+    console.log('Page loaded. Current form data:');
+    const formData = new FormData(document.getElementById('jira-form'));
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+    
+    // Add debug button (remove in production)
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      addDebugButton();
+    }
+  });
+  
+  function addDebugButton() {
+    const debugBtn = document.createElement('button');
+    debugBtn.textContent = '🐛 Debug Info';
+    debugBtn.style.cssText = `
+      position: fixed; top: 10px; right: 10px; z-index: 9999;
+      background: #007bff; color: white; border: none; padding: 8px 12px;
+      border-radius: 4px; font-size: 12px; cursor: pointer;
+    `;
+    debugBtn.onclick = function() {
+      const formData = new FormData(document.getElementById('jira-form'));
+      let debugInfo = 'Form Data:\n';
+      for (let [key, value] of formData.entries()) {
+        debugInfo += `${key}: ${value}\n`;
+      }
+      debugInfo += `\nURL: ${window.location.href}`;
+      debugInfo += `\nTimestamp: ${new Date().toISOString()}`;
+      
+      // Copy to clipboard and show alert
+      navigator.clipboard.writeText(debugInfo).then(() => {
+        alert('Debug info copied to clipboard!\n\n' + debugInfo);
+      });
+    };
+    document.body.appendChild(debugBtn);
   }
 </script>
 </body>

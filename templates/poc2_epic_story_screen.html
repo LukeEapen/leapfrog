@@ -299,13 +299,15 @@
         // Format the epics nicely
         let formattedHTML = '';
         epicsData.forEach((epic, index) => {
+          const epicTitle = epic.epic_title || epic.title || `Untitled Epic ${index + 1}`;
+          const epicDescription = epic.epic_description || epic.description || 'No description available.';
           formattedHTML += `
             <div class="epic-card">
               <div style="display: flex; align-items: center; gap: 10px;">
                 <input type="checkbox" name="epic_ids" value="epic_${index + 1}" id="epic_${index + 1}">
-                <h5 style="margin: 0;">Epic ${index + 1}: ${epic.epic_title || 'Untitled Epic'}</h5>
+                <h5 style="margin: 0;">Epic ${index + 1}: ${epicTitle}</h5>
               </div>
-              <p><strong>Description:</strong> ${epic.epic_description || 'No description available'}</p>
+              <p><strong>Description:</strong> ${epicDescription}</p>
             </div>
           `;
         });
@@ -314,13 +316,15 @@
         return;
       } else if (epicsData && typeof epicsData === 'object') {
         // Handle single epic object
+        const epicTitle = epicsData.epic_title || epicsData.title || 'Untitled Epic';
+        const epicDescription = epicsData.epic_description || epicsData.description || 'No description available.';
         const formattedHTML = `
           <div class="epic-card">
             <div style="display: flex; align-items: center; gap: 10px;">
               <input type="checkbox" name="epic_ids" value="epic_1" id="epic_1">
-              <h5 style="margin: 0;">Epic 1: ${epicsData.epic_title || 'Untitled Epic'}</h5>
+              <h5 style="margin: 0;">Epic 1: ${epicTitle}</h5>
             </div>
-            <p><strong>Description:</strong> ${epicsData.epic_description || 'No description available'}</p>
+            <p><strong>Description:</strong> ${epicDescription}</p>
           </div>
         `;
         epicsContainer.innerHTML = formattedHTML;
@@ -335,13 +339,15 @@
           if (Array.isArray(epicsData)) {
             let formattedHTML = '';
             epicsData.forEach((epic, index) => {
+              const epicTitle = epic.epic_title || epic.title || `Untitled Epic ${index + 1}`;
+              const epicDescription = epic.epic_description || epic.description || 'No description available.';
               formattedHTML += `
                 <div class="epic-card">
                   <div style="display: flex; align-items: center; gap: 10px;">
                     <input type="checkbox" name="epic_ids" value="epic_${index + 1}" id="epic_${index + 1}">
-                    <h5 style="margin: 0;">Epic ${index + 1}: ${epic.epic_title || 'Untitled Epic'}</h5>
+                    <h5 style="margin: 0;">Epic ${index + 1}: ${epicTitle}</h5>
                   </div>
-                  <p><strong>Description:</strong> ${epic.epic_description || 'No description available'}</p>
+                  <p><strong>Description:</strong> ${epicDescription}</p>
                 </div>
               `;
             });
@@ -913,18 +919,33 @@
   let epicChatHistory = [];
   let isEpicChatOpen = false;
 
+  console.log('Epic Chat: Variables initialized');
+
   function toggleEpicChat() {
+    console.log('Epic Chat: toggleEpicChat called, current state:', isEpicChatOpen);
     const panel = document.getElementById('epic-chat-panel');
     const widget = document.getElementById('epic-chat-widget');
     
+    if (!panel) {
+      console.error('Epic Chat: epic-chat-panel not found!');
+      return;
+    }
+    if (!widget) {
+      console.error('Epic Chat: epic-chat-widget not found!');
+      return;
+    }
+    
     if (isEpicChatOpen) {
+      console.log('Epic Chat: Closing chat');
       widget.classList.add('closing');
       setTimeout(() => {
         panel.style.display = 'none';
         widget.classList.remove('closing');
         isEpicChatOpen = false;
+        console.log('Epic Chat: Chat closed');
       }, 300);
     } else {
+      console.log('Epic Chat: Opening chat');
       panel.style.display = 'block';
       widget.classList.add('opening');
       setTimeout(() => {
@@ -936,19 +957,29 @@
       // Focus on input
       setTimeout(() => {
         const input = document.getElementById('epic-chat-input');
-        if (input) input.focus();
+        if (input) {
+          input.focus();
+          console.log('Epic Chat: Input focused');
+        } else {
+          console.error('Epic Chat: epic-chat-input not found!');
+        }
       }, 100);
       
       // Load chat history if needed
       if (epicChatHistory.length === 0) {
+        console.log('Epic Chat: Loading chat history');
         loadEpicChatHistory();
       }
+      console.log('Epic Chat: Chat opened');
     }
   }
 
   function openEpicChat() {
+    console.log('Epic Chat: openEpicChat called');
     if (!isEpicChatOpen) {
       toggleEpicChat();
+    } else {
+      console.log('Epic Chat: Already open');
     }
   }
 
@@ -985,16 +1016,29 @@
   }
 
   function sendEpicChatMessage() {
+    console.log('Epic Chat: sendEpicChatMessage called');
     const input = document.getElementById('epic-chat-input');
+    if (!input) {
+      console.error('Epic Chat: epic-chat-input not found!');
+      return;
+    }
+    
     const message = input.value.trim();
+    console.log('Epic Chat: Message to send:', message);
     
     if (!message) {
+      console.log('Epic Chat: No message to send, focusing input');
       input.focus();
       return;
     }
 
     // Show loading state
     const sendBtn = document.querySelector('#epic-chat-panel .send-btn');
+    if (!sendBtn) {
+      console.error('Epic Chat: Send button not found!');
+      return;
+    }
+    
     const originalHTML = sendBtn.innerHTML;
     sendBtn.disabled = true;
     sendBtn.innerHTML = `
@@ -1043,7 +1087,10 @@
       }
     }
 
+    console.log('Epic Chat: Current epics context:', currentEpicsContext);
+
     // Send message to backend with epic context
+    console.log('Epic Chat: Sending request to /epic-chat');
     fetch('/epic-chat', {
       method: 'POST',
       headers: {
@@ -1054,8 +1101,12 @@
         current_epics: currentEpicsContext
       })
     })
-    .then(response => response.json())
+    .then(response => {
+      console.log('Epic Chat: Response received', response.status);
+      return response.json();
+    })
     .then(data => {
+      console.log('Epic Chat: Response data:', data);
       hideTypingIndicator();
       
       if (data.success) {
@@ -1066,6 +1117,7 @@
         
         // Check if this response updates the epics section
         if (data.epics_updated) {
+          console.log('Epic Chat: Epics updated, refreshing section');
           updateEpicsSection(data.response);
         }
         
@@ -1073,14 +1125,14 @@
           input.focus();
         }, 100);
       } else {
-        console.error('Server error:', data.error);
+        console.error('Epic Chat: Server error:', data.error);
         showNotification('Failed to send message', 'error');
         removeLastUserMessage();
       }
     })
     .catch(error => {
+      console.error('Epic Chat: Network error:', error);
       hideTypingIndicator();
-      console.error('Error sending message:', error);
       showNotification('Failed to send message', 'error');
       removeLastUserMessage();
     })
@@ -1088,6 +1140,7 @@
       // Reset button state
       sendBtn.disabled = false;
       sendBtn.innerHTML = originalHTML;
+      console.log('Epic Chat: Request completed, button reset');
     });
   }
 
@@ -1245,11 +1298,62 @@
     }, 3000);
   }
 
-  function updateEpicsSection(agentResponse) {
-    // Implementation for updating epics section based on agent response
-    // This is a placeholder - full implementation would parse the response
-    showNotification('Epics section updated based on chat response', 'info');
+function updateEpicsSection(agentResponse) {
+  // Helper to escape HTML
+  function escapeHtml(text) {
+    if (typeof text !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
+
+  const epicsContainer = document.getElementById('epics-container');
+  if (!epicsContainer) {
+    showNotification('Could not find epics container.', 'error');
+    return;
+  }
+
+  let epicsData = null;
+  try {
+    // Try to extract JSON from markdown/code block or plain text
+    let cleanContent = agentResponse;
+    const jsonMatch = cleanContent.match(/```json\s*([\s\S]*?)\s*```/);
+    if (jsonMatch && jsonMatch[1]) {
+      cleanContent = jsonMatch[1].trim();
+    } else {
+      const jsonArrayMatch = cleanContent.match(/\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/);
+      if (jsonArrayMatch) {
+        cleanContent = jsonArrayMatch[0];
+      }
+    }
+    epicsData = JSON.parse(cleanContent);
+  } catch (e) {
+    showNotification('Could not parse epics from chat response.', 'error');
+    return;
+  }
+
+  if (Array.isArray(epicsData) && epicsData.length > 0) {
+    let formattedHTML = '';
+    epicsData.forEach((epic, index) => {
+      const epicTitle = epic.epic_title || `Untitled Epic ${index + 1}`;
+      const epicDescription = epic.epic_description || 'No description available.';
+      formattedHTML += `
+        <div class="epic-card">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" name="epic_ids" value="epic_${index + 1}" id="epic_${index + 1}">
+            <h5 style="margin: 0;">Epic ${index + 1}: ${escapeHtml(epicTitle)}</h5>
+          </div>
+          <p><strong>Description:</strong> ${escapeHtml(epicDescription)}</p>
+        </div>
+      `;
+    });
+    epicsContainer.innerHTML = formattedHTML;
+    showNotification('✨ Epics have been updated!', 'success');
+    scrollToEpicsSection();
+  } else {
+    showNotification('No valid epic data found in chat response.', 'info');
+  }
+}
 
   function scrollToEpicsSection() {
     const epicsContainer = document.getElementById('epics-container');
@@ -1694,6 +1798,21 @@
 
   // Add keyboard event listeners for chat inputs
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - initializing Epic Chat functionality');
+    
+    // Check if Epic Chat elements exist
+    const epicChatWidget = document.getElementById('epic-chat-widget');
+    const epicChatPanel = document.getElementById('epic-chat-panel');
+    const epicChatInput = document.getElementById('epic-chat-input');
+    const epicChatBtn = document.getElementById('epicChatBtn');
+    
+    console.log('Epic Chat elements found:', {
+      widget: !!epicChatWidget,
+      panel: !!epicChatPanel,
+      input: !!epicChatInput,
+      button: !!epicChatBtn
+    });
+    
     // Initialize chat displays
     setTimeout(() => {
       updateChatDisplay();
@@ -1701,8 +1820,8 @@
     }, 100);
     
     // Epic Chat input event listeners
-    const epicChatInput = document.getElementById('epic-chat-input');
     if (epicChatInput) {
+      console.log('Epic Chat: Setting up input event listeners');
       epicChatInput.addEventListener('input', updateCharCounter);
       epicChatInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -1716,6 +1835,8 @@
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
       });
+    } else {
+      console.warn('Epic Chat: Input element not found, event listeners not set up');
     }
 
     // User Story Chat input event listeners
@@ -1735,6 +1856,8 @@
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
       });
     }
+    
+    console.log('Epic Chat: Initialization complete');
   });
 </script>
 
