@@ -1467,27 +1467,33 @@
         
         // Check if the response contains JSON and format it nicely
         let displayResponse = aiResponse;
+        let jsonDetected = false;
+        
         try {
-          // Try to detect and format JSON in the response
+          // Strategy 1: Try to detect and format JSON in code blocks
           const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
           if (jsonMatch) {
             const jsonData = JSON.parse(jsonMatch[1]);
             if (Array.isArray(jsonData)) {
               displayResponse = formatEpicsForDisplay(jsonData);
+              jsonDetected = true;
               
               // Show apply button if this looks like updated epics
               setTimeout(() => {
                 showApplyEpicsButton(jsonData);
               }, 100);
             }
-          } else {
-            // Try to extract JSON array pattern
-            const jsonArrayMatch = aiResponse.match(/\[[\s\S]*?\{[\s\S]*?\}[\s\S]*?\]/);
+          }
+          
+          // Strategy 2: Try to extract bare JSON array pattern
+          if (!jsonDetected) {
+            const jsonArrayMatch = aiResponse.match(/\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/);
             if (jsonArrayMatch) {
               try {
                 const jsonData = JSON.parse(jsonArrayMatch[0]);
-                if (Array.isArray(jsonData)) {
+                if (Array.isArray(jsonData) && jsonData.length > 0) {
                   displayResponse = formatEpicsForDisplay(jsonData);
+                  jsonDetected = true;
                   
                   // Show apply button
                   setTimeout(() => {
@@ -1495,11 +1501,31 @@
                   }, 100);
                 }
               } catch (e) {
-                // Keep original response if parsing fails
+                console.log('Failed to parse extracted JSON array:', e);
               }
             }
           }
+          
+          // Strategy 3: Check if the entire response is JSON
+          if (!jsonDetected) {
+            try {
+              const jsonData = JSON.parse(aiResponse.trim());
+              if (Array.isArray(jsonData) && jsonData.length > 0) {
+                displayResponse = formatEpicsForDisplay(jsonData);
+                jsonDetected = true;
+                
+                // Show apply button
+                setTimeout(() => {
+                  showApplyEpicsButton(jsonData);
+                }, 100);
+              }
+            } catch (e) {
+              // Not pure JSON, keep original response
+            }
+          }
+          
         } catch (e) {
+          console.log('JSON parsing error in epic chat:', e);
           // Keep original response if parsing fails
         }
         
@@ -1606,8 +1632,8 @@
       <div class="chat-avatar assistant">AI</div>
       <div class="chat-bubble">
         <button onclick="applyEpicsUpdate(${JSON.stringify(epicsData).replace(/"/g, '&quot;')})" 
-                style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
-          ✅ Apply Epic Updates to Page
+                style="background: #d0021b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
+          📝 Apply Epic Updates
         </button>
       </div>
     `;
@@ -1802,27 +1828,33 @@
         
         // Check if the response contains JSON and format it nicely
         let displayResponse = aiResponse;
+        let jsonDetected = false;
+        
         try {
-          // Try to detect and format JSON in the response
+          // Strategy 1: Try to detect and format JSON in code blocks
           const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
           if (jsonMatch) {
             const jsonData = JSON.parse(jsonMatch[1]);
             if (Array.isArray(jsonData)) {
               displayResponse = formatUserStoriesForDisplay(jsonData);
+              jsonDetected = true;
               
               // Show apply button if this looks like updated user stories
               setTimeout(() => {
                 showApplyUserStoriesButton(jsonData);
               }, 100);
             }
-          } else {
-            // Try to extract JSON array pattern
-            const jsonArrayMatch = aiResponse.match(/\[[\s\S]*?\{[\s\S]*?\}[\s\S]*?\]/);
+          } 
+          
+          // Strategy 2: Try to extract bare JSON array pattern
+          if (!jsonDetected) {
+            const jsonArrayMatch = aiResponse.match(/\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/);
             if (jsonArrayMatch) {
               try {
                 const jsonData = JSON.parse(jsonArrayMatch[0]);
-                if (Array.isArray(jsonData)) {
+                if (Array.isArray(jsonData) && jsonData.length > 0) {
                   displayResponse = formatUserStoriesForDisplay(jsonData);
+                  jsonDetected = true;
                   
                   // Show apply button
                   setTimeout(() => {
@@ -1830,11 +1862,31 @@
                   }, 100);
                 }
               } catch (e) {
-                // Keep original response if parsing fails
+                console.log('Failed to parse extracted JSON array:', e);
               }
             }
           }
+          
+          // Strategy 3: Check if the entire response is JSON
+          if (!jsonDetected) {
+            try {
+              const jsonData = JSON.parse(aiResponse.trim());
+              if (Array.isArray(jsonData) && jsonData.length > 0) {
+                displayResponse = formatUserStoriesForDisplay(jsonData);
+                jsonDetected = true;
+                
+                // Show apply button
+                setTimeout(() => {
+                  showApplyUserStoriesButton(jsonData);
+                }, 100);
+              }
+            } catch (e) {
+              // Not pure JSON, keep original response
+            }
+          }
+          
         } catch (e) {
+          console.log('JSON parsing error in user story chat:', e);
           // Keep original response if parsing fails
         }
         
@@ -1896,7 +1948,7 @@
       <div class="chat-bubble">
         <div class="chat-loading">
           <span class="chat-loading-dots"></span>
-          Thinking...
+          AI is typing...
         </div>
       </div>
     `;
@@ -1945,8 +1997,8 @@
       <div class="chat-avatar assistant">AI</div>
       <div class="chat-bubble">
         <button onclick="applyUserStoriesUpdate(${JSON.stringify(userStoriesData).replace(/"/g, '&quot;')})" 
-                style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
-          ✅ Apply User Story Updates to Page
+                style="background: #d0021b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
+          📝 Apply User Story Updates
         </button>
       </div>
     `;
