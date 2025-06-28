@@ -141,6 +141,27 @@
       border-color: #d0021b;
     }
     
+    /* Chat Button Styles */
+    .chat-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+    .chat-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      transform: translateY(-1px);
+    }
+    
     /* Chat Modal Styles - Right Side Full Height */
     .chat-modal {
       display: none !important;
@@ -263,7 +284,7 @@
     }
     
     .chat-bubble {
-      background: rgb(165, 153, 221);
+      background: rgb(140, 138, 236);
       border-radius: 12px;
       padding: 12px 16px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -277,10 +298,6 @@
       background: #d0021b;
       color: white;
       border-color: #d0021b;
-    }
-    
-    .chat-message.assistant .chat-bubble {
-      color: #8B4513;
     }
     
     .chat-input-area {
@@ -415,6 +432,12 @@
         padding: 8px 12px;
         font-size: 13px;
       }
+      
+      .chat-btn {
+        font-size: 10px;
+        padding: 6px 12px;
+        gap: 4px;
+      }
     }
     
     @media (max-width: 480px) {
@@ -447,7 +470,8 @@
         font-size: 13px;
       }
     }
-  </style>
+    
+   </style>
 </head>
 <body>
 <div class="container mt-4">
@@ -455,8 +479,11 @@
   
   <div class="section-header">
     <span>Epics</span>
-    <button class="btn btn-outline-light btn-sm" id="epicChatBtn" onclick="openEpicChatModal()">💬 Chat</button>
-  </div>
+    <button class="chat-btn" onclick="openEpicChat()">
+      <span>💬</span>
+      Epic Chat
+    </button>
+   </div>
   
   <div id="epics-container">
     {{ epics|safe }}
@@ -474,8 +501,11 @@
   <div id="user-stories-section" class="{{ 'hidden' if not user_stories }}">
     <div class="section-header">
       <span>User stories</span>
-      <button class="btn btn-outline-light btn-sm" id="userStoryChatBtn" onclick="openUserStoryChatModal()">💬 User Story Chat</button>
-    </div>
+      <button class="chat-btn" onclick="openUserStoryChat()">
+        <span>💬</span>
+        User Story Chat
+      </button>
+     </div>
     <p class="mb-3 text-light">
       Review this list of generated user stories for each epic, sorted by the solution's ranking of priority based on industry and uploaded context. Select <strong>one</strong> story to proceed with generating a detailed user story.
     </p>
@@ -495,6 +525,88 @@
         <span class="btn-timer" id="proceedTimer"></span>
       </button>
     </form>
+  </div>
+</div>
+
+<!-- Epic Chat Modal -->
+<div id="epic-chat-modal" class="chat-modal">
+  <div class="chat-modal-content">
+    <div class="chat-header">
+      <span>💬 Epic Chat</span>
+      <button class="chat-close" onclick="closeEpicChat()">&times;</button>
+    </div>
+    <div class="chat-container">
+      <!-- Current Epic Context Display -->
+      <div class="current-description">
+        <h6>Current Epic Context:</h6>
+        <p class="current-description-text" id="current-epic-display">Chat about the currently selected or visible epics. I can help you refine, modify, or generate new epics.</p>
+      </div>
+      
+      <!-- Chat Messages -->
+      <div class="chat-messages" id="epic-chat-messages">
+        <div class="chat-message assistant">
+          <div class="chat-avatar assistant">AI</div>
+          <div class="chat-bubble">
+            Hello! I'm here to help you with your epics. I can:
+            <br>• Refine existing epic descriptions
+            <br>• Generate new epics based on your requirements
+            <br>• Improve epic titles and details
+            <br>• Suggest epic priorities and breakdowns
+            <br><br>What would you like to work on with your epics?
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chat Input -->
+      <div class="chat-input-area">
+        <textarea id="epic-chat-input" class="chat-input" placeholder="Ask me about epics..." rows="1"></textarea>
+        <button class="chat-send-btn" onclick="sendEpicMessage()" id="epic-send-btn">
+          <span>📤</span>
+          Send
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Story Chat Modal -->
+<div id="user-story-chat-modal" class="chat-modal">
+  <div class="chat-modal-content">
+    <div class="chat-header">
+      <span>💬 User Story Chat</span>
+      <button class="chat-close" onclick="closeUserStoryChat()">&times;</button>
+    </div>
+    <div class="chat-container">
+      <!-- Current User Story Context Display -->
+      <div class="current-description">
+        <h6>Current User Story Context:</h6>
+        <p class="current-description-text" id="current-user-story-display">Chat about the currently displayed user stories. I can help you refine, prioritize, or generate new user stories.</p>
+      </div>
+      
+      <!-- Chat Messages -->
+      <div class="chat-messages" id="user-story-chat-messages">
+        <div class="chat-message assistant">
+          <div class="chat-avatar assistant">AI</div>
+          <div class="chat-bubble">
+            Hello! I'm here to help you with your user stories. I can:
+            <br>• Refine existing user story details
+            <br>• Generate additional user stories
+            <br>• Improve user story priorities and descriptions
+            <br>• Suggest better acceptance criteria
+            <br><br>What would you like to work on with your user stories?
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chat Input -->
+      <div class="chat-input-area">
+        <textarea id="user-story-chat-input" class="chat-input" placeholder="Ask me about user stories..." rows="1"></textarea>
+        <button class="chat-send-btn" onclick="sendUserStoryMessage()" id="user-story-send-btn">
+          <span>📤</span>
+          Send
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -944,11 +1056,10 @@
                   <td>
                     <div class="form-check">
                       <input class="form-check-input" type="checkbox" name="user_story_ids" 
-                      value="${userStoriesData.story_id || 'story_1'}" id="story_1"
+                      value="${userStoriesData.story_id || 'US1'}" id="story_1"
                       data-name="${escapedName}" 
                       data-description="${escapedDescription}"
-                      data-epic-id="${userStoriesData.epic_id || ''}"
-                      data-priority="${userStoriesData.priority || 'medium'}" checked>
+                      checked>
                       <label class="form-check-label" for="story_1"></label>
                     </div>
                   </td>
@@ -1222,156 +1333,95 @@
     }
   });
 
-  // Epic Chat functionality (from bk.html)
+  // Epic Chat Functionality
   let epicChatHistory = [];
-  let isEpicChatOpen = false;
-
-  console.log('Epic Chat: Variables initialized');
-
-  function toggleEpicChat() {
-    console.log('Epic Chat: toggleEpicChat called, current state:', isEpicChatOpen);
-    const panel = document.getElementById('epic-chat-panel');
-    const widget = document.getElementById('epic-chat-widget');
-    
-    if (!panel) {
-      console.error('Epic Chat: epic-chat-panel not found!');
-      return;
-    }
-    if (!widget) {
-      console.error('Epic Chat: epic-chat-widget not found!');
-      return;
-    }
-    
-    if (isEpicChatOpen) {
-      console.log('Epic Chat: Closing chat');
-      widget.classList.add('closing');
-      setTimeout(() => {
-        panel.style.display = 'none';
-        widget.classList.remove('closing');
-        isEpicChatOpen = false;
-        console.log('Epic Chat: Chat closed');
-      }, 300);
-    } else {
-      console.log('Epic Chat: Opening chat');
-      panel.style.display = 'block';
-      widget.classList.add('opening');
-      setTimeout(() => {
-        panel.classList.add('show');
-        widget.classList.remove('opening');
-      }, 10);
-      isEpicChatOpen = true;
-      
-      // Focus on input
-      setTimeout(() => {
-        const input = document.getElementById('epic-chat-input');
-        if (input) {
-          input.focus();
-          console.log('Epic Chat: Input focused');
-        } else {
-          console.error('Epic Chat: epic-chat-input not found!');
-        }
-      }, 100);
-      
-      // Load chat history if needed
-      if (epicChatHistory.length === 0) {
-        console.log('Epic Chat: Loading chat history');
-        loadEpicChatHistory();
-      }
-      console.log('Epic Chat: Chat opened');
-    }
-  }
 
   function openEpicChat() {
-    console.log('Epic Chat: openEpicChat called');
-    if (!isEpicChatOpen) {
-      toggleEpicChat();
-    } else {
-      console.log('Epic Chat: Already open');
-    }
+    const modal = document.getElementById('epic-chat-modal');
+    modal.style.display = 'block';
+    
+    // Update current epic context
+    updateEpicContext();
+    
+    // Focus on input
+    setTimeout(() => {
+      document.getElementById('epic-chat-input').focus();
+    }, 100);
   }
 
   function closeEpicChat() {
-    if (isEpicChatOpen) {
-      toggleEpicChat();
-    }
+    const modal = document.getElementById('epic-chat-modal');
+    modal.style.display = 'none';
   }
 
-  function clearEpicChat() {
-    if (confirm('Are you sure you want to clear the chat history?')) {
-      epicChatHistory = [];
-      updateChatDisplay();
-      
-      // Clear on server as well
-      fetch('/epic-chat-clear', {
-        method: 'POST'
-      }).catch(console.error);
-      
-      showNotification('Chat history cleared!', 'success');
-    }
-  }
-
-  function loadEpicChatHistory() {
-    fetch('/epic-chat-history')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.history)) {
-          epicChatHistory = data.history;
-          updateChatDisplay();
-        }
-      })
-      .catch(console.error);
-  }
-
-  function sendEpicChatMessage() {
-    console.log('Epic Chat: sendEpicChatMessage called');
-    const input = document.getElementById('epic-chat-input');
-    if (!input) {
-      console.error('Epic Chat: epic-chat-input not found!');
-      return;
-    }
+  function updateEpicContext() {
+    const epicsContainer = document.getElementById('epics-container');
+    const contextDisplay = document.getElementById('current-epic-display');
     
+    if (epicsContainer) {
+      // Try to extract epic information from the displayed content
+      const epicCards = epicsContainer.querySelectorAll('.epic-card');
+      if (epicCards.length > 0) {
+        let contextText = 'Current Epics:\n';
+        epicCards.forEach((card, index) => {
+          const titleElement = card.querySelector('h5');
+          const descElement = card.querySelector('p');
+          
+          if (titleElement) {
+            const title = titleElement.textContent.replace(/^Epic \d+: /, '');
+            const desc = descElement ? descElement.textContent.replace(/^Description: /, '') : '';
+            contextText += `\n${index + 1}. ${title}\n   ${desc}`;
+          }
+        });
+        contextDisplay.textContent = contextText;
+      } else {
+        const rawContent = epicsContainer.textContent || epicsContainer.innerHTML;
+        if (rawContent && rawContent.trim().length > 0) {
+          contextDisplay.textContent = 'Current Epic Content: ' + rawContent.trim().substring(0, 200) + '...';
+        } else {
+          contextDisplay.textContent = 'No epics content available. I can help you generate new epics.';
+        }
+      }
+    } else {
+      contextDisplay.textContent = 'Epic container not found. I can help you generate new epics.';
+    }
+  }
+
+  function sendEpicMessage() {
+    const input = document.getElementById('epic-chat-input');
     const message = input.value.trim();
-    console.log('Epic Chat: Message to send:', message);
     
     if (!message) {
-      console.log('Epic Chat: No message to send, focusing input');
       input.focus();
       return;
     }
 
-    // Show loading state
-    const sendBtn = document.querySelector('#epic-chat-panel .send-btn');
-    if (!sendBtn) {
-      console.error('Epic Chat: Send button not found!');
-      return;
-    }
-    
+    const sendBtn = document.getElementById('epic-send-btn');
     const originalHTML = sendBtn.innerHTML;
+    
+    // Show loading state
     sendBtn.disabled = true;
     sendBtn.innerHTML = `
-      <div class="typing-indicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
+      <div class="chat-loading">
+        <span class="chat-loading-dots"></span>
+        Sending...
       </div>
     `;
 
     // Clear input immediately
     input.value = '';
-    updateCharCounter();
 
-    // Add user message to display immediately
-    addMessageToDisplay('user', message);
-
+    // Add user message to display
+    addEpicMessage('user', message);
+    
     // Show typing indicator
-    showTypingIndicator();
+    showEpicTyping();
 
-    // Get current epics context from the page
+    // Get current epics context
     const epicsContainer = document.getElementById('epics-container');
     let currentEpicsContext = '';
     
     if (epicsContainer) {
-      // Try to extract epic information from the displayed content
       const epicCards = epicsContainer.querySelectorAll('.epic-card');
       if (epicCards.length > 0) {
         currentEpicsContext = 'Current Epics:\n';
@@ -1380,33 +1430,24 @@
           const descElement = card.querySelector('p');
           
           if (titleElement) {
-            const epicTitle = titleElement.textContent.replace(/^Epic \d+: /, '');
-            const epicDesc = descElement ? descElement.textContent.replace(/^Description: /, '') : '';
-            currentEpicsContext += `\nEpic ${index + 1}: ${epicTitle}\nDescription: ${epicDesc}\n`;
+            const title = titleElement.textContent.replace(/^Epic \d+: /, '');
+            const desc = descElement ? descElement.textContent.replace(/^Description: /, '') : '';
+            currentEpicsContext += `\n${index + 1}. ${title}\n   Description: ${desc}`;
           }
         });
       } else {
-        // If no epic cards, try to get raw text content
         const rawContent = epicsContainer.textContent || epicsContainer.innerHTML;
         if (rawContent && rawContent.trim().length > 0) {
           currentEpicsContext = 'Current Epics Content:\n' + rawContent.trim();
         } else {
-          currentEpicsContext = 'No epics content available currently. Please provide context about what epics you would like to work with.';
+          currentEpicsContext = 'No epics content available currently.';
         }
       }
     } else {
-      currentEpicsContext = 'Epic container not found. Please ensure epics are loaded on the page.';
+      currentEpicsContext = 'Epic container not found.';
     }
 
-    console.log('Epic Chat: Current epics context:', currentEpicsContext);
-    console.log('Epic Chat: Message being sent:', message);
-    console.log('Epic Chat: Full request payload:', {
-      message: message,
-      current_epics_content: currentEpicsContext
-    });
-
-    // Send message to backend with epic context
-    console.log('Epic Chat: Sending request to /epic-chat');
+    // Send message to backend
     fetch('/epic-chat', {
       method: 'POST',
       headers: {
@@ -1417,531 +1458,248 @@
         current_epics_content: currentEpicsContext
       })
     })
-    .then(response => {
-      console.log('Epic Chat: Response received', response.status);
-      return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-      console.log('Epic Chat: Response data:', data);
-      hideTypingIndicator();
+      hideEpicTyping();
       
       if (data.success) {
-        // Get the AI response - check both possible response properties  
-        const aiResponse = data.response || data.message || 'No response received';
-        console.log('Epic Chat: AI Response received:', aiResponse);
+        let aiResponse = data.response || data.message || 'No response received';
+        
+        // Check if the response contains JSON and format it nicely
+        let displayResponse = aiResponse;
+        try {
+          // Try to detect and format JSON in the response
+          const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
+          if (jsonMatch) {
+            const jsonData = JSON.parse(jsonMatch[1]);
+            if (Array.isArray(jsonData)) {
+              displayResponse = formatEpicsForDisplay(jsonData);
+              
+              // Show apply button if this looks like updated epics
+              setTimeout(() => {
+                showApplyEpicsButton(jsonData);
+              }, 100);
+            }
+          } else {
+            // Try to extract JSON array pattern
+            const jsonArrayMatch = aiResponse.match(/\[[\s\S]*?\{[\s\S]*?\}[\s\S]*?\]/);
+            if (jsonArrayMatch) {
+              try {
+                const jsonData = JSON.parse(jsonArrayMatch[0]);
+                if (Array.isArray(jsonData)) {
+                  displayResponse = formatEpicsForDisplay(jsonData);
+                  
+                  // Show apply button
+                  setTimeout(() => {
+                    showApplyEpicsButton(jsonData);
+                  }, 100);
+                }
+              } catch (e) {
+                // Keep original response if parsing fails
+              }
+            }
+          }
+        } catch (e) {
+          // Keep original response if parsing fails
+        }
         
         // Add assistant response
-        addMessageToDisplay('assistant', aiResponse);
+        addEpicMessage('assistant', displayResponse);
         epicChatHistory.push({ role: 'user', message: message });
-        epicChatHistory.push({ role: 'assistant', message: aiResponse });
-        
-        // Check if this response contains epic updates and offer apply button
-        console.log('Epic Chat: Checking response for epic updates');
-        console.log('Epic Chat: epics_updated flag:', data.epics_updated);
-        console.log('Epic Chat: updated_epic content:', data.updated_epic);
-        console.log('Epic Chat: Response contains JSON:', aiResponse.includes('```json'));
-        
-        // Enhanced detection for epic updates
-        const hasEpicUpdate = data.epics_updated || 
-                             data.updated_epic || 
-                             aiResponse.includes('```json') || 
-                             (aiResponse.includes('[') && aiResponse.includes('{') && 
-                              (aiResponse.toLowerCase().includes('epic') || aiResponse.toLowerCase().includes('title'))) ||
-                             aiResponse.toLowerCase().includes('updated epic') ||
-                             aiResponse.toLowerCase().includes('new epic');
-        
-        if (hasEpicUpdate) {
-          console.log('Epic Chat: Epic update content detected, offering apply button');
-          
-          // Create apply button message
-          const buttonId = 'apply-epic-widget-btn-' + Date.now();
-          const applyMessage = `🔄 I found epic updates in my response. Would you like me to apply these changes to your epics section?
-          
-          <div style="margin: 10px 0;">
-            <button id="${buttonId}" 
-                    style="background: #d0021b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; margin-right: 10px;">
-              ✓ Apply Epic Changes
-            </button>
-            <button onclick="this.parentElement.parentElement.remove()" 
-                    style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-              ✗ Skip
-            </button>
-          </div>`;
-          
-          addMessageToDisplay('assistant', applyMessage);
-          
-          // Add click event listener to the apply button
-          setTimeout(() => {
-            const button = document.getElementById(buttonId);
-            if (button) {
-              button.addEventListener('click', () => {
-                updateEpicsSection(aiResponse);
-                // Remove the apply button message after applying
-                button.parentElement.parentElement.remove();
-                // Add confirmation message
-                addMessageToDisplay('assistant', '✅ Epic changes have been applied successfully!');
-              });
-            }
-          }, 100);
-        } else {
-          console.log('Epic Chat: No epic update content detected in response');
-        }
+        epicChatHistory.push({ role: 'assistant', message: displayResponse });
         
         setTimeout(() => {
           input.focus();
         }, 100);
       } else {
-        console.error('Epic Chat: Server error:', data.error);
-        showNotification('Failed to send message', 'error');
-        removeLastUserMessage();
+        console.error('Epic Chat Error:', data.error);
+        addEpicMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+        removeLastEpicMessage();
       }
     })
     .catch(error => {
-      console.error('Epic Chat: Network error:', error);
-      hideTypingIndicator();
-      showNotification('Failed to send message', 'error');
-      removeLastUserMessage();
+      console.error('Epic Chat Network Error:', error);
+      hideEpicTyping();
+      addEpicMessage('assistant', 'Sorry, I encountered a network error. Please try again.');
+      removeLastEpicMessage();
     })
     .finally(() => {
       // Reset button state
       sendBtn.disabled = false;
       sendBtn.innerHTML = originalHTML;
-      console.log('Epic Chat: Request completed, button reset');
     });
   }
 
-  function updateChatDisplay() {
-    const chatMessages = document.getElementById('epic-chat-messages');
-    
-    if (epicChatHistory.length === 0) {
-      chatMessages.innerHTML = `
-        <div class="welcome-message">
-          <div class="message-content">
-            <span class="greeting">👋 Hi! I'm your Epic Assistant</span>
-            <p>I can help you with epic-related questions, improvements, and provide insights about your generated epics.</p>
-            <ul>
-              <li>Ask me to explain or improve any epic</li>
-              <li>Get suggestions for additional epics</li>
-              <li>Discuss epic priorities and dependencies</li>
-              <li>Request epic refinements or alternatives</li>
-            </ul>
-            <p><em>What would you like to know about your epics?</em></p>
-          </div>
-        </div>
-      `;
-      return;
-    }
-    
-    let html = '';
-    epicChatHistory.forEach((msg, index) => {
-      const isUser = msg.role === 'user';
-      const bubbleClass = isUser ? 'user-bubble' : 'agent-bubble';
-      
-      // Check if this is an agent message that might have updated the epics section
-      const hasEpicUpdate = !isUser && (
-        msg.message.toLowerCase().includes('epic') && 
-        (msg.message.toLowerCase().includes('added') || 
-         msg.message.toLowerCase().includes('updated') || 
-         msg.message.toLowerCase().includes('modified'))
-      );
-      
-      html += `
-        <div class="message-bubble ${bubbleClass}">
-          <div class="message-content">${escapeHtml(msg.message)}</div>
-          <span class="message-time">${new Date().toLocaleString()}</span>
-          ${hasEpicUpdate ? `
-            <div class="epic-update-indicator">
-              <span class="update-badge">✨ Epics section updated</span>
-              <button class="view-update-btn" onclick="scrollToEpicsSection()">View Changes</button>
-            </div>
-          ` : ''}
-        </div>
-      `;
-    });
-    
-    chatMessages.innerHTML = html;
-    setTimeout(() => {
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 50);
-  }
-
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  function addMessageToDisplay(role, message) {
+  function addEpicMessage(role, message) {
     const chatMessages = document.getElementById('epic-chat-messages');
     const timestamp = new Date().toLocaleString();
     
-    // Remove welcome message if it exists
-    const welcomeMsg = chatMessages.querySelector('.welcome-message');
-    if (welcomeMsg) {
-      welcomeMsg.remove();
-    }
-    
-    // Check if this message contains epic updates
-    const hasEpicUpdate = role === 'assistant' && (
-      message.includes('```json') || 
-      (message.includes('[') && message.includes('{') && message.includes('epic'))
-    );
+    // Process message for better display
+    let processedMessage = message;
+    processedMessage = processedMessage.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    processedMessage = processedMessage.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    processedMessage = processedMessage.replace(/\n/g, '<br>');
     
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message-bubble ${role === 'user' ? 'user-bubble' : 'agent-bubble'}`;
+    messageDiv.className = `chat-message ${role}`;
     messageDiv.innerHTML = `
-      <div class="message-content">${escapeHtml(message)}</div>
-      <span class="message-time">${timestamp}</span>
-      ${hasEpicUpdate ? `
-        <div class="epic-update-indicator">
-          <span class="update-badge">✨ Epics section updated</span>
-          <button class="view-update-btn" onclick="scrollToEpicsSection()">View Changes</button>
-        </div>
-      ` : ''}
+      <div class="chat-avatar ${role}">${role === 'user' ? 'U' : 'AI'}</div>
+      <div class="chat-bubble">${processedMessage}</div>
     `;
     
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  function removeLastUserMessage() {
-    const chatMessages = document.getElementById('epic-chat-messages');
-    const userMessages = chatMessages.querySelectorAll('.user-bubble');
-    if (userMessages.length > 0) {
-      userMessages[userMessages.length - 1].remove();
-    }
-  }
-
-  function showTypingIndicator() {
+  function showEpicTyping() {
     const chatMessages = document.getElementById('epic-chat-messages');
     const typingDiv = document.createElement('div');
-    typingDiv.className = 'message-bubble agent-bubble typing-indicator-message';
+    typingDiv.className = 'chat-message assistant typing-indicator';
+    typingDiv.id = 'epic-typing-indicator';
     typingDiv.innerHTML = `
-      <div class="typing-indicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
+      <div class="chat-avatar assistant">AI</div>
+      <div class="chat-bubble">
+        <div class="chat-loading">
+          <span class="chat-loading-dots"></span>
+          Thinking...
+        </div>
       </div>
     `;
-    typingDiv.id = 'typing-indicator';
     chatMessages.appendChild(typingDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  function hideTypingIndicator() {
-    const indicator = document.getElementById('typing-indicator');
+  function hideEpicTyping() {
+    const indicator = document.getElementById('epic-typing-indicator');
     if (indicator) {
       indicator.remove();
     }
   }
 
-  function updateCharCounter() {
-    const input = document.getElementById('epic-chat-input');
-    const counter = document.getElementById('char-count');
-    if (input && counter) {
-      counter.textContent = input.value.length;
-      
-      // Change color based on usage
-      const percentage = input.value.length / 2000;
-      if (percentage > 0.9) {
-        counter.style.color = '#ef4444';
-      } else if (percentage > 0.7) {
-        counter.style.color = '#f59e0b';
-      } else {
-        counter.style.color = '#9ca3af';
-      }
+  function removeLastEpicMessage() {
+    const chatMessages = document.getElementById('epic-chat-messages');
+    const userMessages = chatMessages.querySelectorAll('.chat-message.user');
+    if (userMessages.length > 0) {
+      userMessages[userMessages.length - 1].remove();
     }
   }
 
-  function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-      color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      z-index: 10000;
-      font-weight: 500;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  function formatEpicsForDisplay(epicsArray) {
+    let formatted = '**Updated Epics:**\n\n';
+    epicsArray.forEach((epic, index) => {
+      const title = epic.epic_title || epic.title || epic.name || `Epic ${index + 1}`;
+      const description = epic.epic_description || epic.description || 'No description available';
+      const id = epic.epic_id || epic.id || `epic_${index + 1}`;
+      
+      formatted += `**${index + 1}. ${title}**\n`;
+      formatted += `*ID:* ${id}\n`;
+      formatted += `*Description:* ${description}\n\n`;
+    });
+    return formatted;
+  }
+
+  function showApplyEpicsButton(epicsData) {
+    const chatMessages = document.getElementById('epic-chat-messages');
+    const applyDiv = document.createElement('div');
+    applyDiv.className = 'chat-message assistant';
+    applyDiv.innerHTML = `
+      <div class="chat-avatar assistant">AI</div>
+      <div class="chat-bubble">
+        <button onclick="applyEpicsUpdate(${JSON.stringify(epicsData).replace(/"/g, '&quot;')})" 
+                style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
+          ✅ Apply Epic Updates to Page
+        </button>
+      </div>
     `;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      notification.remove();
-    }, 3000);
+    chatMessages.appendChild(applyDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-function updateEpicsSection(agentResponse) {
-  // Helper to escape HTML
-  function escapeHtml(text) {
-    if (typeof text !== 'string') return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+  function applyEpicsUpdate(epicsData) {
+    const epicsContainer = document.getElementById('epics-container');
+    if (!epicsContainer) return;
 
-  const epicsContainer = document.getElementById('epics-container');
-  if (!epicsContainer) {
-    console.error('Could not find epics container.');
-    showNotification('Could not find epics container.', 'error');
-    return;
-  }
-
-  console.log('Updating epics section with response:', agentResponse.substring(0, 200) + '...');
-
-  let epicsData = null;
-  try {
-    // Try multiple approaches to extract epic data
-    let cleanContent = agentResponse.trim();
-    
-    // 1. Try to extract JSON from markdown code block
-    const jsonMatch = cleanContent.match(/```json\s*([\s\S]*?)\s*```/i);
-    if (jsonMatch && jsonMatch[1]) {
-      cleanContent = jsonMatch[1].trim();
-      console.log('Found JSON in code block');
-    } else {
-      // 2. Try to find JSON array pattern
-      const jsonArrayMatch = cleanContent.match(/\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/);
-      if (jsonArrayMatch) {
-        cleanContent = jsonArrayMatch[0];
-        console.log('Found JSON array pattern');
-      } else {
-        // 3. Try to find JSON object pattern and wrap in array
-        const jsonObjectMatch = cleanContent.match(/\{\s*["'](?:epic_)?(?:title|name)["'][\s\S]*?\}/);
-        if (jsonObjectMatch) {
-          cleanContent = '[' + jsonObjectMatch[0] + ']';
-          console.log('Found single JSON object, wrapped in array');
-        }
-      }
-    }
-    
-    console.log('Attempting to parse:', cleanContent.substring(0, 100) + '...');
-    epicsData = JSON.parse(cleanContent);
-    console.log('Successfully parsed epic data:', epicsData);
-    
-  } catch (e) {
-    console.log('JSON parsing failed:', e.message);
-    console.log('Response content:', agentResponse);
-    showNotification('Could not parse epic data from chat response. Please ensure the response contains valid JSON format.', 'error');
-    return;
-  }
-
-  // Ensure we have an array
-  if (!Array.isArray(epicsData)) {
-    if (typeof epicsData === 'object' && epicsData !== null) {
-      epicsData = [epicsData];
-      console.log('Converted single object to array');
-    } else {
-      console.error('Invalid epic data type:', typeof epicsData);
-      showNotification('Invalid epic data format received.', 'error');
-      return;
-    }
-  }
-
-  if (epicsData.length > 0) {
-    console.log(`Formatting ${epicsData.length} epics for display`);
     let formattedHTML = '';
-    
     epicsData.forEach((epic, index) => {
-      // Handle different possible field names
-      const epicTitle = epic.epic_title || epic.title || epic.name || `Untitled Epic ${index + 1}`;
-      const epicDescription = epic.epic_description || epic.description || epic.desc || 'No description available.';
-      const epicId = epic.epic_id || epic.id || `epic_${index + 1}`;
-      
+      const epicTitle = epic.epic_title || epic.title || `Untitled Epic ${index + 1}`;
+      const epicDescription = epic.epic_description || epic.description || 'No description available.';
       formattedHTML += `
         <div class="epic-card">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <input type="checkbox" name="epic_ids" value="${epicId}" id="${epicId}" checked>
-            <h5 style="margin: 0;">Epic ${index + 1}: ${escapeHtml(epicTitle)}</h5>
+            <input type="checkbox" name="epic_ids" value="epic_${index + 1}" id="epic_${index + 1}">
+            <h5 style="margin: 0;">Epic ${index + 1}: ${epicTitle}</h5>
           </div>
-          <p><strong>Description:</strong> ${escapeHtml(epicDescription)}</p>
+          <p><strong>Description:</strong> ${epicDescription}</p>
         </div>
       `;
     });
     
     epicsContainer.innerHTML = formattedHTML;
-    console.log('Epics section updated successfully');
-    showNotification('✨ Epics have been updated!', 'success');
-    scrollToEpicsSection();
-  } else {
-    console.log('No epics found in parsed data');
-    showNotification('No valid epic data found in chat response.', 'info');
-  }
-}
-
-  function scrollToEpicsSection() {
-    const epicsContainer = document.getElementById('epics-container');
-    if (epicsContainer) {
-      epicsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      
-      // Highlight the epics section
-      epicsContainer.style.transition = 'all 0.3s ease';
-      epicsContainer.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.3)';
-      setTimeout(() => {
-        epicsContainer.style.boxShadow = '';
-      }, 2000);
-    }
-  }
-
-  // User Story Chat functionality (from bk.html)
-  let userStoryChatHistory = [];
-  let isUserStoryChatOpen = false;
-  let hasSystemInfo = false;
-
-  function toggleUserStoryChat() {
-    const panel = document.getElementById('user-story-chat-panel');
-    const widget = document.getElementById('user-story-chat-widget');
+    updateEpicContext();
     
-    if (isUserStoryChatOpen) {
-      widget.classList.add('closing');
-      setTimeout(() => {
-        panel.style.display = 'none';
-        widget.classList.remove('closing');
-        isUserStoryChatOpen = false;
-      }, 300);
-    } else {
-      panel.style.display = 'block';
-      widget.classList.add('opening');
-      setTimeout(() => {
-        panel.classList.add('show');
-        widget.classList.remove('opening');
-      }, 10);
-      isUserStoryChatOpen = true;
-      
-      // Focus on input
-      setTimeout(() => {
-        const input = document.getElementById('user-story-chat-input');
-        if (input) input.focus();
-      }, 100);
-      
-      // Load chat history and check system info
-      if (userStoryChatHistory.length === 0) {
-        loadUserStoryChatHistory();
-      }
-      checkSystemInfo();
-    }
+    // Show success message
+    addEpicMessage('assistant', '✅ Epic updates have been applied to the page successfully!');
   }
+
+  // User Story Chat Functionality
+  let userStoryChatHistory = [];
 
   function openUserStoryChat() {
-    if (!isUserStoryChatOpen) {
-      toggleUserStoryChat();
-    }
+    const modal = document.getElementById('user-story-chat-modal');
+    modal.style.display = 'block';
+    
+    // Update current user story context
+    updateUserStoryContext();
+    
+    // Focus on input
+    setTimeout(() => {
+      document.getElementById('user-story-chat-input').focus();
+    }, 100);
   }
 
   function closeUserStoryChat() {
-    if (isUserStoryChatOpen) {
-      toggleUserStoryChat();
-    }
+    const modal = document.getElementById('user-story-chat-modal');
+    modal.style.display = 'none';
   }
 
-  function clearUserStoryChat() {
-    if (confirm('Are you sure you want to clear the chat history?')) {
-      userStoryChatHistory = [];
-      updateUserStoryChatDisplay();
-      
-      // Clear on server as well
-      fetch('/user-story-chat-clear', {
-        method: 'POST'
-      }).catch(console.error);
-      
-      showNotification('User Story chat history cleared!', 'success');
-    }
-  }
-
-  function loadUserStoryChatHistory() {
-    fetch('/user-story-chat-history')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.history)) {
-          userStoryChatHistory = data.history;
-          updateUserStoryChatDisplay();
+  function updateUserStoryContext() {
+    const userStoriesContainer = document.getElementById('user-stories-container');
+    const contextDisplay = document.getElementById('current-user-story-display');
+    
+    if (userStoriesContainer) {
+      // Try to extract user story information from the displayed content
+      const table = userStoriesContainer.querySelector('table');
+      if (table) {
+        const rows = table.querySelectorAll('tbody tr');
+        if (rows.length > 0) {
+          let contextText = 'Current User Stories:\n';
+          rows.forEach((row, index) => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 3) {
+              const storyId = cells[1].textContent.trim();
+              const storyName = cells[2].textContent.trim();
+              const priority = cells[3] ? cells[3].textContent.trim() : 'N/A';
+              contextText += `\n${index + 1}. ${storyId}: ${storyName} (Priority: ${priority})`;
+            }
+          });
+          contextDisplay.textContent = contextText;
+        } else {
+          contextDisplay.textContent = 'No user stories available. I can help you generate new user stories.';
         }
-      })
-      .catch(console.error);
-  }
-
-  function checkSystemInfo() {
-    fetch('/get-system-info')
-      .then(response => response.json())
-      .then(data => {
-        hasSystemInfo = data.has_system_info || false;
-        updateSystemInfoStatus();
-      })
-      .catch(console.error);
-  }
-
-  function updateSystemInfoStatus() {
-    const statusElement = document.getElementById('user-story-status');
-    if (statusElement) {
-      if (hasSystemInfo) {
-        statusElement.innerHTML = '<span style="color: #10b981;">✓ System Info Available</span>';
       } else {
-        statusElement.innerHTML = '<span style="color: #f59e0b;">⚠ No System Info</span>';
+        const rawContent = userStoriesContainer.textContent || userStoriesContainer.innerHTML;
+        if (rawContent && rawContent.trim().length > 0) {
+          contextDisplay.textContent = 'Current User Story Content: ' + rawContent.trim().substring(0, 200) + '...';
+        } else {
+          contextDisplay.textContent = 'No user stories content available. I can help you generate new user stories.';
+        }
       }
+    } else {
+      contextDisplay.textContent = 'User stories container not found. I can help you generate new user stories.';
     }
   }
 
-  function showSystemInfoUpload() {
-    const uploadSection = document.getElementById('system-info-upload');
-    if (uploadSection) {
-      uploadSection.style.display = 'block';
-    }
-  }
-
-  function hideSystemInfoUpload() {
-    const uploadSection = document.getElementById('system-info-upload');
-    if (uploadSection) {
-      uploadSection.style.display = 'none';
-    }
-  }
-
-  function uploadSystemInfo(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const statusDiv = document.getElementById('system-info-status');
-    statusDiv.style.display = 'block';
-    statusDiv.className = 'system-status';
-    statusDiv.innerHTML = 'Uploading system information...';
-
-    fetch('/upload-system-info', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        statusDiv.className = 'system-status success';
-        statusDiv.innerHTML = '✓ System information uploaded successfully!';
-        hasSystemInfo = true;
-        updateSystemInfoStatus();
-        hideSystemInfoUpload();
-        showNotification('System information uploaded successfully!', 'success');
-      } else {
-        statusDiv.className = 'system-status error';
-        statusDiv.innerHTML = '✗ Failed to upload system information';
-        showNotification('Failed to upload system information', 'error');
-      }
-    })
-    .catch(error => {
-      statusDiv.className = 'system-status error';
-      statusDiv.innerHTML = '✗ Upload error occurred';
-      showNotification('Failed to upload system information', 'error');
-    });
-
-    // Reset file input
-    input.value = '';
-  }
-
-  function sendUserStoryChatMessage() {
+  function sendUserStoryMessage() {
     const input = document.getElementById('user-story-chat-input');
     const message = input.value.trim();
     
@@ -1950,91 +1708,80 @@ function updateEpicsSection(agentResponse) {
       return;
     }
 
-    // Show loading state
-    const sendBtn = document.querySelector('#user-story-chat-panel .send-btn');
+    const sendBtn = document.getElementById('user-story-send-btn');
     const originalHTML = sendBtn.innerHTML;
+    
+    // Show loading state
     sendBtn.disabled = true;
     sendBtn.innerHTML = `
-      <div class="typing-indicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
+      <div class="chat-loading">
+        <span class="chat-loading-dots"></span>
+        Sending...
       </div>
     `;
 
     // Clear input immediately
     input.value = '';
-    updateUserStoryCharCounter();
 
-    // Add user message to display immediately
-    addUserStoryMessageToDisplay('user', message);
-
+    // Add user message to display
+    addUserStoryMessage('user', message);
+    
     // Show typing indicator
-    showUserStoryTypingIndicator();
+    showUserStoryTyping();
 
-    // Get current user stories context from the page
+    // Get current user story context
     const userStoriesContainer = document.getElementById('user-stories-container');
     let currentUserStoriesContext = '';
     
     if (userStoriesContainer) {
-      // Try to extract user story information from the displayed content
-      const storyCheckboxes = userStoriesContainer.querySelectorAll('input[name="user_story_ids"]');
-      if (storyCheckboxes.length > 0) {
-        currentUserStoriesContext = 'Current User Stories:\n';
-        storyCheckboxes.forEach((checkbox, index) => {
-          const storyId = checkbox.value;
-          const storyName = checkbox.getAttribute('data-name');
-          const storyDescription = checkbox.getAttribute('data-description');
-          const storyPriority = checkbox.getAttribute('data-priority');
-          
-          if (storyName) {
-            currentUserStoriesContext += `\nStory ${index + 1} (${storyId}): ${storyName}\n`;
-            if (storyDescription && storyDescription !== storyName) currentUserStoriesContext += `Description: ${storyDescription}\n`;
-            if (storyPriority) currentUserStoriesContext += `Priority: ${storyPriority}\n`;
-          }
-        });
+      const table = userStoriesContainer.querySelector('table');
+      if (table) {
+        const rows = table.querySelectorAll('tbody tr');
+        if (rows.length > 0) {
+          currentUserStoriesContext = 'Current User Stories:\n';
+          rows.forEach((row, index) => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 3) {
+              const storyId = cells[1].textContent.trim();
+              const storyName = cells[2].textContent.trim();
+              const priority = cells[3] ? cells[3].textContent.trim() : 'N/A';
+              const systems = cells[4] ? cells[4].textContent.trim() : 'N/A';
+              currentUserStoriesContext += `\n${index + 1}. ${storyId}: ${storyName}\n   Priority: ${priority}, Systems: ${systems}`;
+            }
+          });
+        } else {
+          currentUserStoriesContext = 'No user stories available currently.';
+        }
       } else {
-        // If no story checkboxes, try to get raw text content
         const rawContent = userStoriesContainer.textContent || userStoriesContainer.innerHTML;
         if (rawContent && rawContent.trim().length > 0) {
           currentUserStoriesContext = 'Current User Stories Content:\n' + rawContent.trim();
         } else {
-          currentUserStoriesContext = 'No user stories content available currently. Please provide context about what user stories you would like to work with.';
+          currentUserStoriesContext = 'No user stories content available currently.';
         }
       }
     } else {
-      currentUserStoriesContext = 'User stories container not found. Please ensure user stories are loaded on the page.';
+      currentUserStoriesContext = 'User stories container not found.';
     }
 
-    // Also get epic context for better user story assistance
+    // Get epic context for user story generation
     const epicsContainer = document.getElementById('epics-container');
-    let currentEpicsContext = '';
-    
+    let epicContext = '';
     if (epicsContainer) {
       const epicCards = epicsContainer.querySelectorAll('.epic-card');
       if (epicCards.length > 0) {
-        currentEpicsContext = 'Related Epics:\n';
+        epicContext = '\nRelated Epics:\n';
         epicCards.forEach((card, index) => {
           const titleElement = card.querySelector('h5');
-          const descElement = card.querySelector('p');
-          
           if (titleElement) {
-            const epicTitle = titleElement.textContent.replace(/^Epic \d+: /, '');
-            const epicDesc = descElement ? descElement.textContent.replace(/^Description: /, '') : '';
-            currentEpicsContext += `\nEpic ${index + 1}: ${epicTitle}\nDescription: ${epicDesc}\n`;
+            const title = titleElement.textContent.replace(/^Epic \d+: /, '');
+            epicContext += `${index + 1}. ${title}\n`;
           }
         });
       }
     }
 
-    console.log('User Story Chat: Current user stories context:', currentUserStoriesContext);
-    console.log('User Story Chat: Current epics context:', currentEpicsContext);
-    console.log('User Story Chat: Message being sent:', message);
-    console.log('User Story Chat: Full request payload:', {
-      message: message,
-      current_user_stories: currentUserStoriesContext,
-      current_epics: currentEpicsContext
-    });
+    // Send message to backend
     fetch('/user-story-chat', {
       method: 'POST',
       headers: {
@@ -2042,97 +1789,73 @@ function updateEpicsSection(agentResponse) {
       },
       body: JSON.stringify({ 
         message: message,
-        current_user_stories: currentUserStoriesContext,
-        current_epics: currentEpicsContext
+        current_user_stories_content: currentUserStoriesContext,
+        epic_context: epicContext
       })
     })
     .then(response => response.json())
     .then(data => {
-      console.log('User Story Chat: Response data:', data);
-      hideUserStoryTypingIndicator();
+      hideUserStoryTyping();
       
       if (data.success) {
-        // Get the AI response - check both possible response properties with better debugging
-        const aiResponse = data.response || data.message || data.content || 'No response received';
-        console.log('User Story Chat: Raw response data:', data);
-        console.log('User Story Chat: AI Response extracted:', aiResponse);
+        let aiResponse = data.response || data.message || 'No response received';
         
-        // Ensure we don't show undefined
-        if (aiResponse === 'No response received' || !aiResponse || aiResponse === 'undefined') {
-          console.error('User Story Chat: Invalid response received:', data);
-          addUserStoryMessageToDisplay('assistant', 'Sorry, I received an invalid response. Please try again.');
-          removeLastUserStoryMessage();
-          return;
-        }
-        
-        addUserStoryMessageToDisplay('assistant', aiResponse);
-        userStoryChatHistory.push({ role: 'user', message: message });
-        userStoryChatHistory.push({ role: 'assistant', message: aiResponse });
-        
-        // Enhanced detection for user story updates 
-        const hasUserStoryUpdate = data.user_stories_updated || 
-                                  data.updated_user_story || 
-                                  data.updated_user_stories ||
-                                  aiResponse.toLowerCase().includes('user stor') && 
-                                  (aiResponse.includes('```json') || aiResponse.includes('[') || aiResponse.includes('{')) ||
-                                  aiResponse.toLowerCase().includes('updated story') ||
-                                  aiResponse.toLowerCase().includes('new story') ||
-                                  aiResponse.toLowerCase().includes('story update');
-        
-        if (hasUserStoryUpdate) {
-          console.log('User Story Chat: User story update detected, offering apply button');
-          
-          // Create apply button message
-          const buttonId = 'apply-userstory-widget-btn-' + Date.now();
-          const applyMessage = `🔄 I found user story updates in my response. Would you like me to apply these changes to your user stories section?
-          
-          <div style="margin: 10px 0;">
-            <button id="${buttonId}" 
-                    style="background: #d0021b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; margin-right: 10px;">
-              ✓ Apply User Story Changes
-            </button>
-            <button onclick="this.parentElement.parentElement.remove()" 
-                    style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-              ✗ Skip
-            </button>
-          </div>`;
-          
-          addUserStoryMessageToDisplay('assistant', applyMessage);
-          
-          // Add click event listener to the apply button
-          setTimeout(() => {
-            const button = document.getElementById(buttonId);
-            if (button) {
-              button.addEventListener('click', () => {
-                console.log('User Story Chat: Apply button clicked, calling updateUserStoriesSection');
-                updateUserStoriesSection(aiResponse);
-                // Remove the apply button message after applying
-                button.parentElement.parentElement.remove();
-                // Add confirmation message
-                addUserStoryMessageToDisplay('assistant', '✅ User story changes have been applied successfully!');
-              });
+        // Check if the response contains JSON and format it nicely
+        let displayResponse = aiResponse;
+        try {
+          // Try to detect and format JSON in the response
+          const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
+          if (jsonMatch) {
+            const jsonData = JSON.parse(jsonMatch[1]);
+            if (Array.isArray(jsonData)) {
+              displayResponse = formatUserStoriesForDisplay(jsonData);
+              
+              // Show apply button if this looks like updated user stories
+              setTimeout(() => {
+                showApplyUserStoriesButton(jsonData);
+              }, 100);
             }
-          }, 100);
+          } else {
+            // Try to extract JSON array pattern
+            const jsonArrayMatch = aiResponse.match(/\[[\s\S]*?\{[\s\S]*?\}[\s\S]*?\]/);
+            if (jsonArrayMatch) {
+              try {
+                const jsonData = JSON.parse(jsonArrayMatch[0]);
+                if (Array.isArray(jsonData)) {
+                  displayResponse = formatUserStoriesForDisplay(jsonData);
+                  
+                  // Show apply button
+                  setTimeout(() => {
+                    showApplyUserStoriesButton(jsonData);
+                  }, 100);
+                }
+              } catch (e) {
+                // Keep original response if parsing fails
+              }
+            }
+          }
+        } catch (e) {
+          // Keep original response if parsing fails
         }
+        
+        // Add assistant response
+        addUserStoryMessage('assistant', displayResponse);
+        userStoryChatHistory.push({ role: 'user', message: message });
+        userStoryChatHistory.push({ role: 'assistant', message: displayResponse });
         
         setTimeout(() => {
           input.focus();
         }, 100);
       } else {
-        console.error('User Story Chat: Server error:', data.error || 'Unknown error');
-        const errorMsg = data.error || 'Sorry, I encountered an error processing your request. Please try again.';
-        addUserStoryMessageToDisplay('assistant', errorMsg);
+        console.error('User Story Chat Error:', data.error);
+        addUserStoryMessage('assistant', 'Sorry, I encountered an error. Please try again.');
         removeLastUserStoryMessage();
       }
     })
     .catch(error => {
-      hideUserStoryTypingIndicator();
-      console.error('User Story Chat: Network error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack
-      });
-      showNotification('Failed to send message', 'error');
+      console.error('User Story Chat Network Error:', error);
+      hideUserStoryTyping();
+      addUserStoryMessage('assistant', 'Sorry, I encountered a network error. Please try again.');
       removeLastUserStoryMessage();
     })
     .finally(() => {
@@ -2142,1840 +1865,218 @@ function updateEpicsSection(agentResponse) {
     });
   }
 
-  function updateUserStoryChatDisplay() {
-    const chatMessages = document.getElementById('user-story-chat-messages');
-    
-    if (userStoryChatHistory.length === 0) {
-      chatMessages.innerHTML = `
-        <div class="welcome-message">
-          <div class="message-content">
-            <span class="greeting">📋 Hi! I'm your User Story Assistant</span>
-            <p>I can help you create, refine, and understand user stories. I can provide guidance on:</p>
-            <ul>
-              <li>Writing better user stories</li>
-              <li>Creating acceptance criteria</li>
-              <li>Story estimation and prioritization</li>
-              <li>Breaking down large stories</li>
-            </ul>
-            <p><em>How can I help you with your user stories today?</em></p>
-          </div>
-        </div>
-      `;
-      return;
-    }
-    
-    let html = '';
-    userStoryChatHistory.forEach((msg, index) => {
-      const isUser = msg.role === 'user';
-      const bubbleClass = isUser ? 'user-bubble' : 'agent-bubble';
-      
-      // Check if this is an agent message that might have updated the user stories section
-      const hasUserStoryUpdate = !isUser && (
-        msg.message.toLowerCase().includes('story') && 
-        (msg.message.toLowerCase().includes('added') || 
-         msg.message.toLowerCase().includes('updated') || 
-         msg.message.toLowerCase().includes('created'))
-      );
-      
-      html += `
-        <div class="message-bubble ${bubbleClass}">
-          <div class="message-content">${escapeHtml(msg.message)}</div>
-          <span class="message-time">${new Date().toLocaleString()}</span>
-          ${hasUserStoryUpdate ? `
-            <div class="epic-update-indicator">
-              <span class="update-badge">📋 User Stories updated</span>
-              <button class="view-update-btn" onclick="scrollToUserStoriesSection()">View Changes</button>
-            </div>
-          ` : ''}
-        </div>
-      `;
-    });
-    
-    chatMessages.innerHTML = html;
-    setTimeout(() => {
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 50);
-  }
-
-  function addUserStoryMessageToDisplay(role, message) {
+  function addUserStoryMessage(role, message) {
     const chatMessages = document.getElementById('user-story-chat-messages');
     const timestamp = new Date().toLocaleString();
     
-    // Remove welcome message if it exists
-    const welcomeMsg = chatMessages.querySelector('.welcome-message');
-    if (welcomeMsg) {
-      welcomeMsg.remove();
-    }
+    // Process message for better display
+    let processedMessage = message;
+    processedMessage = processedMessage.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    processedMessage = processedMessage.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    processedMessage = processedMessage.replace(/\n/g, '<br>');
     
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message-bubble ${role === 'user' ? 'user-bubble' : 'agent-bubble'}`;
+    messageDiv.className = `chat-message ${role}`;
     messageDiv.innerHTML = `
-      <div class="message-content">${escapeHtml(message)}</div>
-      <span class="message-time">${timestamp}</span>
+      <div class="chat-avatar ${role}">${role === 'user' ? 'U' : 'AI'}</div>
+      <div class="chat-bubble">${processedMessage}</div>
     `;
     
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  function removeLastUserStoryMessage() {
-    const chatMessages = document.getElementById('user-story-chat-messages');
-    const userMessages = chatMessages.querySelectorAll('.user-bubble');
-    if (userMessages.length > 0) {
-      userMessages[userMessages.length - 1].remove();
-    }
-  }
-
-  function showUserStoryTypingIndicator() {
+  function showUserStoryTyping() {
     const chatMessages = document.getElementById('user-story-chat-messages');
     const typingDiv = document.createElement('div');
-    typingDiv.className = 'message-bubble agent-bubble typing-indicator-message';
+    typingDiv.className = 'chat-message assistant typing-indicator';
+    typingDiv.id = 'user-story-typing-indicator';
     typingDiv.innerHTML = `
-      <div class="typing-indicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
+      <div class="chat-avatar assistant">AI</div>
+      <div class="chat-bubble">
+        <div class="chat-loading">
+          <span class="chat-loading-dots"></span>
+          Thinking...
+        </div>
       </div>
     `;
-    typingDiv.id = 'user-story-typing-indicator';
     chatMessages.appendChild(typingDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  function hideUserStoryTypingIndicator() {
+  function hideUserStoryTyping() {
     const indicator = document.getElementById('user-story-typing-indicator');
     if (indicator) {
       indicator.remove();
     }
   }
 
-  function updateUserStoryCharCounter() {
-    const input = document.getElementById('user-story-chat-input');
-    const counter = document.getElementById('user-story-char-count');
-    if (input && counter) {
-      counter.textContent = input.value.length;
-      
-      // Change color based on usage
-      const percentage = input.value.length / 2000;
-      if (percentage > 0.9) {
-        counter.style.color = '#ef4444';
-      } else if (percentage > 0.7) {
-        counter.style.color = '#f59e0b';
-      } else {
-        counter.style.color = '#9ca3af';
-      }
+  function removeLastUserStoryMessage() {
+    const chatMessages = document.getElementById('user-story-chat-messages');
+    const userMessages = chatMessages.querySelectorAll('.chat-message.user');
+    if (userMessages.length > 0) {
+      userMessages[userMessages.length - 1].remove();
     }
   }
 
-  function updateUserStoriesSection(agentResponse) {
-    // Helper to escape HTML
-    function escapeHtml(text) {
-      if (typeof text !== 'string') return '';
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
+  function formatUserStoriesForDisplay(userStoriesArray) {
+    let formatted = '**Updated User Stories:**\n\n';
+    userStoriesArray.forEach((story, index) => {
+      const storyId = story.story_id || `US-${index + 1}`;
+      const storyName = story.name || story.title || `Story ${index + 1}`;
+      const priority = story.priority || 'Medium';
+      const systems = Array.isArray(story.systems) ? story.systems.join(', ') : (story.systems || 'TBD');
+      const description = story.description || 'No description available';
+      
+      formatted += `**${index + 1}. ${storyName}**\n`;
+      formatted += `*ID:* ${storyId}\n`;
+      formatted += `*Priority:* ${priority}\n`;
+      formatted += `*Systems:* ${systems}\n`;
+      formatted += `*Description:* ${description}\n\n`;
+    });
+    return formatted;
+  }
 
+  function showApplyUserStoriesButton(userStoriesData) {
+    const chatMessages = document.getElementById('user-story-chat-messages');
+    const applyDiv = document.createElement('div');
+    applyDiv.className = 'chat-message assistant';
+    applyDiv.innerHTML = `
+      <div class="chat-avatar assistant">AI</div>
+      <div class="chat-bubble">
+        <button onclick="applyUserStoriesUpdate(${JSON.stringify(userStoriesData).replace(/"/g, '&quot;')})" 
+                style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
+          ✅ Apply User Story Updates to Page
+        </button>
+      </div>
+    `;
+    chatMessages.appendChild(applyDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function applyUserStoriesUpdate(userStoriesData) {
     const userStoriesContainer = document.getElementById('user-stories-container');
-    if (!userStoriesContainer) {
-      console.error('Could not find user stories container.');
-      showNotification('Could not find user stories container.', 'error');
-      return;
-    }
+    if (!userStoriesContainer) return;
 
-    console.log('Updating user stories section with response:', agentResponse.substring(0, 200) + '...');
-
-    let userStoriesData = null;
-    try {
-      // Try multiple approaches to extract user story data
-      let cleanContent = agentResponse.trim();
+    // Format the user stories as a table
+    let formattedHTML = `
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+          <thead class="thead-dark">
+            <tr>
+              <th>Select</th>
+              <th>Story ID</th>
+              <th>Name</th>
+              <th>Priority</th>
+              <th>Systems</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    userStoriesData.forEach((story, index) => {
+      const storyId = story.story_id || `US-${index + 1}`;
+      const storyName = story.name || story.title || 'Untitled Story';
+      const storyPriority = story.priority || 'Medium';
+      const storySystems = Array.isArray(story.systems) ? story.systems.join(', ') : (story.systems || 'TBD');
+      const storyDescription = story.description || story.name || 'No description available';
       
-      // 1. Try to extract JSON from markdown code block
-      const jsonMatch = cleanContent.match(/```json\s*([\s\S]*?)\s*```/i);
-      if (jsonMatch && jsonMatch[1]) {
-        cleanContent = jsonMatch[1].trim();
-        console.log('Found JSON in code block');
-      } else {
-        // 2. Try to find JSON array pattern
-        const jsonArrayMatch = cleanContent.match(/\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/);
-        if (jsonArrayMatch) {
-          cleanContent = jsonArrayMatch[0];
-          console.log('Found JSON array pattern');
-        } else {
-          // 3. Try to find JSON object pattern and wrap in array
-          const jsonObjectMatch = cleanContent.match(/\{\s*["'](?:story_)?(?:title|name)["'][\s\S]*?\}/);
-          if (jsonObjectMatch) {
-            cleanContent = '[' + jsonObjectMatch[0] + ']';
-            console.log('Found single JSON object, wrapped in array');
-          }
-        }
+      // Escape HTML for data attributes
+      const escapedName = storyName.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const escapedDescription = storyDescription.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      
+      // Determine priority badge color
+      let priorityClass = 'badge-secondary';
+      if (storyPriority.toLowerCase() === 'high') {
+        priorityClass = 'badge-danger';
+      } else if (storyPriority.toLowerCase() === 'medium') {
+        priorityClass = 'badge-warning';
+      } else if (storyPriority.toLowerCase() === 'low') {
+        priorityClass = 'badge-success';
       }
-      
-      console.log('Attempting to parse:', cleanContent.substring(0, 100) + '...');
-      userStoriesData = JSON.parse(cleanContent);
-      console.log('Successfully parsed user story data:', userStoriesData);
-      
-    } catch (e) {
-      console.log('JSON parsing failed:', e.message);
-      console.log('Response content:', agentResponse);
-      showNotification('Could not parse user story data from chat response. Please ensure the response contains valid JSON format.', 'error');
-      return;
-    }
-
-    // Ensure we have an array
-    if (!Array.isArray(userStoriesData)) {
-      if (typeof userStoriesData === 'object' && userStoriesData !== null) {
-        userStoriesData = [userStoriesData];
-        console.log('Converted single object to array');
-      } else {
-        console.error('Invalid user story data type:', typeof userStoriesData);
-        showNotification('Invalid user story data format received.', 'error');
-        return;
-      }
-    }
-
-    if (userStoriesData.length > 0) {
-      console.log(`Formatting ${userStoriesData.length} user stories for display`);
-      
-      // Create table format like in the user details page
-      let formattedHTML = `
-        <div class="table-responsive">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>Select</th>
-                <th>Story ID</th>
-                <th>Story Name</th>
-                <th>Priority</th>
-                <th>Systems</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      
-      userStoriesData.forEach((story, index) => {
-        // Handle different possible field names
-        const storyTitle = story.story_title || story.title || story.name || story.story_name || `Untitled Story ${index + 1}`;
-        const storyDescription = story.story_description || story.description || story.desc || storyTitle;
-        const storyId = story.story_id || story.id || `US-${index + 1}`;
-        const priority = story.priority || 'Medium';
-        const systems = story.systems || story.responsible_systems || 'TBD';
-        
-        // Escape HTML for data attributes
-        const escapedTitle = storyTitle.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        const escapedDescription = storyDescription.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        
-        formattedHTML += `
-          <tr>
-            <td>
-              <input type="checkbox" name="user_story_ids" value="${storyId}" 
-                     data-name="${escapedTitle}" 
-                     data-description="${escapedDescription}"
-                     data-priority="${priority}" 
-                     data-systems="${systems}">
-            </td>
-            <td>${storyId}</td>
-            <td>${storyTitle}</td>
-            <td><span class="badge badge-warning">${priority}</span></td>
-            <td>${systems}</td>
-          </tr>
-        `;
-      });
       
       formattedHTML += `
-            </tbody>
-          </table>
-        </div>
+        <tr>
+          <td>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="user_story_ids" 
+              value="${storyId}" id="story_${index + 1}"
+              data-name="${escapedName}" 
+              data-description="${escapedDescription}"
+              data-priority="${storyPriority}"
+              data-systems="${storySystems}"${index === 0 ? ' checked' : ''}>
+              <label class="form-check-label" for="story_${index + 1}"></label>
+            </div>
+          </td>
+          <td><strong>${storyId}</strong></td>
+          <td><strong>${storyName}</strong></td>
+          <td><span class="badge ${priorityClass}">${storyPriority}</span></td>
+          <td>${storySystems}</td>
+        </tr>
       `;
-      
-      userStoriesContainer.innerHTML = formattedHTML;
-      console.log('User stories section updated successfully');
-      showNotification('✨ User stories have been updated!', 'success');
-      
-      // Re-setup event listeners for the new checkboxes
-      setupUserStoryCheckboxListeners();
-      
-      // Show the user stories section if it was hidden
-      const userStoriesSection = document.getElementById('user-stories-section');
-      if (userStoriesSection && userStoriesSection.classList.contains('hidden')) {
-        userStoriesSection.classList.remove('hidden');
-      }
-      
-      scrollToUserStoriesSection();
-    } else {
-      console.log('No user stories found in parsed data');
-      showNotification('No valid user story data found in chat response.', 'info');
-    }
-  }
-
-  function scrollToUserStoriesSection() {
-    const userStoriesSection = document.getElementById('user-stories-section');
-    if (userStoriesSection) {
-      userStoriesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      
-      // Highlight the user stories section
-      userStoriesSection.style.transition = 'all 0.3s ease';
-      userStoriesSection.style.boxShadow = '0 0 20px rgba(240, 147, 251, 0.3)';
-      setTimeout(() => {
-        userStoriesSection.style.boxShadow = '';
-      }, 2000);
-    }
-  }
-
-  // Add keyboard event listeners for chat inputs
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM Content Loaded - initializing Epic Chat functionality');
-    
-    // Check if Epic Chat elements exist
-    const epicChatWidget = document.getElementById('epic-chat-widget');
-    const epicChatPanel = document.getElementById('epic-chat-panel');
-    const epicChatInput = document.getElementById('epic-chat-input');
-    const epicChatBtn = document.getElementById('epicChatBtn');
-    
-    console.log('Epic Chat elements found:', {
-      widget: !!epicChatWidget,
-      panel: !!epicChatPanel,
-      input: !!epicChatInput,
-      button: !!epicChatBtn
     });
     
-    // Initialize chat displays
-    setTimeout(() => {
-      updateChatDisplay();
-      updateUserStoryChatDisplay();
-    }, 100);
+    formattedHTML += `
+          </tbody>
+        </table>
+      </div>
+    `;
     
-    // Epic Chat input event listeners
-    if (epicChatInput) {
-      console.log('Epic Chat: Setting up input event listeners');
-      epicChatInput.addEventListener('input', updateCharCounter);
-      epicChatInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendEpicChatMessage();
-        }
-      });
-      
-      // Auto-resize textarea
-      epicChatInput.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-      });
-    } else {
-      console.warn('Epic Chat: Input element not found, event listeners not set up');
+    userStoriesContainer.innerHTML = formattedHTML;
+    
+    // Re-setup event listeners for new checkboxes
+    setupUserStoryCheckboxListeners();
+    
+    // Show the user stories section
+    const userStoriesSection = document.getElementById('user-stories-section');
+    if (userStoriesSection) {
+      userStoriesSection.classList.remove('hidden');
     }
+    
+    updateUserStoryContext();
+    
+    // Show success message
+    addUserStoryMessage('assistant', '✅ User story updates have been applied to the page successfully!');
+  }
 
-    // User Story Chat input event listeners
+  // Handle Enter key for chat inputs
+  document.addEventListener('DOMContentLoaded', function() {
+    const epicChatInput = document.getElementById('epic-chat-input');
     const userStoryChatInput = document.getElementById('user-story-chat-input');
-    if (userStoryChatInput) {
-      userStoryChatInput.addEventListener('input', updateUserStoryCharCounter);
-      userStoryChatInput.addEventListener('keydown', function(e) {
+    
+    if (epicChatInput) {
+      epicChatInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
-          sendUserStoryChatMessage();
+          sendEpicMessage();
         }
       });
-      
-      // Auto-resize textarea
-      userStoryChatInput.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    }
+    
+    if (userStoryChatInput) {
+      userStoryChatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendUserStoryMessage();
+        }
       });
     }
     
-    console.log('Epic Chat: Initialization complete');
-    
-    // Modal-style chat functions (like story details page)
-    window.openEpicChatModal = function() {
-      console.log('Opening Epic Chat Modal');
-      const modal = document.getElementById('epic-chat-modal');
-      if (!modal) {
-        alert('❌ Error: Epic chat modal not found. Please reload the page and try again.');
-        return;
-      }
-      
-      const currentEpicDisplay = document.getElementById('current-epic-display');
-      
-      // Get current epic content
-      const epicsContainer = document.getElementById('epics-container');
-      let currentEpicContent = 'No epic content available';
-      if (epicsContainer) {
-        currentEpicContent = epicsContainer.innerText.trim() || currentEpicContent;
-      }
-      
-      // Update the current epic display in the modal
-      if (currentEpicDisplay) {
-        currentEpicDisplay.textContent = currentEpicContent;
-      }
-      
-      // Show the modal
-      modal.style.display = 'block';
-      
-      // Focus on the input
-      setTimeout(() => {
-        const inputElement = document.getElementById('epic-modal-chat-input');
-        if (inputElement) {
-          inputElement.focus();
-        }
-      }, 100);
-      
-      // Add event listener for Enter key
-      const chatInput = document.getElementById('epic-modal-chat-input');
-      if (chatInput && !chatInput.hasAttribute('data-listener-added')) {
-        chatInput.setAttribute('data-listener-added', 'true');
-        chatInput.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendEpicModalMessage();
-          }
-        });
-      }
-    };
-    
-    window.closeEpicChatModal = function() {
-      const modal = document.getElementById('epic-chat-modal');
-      modal.style.display = 'none';
-    };
-    
-    window.sendEpicModalMessage = function() {
-      const input = document.getElementById('epic-modal-chat-input');
-      const message = input.value.trim();
-      
-      if (!message) return;
-      
-      // Add user message to chat
-      addEpicModalChatMessage(message, 'user');
-      
-      // Clear input
-      input.value = '';
-      
-      // Show loading state
-      const sendBtn = document.getElementById('epic-modal-send-btn');
-      sendBtn.disabled = true;
-      sendBtn.innerHTML = '<span class="chat-loading-dots"></span> Processing';
-      
-      // Add loading message
-      const loadingMessageId = addEpicModalChatMessage('', 'assistant', true);
-      
-      // Get current epic content
-      const epicsContainer = document.getElementById('epics-container');
-      const currentEpicContent = epicsContainer ? epicsContainer.innerText.trim() : '';
-      
-      // Call backend API
-      fetch('/epic-chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: message,
-          current_epics_content: currentEpicContent
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Epic chat response:', data); // Debug log
-        
-        // Remove loading message
-        const loadingMsg = document.getElementById(loadingMessageId);
-        if (loadingMsg) loadingMsg.remove();
-        
-        if (data.success) {
-          // Add AI response - check both data.message and data.response with debugging
-          const aiResponse = data.message || data.response || data.content || 'No response received';
-          console.log('Epic Chat Modal: Raw response data:', data);
-          console.log('Epic Chat Modal: AI Response extracted:', aiResponse);
-          
-          // Ensure we don't show undefined
-          if (aiResponse === 'No response received' || !aiResponse || aiResponse === 'undefined') {
-            console.error('Epic Chat Modal: Invalid response received:', data);
-            addEpicModalChatMessage('Sorry, I received an invalid response. Please try again.', 'assistant');
-            return;
-          }
-          
-          addEpicModalChatMessage(aiResponse, 'assistant');
-          
-          // Enhanced detection for epic updates
-          const hasEpicUpdate = data.updated_epic || 
-                               data.epics_updated ||
-                               aiResponse.toLowerCase().includes('updated epic') ||
-                               aiResponse.toLowerCase().includes('new epic') ||
-                               (aiResponse.includes('```json') && aiResponse.toLowerCase().includes('epic')) ||
-                               (aiResponse.includes('[') && aiResponse.includes('{') && aiResponse.toLowerCase().includes('epic'));
-          
-          // If there's an updated epic, offer to apply it
-          if (hasEpicUpdate) {
-            const buttonId = 'apply-epic-btn-' + Date.now();
-            
-            // Use the updated_epic from response or the AI response itself
-            const epicToApply = data.updated_epic && data.updated_epic.trim() ? data.updated_epic : aiResponse;
-            
-            addEpicModalChatMessage(
-              `Here's the updated epic. Would you like me to apply this change?
-              
-              <div style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; font-style: italic;">
-                ${epicToApply}
-              </div>
-              
-              <button id="${buttonId}" 
-                      style="background: #d0021b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
-                ✓ Apply This Epic
-              </button>`, 
-              'assistant'
-            );
-            
-            // Add click event listener to the button
-            setTimeout(() => {
-              const button = document.getElementById(buttonId);
-              if (button) {
-                button.addEventListener('click', () => {
-                  applyEpicUpdate(epicToApply);
-                });
-              }
-            }, 100);
-          }
-        } else {
-          console.error('Epic chat error:', data.error || 'Unknown error');
-          addEpicModalChatMessage(`Sorry, I encountered an error: ${data.error || 'Unknown error'}. Please try again.`, 'assistant');
-        }
-        
-        // Reset send button
-        sendBtn.disabled = false;
-        sendBtn.innerHTML = '<span>📤</span> Send';
-      })
-      .catch(error => {
-        console.error('Epic chat network error:', error);
-        
-        // Remove loading message
-        const loadingMsg = document.getElementById(loadingMessageId);
-        if (loadingMsg) loadingMsg.remove();
-        
-        // Show error message
-        addEpicModalChatMessage(`Sorry, I encountered a connection error: ${error.message}. Please check your internet connection and try again.`, 'assistant');
-        
-        // Reset send button
-        sendBtn.disabled = false;
-        sendBtn.innerHTML = '<span>📤</span> Send';
-      });
-    };
-    
-    function addEpicModalChatMessage(message, sender, isLoading = false) {
-      const messagesContainer = document.getElementById('epic-modal-chat-messages');
-      const messageDiv = document.createElement('div');
-      const messageId = 'epic-msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-      messageDiv.id = messageId;
-      
-      if (isLoading) {
-        messageDiv.className = 'chat-message assistant';
-        messageDiv.innerHTML = `
-          <div class="chat-avatar assistant">AI</div>
-          <div class="chat-bubble">
-            <div class="chat-loading-dots"></div>
-          </div>
-        `;
-      } else {
-        messageDiv.className = `chat-message ${sender}`;
-        
-        if (sender === 'user') {
-          messageDiv.innerHTML = `
-            <div class="chat-bubble">${message}</div>
-            <div class="chat-avatar user">You</div>
-          `;
-        } else {
-          messageDiv.innerHTML = `
-            <div class="chat-avatar assistant">AI</div>
-            <div class="chat-bubble">${message}</div>
-          `;
-        }
-      }
-      
-      messagesContainer.appendChild(messageDiv);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      
-      return messageId;
-    }
-    
-    function applyEpicUpdate(newEpic) {
-      // Update the visible epic content on the page
-      const epicsContainer = document.getElementById('epics-container');
-      if (epicsContainer) {
-        // If the content is in table format, keep the table structure but update content
-        if (epicsContainer.innerHTML.includes('<table') || epicsContainer.innerHTML.includes('epic-card')) {
-          // Try to find and update epic title in existing structure
-          const epicTitleElements = epicsContainer.querySelectorAll('h5');
-          if (epicTitleElements.length > 0) {
-            epicTitleElements[0].innerHTML = `Epic 1: ${newEpic}`;
-          } else {
-            // Fallback: replace entire content
-            epicsContainer.innerHTML = `
-              <div class="epic-card">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <input type="checkbox" name="epic_ids" value="epic_1" id="epic_1" checked>
-                  <h5 style="margin: 0;">Epic 1: ${newEpic}</h5>
-                </div>
-                <p><strong>Description:</strong> ${newEpic}</p>
-              </div>
-            `;
-          }
-        } else {
-          // Simple text content
-          epicsContainer.innerHTML = newEpic;
-        }
-      }
-      
-      // Update the modal display
-      const currentEpicDisplay = document.getElementById('current-epic-display');
-      if (currentEpicDisplay) {
-        currentEpicDisplay.textContent = newEpic;
-      }
-      
-      // Show success message
-      addEpicModalChatMessage('✅ Epic updated successfully! The changes are now applied to your page.', 'assistant');
-    }
-    
-    // User Story Modal functions
-    window.openUserStoryChatModal = function() {
-      console.log('Opening User Story Chat Modal');
-      const modal = document.getElementById('user-story-chat-modal');
-      if (!modal) {
-        alert('❌ Error: User story chat modal not found. Please reload the page and try again.');
-        return;
-      }
-      
-      const currentUserStoriesDisplay = document.getElementById('current-userstories-display');
-      
-      // Get current user stories content
-      const userStoriesContainer = document.getElementById('user-stories-container');
-      let currentUserStoriesContent = 'No user stories available';
-      if (userStoriesContainer) {
-        currentUserStoriesContent = userStoriesContainer.innerText.trim() || currentUserStoriesContent;
-      }
-      
-      // Update the current user stories display in the modal
-      if (currentUserStoriesDisplay) {
-        currentUserStoriesDisplay.textContent = currentUserStoriesContent;
-      }
-      
-      // Show the modal
-      modal.style.display = 'block';
-      
-      // Focus on the input
-      setTimeout(() => {
-        const inputElement = document.getElementById('userstory-modal-chat-input');
-        if (inputElement) {
-          inputElement.focus();
-        }
-      }, 100);
-      
-      // Add event listener for Enter key
-      const chatInput = document.getElementById('userstory-modal-chat-input');
-      if (chatInput && !chatInput.hasAttribute('data-listener-added')) {
-        chatInput.setAttribute('data-listener-added', 'true');
-        chatInput.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendUserStoryModalMessage();
-          }
-        });
-      }
-    };
-    
-    window.closeUserStoryChatModal = function() {
-      const modal = document.getElementById('user-story-chat-modal');
-      modal.style.display = 'none';
-    };
-    
-    window.sendUserStoryModalMessage = function() {
-      const input = document.getElementById('userstory-modal-chat-input');
-      const message = input.value.trim();
-      
-      if (!message) return;
-      
-      // Add user message to chat
-      addUserStoryModalChatMessage(message, 'user');
-      
-      // Clear input
-      input.value = '';
-      
-      // Show loading state
-      const sendBtn = document.getElementById('userstory-modal-send-btn');
-      sendBtn.disabled = true;
-      sendBtn.innerHTML = '<span class="chat-loading-dots"></span> Processing';
-      
-      // Add loading message
-      const loadingMessageId = addUserStoryModalChatMessage('', 'assistant', true);
-      
-      // Get current user stories content and epic context
-      const userStoriesContainer = document.getElementById('user-stories-container');
-      const currentUserStoriesContent = userStoriesContainer ? userStoriesContainer.innerText.trim() : '';
-      
-      const epicsContainer = document.getElementById('epics-container');
-      const epicContext = epicsContainer ? epicsContainer.innerText.trim() : '';
-      
-      // Call backend API
-      fetch('/user-story-chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: message,
-          current_user_story: currentUserStoriesContent,
-          epic_title: epicContext,
-          description: currentUserStoriesContent
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('User Story Chat API Response:', data);
-        
-        // Remove loading message
-        const loadingMsg = document.getElementById(loadingMessageId);
-        if (loadingMsg) loadingMsg.remove();
-        
-        if (data.success) {
-          // Get the AI response - check both possible response properties with debugging
-          const aiResponse = data.message || data.response || data.content || 'No response received';
-          console.log('User Story Chat Modal: Raw response data:', data);
-          console.log('User Story Chat Modal: AI Response extracted:', aiResponse);
-          
-          // Ensure we don't show undefined
-          if (aiResponse === 'No response received' || !aiResponse || aiResponse === 'undefined') {
-            console.error('User Story Chat Modal: Invalid response received:', data);
-            addUserStoryModalChatMessage('Sorry, I received an invalid response. Please try again.', 'assistant');
-            return;
-          }
-          
-          // Add AI response
-          addUserStoryModalChatMessage(aiResponse, 'assistant');
-          
-          // Enhanced detection for user story updates
-          const hasUserStoryUpdate = data.updated_user_story || 
-                                    data.updated_user_stories ||
-                                    data.user_stories_updated ||
-                                    aiResponse.toLowerCase().includes('updated story') ||
-                                    aiResponse.toLowerCase().includes('new story') ||
-                                    (aiResponse.includes('```json') && aiResponse.toLowerCase().includes('story')) ||
-                                    (aiResponse.includes('[') && aiResponse.includes('{') && aiResponse.toLowerCase().includes('story'));
-          
-          // If there are updated user stories, offer to apply them
-          if (hasUserStoryUpdate) {
-            const buttonId = 'apply-stories-btn-' + Date.now();
-            
-            // Use the updated_user_story from response or the AI response itself
-            const storiesToApply = data.updated_user_story || data.updated_user_stories || aiResponse;
-            
-            addUserStoryModalChatMessage(
-              `Here are the updated user stories. Would you like me to apply these changes?
-              
-              <div style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; font-style: italic;">
-                ${storiesToApply}
-              </div>
-              
-              <button id="${buttonId}" 
-                      style="background: #d0021b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
-                ✓ Apply These User Stories
-              </button>`, 
-              'assistant'
-            );
-            
-            // Add click event listener to the button
-            setTimeout(() => {
-              const button = document.getElementById(buttonId);
-              if (button) {
-                button.addEventListener('click', () => {
-                  applyUserStoriesUpdate(storiesToApply);
-                });
-              }
-            }, 100);
-          }
-        } else {
-          addUserStoryModalChatMessage('Sorry, I encountered an error processing your request. Please try again.', 'assistant');
-        }
-        
-        // Reset send button
-        sendBtn.disabled = false;
-        sendBtn.innerHTML = '<span>📤</span> Send';
-      })
-      .catch(error => {
-        console.error('Error calling user story chat API:', error);
-        
-        // Remove loading message
-        const loadingMsg = document.getElementById(loadingMessageId);
-        if (loadingMsg) loadingMsg.remove();
-        
-        // Show error message
-        addUserStoryModalChatMessage('Sorry, I encountered a connection error. Please check your internet connection and try again.', 'assistant');
-        
-        // Reset send button
-        sendBtn.disabled = false;
-        sendBtn.innerHTML = '<span>📤</span> Send';
-      });
-    };
-    
-    function addUserStoryModalChatMessage(message, sender, isLoading = false) {
-      const messagesContainer = document.getElementById('userstory-modal-chat-messages');
-      const messageDiv = document.createElement('div');
-      const messageId = 'userstory-msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-      messageDiv.id = messageId;
-      
-      if (isLoading) {
-        messageDiv.className = 'chat-message assistant';
-        messageDiv.innerHTML = `
-          <div class="chat-avatar assistant">AI</div>
-          <div class="chat-bubble">
-            <div class="chat-loading-dots"></div>
-          </div>
-        `;
-      } else {
-        messageDiv.className = `chat-message ${sender}`;
-        
-        if (sender === 'user') {
-          messageDiv.innerHTML = `
-            <div class="chat-bubble">${message}</div>
-            <div class="chat-avatar user">You</div>
-          `;
-        } else {
-          messageDiv.innerHTML = `
-            <div class="chat-avatar assistant">AI</div>
-            <div class="chat-bubble">${message}</div>
-          `;
-        }
-      }
-      
-      messagesContainer.appendChild(messageDiv);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      
-      return messageId;
-    }
-    
-    function applyUserStoriesUpdate(newUserStories) {
-      // Update the visible user stories content on the page
-      const userStoriesContainer = document.getElementById('user-stories-container');
-      if (userStoriesContainer) {
-        // If the content is in table format, keep the table structure but update content
-        if (userStoriesContainer.innerHTML.includes('<table')) {
-          // Try to parse and update the user stories in table format
-          try {
-            const storiesArray = Array.isArray(newUserStories) ? newUserStories : [newUserStories];
-            let tableHTML = `
-              <div class="table-responsive">
-                <table class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>Select</th>
-                      <th>Story ID</th>
-                      <th>Story Name</th>
-                      <th>Priority</th>
-                      <th>Systems</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-            `;
-            
-            storiesArray.forEach((story, index) => {
-              const storyText = typeof story === 'string' ? story : story.name || story.title || 'Updated Story';
-              const storyId = `US-${index + 1}`;
-              tableHTML += `
-                <tr>
-                  <td>
-                    <input type="checkbox" name="user_story_ids" value="${storyId}" 
-                           data-name="${storyText}" 
-                           data-description="${storyText}"
-                           data-priority="Medium" 
-                           data-systems="TBD">
-                  </td>
-                  <td>${storyId}</td>
-                  <td>${storyText}</td>
-                  <td><span class="badge badge-warning">Medium</span></td>
-                  <td>TBD</td>
-                </tr>
-              `;
-            });
-            
-            tableHTML += `
-                  </tbody>
-                </table>
-              </div>
-            `;
-            
-            userStoriesContainer.innerHTML = tableHTML;
-            
-            // Re-setup event listeners for the new checkboxes
-            setupUserStoryCheckboxListeners();
-            
-          } catch (e) {
-            // Fallback: replace with simple content
-            userStoriesContainer.innerHTML = newUserStories;
-          }
-        } else {
-          // Simple text content
-          userStoriesContainer.innerHTML = newUserStories;
-        }
-        
-        // Show the user stories section if it was hidden
-        const userStoriesSection = document.getElementById('user-stories-section');
-        if (userStoriesSection && userStoriesSection.classList.contains('hidden')) {
-          userStoriesSection.classList.remove('hidden');
-        }
-      }
-      
-      // Update the modal display
-      const currentUserStoriesDisplay = document.getElementById('current-userstories-display');
-      if (currentUserStoriesDisplay) {
-        currentUserStoriesDisplay.textContent = typeof newUserStories === 'string' ? newUserStories : JSON.stringify(newUserStories);
-      }
-      
-      // Show success message
-      addUserStoryModalChatMessage('✅ User stories updated successfully! The changes are now applied to your page.', 'assistant');
-    }
-    
-    // Close modal when clicking outside
+    // Close modals when clicking outside
     window.addEventListener('click', function(e) {
       const epicModal = document.getElementById('epic-chat-modal');
       const userStoryModal = document.getElementById('user-story-chat-modal');
       
       if (e.target === epicModal) {
-        closeEpicChatModal();
+        closeEpicChat();
       }
       if (e.target === userStoryModal) {
-        closeUserStoryChatModal();
+        closeUserStoryChat();
       }
     });
   });
+
 </script>
-
-<!-- Epic Chat Modal -->
-<div id="epic-chat-modal" class="chat-modal">
-  <div class="chat-modal-content">
-    <div class="chat-header">
-      <span>💬 Edit Epic</span>
-      <button class="chat-close" onclick="closeEpicChatModal()">&times;</button>
-    </div>
-    <div class="chat-container">
-      <!-- Current Epic Display -->
-      <div class="current-description">
-        <h6>Current Epic:</h6>
-        <p class="current-description-text" id="current-epic-display"></p>
-      </div>
-      
-      <!-- Chat Messages -->
-      <div class="chat-messages" id="epic-modal-chat-messages">
-        <div class="chat-message assistant">
-          <div class="chat-avatar assistant">AI</div>
-          <div class="chat-bubble">
-            Hello! I'm here to help you refine your epic. You can ask me to:
-            <br>• Make it more strategic and high-level
-            <br>• Improve alignment with business objectives
-            <br>• Add context about user value and benefits
-            <br>• Adjust scope and structure
-            <br>• Make it more actionable for the development team
-            <br><br>What would you like to change about the current epic?
-          </div>
-        </div>
-      </div>
-      
-      <!-- Chat Input -->
-      <div class="chat-input-area">
-        <textarea id="epic-modal-chat-input" class="chat-input" placeholder="Ask me to revise the epic..." rows="1"></textarea>
-        <button class="chat-send-btn" onclick="sendEpicModalMessage()" id="epic-modal-send-btn">
-          <span>📤</span>
-          Send
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- User Story Chat Modal -->
-<div id="user-story-chat-modal" class="chat-modal">
-  <div class="chat-modal-content">
-    <div class="chat-header">
-      <span>💬 Edit User Stories</span>
-      <button class="chat-close" onclick="closeUserStoryChatModal()">&times;</button>
-    </div>
-    <div class="chat-container">
-      <!-- Current User Stories Display -->
-      <div class="current-description">
-        <h6>Current User Stories:</h6>
-        <p class="current-description-text" id="current-userstories-display"></p>
-      </div>
-      
-      <!-- Chat Messages -->
-      <div class="chat-messages" id="userstory-modal-chat-messages">
-        <div class="chat-message assistant">
-          <div class="chat-avatar assistant">AI</div>
-          <div class="chat-bubble">
-            Hello! I'm here to help you refine your user stories. You can ask me to:
-            <br>• Improve the user story format (As a... I want... So that...)
-            <br>• Make stories more specific and actionable
-            <br>• Add clarity about user needs and goals
-            <br>• Ensure they're testable and deliverable
-            <br>• Add context about user personas or scenarios
-            <br>• Generate additional user stories
-            <br><br>What would you like to change about the current user stories?
-          </div>
-        </div>
-      </div>
-      
-      <!-- Chat Input -->
-      <div class="chat-input-area">
-        <textarea id="userstory-modal-chat-input" class="chat-input" placeholder="Ask me to improve the user stories..." rows="1"></textarea>
-        <button class="chat-send-btn" onclick="sendUserStoryModalMessage()" id="userstory-modal-send-btn">
-          <span>📤</span>
-          Send
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Epic Chat Bot Widget -->
-<div id="epic-chat-widget" class="chat-widget">
-  <!-- Chat Toggle Button -->
-  <div id="chat-toggle-btn" class="chat-toggle" onclick="toggleEpicChat()">
-    <div class="chat-icon">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z" fill="currentColor"/>
-        <circle cx="7" cy="9" r="1" fill="currentColor"/>
-        <circle cx="12" cy="9" r="1" fill="currentColor"/>
-        <circle cx="17" cy="9" r="1" fill="currentColor"/>
-      </svg>
-    </div>
-    <div class="chat-badge" id="chat-badge" style="display: none;">1</div>
-  </div>
-  
-  <!-- Chat Panel -->
-  <div id="epic-chat-panel" class="chat-panel" style="display: none;">
-    <div class="chat-header">
-      <div class="chat-header-content">
-        <div class="agent-avatar">
-          <div class="avatar-gradient">
-            <span class="avatar-text">EA</span>
-          </div>
-        </div>
-        <div class="agent-info">
-          <h6 class="agent-name">Epic Agent</h6>
-          <span class="agent-status">Online • Ready to help</span>
-        </div>
-      </div>
-      <div class="chat-actions">
-        <button class="action-btn" onclick="clearEpicChat()" title="Clear chat">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 9V19H8V9H16ZM14.5 3H9.5L8.5 4H5V6H19V4H15.5L14.5 3ZM18 7H6V19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7Z" fill="currentColor"/>
-          </svg>
-        </button>
-        <button class="action-btn minimize-btn" onclick="toggleEpicChat()" title="Minimize">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 13H5V11H19V13Z" fill="currentColor"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-    
-    <div class="chat-messages-container">
-      <div id="epic-chat-messages" class="chat-messages">
-        <!-- Welcome message will be inserted by JavaScript -->
-      </div>
-    </div>
-    
-    <div class="chat-input-area">
-      <div class="input-container">
-        <textarea 
-          id="epic-chat-input" 
-          class="chat-input" 
-          placeholder="Type your message here..."
-          rows="1"
-          maxlength="2000"></textarea>
-        <button class="send-btn" onclick="sendEpicChatMessage()" title="Send message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
-          </svg>
-        </button>
-      </div>
-      <div class="input-footer">
-        <span class="input-hint">Press Enter to send • Shift+Enter for new line</span>
-        <span class="char-counter"><span id="char-count">0</span>/2000</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- User Story Chat Bot Widget -->
-<div id="user-story-chat-widget" class="chat-widget user-story-widget">
-  <!-- Chat Toggle Button -->
-  <div id="user-story-chat-toggle-btn" class="chat-toggle user-story-toggle" onclick="toggleUserStoryChat()">
-    <div class="chat-icon">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
-        <path d="M7 10H17V12H7V10Z" fill="currentColor"/>
-        <path d="M7 14H17V16H7V14Z" fill="currentColor"/>
-        <path d="M7 6H17V8H7V6Z" fill="currentColor"/>
-      </svg>
-    </div>
-    <div class="chat-badge" id="user-story-chat-badge" style="display: none;">1</div>
-  </div>
-  
-  <!-- Chat Panel -->
-  <div id="user-story-chat-panel" class="chat-panel" style="display: none;">
-    <div class="chat-header">
-      <div class="chat-header-content">
-        <div class="agent-avatar">
-          <div class="avatar-gradient user-story-avatar">
-            <span class="avatar-text">US</span>
-          </div>
-        </div>
-        <div class="agent-info">
-          <h6 class="agent-name">User Story Bot</h6>
-          <span class="agent-status" id="user-story-status">Online • Ready to help</span>
-        </div>
-      </div>
-      <div class="chat-actions">
-        <button class="action-btn" onclick="showSystemInfoUpload()" title="Upload system info">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="currentColor"/>
-          </svg>
-        </button>
-        <button class="action-btn" onclick="clearUserStoryChat()" title="Clear chat">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 9V19H8V9H16ZM14.5 3H9.5L8.5 4H5V6H19V4H15.5L14.5 3ZM18 7H6V19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7Z" fill="currentColor"/>
-          </svg>
-        </button>
-        <button class="action-btn minimize-btn" onclick="toggleUserStoryChat()" title="Minimize">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 13H5V11H19V13Z" fill="currentColor"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-    
-    <!-- System Info Upload Area -->
-    <div id="system-info-upload" class="system-info-section" style="display: none;">
-      <div class="upload-header">
-        <h6>Upload System Information</h6>
-        <button class="close-upload-btn" onclick="hideSystemInfoUpload()">×</button>
-      </div>
-      <div class="upload-content">
-        <div class="file-upload-area" onclick="document.getElementById('system-file-input').click()">
-          <div class="upload-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" fill="#667eea"/>
-            </svg>
-          </div>
-          <p>Click to upload system information</p>
-          <span class="upload-hint">Supports TXT, JSON, CSV files (max 10MB)</span>
-        </div>
-        <input type="file" id="system-file-input" accept=".txt,.json,.csv" style="display: none;" onchange="uploadSystemInfo(this)">
-        <div id="system-info-status" class="system-status" style="display: none;"></div>
-      </div>
-    </div>
-    
-    <div class="chat-messages-container">
-      <div id="user-story-chat-messages" class="chat-messages">
-        <div class="welcome-message">
-          <div class="message-bubble agent-bubble">
-            <div class="message-content">
-              <span class="greeting">📋 Welcome to User Story Bot!</span>
-              <p>I can help you with:</p>
-              <ul>
-                <li>✍️ Creating detailed user stories</li>
-                <li>🎯 Defining acceptance criteria</li>
-                <li>🏗️ Mapping stories to systems</li>
-                <li>📊 Organizing story backlogs</li>
-              </ul>
-              <p>💡 <strong>Tip:</strong> Upload system information to automatically map user stories to the correct systems!</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="chat-input-area">
-      <div class="input-container">
-        <textarea 
-          id="user-story-chat-input" 
-          class="chat-input" 
-          placeholder="Describe the user stories you need..."
-          rows="1"
-          maxlength="2000"></textarea>
-        <button class="send-btn" onclick="sendUserStoryChatMessage()" title="Send message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
-          </svg>
-        </button>
-      </div>
-      <div class="input-footer">
-        <span class="input-hint">Press Enter to send • Shift+Enter for new line</span>
-        <span class="char-counter"><span id="user-story-char-count">0</span>/2000</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style>
-/* Epic Chat Floating Widget Styles */
-.chat-widget {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* Chat Toggle Button */
-.chat-toggle {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
-  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  position: relative;
-  border: none;
-  outline: none;
-}
-
-.chat-toggle:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 12px 48px rgba(102, 126, 234, 0.6);
-}
-
-.chat-toggle:active {
-  transform: translateY(0) scale(0.95);
-}
-
-.chat-icon {
-  color: white;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.chat-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: linear-gradient(135deg, #ff416c 0%, #ff4757 100%);
-  color: white;
-  border-radius: 12px;
-  min-width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 600;
-  border: 2px solid white;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-/* Chat Panel */
-.chat-panel {
-  position: absolute;
-  bottom: 80px;
-  right: 0;
-  width: 480px;
-  height: 520px;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transform: translateY(10px) scale(0.95);
-  opacity: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-}
-
-/* Responsive width adjustments */
-@media (max-width: 768px) {
-  .chat-panel {
-    width: calc(100vw - 40px);
-    right: 20px;
-    left: 20px;
-  }
-}
-
-@media (max-width: 520px) {
-  .chat-panel {
-    bottom: 20px;
-    height: calc(100vh - 120px);
-  }
-}
-
-.chat-panel.show {
-  transform: translateY(0) scale(1);
-  opacity: 1;
-}
-
-/* Chat Header */
-.chat-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: white;
-  border-radius: 20px 20px 0 0;
-}
-
-.chat-header-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.agent-avatar {
-  position: relative;
-}
-
-.avatar-gradient {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  position: relative;
-}
-
-.avatar-gradient::after {
-  content: '';
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background: #4ade80;
-  border: 2px solid white;
-  border-radius: 50%;
-  bottom: 2px;
-  right: 2px;
-}
-
-.avatar-text {
-  font-weight: 700;
-  font-size: 14px;
-  color: #333;
-}
-
-.agent-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.agent-name {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
-  color: white;
-}
-
-.agent-status {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.chat-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
-}
-
-/* Messages Container */
-.chat-messages-container {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-messages {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  scroll-behavior: smooth;
-}
-
-.chat-messages::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-messages::-webkit-scrollbar-track {
-  background: #f1f3f4;
-  border-radius: 3px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 3px;
-}
-
-.welcome-message {
-  margin-bottom: 16px;
-}
-
-.message-bubble {
-  max-width: 85%;
-  margin-bottom: 16px;
-  border-radius: 18px;
-  padding: 12px 16px;
-  position: relative;
-  word-wrap: break-word;
-  animation: messageSlide 0.3s ease-out;
-}
-
-@keyframes messageSlide {
-  from { 
-    opacity: 0; 
-    transform: translateY(10px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-.user-bubble {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  margin-left: auto;
-  border-bottom-right-radius: 6px;
-}
-
-.agent-bubble {
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-  color: #333;
-  margin-right: auto;
-  border-bottom-left-radius: 6px;
-}
-
-.message-content {
-  line-height: 1.4;
-}
-
-.message-content .greeting {
-  font-size: 18px;
-  font-weight: 600;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.message-content p {
-  margin: 8px 0;
-  font-size: 14px;
-}
-
-.message-content ul {
-  margin: 8px 0;
-  padding-left: 16px;
-}
-
-.message-content li {
-  margin: 4px 0;
-  font-size: 14px;
-}
-
-.message-time {
-  font-size: 11px;
-  opacity: 0.7;
-  margin-top: 6px;
-  display: block;
-}
-
-.epic-update-indicator {
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: rgba(102, 126, 234, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.update-badge {
-  font-size: 11px;
-  color: #667eea;
-  font-weight: 600;
-  flex: 1;
-}
-
-.view-update-btn {
-  background: #667eea;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.view-update-btn:hover {
-  background: #5a67d8;
-}
-
-/* Chat Input Area */
-.chat-input-area {
-  padding: 16px 20px 20px;
-  background: #f8f9fa;
-  border-radius: 0 0 20px 20px;
-}
-
-.input-container {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  background: white;
-  border-radius: 12px;
-  padding: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 2px solid transparent;
-  transition: border-color 0.2s ease;
-}
-
-.input-container:focus-within {
-  border-color: #667eea;
-}
-
-.chat-input {
-  flex: 1;
-  border: none;
-  outline: none;
-  resize: none;
-  font-size: 14px;
-  line-height: 1.4;
-  padding: 8px 0;
-  max-height: 80px;
-  min-height: 20px;
-  font-family: inherit;
-  background: transparent;
-}
-
-.chat-input::placeholder {
-  color: #9ca3af;
-}
-
-.send-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.send-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.send-btn:active {
-  transform: scale(0.95);
-}
-
-.send-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.input-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.input-hint {
-  font-size: 11px;
-  color: #6b7280;
-}
-
-.char-counter {
-  font-size: 11px;
-  color: #9ca3af;
-}
-
-/* Responsive Design */
-@media (max-width: 480px) {
-  .chat-panel {
-    width: calc(100vw - 40px);
-    height: calc(100vh - 140px);
-    bottom: 80px;
-    right: 20px;
-    left: 20px;
-  }
-  
-  .chat-toggle {
-    width: 56px;
-    height: 56px;
-  }
-}
-
-/* Loading States */
-.message-bubble.loading {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.typing-indicator {
-  display: flex;
-  gap: 4px;
-  padding: 16px;
-}
-
-.typing-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #667eea;
-  animation: typing 1.4s infinite ease-in-out;
-}
-
-.typing-dot:nth-child(1) { animation-delay: -0.32s; }
-.typing-dot:nth-child(2) { animation-delay: -0.16s; }
-
-@keyframes typing {
-  0%, 80%, 100% { 
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  40% { 
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* Animation for opening/closing */
-.chat-widget.opening .chat-panel {
-  animation: slideUpFade 0.3s ease-out forwards;
-}
-
-.chat-widget.closing .chat-panel {
-  animation: slideDownFade 0.3s ease-in forwards;
-}
-
-@keyframes slideUpFade {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes slideDownFade {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(20px) scale(0.9);
-  }
-}
-
-/* User Story Chat Bot Specific Styles */
-.user-story-widget {
-  bottom: 20px;
-  right: 100px; /* Position next to Epic Chat */
-}
-
-.user-story-toggle {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  box-shadow: 0 8px 32px rgba(240, 147, 251, 0.4);
-}
-
-.user-story-toggle:hover {
-  box-shadow: 0 12px 48px rgba(240, 147, 251, 0.6);
-}
-
-.user-story-avatar {
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-}
-
-.user-story-widget .chat-header {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.user-story-widget .chat-messages::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.user-story-widget .send-btn {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.user-story-widget .send-btn:hover {
-  box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
-}
-
-/* System Info Upload Styles */
-.system-info-section {
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 16px 20px;
-}
-
-.upload-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.upload-header h6 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.close-upload-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.close-upload-btn:hover {
-  background: #e5e7eb;
-  color: #374151;
-}
-
-.file-upload-area {
-  border: 2px dashed #d1d5db;
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: white;
-}
-
-.file-upload-area:hover {
-  border-color: #f093fb;
-  background: #fef7ff;
-}
-
-.upload-icon {
-  margin-bottom: 8px;
-}
-
-.file-upload-area p {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-}
-
-.upload-hint {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.system-status {
-  margin-top: 12px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-}
-
-.system-status.success {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-}
-
-.system-status.error {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
-}
-
-/* Responsive adjustments for User Story Chat */
-@media (max-width: 768px) {
-  .user-story-widget {
-    right: 20px;
-    bottom: 100px; /* Stack vertically on mobile */
-  }
-}
-
-@media (max-width: 520px) {
-  .user-story-widget {
-    bottom: 20px;
-    right: 20px;
-  }
-  
-  .user-story-widget .chat-panel {
-    width: calc(100vw - 40px);
-    height: calc(100vh - 120px);
-  }
-}
-
-/* Animation states for User Story Chat */
-.user-story-widget.opening .chat-panel {
-  animation: slideUpFade 0.3s ease-out forwards;
-}
-
-.user-story-widget.closing .chat-panel {
-  animation: slideDownFade 0.3s ease-in forwards;
-}
-</style>
 
 </body>
 </html>
