@@ -1727,6 +1727,10 @@
   // Parse epics when page loads
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, checking for epics content...');
+    
+    // Ensure epic content integrity first
+    ensureEpicContentIntegrity();
+    
     const epicsContainer = document.getElementById('epics-container');
     if (epicsContainer) {
       parseAndFormatEpics();
@@ -1765,6 +1769,9 @@
   
   // Also try after a slight delay in case content is loaded asynchronously
   setTimeout(function() {
+    // Check and restore epic content integrity first
+    ensureEpicContentIntegrity();
+    
     const epicsContainer = document.getElementById('epics-container');
     if (epicsContainer && epicsContainer.innerHTML.trim()) {
       parseAndFormatEpics();
@@ -1793,6 +1800,11 @@
     // Get current epics content to preserve it
     const epicsContainer = document.getElementById('epics-container');
     const currentEpicsContent = epicsContainer ? epicsContainer.innerHTML : '';
+    
+    // Store epic content in session storage as backup
+    if (currentEpicsContent) {
+      sessionStorage.setItem('preserved_epics_content', currentEpicsContent);
+    }
     
     // Collect selected epic IDs and their content from checkboxes
     const selectedEpics = [];
@@ -1858,29 +1870,60 @@
       
       if (response.ok) {
         const html = await response.text();
-        // Store timer state before page replacement
-        if (timerInterval && approveTimerEl) {
-          sessionStorage.setItem('epicApprovalTime', approveTimerEl.textContent || '0:00');
-        }
+        console.log('Epic approval response received');
         
-        document.open();
-        document.write(html);
-        document.close();
+        // Instead of replacing the entire page, extract and update only the user stories
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
         
-        // After the new page loads, try to parse user stories and restore state
-        setTimeout(function() {
+        // Find user stories content in the response
+        const newUserStoriesContainer = tempDiv.querySelector('#user-stories-container');
+        const newUserStoriesSection = tempDiv.querySelector('#user-stories-section');
+        
+        if (newUserStoriesContainer && newUserStoriesSection) {
+          // Update user stories content without affecting epics
+          const currentUserStoriesContainer = document.getElementById('user-stories-container');
+          const currentUserStoriesSection = document.getElementById('user-stories-section');
+          
+          if (currentUserStoriesContainer) {
+            currentUserStoriesContainer.innerHTML = newUserStoriesContainer.innerHTML;
+          }
+          
+          if (currentUserStoriesSection) {
+            // Remove hidden class to show user stories section
+            currentUserStoriesSection.classList.remove('hidden');
+          }
+          
+          // Parse and format the new user stories
           parseAndFormatUserStories();
           
-          // Try to restore timer display (though the actual timer won't continue)
-          const restoredTime = sessionStorage.getItem('epicApprovalTime');
-          if (restoredTime) {
-            const timerEl = document.getElementById('approveTimer');
-            if (timerEl) {
-              timerEl.textContent = restoredTime;
+          console.log('User stories updated successfully, epics preserved');
+        } else {
+          console.warn('No user stories found in response, attempting full content extraction');
+          
+          // Fallback: try to extract user stories from text content
+          const responseText = tempDiv.textContent || tempDiv.innerText || '';
+          if (responseText.includes('[') && responseText.includes(']')) {
+            // There might be JSON user stories in the response
+            const userStoriesContainer = document.getElementById('user-stories-container');
+            if (userStoriesContainer) {
+              userStoriesContainer.innerHTML = responseText;
+              parseAndFormatUserStories();
+              
+              // Show user stories section
+              const userStoriesSection = document.getElementById('user-stories-section');
+              if (userStoriesSection) {
+                userStoriesSection.classList.remove('hidden');
+              }
             }
-            sessionStorage.removeItem('epicApprovalTime');
           }
-        }, 1000);
+        }
+        
+        // Show success message
+        setTimeout(() => {
+          alert('Epic(s) approved successfully! User stories have been generated.');
+        }, 500);
+        
       } else {
         console.error('Error submitting epic approval:', response.status, response.statusText);
         alert('Error processing epic approval. Please try again.');
@@ -1904,6 +1947,11 @@
         if (approveTimerEl) approveTimerEl.textContent = '';
         if (timerInterval) clearInterval(timerInterval);
       }
+      
+      // Ensure epic content integrity after the operation
+      setTimeout(() => {
+        ensureEpicContentIntegrity();
+      }, 200);
     }
   });
 
@@ -2074,6 +2122,52 @@
       }
     }
   });
+
+  // Function to restore epic content if it gets lost
+  function restoreEpicContent() {
+    const epicsContainer = document.getElementById('epics-container');
+    if (!epicsContainer) return false;
+    
+    const currentContent = epicsContainer.innerHTML.trim();
+    
+    // If epics container is empty or has minimal content, try to restore from backup
+    if (!currentContent || currentContent.length < 50) {
+      const preservedContent = sessionStorage.getItem('preserved_epics_content');
+      if (preservedContent) {
+        console.log('Restoring epic content from session storage');
+        epicsContainer.innerHTML = preservedContent;
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  // Function to ensure epic content integrity
+  function ensureEpicContentIntegrity() {
+    const epicsContainer = document.getElementById('epics-container');
+    if (!epicsContainer) return;
+    
+    const content = epicsContainer.innerHTML.trim();
+    
+    // Check if content looks valid (should contain epic-card or checkboxes)
+    if (content && (content.includes('epic-card') || content.includes('epic_ids'))) {
+      // Content looks good, preserve it
+      sessionStorage.setItem('preserved_epics_content', content);
+    } else if (content && content.length > 50) {
+      // Content exists but might need formatting
+      parseAndFormatEpics();
+      setTimeout(() => {
+        const updatedContent = epicsContainer.innerHTML.trim();
+        if (updatedContent) {
+          sessionStorage.setItem('preserved_epics_content', updatedContent);
+        }
+      }, 100);
+    } else {
+      // Try to restore from backup
+      restoreEpicContent();
+    }
+  }
 
   // Epic Chat Functionality
   let epicChatHistory = [];
