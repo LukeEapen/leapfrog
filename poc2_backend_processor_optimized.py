@@ -3523,6 +3523,274 @@ def process_requirements_fallback(user_message, current_requirements, story_cont
             "updated_requirements": generic_requirements
         }
 
+@app.route("/chat-user-story", methods=["POST"])
+def chat_user_story():
+    """Handle chat requests for user story refinement and context management."""
+    logger.info("Request received for user story chat")
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No JSON data provided"}), 400
+            
+        user_message = data.get("message", "").strip()
+        context = data.get("context", {})
+        
+        if not user_message:
+            return jsonify({"success": False, "error": "Message is required"}), 400
+        
+        # Extract context information
+        user_story_name = context.get("user_story_name", "")
+        user_story_description = context.get("user_story_description", "")
+        epic_title = context.get("epic_title", "")
+        acceptance_criteria = context.get("acceptance_criteria", [])
+        tagged_requirements = context.get("tagged_requirements", [])
+        
+        logger.info(f"User story chat message: {user_message}")
+        logger.info(f"Context - Story: {user_story_name}")
+        
+        # Build context string for AI
+        context_text = f"""
+Current User Story Context:
+- Story Name: {user_story_name or 'Not specified'}
+- Description: {user_story_description or 'Not specified'}
+- Epic: {epic_title or 'Not specified'}
+- Acceptance Criteria: {len(acceptance_criteria)} items
+- Tagged Requirements: {len(tagged_requirements)} items
+"""
+        
+        if acceptance_criteria:
+            context_text += "\nAcceptance Criteria:\n" + "\n".join([f"• {criterion}" for criterion in acceptance_criteria])
+        
+        if tagged_requirements:
+            context_text += "\nTagged Requirements:\n" + "\n".join([f"• {req}" for req in tagged_requirements])
+        
+        # System prompt for user story chat
+        system_prompt = f"""You are an expert business analyst and product manager specializing in user story development and refinement. You help improve user stories by making them more clear, specific, and valuable.
+
+{context_text}
+
+IMPORTANT CONTEXT AWARENESS:
+- This is a single user story details page, not a multi-story management interface
+- When users mention removing "US-5" or similar story IDs, they are likely confused about the interface
+- Always maintain context of the current user story: "{user_story_name}"
+- If asked to remove stories or story IDs, clarify that this page is for refining ONE specific story
+
+Your role is to:
+1. Help refine the user story name and description using the "As a... I want... So that..." format
+2. Suggest improvements to make the story more specific and actionable
+3. Help identify missing acceptance criteria or requirements
+4. Ensure the story is properly scoped and testable
+5. Handle requests to modify, remove, or restructure story components WITHIN this single story
+6. Maintain context of the current user story throughout the conversation
+7. If users request to "remove US-X" or similar, explain this is a single story page and offer alternatives
+
+When users ask to remove story identifiers (like US-5), respond with context-aware guidance:
+- Explain this is a details page for ONE user story
+- Suggest they may want to go back to the epic screen to manage multiple stories
+- Offer to help refine THIS story instead
+- Keep the conversation focused on improving the current story
+
+For any significant changes, provide the updated content in your response and indicate what specific parts should be updated."""
+
+        user_prompt = f"User Request: {user_message}"
+
+        # Use OpenAI to generate user story guidance
+        try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=1000,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content.strip()
+            
+            # Check if the response suggests specific updates
+            updates = {}
+            lower_response = ai_response.lower()
+            
+            # Look for specific update patterns in the AI response
+            if "user story name:" in lower_response or "story name:" in lower_response:
+                # Try to extract suggested story name (this is a simple heuristic)
+                lines = ai_response.split('\n')
+                for line in lines:
+                    if "story name:" in line.lower() or "user story name:" in line.lower():
+                        # Extract the suggested name after the colon
+                        parts = line.split(':', 1)
+                        if len(parts) > 1:
+                            suggested_name = parts[1].strip().strip('"').strip("'")
+                            if suggested_name and len(suggested_name) > 10:  # Reasonable length check
+                                updates["user_story_name"] = suggested_name
+                        break
+            
+            if "description:" in lower_response and "as a" in lower_response:
+                # Try to extract user story description in proper format
+                lines = ai_response.split('\n')
+                for i, line in enumerate(lines):
+                    if "description:" in line.lower() and i + 1 < len(lines):
+                        next_line = lines[i + 1].strip()
+                        if next_line.lower().startswith("as a"):
+                            updates["user_story_description"] = next_line
+                        break
+            
+            # Look for acceptance criteria suggestions
+            if "acceptance criteria:" in lower_response:
+                criteria_lines = []
+                lines = ai_response.split('\n')
+                capturing = False
+                for line in lines:
+                    if "acceptance criteria:" in line.lower():
+                        capturing = True
+                        continue
+                    elif capturing:
+                        if line.strip().startswith('•') or line.strip().startswith('-') or line.strip().startswith('*'):
+                            criteria_lines.append(line.strip().lstrip('•-* '))
+                        elif line.strip() and not line.strip().startswith('•') and not line.strip().startswith('-'):
+                            # Stop capturing if we hit a non-bullet line
+                            break
+                
+                if criteria_lines:
+                    updates["acceptance_criteria"] = criteria_lines
+            
+            logger.info("Successfully generated user story chat response")
+            
+            response_data = {
+                "success": True,
+                "message": ai_response
+            }
+            
+            if updates:
+                response_data["updates"] = updates
+                logger.info(f"Suggested updates: {updates}")
+            
+            return jsonify(response_data)
+            
+        except Exception as ai_error:
+            logger.error(f"OpenAI API error: {str(ai_error)}")
+            
+            # Fallback response for user story chat
+            fallback_response = process_user_story_fallback(user_message, context)
+            return jsonify({
+                "success": True,
+                "message": fallback_response
+            })
+            
+    except Exception as e:
+        logger.error(f"Error in user story chat: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+def process_user_story_fallback(user_message, context):
+    """Fallback processing for user story chat when AI is not available."""
+    user_story_name = context.get("user_story_name", "")
+    user_story_description = context.get("user_story_description", "")
+    epic_title = context.get("epic_title", "")
+    
+    lower_message = user_message.lower()
+    
+    # Handle removal requests with context awareness
+    if any(word in lower_message for word in ['remove', 'delete']) and any(story_id in lower_message for story_id in ['us-', 'story', 'user story']):
+        return f"""🎯 **Context Clarification Needed**
+
+I understand you mentioned removing something, but I want to make sure we're on the same page:
+
+**Current Context:** You're viewing the details page for the user story "{user_story_name or 'this specific story'}" which is part of the epic "{epic_title or 'the current epic'}".
+
+This page is designed to refine and improve **this single user story**, not to manage multiple stories.
+
+**If you want to:**
+• **Remove this entire story**: Please go back to the epic screen where you can manage multiple stories
+• **Modify this story**: I can help you refine the description, acceptance criteria, or requirements right here
+• **Split this story**: I can help you identify how to break it into smaller, more manageable stories
+• **Remove specific parts**: I can help remove or modify acceptance criteria, requirements, or description elements
+
+**What specifically would you like to do with the current user story: "{user_story_name}"?**"""
+    
+    elif any(word in lower_message for word in ['improve', 'better', 'enhance', 'refine']):
+        suggestions = []
+        
+        if not user_story_description or len(user_story_description) < 50:
+            suggestions.append("• Expand the user story description to follow the 'As a... I want... So that...' format")
+        
+        if "as a" not in user_story_description.lower():
+            suggestions.append("• Rewrite the description to clearly identify the user persona")
+        
+        if "so that" not in user_story_description.lower():
+            suggestions.append("• Add the business value and rationale ('So that...' clause)")
+        
+        suggestions.append("• Consider adding more specific acceptance criteria")
+        suggestions.append("• Review if the story is properly sized for a single sprint")
+        
+        return f"""🔧 **Improvement Suggestions for "{user_story_name or 'Your User Story'}"**
+
+Here are some suggestions to improve your user story:
+
+{chr(10).join(suggestions)}
+
+**Current Story Context:**
+• **Epic:** {epic_title or 'Not specified'}  
+• **Story:** {user_story_name or 'Not specified'}
+• **Description Length:** {len(user_story_description) if user_story_description else 0} characters
+
+Would you like me to help with any specific aspect? You can ask me to:
+- "Rewrite the description in proper format"
+- "Suggest additional acceptance criteria"  
+- "Help break down a large story into smaller ones"
+- "Add missing requirements or constraints"
+
+I'll maintain context of this specific story throughout our conversation."""
+    
+    elif any(word in lower_message for word in ['format', 'as a', 'structure']):
+        return f"""📝 **User Story Format Guidance**
+
+I can help you format the user story properly. A good user story follows this structure:
+
+**As a** [user persona]
+**I want** [specific functionality] 
+**So that** [business value/benefit]
+
+**Current Story Context:**
+• **Epic:** {epic_title or 'Not specified'}
+• **Story Name:** {user_story_name or 'Not specified'}
+• **Current Description:** "{user_story_description or 'No description provided'}"
+
+Would you like me to help rewrite this in the proper format? Please provide more details about:
+- Who is the user? (customer, admin, employee, etc.)
+- What specific action do they want to perform?
+- What benefit or value will they get from this feature?
+
+I'll keep this focused on improving your current story: "{user_story_name or 'this story'}"."""
+    
+    else:
+        return f"""👋 **Welcome to User Story Chat**
+
+I'm here to help you refine and improve your user story: **"{user_story_name or 'Current Story'}"**
+
+**Current Context:**
+• **Epic:** {epic_title or 'Not specified'}
+• **Story:** {user_story_name or 'Not specified'}
+• **Description:** {user_story_description[:100] + '...' if user_story_description and len(user_story_description) > 100 else user_story_description or 'Not specified'}
+
+**I can help you with:**
+• **Story Format**: Ensure it follows "As a... I want... So that..." structure
+• **Clarity**: Make the description more specific and actionable
+• **Acceptance Criteria**: Add or improve the criteria for testing
+• **Requirements**: Identify missing technical or business requirements
+• **Scope**: Ensure the story is appropriately sized
+
+**What would you like to work on?** You can say things like:
+- "Help me rewrite this in proper format"
+- "Add more acceptance criteria"
+- "Make this more specific"
+- "Is this story too big?"
+- "Improve the user story description"
+
+💡 **Note:** This page focuses on refining THIS specific user story. If you need to manage multiple stories or remove stories entirely, please use the epic management screen."""
+
 @app.route("/submit-jira-ticket", methods=["POST"])
 def submit_jira_ticket():
     """Submit user story details to Jira as a ticket."""
