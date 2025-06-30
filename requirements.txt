@@ -6,7 +6,7 @@ Werkzeug>=3.0.1         # Flask dependency for security features
 
 # AI and Language Processing
 openai>=1.10.0,<2.0.0
-tiktoken>=0.5.0         # For token counting
+tiktoken==0.5.1        # For token counting
 langgraph==0.0.21
 langchain-core==0.1.17
 langchain-openai==0.0.5
@@ -22,7 +22,7 @@ scikit-learn>=1.3.0     # For additional ML operations
 aiohttp>=3.9.1         # For async HTTP requests
 asyncio-throttle>=1.0.2  # Rate limiting for async calls
 httpx>=0.25.0          # Modern async HTTP client
-uvloop>=0.19.0         # High-performance event loop (Unix only)
+# uvloop>=0.19.0         # High-performance event loop (Unix only) - Windows not supported
 
 google-generativeai>=0.3.0
 

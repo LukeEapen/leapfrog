@@ -738,9 +738,15 @@ def retrieve_relevant_content(query, top_k=5, doc_type=None):
         return []
 
 def create_rag_summary(content, filename, max_summary_length=5000):
-    """Create a RAG-enhanced summary of the document content."""
+    """Create a RAG-enhanced summary of the document content with size optimization."""
     logger.info(f"Creating RAG-enhanced summary for {filename}")
-      # Store the document in vector DB
+    
+    # For very large files, skip expensive RAG processing and use intelligent fallback
+    if len(content) > 50000:  # 50KB threshold
+        logger.info(f"File {filename} is large ({len(content):,} chars), using intelligent fallback instead of RAG")
+        return create_intelligent_summary_fallback(content, filename, max_summary_length)
+    
+    # Store the document in vector DB
     doc_id = store_document_in_vector_db(content, filename)
     
     if not doc_id:
@@ -1531,16 +1537,13 @@ def vector_db_clear():
 
 @app.route("/document-upload", methods=["POST"])
 def document_upload_preview():
-    """Step 1: Upload and preview documents with RAG summary before epic generation."""
+    """Step 1: Upload and preview documents with optimized processing for large files."""
     logger.info("=== DOCUMENT UPLOAD ENDPOINT CALLED ===")
     start_time = time.time()
     logger.info("POST request received for document upload and preview")
     
     try:
         logger.info("=== INSIDE TRY BLOCK ===")
-        
-        # Test logging to ensure we reach this point
-        logger.info("About to process document upload...")
         
         # Collect input
         logger.info("Collecting form data and file uploads for preview")
@@ -1554,71 +1557,105 @@ def document_upload_preview():
         logger.info(f"Additional docs uploaded: {'Yes' if additional_docs else 'No'}")
         logger.info(f"CSV file uploaded: {'Yes' if csv_file else 'No'}")
         
+        # Log file sizes for performance monitoring
         if prd_file:
-            logger.info(f"PRD file name: {prd_file.filename}")
+            prd_file.seek(0, 2)  # Seek to end
+            prd_size = prd_file.tell()
+            prd_file.seek(0)  # Reset to beginning
+            logger.info(f"PRD file: {prd_file.filename}, size: {prd_size:,} bytes")
+        
         if additional_docs:
-            logger.info(f"Additional docs file name: {additional_docs.filename}")
-        if csv_file:
-            logger.info(f"CSV file name: {csv_file.filename}")
+            additional_docs.seek(0, 2)
+            docs_size = additional_docs.tell()
+            additional_docs.seek(0)
+            logger.info(f"Additional docs: {additional_docs.filename}, size: {docs_size:,} bytes")
 
         # Process CSV file first if provided (store in vector DB)
         csv_summary = ""
         if csv_file and csv_file.filename.lower().endswith('.csv'):
             logger.info("Processing CSV file for vector database storage")
-            csv_summary = process_csv_to_vector_db(csv_file)
-            logger.info(f"CSV processing completed: {csv_summary[:100]}...")
+            try:
+                csv_summary = process_csv_to_vector_db(csv_file)
+                logger.info(f"CSV processing completed: {csv_summary[:100]}...")
+            except Exception as e:
+                logger.warning(f"CSV processing failed: {e}")
+                csv_summary = f"Warning: Failed to process {csv_file.filename}: {str(e)}"
         elif csv_file:
             logger.warning(f"Uploaded file {csv_file.filename} is not a CSV file")
             csv_summary = f"Warning: {csv_file.filename} is not a CSV file"
 
-        # Parallel file reading for better performance
-        logger.info("Reading uploaded files in parallel for preview")
+        # Optimized file reading - avoid parallel processing for large files
+        logger.info("Reading uploaded files with optimized processing")
         
-        def read_files_parallel():
-            with ThreadPoolExecutor(max_workers=2) as file_executor:
-                prd_future = file_executor.submit(safe_read, prd_file) if prd_file else None
-                docs_future = file_executor.submit(safe_read, additional_docs) if additional_docs else None
-                
-                prd_content = prd_future.result() if prd_future else ""
-                docs_content = docs_future.result() if docs_future else ""
-                
-                return prd_content, docs_content
+        prd_content = ""
+        docs_content = ""
         
-        prd_content, docs_content = read_files_parallel()
+        # Read PRD file with size optimization
+        if prd_file:
+            logger.info(f"Reading PRD file: {prd_file.filename}")
+            prd_content = safe_read(prd_file)
+            if prd_content:
+                logger.info(f"PRD content length: {len(prd_content):,} characters")
+                # For large files, truncate early to avoid processing overhead
+                if len(prd_content) > 100000:  # 100KB text threshold
+                    logger.info("Large PRD detected, using optimized processing")
+                    prd_content = prd_content[:100000] + "\n\n[Content truncated for performance - full content will be used in epic generation]"
         
-        # Debug file content
-        if prd_content:
-            debug_file_content(prd_content, prd_file.filename if prd_file else "prd_content")
-        if docs_content:
-            debug_file_content(docs_content, additional_docs.filename if additional_docs else "additional_docs")
+        # Read additional docs with size optimization  
+        if additional_docs:
+            logger.info(f"Reading additional docs: {additional_docs.filename}")
+            docs_content = safe_read(additional_docs)
+            if docs_content:
+                logger.info(f"Docs content length: {len(docs_content):,} characters")
+                # For large files, truncate for preview
+                if len(docs_content) > 50000:  # 50KB text threshold
+                    logger.info("Large additional docs detected, using optimized processing")
+                    docs_content = docs_content[:50000] + "\n\n[Content truncated for performance - full content will be used in epic generation]"
 
-        # Store documents in vector database and create RAG summaries for preview
-        logger.info("Processing documents with RAG enhancement for preview")
+        # Create simple summaries without expensive RAG processing for large files
+        logger.info("Creating optimized summaries for preview")
         
-        # Process PRD with RAG if content is substantial and valid
+        # Process PRD summary - avoid RAG for large files
         prd_summary = ""
-        if is_valid_content(prd_content):
-            if len(prd_content) > 1000:  # Lower threshold for preview
-                logger.info("Creating RAG-enhanced PRD summary for preview")
-                prd_summary = create_rag_summary(prd_content, prd_file.filename if prd_file else "prd_content", max_summary_length=15000)
+        if prd_content and len(prd_content.strip()) > 50:
+            if len(prd_content) > 20000:  # For large files, use simple truncated summary
+                logger.info("Using optimized summary for large PRD file")
+                prd_summary = prd_content[:15000] + "\n\n[Summary truncated for preview - full content will be processed during epic generation]"
             else:
-                logger.info("PRD content is valid but small, using as-is for preview")
-                prd_summary = prd_content
+                logger.info("Creating enhanced summary for smaller PRD file")
+                # Only use RAG for smaller files to avoid performance issues
+                if is_valid_content(prd_content) and prd_collection and embedding_model:
+                    try:
+                        prd_summary = create_rag_summary(prd_content, prd_file.filename if prd_file else "prd_content", max_summary_length=15000)
+                    except Exception as e:
+                        logger.warning(f"RAG summary failed, using fallback: {e}")
+                        prd_summary = create_intelligent_summary_fallback(prd_content, prd_file.filename if prd_file else "prd_content", max_summary_length=15000)
+                else:
+                    prd_summary = create_intelligent_summary_fallback(prd_content, prd_file.filename if prd_file else "prd_content", max_summary_length=15000)
         else:
-            logger.warning(f"PRD content is invalid for RAG processing: {prd_content[:100] if prd_content else 'None'}")
-            prd_summary = "No valid PRD content available - please check file format and encoding."
-          # Process additional docs with RAG
+            logger.warning("PRD content is too short or invalid")
+            prd_summary = "No valid PRD content available - please check file format and content."
+
+        # Process additional docs summary - avoid RAG for large files  
         docs_summary = ""
-        if is_valid_content(docs_content):
-            if len(docs_content) > 1000:  # Lower threshold for preview
-                logger.info("Creating RAG-enhanced docs summary for preview")
-                docs_summary = create_rag_summary(docs_content, additional_docs.filename if additional_docs else "additional_docs", max_summary_length=8000)
+        if docs_content and len(docs_content.strip()) > 50:
+            if len(docs_content) > 20000:  # For large files, use simple truncated summary
+                logger.info("Using optimized summary for large additional docs")
+                docs_summary = docs_content[:10000] + "\n\n[Summary truncated for preview - full content will be processed during epic generation]"
             else:
-                logger.info("Additional docs content is valid but small, using as-is for preview")
-                docs_summary = docs_content
+                logger.info("Creating enhanced summary for smaller additional docs")
+                # Only use RAG for smaller files
+                if is_valid_content(docs_content) and prd_collection and embedding_model:
+                    try:
+                        docs_summary = create_rag_summary(docs_content, additional_docs.filename if additional_docs else "additional_docs", max_summary_length=10000)
+                    except Exception as e:
+                        logger.warning(f"RAG summary failed for docs, using fallback: {e}")
+                        docs_summary = create_intelligent_summary_fallback(docs_content, additional_docs.filename if additional_docs else "additional_docs", max_summary_length=10000)
+                else:
+                    docs_summary = create_intelligent_summary_fallback(docs_content, additional_docs.filename if additional_docs else "additional_docs", max_summary_length=10000)
         else:
-            logger.warning(f"Additional docs content is invalid: {docs_content[:100] if docs_content else 'None'}")
-            docs_summary = "No valid additional documentation available."
+            logger.warning("Additional docs content is too short or invalid")
+            docs_summary = "No valid additional documentation available - please check file format and content."
         
         logger.info(f"PRD summary length: {len(prd_summary)} characters")
         logger.info(f"Additional docs summary length: {len(docs_summary)} characters")
@@ -1794,6 +1831,11 @@ def generate_epics_from_preview():
         response_cache[prompt_hash] = final_output
         logger.info("Response cached for future requests")
         
+        # Store the initial epic data in session for navigation consistency
+        session['current_epics'] = final_output
+        session['current_user_stories'] = ''  # Clear any previous user stories
+        logger.info("Stored initial epic data in session")
+        
         processing_time = time.time() - start_time
         logger.info(f"Total RAG-optimized processing time: {processing_time:.2f} seconds")
         
@@ -1827,9 +1869,24 @@ def show_epic_results():
     if request.method == "POST":
         epics = request.form.get("epics", "")
         user_stories = request.form.get("user_stories", "")
+        
+        # Store the epic and user story data in the session for back navigation
+        session['current_epics'] = epics
+        session['current_user_stories'] = user_stories
+        logger.info("Stored epic and user story data in session for back navigation")
+        
         return render_template("poc2_epic_story_screen.html", epics=epics, user_stories=user_stories)
     else:
-        # Provide sample epics for testing Epic Chat functionality
+        # Check if we have stored epic data in the session first
+        stored_epics = session.get('current_epics')
+        stored_user_stories = session.get('current_user_stories', '')
+        
+        if stored_epics:
+            logger.info("Retrieved epic and user story data from session")
+            return render_template("poc2_epic_story_screen.html", epics=stored_epics, user_stories=stored_user_stories)
+        
+        # Fallback: Provide sample epics for testing Epic Chat functionality
+        logger.info("No stored data found, using sample epics")
         sample_epics = """
         <div class="epic-card" data-epic-id="epic_1">
           <div style="display: flex; align-items: center; gap: 10px;">
@@ -2057,6 +2114,10 @@ def approve_epics():
         
         # Combine all user stories - send raw content for JS parsing
         user_stories_content = "\n".join(user_stories)
+        
+        # Store the updated user stories in session for back navigation
+        session['current_user_stories'] = user_stories_content
+        logger.info("Updated user stories data in session")
         
         processing_time = time.time() - start_time
         logger.info(f"User story generation completed in {processing_time:.2f} seconds")
@@ -2329,6 +2390,21 @@ def user_story_details():
 
 
             logger.info(f"Processing selected prompt ****Acceptance Criteria **** : {acceptance_criteria}")
+            
+            # Store selected story details in session for back navigation
+            session['selected_story_data'] = {
+                'story_id': selected_story_id,
+                'story_name': story_name,
+                'enhanced_description': enhanced_description,
+                'original_description': selected_story_description,
+                'epic_title': epic_title,
+                'priority': priority,
+                'responsible_systems': responsible_systems,
+                'acceptance_criteria': acceptance_criteria,
+                'tagged_requirements': tagged_requirements
+            }
+            logger.info("Stored selected story details in session")
+            
               # For AJAX requests, return JSON for navigation
             if request.is_json:
                 return jsonify({
@@ -2370,14 +2446,15 @@ def user_story_details():
             logger.info("GET request received for user story details")
             
             # Try to get data from session first (backward compatibility)
-            session_data = session.get('current_story')
+            session_data = session.get('selected_story_data') or session.get('current_story')
             
             if session_data:
                 # Use session data
                 logger.info("Using story data from session")
                 epic_title = session_data.get('epic_title', '')
                 user_story_title = session_data.get('story_name', '')
-                user_story_description = session_data.get('story_description', '')
+                user_story_description = session_data.get('enhanced_description') or session_data.get('story_description', '')
+                original_description = session_data.get('original_description', user_story_description)
                 priority = session_data.get('priority', 'High')
                 story_id = session_data.get('story_id', '')
                 acceptance_criteria = session_data.get('acceptance_criteria', [])
@@ -2387,6 +2464,7 @@ def user_story_details():
                 ])
                 
                 # Clean up session data after use
+                session.pop('selected_story_data', None)
                 session.pop('current_story', None)
                 
             else:
@@ -2496,7 +2574,7 @@ def user_story_details():
                 epic_title=epic_title,
                 user_story_name=user_story_title,
                 user_story_description=user_story_description,
-                original_description=final_story_description if 'final_story_description' in locals() else user_story_description,  # Keep original for reference
+                original_description=original_description if 'original_description' in locals() else (final_story_description if 'final_story_description' in locals() else user_story_description),  # Keep original for reference
                 priority=priority,
                 responsible_systems=responsible_systems,
                 acceptance_criteria=acceptance_criteria,
@@ -2803,21 +2881,34 @@ def user_story_chat():
             "timestamp": current_time.strftime("%Y-%m-%d %H:%M:%S")
         })
         
+        # Get current user stories and epic context from request
+        current_user_stories_content = data.get("current_user_stories_content", "")
+        epic_context = data.get("epic_context", "")
+        
         # Get system information from session (if available)
         system_info = session.get('system_info', '')
         
-        # Prepare context for User Story Agent with system mapping
+        # Prepare context for User Story Agent with current context
         chat_context = f"""You are a User Story Agent helping to create, refine, and map user stories to specific systems.
+
+CURRENT USER STORIES CONTEXT:
+{current_user_stories_content if current_user_stories_content else 'No current user stories available.'}
+
+RELATED EPICS:
+{epic_context if epic_context else 'No epic context available.'}
 
 SYSTEM INFORMATION:
 {system_info if system_info else 'No system information provided. User stories will not include system mapping.'}
 
 INSTRUCTIONS:
-- Create detailed user stories following best practices
+- When refining or updating user stories, base your changes on the CURRENT USER STORIES CONTEXT provided above
+- Maintain the existing user story IDs and structure when making improvements
+- If creating new user stories, ensure they align with the related epics
 - If system information is available, map each user story to the appropriate system based on the functionality described
 - Include a "System Name" for each user story when system mapping is possible
-- Format user stories with: Title, Description, Acceptance Criteria, and System Name (if applicable)
+- Format user stories with: Story ID, Title, Description, Acceptance Criteria, Priority, and System Name (if applicable)
 - Focus on creating clear, actionable user stories that deliver business value
+- When returning updated user stories, provide them in JSON format that matches the existing structure
 
 """
         if session['user_story_chat_history']:
@@ -2829,9 +2920,37 @@ INSTRUCTIONS:
         else:
             chat_context += f"User request: {user_message}"
         
-        # Call User Story Agent (using same agent as Epic for consistency)
-        logger.info(f"Calling User Story Agent with message: {user_message[:100]}...")
-        story_response = ask_assistant_from_file_optimized("poc2_agent3_basic_user_story", chat_context)
+        # Determine if this is a request for user story updates or just conversation
+        is_update_request = any(keyword in user_message.lower() for keyword in [
+            'update', 'modify', 'change', 'improve', 'refine', 'edit', 'enhance', 
+            'fix', 'adjust', 'revise', 'generate', 'create', 'add'
+        ])
+        
+        if is_update_request and current_user_stories_content and 'No user stories' not in current_user_stories_content:
+            # This is a request to update existing user stories - use the structured agent
+            chat_context += f"\nUser Request: {user_message}\n\nIMPORTANT: Return the updated user stories as a JSON array using this exact format:\n"
+            chat_context += """[
+  {
+    "story_id": "existing_or_new_id",
+    "name": "Story name",
+    "description": "Detailed description",
+    "priority": "High/Medium/Low",
+    "systems": ["System1", "System2"]
+  }
+]
+
+Include ALL existing user stories with any requested changes, plus any new ones if requested."""
+            
+            agent_to_use = "poc2_agent3_basic_user_story"
+        else:
+            # This is a conversational request - use a general assistant approach
+            chat_context += f"\nUser Request: {user_message}\n\nProvide helpful conversational guidance about user story best practices, suggestions, or answer their question. Be conversational and helpful."
+            agent_to_use = "poc2_agent2_epic_generator"  # Use epic generator as it's more conversational
+        
+        # Call appropriate agent
+        logger.info(f"Calling User Story Agent ({agent_to_use}) with message: {user_message[:100]}...")
+        logger.info(f"Is update request: {is_update_request}, Has current stories: {bool(current_user_stories_content and 'No user stories' not in current_user_stories_content)}")
+        story_response = ask_assistant_from_file_optimized(agent_to_use, chat_context)
         
         if story_response.startswith("Error:"):
             logger.error(f"User Story Agent error: {story_response}")

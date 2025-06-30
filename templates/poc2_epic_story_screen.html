@@ -67,7 +67,9 @@
     .header-bar {
       background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
       color: white;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       font-weight: 700;
       font-size: 1.5rem;
       padding: var(--spacing-lg) var(--spacing-xl);
@@ -87,6 +89,74 @@
       height: 100%;
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
       animation: shimmer 3s infinite;
+    }
+
+    .header-title {
+      flex: 1;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    .header-spacer {
+      width: 120px; /* Same width as back button to center the title */
+    }
+
+    /* Header Back Button Styling */
+    .back-btn-header {
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-width: 100px;
+      z-index: 2;
+    }
+
+    .back-btn-header:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .back-btn-header:active {
+      transform: translateY(0);
+    }
+
+    .back-btn-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .back-btn-header:hover::before {
+      left: 100%;
+    }
+
+    .back-btn-header .back-icon {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.3s ease;
+    }
+
+    .back-btn-header:hover .back-icon {
+      transform: translateX(-2px);
     }
 
     @keyframes shimmer {
@@ -604,6 +674,25 @@
         min-height: 50px;
       }
 
+      .header-title {
+        font-size: 1.25rem;
+      }
+
+      .header-spacer {
+        width: 90px;
+      }
+
+      .back-btn-header {
+        font-size: 0.85rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        min-width: 80px;
+      }
+
+      .back-btn-header .back-icon {
+        width: 16px;
+        height: 16px;
+      }
+
       .instruction-text {
         font-size: 0.9rem;
         padding: var(--spacing-md);
@@ -620,9 +709,29 @@
         padding: var(--spacing-sm) var(--spacing-md);
       }
 
+      .header-title {
+        font-size: 1.1rem;
+      }
+
+      .header-spacer {
+        width: 70px;
+      }
+
       .section-header {
         padding: var(--spacing-sm);
         font-size: 1.1rem;
+      }
+
+      .back-btn-header {
+        font-size: 0.8rem;
+        padding: 6px 8px;
+        min-width: 70px;
+        gap: 4px;
+      }
+
+      .back-btn-header .back-icon {
+        width: 14px;
+        height: 14px;
       }
 
       .epic-card, .user-story-card {
@@ -1033,7 +1142,17 @@
 <body>
 <div class="main-wrapper">
   <div class="container mt-4">
-    <div class="header-bar">Epic generation & list of user stories</div>
+    <div class="header-bar">
+      <button type="button" class="back-btn-header" onclick="goBack()">
+        <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m12 19-7-7 7-7"/>
+          <path d="m19 12H5"/>
+        </svg>
+        <span>Back</span>
+      </button>
+      <span class="header-title">Epic generation & list of user stories</span>
+      <div class="header-spacer"></div>
+    </div>
   
   <div class="section-header">
     <span>Epics</span>
@@ -1158,10 +1277,11 @@
           <div class="chat-avatar assistant">AI</div>
           <div class="chat-bubble">
             Hello! I'm here to help you with your user stories. I can:
-            <br>• Refine existing user story details
-            <br>• Generate additional user stories
-            <br>• Improve user story priorities and descriptions
-            <br>• Suggest better acceptance criteria
+            <br>• <strong>Refine existing user stories</strong> - Say things like "improve the priorities" or "update story descriptions"
+            <br>• <strong>Generate additional user stories</strong> - Ask me to "create more stories" or "add new user stories"
+            <br>• <strong>Answer questions</strong> - Ask about user story best practices, formats, or techniques
+            <br>• <strong>Provide suggestions</strong> - I can suggest better acceptance criteria or story improvements
+            <br><br>💡 <em>Tip: When you ask me to update or modify stories, I'll provide a button to apply the changes!</em>
             <br><br>What would you like to work on with your user stories?
           </div>
         </div>
@@ -1299,8 +1419,12 @@
     
     // If content is already formatted (contains epic-card divs), don't reprocess
     if (content.includes('epic-card')) {
+      console.log('Epic content already formatted, skipping parse');
       return;
     }
+    
+    // Store the original raw content before processing
+    sessionStorage.setItem('preserved_epics_raw', content);
     
     // Remove any HTML tags and get plain text
     const tempDiv = document.createElement('div');
@@ -1310,8 +1434,11 @@
     
     // If content is empty or very short, leave it as is
     if (!content || content.length < 5) {
+      console.log('Epic content too short or empty, skipping parse');
       return;
     }
+    
+    console.log('Attempting to parse epic content:', content.substring(0, 100) + '...');
     
     try {
       // Clean up the content - remove any backticks or markdown formatting
@@ -1327,15 +1454,18 @@
       const epicsData = JSON.parse(cleanContent);
       
       if (Array.isArray(epicsData)) {
-        // Format the epics nicely
+        console.log('Successfully parsed epics array:', epicsData.length, 'epics');
+        // Format the epics nicely with consistent structure
         let formattedHTML = '';
         epicsData.forEach((epic, index) => {
-          const epicTitle = epic.epic_title || epic.title || `Untitled Epic ${index + 1}`;
-          const epicDescription = epic.epic_description || epic.description || 'No description available.';
+          const epicTitle = epic.epic_title || epic.title || epic.name || `Untitled Epic ${index + 1}`;
+          const epicDescription = epic.epic_description || epic.description || epic.desc || 'No description available.';
+          const epicId = epic.epic_id || epic.id || `epic_${index + 1}`;
+          
           formattedHTML += `
-            <div class="epic-card">
+            <div class="epic-card" data-epic-id="${epicId}" data-index="${index}">
               <div style="display: flex; align-items: center; gap: 10px;">
-                <input type="checkbox" name="epic_ids" value="epic_${index + 1}" id="epic_${index + 1}">
+                <input type="checkbox" name="epic_ids" value="${epicId}" id="${epicId}">
                 <h5 style="margin: 0;">Epic ${index + 1}: ${epicTitle}</h5>
               </div>
               <p><strong>Description:</strong> ${epicDescription}</p>
@@ -1344,38 +1474,51 @@
         });
         
         epicsContainer.innerHTML = formattedHTML;
+        sessionStorage.setItem('preserved_epics_content', formattedHTML);
+        sessionStorage.setItem('epics_format_type', 'formatted');
+        console.log('Epic content formatted and preserved successfully');
         return;
       } else if (epicsData && typeof epicsData === 'object') {
-        // Handle single epic object
-        const epicTitle = epicsData.epic_title || epicsData.title || 'Untitled Epic';
-        const epicDescription = epicsData.epic_description || epicsData.description || 'No description available.';
+        console.log('Successfully parsed single epic object');
+        // Handle single epic object with consistent structure
+        const epicTitle = epicsData.epic_title || epicsData.title || epicsData.name || 'Untitled Epic';
+        const epicDescription = epicsData.epic_description || epicsData.description || epicsData.desc || 'No description available.';
+        const epicId = epicsData.epic_id || epicsData.id || 'epic_1';
+        
         const formattedHTML = `
-          <div class="epic-card">
+          <div class="epic-card" data-epic-id="${epicId}" data-index="0">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <input type="checkbox" name="epic_ids" value="epic_1" id="epic_1">
+              <input type="checkbox" name="epic_ids" value="${epicId}" id="${epicId}">
               <h5 style="margin: 0;">Epic 1: ${epicTitle}</h5>
             </div>
             <p><strong>Description:</strong> ${epicDescription}</p>
           </div>
         `;
         epicsContainer.innerHTML = formattedHTML;
+        sessionStorage.setItem('preserved_epics_content', formattedHTML);
+        sessionStorage.setItem('epics_format_type', 'formatted');
+        console.log('Single epic formatted and preserved successfully');
         return;
       }
     } catch (e) {
+      console.log('Initial JSON parse failed, trying alternative extraction methods:', e.message);
       // Try to extract JSON from text that might have extra content
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         try {
           const epicsData = JSON.parse(jsonMatch[0]);
           if (Array.isArray(epicsData)) {
+            console.log('Successfully extracted epics array from text:', epicsData.length, 'epics');
             let formattedHTML = '';
             epicsData.forEach((epic, index) => {
-              const epicTitle = epic.epic_title || epic.title || `Untitled Epic ${index + 1}`;
-              const epicDescription = epic.epic_description || epic.description || 'No description available.';
+              const epicTitle = epic.epic_title || epic.title || epic.name || `Untitled Epic ${index + 1}`;
+              const epicDescription = epic.epic_description || epic.description || epic.desc || 'No description available.';
+              const epicId = epic.epic_id || epic.id || `epic_${index + 1}`;
+              
               formattedHTML += `
-                <div class="epic-card">
+                <div class="epic-card" data-epic-id="${epicId}" data-index="${index}">
                   <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="checkbox" name="epic_ids" value="epic_${index + 1}" id="epic_${index + 1}">
+                    <input type="checkbox" name="epic_ids" value="${epicId}" id="${epicId}">
                     <h5 style="margin: 0;">Epic ${index + 1}: ${epicTitle}</h5>
                   </div>
                   <p><strong>Description:</strong> ${epicDescription}</p>
@@ -1383,13 +1526,23 @@
               `;
             });
             epicsContainer.innerHTML = formattedHTML;
+            sessionStorage.setItem('preserved_epics_content', formattedHTML);
+            sessionStorage.setItem('epics_format_type', 'formatted');
+            console.log('Extracted epic content formatted and preserved successfully');
             return;
           }
         } catch (e2) {
-          // If all parsing fails, leave content as is
+          console.log('Alternative JSON extraction also failed:', e2.message);
+          // If all parsing fails, leave content as is but mark it as raw
+          sessionStorage.setItem('epics_format_type', 'raw');
         }
+      } else {
+        console.log('No JSON pattern found in content');
+        sessionStorage.setItem('epics_format_type', 'raw');
       }
     }
+    
+    console.log('Epic parsing completed, content left in original state');
   }
 
   // Function to set up event listeners for user story checkboxes
@@ -1728,12 +1881,31 @@
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, checking for epics content...');
     
-    // Ensure epic content integrity first
-    ensureEpicContentIntegrity();
-    
     const epicsContainer = document.getElementById('epics-container');
     if (epicsContainer) {
-      parseAndFormatEpics();
+      // Check what type of content we have
+      const currentContent = epicsContainer.innerHTML.trim();
+      const formatType = sessionStorage.getItem('epics_format_type');
+      
+      console.log('Current epic content length:', currentContent.length);
+      console.log('Stored format type:', formatType);
+      
+      if (!currentContent || currentContent.length < 50) {
+        console.log('Epic content appears to be missing or minimal, attempting restore...');
+        const restored = restoreEpicContent();
+        if (!restored) {
+          console.log('No epic content to restore');
+        }
+      } else if (currentContent.includes('epic-card')) {
+        console.log('Epic content already formatted correctly');
+        sessionStorage.setItem('preserved_epics_content', currentContent);
+        sessionStorage.setItem('epics_format_type', 'formatted');
+      } else {
+        console.log('Epic content needs formatting');
+        // Ensure content integrity before formatting
+        ensureEpicContentIntegrity();
+        parseAndFormatEpics();
+      }
     }
     
     // Initialize card animations
@@ -1769,12 +1941,25 @@
   
   // Also try after a slight delay in case content is loaded asynchronously
   setTimeout(function() {
-    // Check and restore epic content integrity first
-    ensureEpicContentIntegrity();
+    console.log('Delayed content check triggered...');
     
     const epicsContainer = document.getElementById('epics-container');
-    if (epicsContainer && epicsContainer.innerHTML.trim()) {
-      parseAndFormatEpics();
+    if (epicsContainer) {
+      const currentContent = epicsContainer.innerHTML.trim();
+      const formatType = sessionStorage.getItem('epics_format_type');
+      
+      console.log('Delayed check - Epic content length:', currentContent.length);
+      console.log('Delayed check - Format type:', formatType);
+      
+      // If we still don't have properly formatted content, try to fix it
+      if (currentContent && currentContent.length > 50 && !currentContent.includes('epic-card')) {
+        console.log('Delayed formatting of epic content...');
+        ensureEpicContentIntegrity();
+        parseAndFormatEpics();
+      } else if (!currentContent || currentContent.length < 50) {
+        console.log('Delayed restore attempt...');
+        restoreEpicContent();
+      }
     }
     
     const userStoriesContainer = document.getElementById('user-stories-container');
@@ -2132,10 +2317,20 @@
     
     // If epics container is empty or has minimal content, try to restore from backup
     if (!currentContent || currentContent.length < 50) {
+      // First try to restore formatted content
       const preservedContent = sessionStorage.getItem('preserved_epics_content');
-      if (preservedContent) {
-        console.log('Restoring epic content from session storage');
+      if (preservedContent && preservedContent.includes('epic-card')) {
+        console.log('Restoring formatted epic content from session storage');
         epicsContainer.innerHTML = preservedContent;
+        return true;
+      }
+      
+      // If no formatted content, try raw content and format it
+      const preservedRaw = sessionStorage.getItem('preserved_epics_raw');
+      if (preservedRaw) {
+        console.log('Restoring and formatting raw epic content from session storage');
+        epicsContainer.innerHTML = preservedRaw;
+        parseAndFormatEpics();
         return true;
       }
     }
@@ -2152,20 +2347,32 @@
     
     // Check if content looks valid (should contain epic-card or checkboxes)
     if (content && (content.includes('epic-card') || content.includes('epic_ids'))) {
-      // Content looks good, preserve it
+      // Content looks good, preserve it in the current format
       sessionStorage.setItem('preserved_epics_content', content);
+      sessionStorage.setItem('epics_format_type', 'formatted');
+      console.log('Epic content preserved in formatted state');
     } else if (content && content.length > 50) {
-      // Content exists but might need formatting
+      // Content exists but might need formatting - preserve raw content first
+      sessionStorage.setItem('preserved_epics_raw', content);
+      sessionStorage.setItem('epics_format_type', 'raw');
+      console.log('Epic content preserved in raw state, will format');
+      
+      // Try to format the content
       parseAndFormatEpics();
       setTimeout(() => {
         const updatedContent = epicsContainer.innerHTML.trim();
-        if (updatedContent) {
+        if (updatedContent && updatedContent.includes('epic-card')) {
           sessionStorage.setItem('preserved_epics_content', updatedContent);
+          sessionStorage.setItem('epics_format_type', 'formatted');
+          console.log('Epic content formatted and preserved');
         }
       }, 100);
     } else {
       // Try to restore from backup
-      restoreEpicContent();
+      const restored = restoreEpicContent();
+      if (!restored) {
+        console.log('No epic content to preserve or restore');
+      }
     }
   }
 
@@ -2580,10 +2787,11 @@
           <div class="chat-avatar assistant">AI</div>
           <div class="chat-bubble">
             Hello! I'm here to help you with your user stories. I can:
-            <br>• Refine existing user story details
-            <br>• Generate additional user stories
-            <br>• Improve user story priorities and descriptions
-            <br>• Suggest better acceptance criteria
+            <br>• <strong>Refine existing user stories</strong> - Say things like "improve the priorities" or "update story descriptions"
+            <br>• <strong>Generate additional user stories</strong> - Ask me to "create more stories" or "add new user stories"
+            <br>• <strong>Answer questions</strong> - Ask about user story best practices, formats, or techniques
+            <br>• <strong>Provide suggestions</strong> - I can suggest better acceptance criteria or story improvements
+            <br><br>💡 <em>Tip: When you ask me to update or modify stories, I'll provide a button to apply the changes!</em>
             <br><br>What would you like to work on with your user stories?
           </div>
         </div>
@@ -2685,7 +2893,7 @@
     // Show typing indicator
     showUserStoryTyping();
 
-    // Get current user story context
+    // Get current user story context with full details
     const userStoriesContainer = document.getElementById('user-stories-container');
     let currentUserStoriesContext = '';
     
@@ -2694,17 +2902,49 @@
       if (table) {
         const rows = table.querySelectorAll('tbody tr');
         if (rows.length > 0) {
-          currentUserStoriesContext = 'Current User Stories:\n';
+          currentUserStoriesContext = 'Current User Stories (detailed):\n';
           rows.forEach((row, index) => {
             const cells = row.querySelectorAll('td');
             if (cells.length >= 3) {
+              const checkbox = row.querySelector('input[type="checkbox"]');
               const storyId = cells[1].textContent.trim();
               const storyName = cells[2].textContent.trim();
               const priority = cells[3] ? cells[3].textContent.trim() : 'N/A';
               const systems = cells[4] ? cells[4].textContent.trim() : 'N/A';
-              currentUserStoriesContext += `\n${index + 1}. ${storyId}: ${storyName}\n   Priority: ${priority}, Systems: ${systems}`;
+              
+              // Get additional details from checkbox data attributes
+              let description = 'No description available';
+              if (checkbox) {
+                const dataDescription = checkbox.getAttribute('data-description');
+                if (dataDescription && dataDescription !== storyName) {
+                  description = dataDescription;
+                }
+              }
+              
+              currentUserStoriesContext += `\n${index + 1}. Story ID: ${storyId}`;
+              currentUserStoriesContext += `\n   Name: ${storyName}`;
+              currentUserStoriesContext += `\n   Description: ${description}`;
+              currentUserStoriesContext += `\n   Priority: ${priority}`;
+              currentUserStoriesContext += `\n   Systems: ${systems}`;
+              currentUserStoriesContext += `\n`;
             }
           });
+          
+          // Also include currently selected story details from form fields
+          const selectedStoryId = document.getElementById('selected_story_id')?.value;
+          const selectedStoryName = document.getElementById('selected_story_name')?.value;
+          const selectedStoryDesc = document.getElementById('selected_story_description')?.value;
+          const selectedStoryPriority = document.getElementById('selected_story_priority')?.value;
+          const selectedStorySystems = document.getElementById('selected_story_systems')?.value;
+          
+          if (selectedStoryId) {
+            currentUserStoriesContext += `\nCurrently Selected Story for Editing:`;
+            currentUserStoriesContext += `\n- ID: ${selectedStoryId}`;
+            currentUserStoriesContext += `\n- Name: ${selectedStoryName || 'N/A'}`;
+            currentUserStoriesContext += `\n- Description: ${selectedStoryDesc || 'N/A'}`;
+            currentUserStoriesContext += `\n- Priority: ${selectedStoryPriority || 'N/A'}`;
+            currentUserStoriesContext += `\n- Systems: ${selectedStorySystems || 'N/A'}`;
+          }
         } else {
           currentUserStoriesContext = 'No user stories available currently.';
         }
@@ -2720,22 +2960,53 @@
       currentUserStoriesContext = 'User stories container not found.';
     }
 
-    // Get epic context for user story generation
+    // Get epic context for user story generation with full details
     const epicsContainer = document.getElementById('epics-container');
     let epicContext = '';
     if (epicsContainer) {
       const epicCards = epicsContainer.querySelectorAll('.epic-card');
       if (epicCards.length > 0) {
-        epicContext = '\nRelated Epics:\n';
+        epicContext = '\nRelated Epics (detailed):\n';
         epicCards.forEach((card, index) => {
           const titleElement = card.querySelector('h5');
+          const descriptionElement = card.querySelector('.epic-description');
+          const businessValueElement = card.querySelector('.epic-business-value');
+          
           if (titleElement) {
             const title = titleElement.textContent.replace(/^Epic \d+: /, '');
-            epicContext += `${index + 1}. ${title}\n`;
+            epicContext += `\n${index + 1}. Epic: ${title}`;
+            
+            if (descriptionElement) {
+              const description = descriptionElement.textContent.trim();
+              if (description) {
+                epicContext += `\n   Description: ${description}`;
+              }
+            }
+            
+            if (businessValueElement) {
+              const businessValue = businessValueElement.textContent.trim();
+              if (businessValue) {
+                epicContext += `\n   Business Value: ${businessValue}`;
+              }
+            }
+            epicContext += `\n`;
           }
         });
+      } else {
+        // Try to get raw epic content if cards aren't formatted yet
+        const rawEpicContent = epicsContainer.textContent || epicsContainer.innerHTML;
+        if (rawEpicContent && rawEpicContent.trim().length > 0) {
+          epicContext = '\nEpic Context:\n' + rawEpicContent.trim().substring(0, 500) + '...';
+        }
       }
     }
+
+    console.log('User Story Chat Context being sent:', {
+      message: message,
+      userStoriesLength: currentUserStoriesContext.length,
+      epicContextLength: epicContext.length,
+      hasSelectedStory: !!document.getElementById('selected_story_id')?.value
+    });
 
     // Send message to backend
     fetch('/user-story-chat', {
@@ -2759,15 +3030,19 @@
         // Check if the response contains JSON and format it nicely
         let displayResponse = aiResponse;
         let jsonDetected = false;
+        let jsonData = null;
+        
+        console.log('Processing AI response for user story chat:', aiResponse.substring(0, 200) + '...');
         
         try {
           // Strategy 1: Try to detect and format JSON in code blocks
           const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
           if (jsonMatch) {
-            const jsonData = JSON.parse(jsonMatch[1]);
-            if (Array.isArray(jsonData)) {
+            jsonData = JSON.parse(jsonMatch[1]);
+            if (Array.isArray(jsonData) && jsonData.length > 0 && jsonData[0].story_id) {
               displayResponse = formatUserStoriesForDisplay(jsonData);
               jsonDetected = true;
+              console.log('Detected JSON in code block, formatted for display');
               
               // Show apply button if this looks like updated user stories
               setTimeout(() => {
@@ -2781,15 +3056,11 @@
             const jsonArrayMatch = aiResponse.match(/\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/);
             if (jsonArrayMatch) {
               try {
-                const jsonData = JSON.parse(jsonArrayMatch[0]);
-                if (Array.isArray(jsonData) && jsonData.length > 0) {
+                jsonData = JSON.parse(jsonArrayMatch[0]);
+                if (Array.isArray(jsonData) && jsonData.length > 0 && jsonData[0].story_id) {
                   displayResponse = formatUserStoriesForDisplay(jsonData);
                   jsonDetected = true;
-                  
-                  // Show apply button
-                  setTimeout(() => {
-                    showApplyUserStoriesButton(jsonData);
-                  }, 100);
+                  console.log('Detected JSON array pattern, formatted for display');
                 }
               } catch (e) {
                 console.log('Failed to parse extracted JSON array:', e);
@@ -2800,18 +3071,14 @@
           // Strategy 3: Check if the entire response is JSON
           if (!jsonDetected) {
             try {
-              const jsonData = JSON.parse(aiResponse.trim());
-              if (Array.isArray(jsonData) && jsonData.length > 0) {
+              jsonData = JSON.parse(aiResponse.trim());
+              if (Array.isArray(jsonData) && jsonData.length > 0 && jsonData[0].story_id) {
                 displayResponse = formatUserStoriesForDisplay(jsonData);
                 jsonDetected = true;
-                
-                // Show apply button
-                setTimeout(() => {
-                  showApplyUserStoriesButton(jsonData);
-                }, 100);
+                console.log('Detected full JSON response, formatted for display');
               }
             } catch (e) {
-              // Not pure JSON, keep original response
+              console.log('Response is not pure JSON, treating as conversational');
             }
           }
           
@@ -2824,6 +3091,14 @@
         addUserStoryMessage('assistant', displayResponse);
         userStoryChatHistory.push({ role: 'user', message: message });
         userStoryChatHistory.push({ role: 'assistant', message: displayResponse });
+        
+        // Show apply button if we detected valid user story JSON
+        if (jsonDetected && jsonData) {
+          console.log('Showing apply button for detected user stories:', jsonData.length, 'stories');
+          setTimeout(() => {
+            showApplyUserStoriesButton(jsonData);
+          }, 100);
+        }
         
         setTimeout(() => {
           input.focus();
@@ -2937,8 +3212,8 @@
   }
 
   function applyUserStoriesUpdate(userStoriesData) {
-    const userStoriesContainer = document.getElementById('user-stories-container');
-    if (!userStoriesContainer) return;
+    console.log('Applying user stories update with', userStoriesData.length, 'stories');
+    console.log('User stories data received:', userStoriesData);
 
     // Store current form values before updating
     const currentFormValues = {
@@ -2951,6 +3226,12 @@
     };
     
     console.log('Preserving current form values before apply:', currentFormValues);
+
+    const userStoriesContainer = document.getElementById('user-stories-container');
+    if (!userStoriesContainer) {
+      console.error('User stories container not found!');
+      return;
+    }
 
     // Format the user stories as a table
     let formattedHTML = `
@@ -3079,7 +3360,9 @@
     updateUserStoryContext();
     
     // Show success message
-    addUserStoryMessage('assistant', '✅ User story updates have been applied to the page successfully! Your previous selection has been preserved.');
+    addUserStoryMessage('assistant', '✅ User story updates have been applied to the page successfully! Your selection context has been preserved. You can now proceed with the updated stories.');
+    
+    console.log('User story apply completed successfully');
   }
 
   // Handle Enter key for chat inputs
@@ -3118,6 +3401,24 @@
       }
     });
   });
+
+  // Back Button Functionality
+  function goBack() {
+    // Navigate back to the user story input page
+    try {
+      // Try to go back in browser history first
+      if (window.history.length > 1 && document.referrer.includes('/prd_parser')) {
+        window.history.back();
+      } else {
+        // Navigate directly to the input page
+        window.location.href = '/prd_parser';
+      }
+    } catch (error) {
+      console.error('Error navigating back:', error);
+      // Fallback to direct navigation
+      window.location.href = '/prd_parser';
+    }
+  }
 
 </script>
 

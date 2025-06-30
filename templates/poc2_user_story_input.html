@@ -276,7 +276,6 @@
     }
 
     .upload-section-disabled {
-      opacity: 0.6;
       pointer-events: none;
       position: relative;
       transition: all 0.3s ease;
@@ -289,9 +288,10 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(240, 240, 240, 0.9));
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(240, 240, 240, 0.2));
       border-radius: var(--radius-md);
-      backdrop-filter: blur(2px);
+      backdrop-filter: blur(1px);
+      pointer-events: none;
     }
 
     .preview-section {
@@ -930,7 +930,7 @@
       if (timerInterval) {
         clearInterval(timerInterval);
       }
-    }// Step 1: Document Upload
+    }    // Step 1: Document Upload
     document.getElementById('documentUploadForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
@@ -939,10 +939,50 @@
       const uploadSpinner = document.getElementById('uploadSpinner');
       const uploadTimerEl = document.getElementById('uploadTimer');
       const loadingSpinner = document.getElementById('loadingSpinner');
+      
+      // Check file sizes and warn user about large files
+      const prdFile = document.getElementById('prdFile').files[0];
+      const csvFile = document.getElementById('csvFile').files[0];
+      let totalSize = 0;
+      let largeFileWarning = false;
+      
+      if (prdFile) {
+        totalSize += prdFile.size;
+        console.log(`PRD file size: ${(prdFile.size / 1024).toFixed(1)} KB`);
+        if (prdFile.size > 40000) { // 40KB threshold
+          largeFileWarning = true;
+        }
+      }
+      
+      if (csvFile) {
+        totalSize += csvFile.size;
+        console.log(`CSV file size: ${(csvFile.size / 1024).toFixed(1)} KB`);
+      }
+      
+      console.log(`Total file size: ${(totalSize / 1024).toFixed(1)} KB`);
+      
+      // Show warning for large files
+      if (largeFileWarning) {
+        const proceed = confirm(
+          `Large file detected (${(totalSize / 1024).toFixed(1)} KB). ` +
+          'Processing may take longer than usual. Do you want to continue?'
+        );
+        if (!proceed) {
+          return;
+        }
+      }
         // Show loading spinner and start timer
       uploadTimer = showButtonLoading(uploadBtn, uploadSpinner, uploadTimerEl, 'Upload & Preview Summary', 'Processing...');
       loadingSpinner.style.display = 'block';
       console.log('Loading spinner shown:', loadingSpinner.style.display);
+      
+      // Update loading message for large files
+      if (largeFileWarning) {
+        const loadingMessage = loadingSpinner.querySelector('p');
+        if (loadingMessage) {
+          loadingMessage.textContent = '📊 Processing large files - this may take a moment...';
+        }
+      }
         try {
         const response = await fetch('/document-upload', {
           method: 'POST',

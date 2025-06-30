@@ -94,7 +94,7 @@
       background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
       color: white;
       padding: var(--spacing-lg) var(--spacing-xl);
-      font-size: 0.875rem;
+      font-size: 1.1rem;
       font-weight: 600;
       position: relative;
       display: flex;
@@ -300,17 +300,22 @@
 
     .section-header {
       background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
-      color: var(--text-white);
+      color: #ffffff !important;
       padding: var(--spacing-lg) var(--spacing-xl);
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 1.1rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       box-shadow: var(--shadow-md);
       border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+
+    .section-header span {
+      color: #ffffff !important;
+      font-weight: 700;
     }
 
     .section-content {
@@ -1388,10 +1393,10 @@
       <button class="back-button" onclick="goBack()">
         &lt; Back
       </button>
-      <span style="position: absolute; left: 50%; transform: translateX(-50%); font-weight: bold;">
+      <span style="position: absolute; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 1.25rem;">
         Jira ticket creation
       </span>
-      <span style="position: absolute; right: 16px; top: 12px; font-size: 12px;">
+      <span style="position: absolute; right: 16px; top: 12px; font-size: 1rem; font-weight: 500;">
         Use the 'Chat' interface to ask questions and edit outputs
       </span>
     </div>
