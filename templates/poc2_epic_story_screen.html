@@ -6,91 +6,283 @@
   <title>Epic generation & list of user stories</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
   <style>
-    body {
-      background-color: #2f323a;
-      color: #fff;
+    /* Modern CSS Variables for Design System */
+    :root {
+      --primary-red: #d0021b;
+      --primary-red-dark: #a0011a;
+      --primary-red-light: #ff1744;
+      --primary-red-lighter: #fff5f5;
+      --background-dark: #1a1d23;
+      --background-darker: #121419;
+      --background-light: #2a2d35;
+      --surface-primary: #ffffff;
+      --surface-secondary: #f8fafc;
+      --surface-tertiary: #f1f5f9;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-light: #ffffff;
+      --text-muted: #94a3b8;
+      --border-light: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --spacing-xs: 0.5rem;
+      --spacing-sm: 0.75rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      --spacing-2xl: 3rem;
     }
+
+    /* Modern Body Styling with Gradient */
+    body {
+      background: linear-gradient(135deg, var(--background-darker) 0%, var(--background-dark) 100%);
+      color: var(--text-light);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 20% 80%, rgba(208, 2, 27, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Enhanced Header Bar */
     .header-bar {
-      background-color: #d0021b;
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
       color: white;
       text-align: center;
-      font-weight: bold;
-      padding: 10px;
-      border-radius: 6px 6px 0 0;
-      margin-bottom: 10px;
+      font-weight: 700;
+      font-size: 1.5rem;
+      padding: var(--spacing-lg) var(--spacing-xl);
+      border-radius: var(--radius-xl) var(--radius-xl) var(--radius-lg) var(--radius-lg);
+      margin-bottom: var(--spacing-xl);
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
     }
+
+    .header-bar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    /* Modern Section Headers */
     .section-header {
-      background-color: #444;
-      padding: 10px;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 1.2rem;
+      background: linear-gradient(135deg, var(--background-light) 0%, #3a3d47 100%);
+      padding: var(--spacing-lg) var(--spacing-xl);
+      border-radius: var(--radius-lg);
+      font-weight: 600;
+      font-size: 1.25rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 20px;
+      margin-top: var(--spacing-2xl);
+      margin-bottom: var(--spacing-lg);
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
     }
+
+    .section-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    /* Enhanced Card Styling */
     .epic-card, .user-story-card {
-      background-color: #f8f9fa;
-      border-radius: 6px;
-      padding: 15px;
-      margin-bottom: 10px;
-      color: #000;
+      background: var(--surface-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-xl);
+      margin-bottom: var(--spacing-lg);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-light);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      animation: cardSlideIn 0.6s ease-out forwards;
+      opacity: 0;
+      transform: translateY(20px);
     }
-    #epics-container {
-      background-color: white;
-      border-radius: 6px;
-      padding: 15px;
-      margin-top: 10px;
-      color: #000;
+
+    .epic-card:nth-child(n) {
+      animation-delay: calc(0.1s * var(--i, 0));
     }
-    #user-stories-container {
-      background-color: white;
-      border-radius: 6px;
-      padding: 15px;
-      margin-top: 10px;
-      color: #000;
+
+    @keyframes cardSlideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
+
+    .epic-card:hover, .user-story-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+      border-color: var(--primary-red);
+    }
+
+    .epic-card::before, .user-story-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+      transform-origin: left;
+    }
+
+    .epic-card:hover::before, .user-story-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    /* Container Enhancements */
+    #epics-container, #user-stories-container {
+      background: var(--surface-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-xl);
+      margin-top: var(--spacing-lg);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-light);
+      position: relative;
+    }
+
+    /* Typography Improvements */
     .epic-card h5 {
-      color: #d0021b;
-      font-weight: bold;
+      color: var(--primary-red);
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-bottom: var(--spacing-sm);
+      line-height: 1.4;
     }
+
+    .epic-card p {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    /* Enhanced Priority Styling */
     .priority-high {
-      color: red;
-      font-weight: bold;
+      color: #ef4444;
+      font-weight: 600;
+      background: #fef2f2;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid #fecaca;
     }
     .priority-medium {
-      color: orange;
-      font-weight: bold;
+      color: #f59e0b;
+      font-weight: 600;
+      background: #fffbeb;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid #fed7aa;
     }
     .priority-low {
-      color: green;
-      font-weight: bold;
+      color: #10b981;
+      font-weight: 600;
+      background: #f0fdf4;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid #bbf7d0;
     }
+    /* Modern Footer Button Styling */
     .footer-btn {
-      background-color: #d0021b;
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
       color: white;
-      font-weight: bold;
-      padding: 10px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      padding: var(--spacing-lg) var(--spacing-xl);
       width: 100%;
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       border: none;
-      margin-top: 20px;
+      margin-top: var(--spacing-2xl);
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: var(--spacing-sm);
+      box-shadow: var(--shadow-lg);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      min-height: 60px;
+    }
+
+    .footer-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .footer-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+      background: linear-gradient(135deg, var(--primary-red-light) 0%, var(--primary-red) 100%);
+    }
+
+    .footer-btn:hover:not(:disabled)::before {
+      left: 100%;
+    }
+
+    .footer-btn:active:not(:disabled) {
+      transform: translateY(0);
     }
 
     .footer-btn:disabled {
-      background-color: #666;
+      background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
       cursor: not-allowed;
+      transform: none;
+      box-shadow: var(--shadow-md);
     }
 
     .footer-btn .btn-spinner {
-      width: 1rem;
-      height: 1rem;
+      width: 1.25rem;
+      height: 1.25rem;
       border: 2px solid rgba(255, 255, 255, 0.3);
       border-top: 2px solid white;
       border-radius: 50%;
@@ -100,8 +292,12 @@
 
     .footer-btn .btn-timer {
       font-size: 0.9rem;
-      font-weight: normal;
-      color: rgba(255, 255, 255, 0.8);
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     @keyframes spin {
@@ -109,57 +305,368 @@
       100% { transform: rotate(360deg); }
     }
 
+    /* Enhanced Utility Classes */
     .hidden {
-      display: none;
+      display: none !important;
     }
     
-    /* User stories table styling */
+    /* Modern Table Styling */
     .table {
-      background-color: white;
-      border-radius: 6px;
+      background-color: var(--surface-primary);
+      border-radius: var(--radius-lg);
       overflow: hidden;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-light);
     }
+    
     .table th {
-      background-color: #343a40;
+      background: linear-gradient(135deg, var(--text-primary) 0%, #374151 100%);
       color: white;
       border: none;
-      font-weight: bold;
+      font-weight: 600;
+      font-size: 0.95rem;
       vertical-align: middle;
-    }
-    .table td {
-      vertical-align: middle;
-      border-color: #dee2e6;
-    }
-    .table-striped tbody tr:nth-of-type(odd) {
-      background-color: #f8f9fa;
-    }
-    .badge {
-      font-size: 0.8em;
-    }
-    .form-check-input:checked {
-      background-color: #d0021b;
-      border-color: #d0021b;
+      padding: var(--spacing-lg);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
-    /* Chat Button Styles */
+    .table td {
+      vertical-align: middle;
+      border-color: var(--border-light);
+      padding: var(--spacing-lg);
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    
+    .table-striped tbody tr:nth-of-type(odd) {
+      background-color: var(--surface-secondary);
+    }
+    
+    .table tbody tr {
+      transition: all 0.2s ease;
+    }
+    
+    .table tbody tr:hover {
+      background-color: var(--primary-red-lighter) !important;
+      transform: scale(1.01);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    /* Enhanced Badge Styling */
+    .badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--radius-md);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .badge-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+    }
+    
+    .badge-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+    }
+    
+    .badge-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+    
+    .badge-secondary {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(107, 114, 128, 0.2);
+    }
+    
+    /* Enhanced Form Controls */
+    .form-check-input:checked {
+      background-color: var(--primary-red);
+      border-color: var(--primary-red);
+      box-shadow: 0 0 0 3px rgba(208, 2, 27, 0.2);
+    }
+    
+    .form-check-input {
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border-medium);
+      transition: all 0.2s ease;
+    }
+    
+    .form-check-input:focus {
+      box-shadow: 0 0 0 3px rgba(208, 2, 27, 0.2);
+    }
+    
+    /* Enhanced Chat Button Styles */
     .chat-btn {
-      background: rgba(255, 255, 255, 0.1);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
       border: 1px solid rgba(255, 255, 255, 0.3);
       color: white;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-size: 12px;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-      font-weight: 500;
+      gap: var(--spacing-xs);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
     }
+    
+    .chat-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+    
     .chat-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
       color: white;
       transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .chat-btn:hover::before {
+      left: 100%;
+    }
+    
+    .chat-btn:active {
+      transform: translateY(0);
+    }
+    
+    .chat-btn span:first-child {
+      font-size: 1rem;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+    }
+
+    /* Instruction Text Styling */
+    .instruction-text {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl) !important;
+      font-size: 1rem;
+      line-height: 1.6;
+      backdrop-filter: blur(10px);
+    }
+
+    .instruction-text strong {
+      color: var(--primary-red-light);
+      font-weight: 700;
+    }
+
+    /* Container Layout Improvements */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--spacing-lg);
+    }
+
+    /* Epic Card Checkbox Enhancement */
+    .epic-card .form-check {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .epic-card .form-check-input {
+      width: 1.2rem;
+      height: 1.2rem;
+      margin: 0;
+    }
+
+    .epic-card .form-check-label {
+      margin: 0;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Progress and Loading States */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(4px);
+    }
+
+    .loading-spinner {
+      width: 3rem;
+      height: 3rem;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid var(--primary-red);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    /* Status Messages */
+    .status-message {
+      padding: var(--spacing-md) var(--spacing-lg);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-lg);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .status-success {
+      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+
+    .status-error {
+      background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    .status-warning {
+      background: linear-gradient(135deg, #fffbeb 0%, #fed7aa 100%);
+      color: #92400e;
+      border: 1px solid #fdba74;
+    }
+
+    /* Enhanced Responsive Design */
+    @media (max-width: 1200px) {
+      .container {
+        max-width: 100%;
+        padding: 0 var(--spacing-md);
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --spacing-xl: 1.5rem;
+        --spacing-2xl: 2rem;
+      }
+
+      .header-bar {
+        font-size: 1.25rem;
+        padding: var(--spacing-md) var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+      }
+
+      .section-header {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
+        text-align: center;
+      }
+
+      .chat-btn {
+        width: 100%;
+        justify-content: center;
+        padding: var(--spacing-md);
+      }
+
+      .epic-card, .user-story-card {
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-md);
+      }
+
+      .table-responsive {
+        font-size: 0.875rem;
+      }
+
+      .table th, .table td {
+        padding: var(--spacing-sm);
+      }
+
+      .footer-btn {
+        font-size: 1rem;
+        padding: var(--spacing-md) var(--spacing-lg);
+        min-height: 50px;
+      }
+
+      .instruction-text {
+        font-size: 0.9rem;
+        padding: var(--spacing-md);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 0 var(--spacing-sm);
+      }
+
+      .header-bar {
+        font-size: 1.1rem;
+        padding: var(--spacing-sm) var(--spacing-md);
+      }
+
+      .section-header {
+        padding: var(--spacing-sm);
+        font-size: 1.1rem;
+      }
+
+      .epic-card, .user-story-card {
+        padding: var(--spacing-md);
+      }
+
+      .epic-card h5 {
+        font-size: 1.1rem;
+      }
+
+      .chat-btn {
+        font-size: 0.8rem;
+        padding: var(--spacing-sm);
+      }
+
+      .table {
+        font-size: 0.8rem;
+      }
+
+      .badge {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
+      }
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+      }
+
+      .chat-btn {
+        display: none !important;
+      }
+
+      .footer-btn {
+        display: none !important;
+      }
+
+      .section-header {
+        background: #f8f9fa !important;
+        color: black !important;
+      }
     }
     
     /* Chat Modal Styles - Right Side Full Height */
@@ -204,6 +711,38 @@
       align-items: center;
       font-weight: 600;
       font-size: 16px;
+    }
+    
+    .chat-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .chat-clear-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 8px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      font-weight: normal;
+    }
+    
+    .chat-clear-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+    
+    .chat-clear-btn:active {
+      transform: scale(0.95);
     }
     
     .chat-close {
@@ -284,7 +823,7 @@
     }
     
     .chat-bubble {
-      background: rgb(140, 138, 236);
+      background: rgb(224, 224, 235);
       border-radius: 12px;
       padding: 12px 16px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -454,6 +993,18 @@
         font-size: 14px;
       }
       
+      .chat-clear-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+      }
+      
+      .chat-close {
+        width: 32px;
+        height: 32px;
+        font-size: 24px;
+      }
+      
       .chat-messages {
         padding: 15px;
         gap: 12px;
@@ -470,12 +1021,19 @@
         font-size: 13px;
       }
     }
+
+    /* Main Wrapper */
+    .main-wrapper {
+      min-height: 100vh;
+      padding: var(--spacing-lg) 0;
+    }
     
    </style>
 </head>
 <body>
-<div class="container mt-4">
-  <div class="header-bar">Epic generation & list of user stories</div>
+<div class="main-wrapper">
+  <div class="container mt-4">
+    <div class="header-bar">Epic generation & list of user stories</div>
   
   <div class="section-header">
     <span>Epics</span>
@@ -506,7 +1064,7 @@
         User Story Chat
       </button>
      </div>
-    <p class="mb-3 text-light">
+    <p class="mb-3 text-light instruction-text">
       Review this list of generated user stories for each epic, sorted by the solution's ranking of priority based on industry and uploaded context. Select <strong>one</strong> story to proceed with generating a detailed user story.
     </p>
     <form id="proceed-form" method="POST" action="/user-story-details">
@@ -527,13 +1085,19 @@
     </form>
   </div>
 </div>
+</div>
 
 <!-- Epic Chat Modal -->
 <div id="epic-chat-modal" class="chat-modal">
   <div class="chat-modal-content">
     <div class="chat-header">
       <span>💬 Epic Chat</span>
-      <button class="chat-close" onclick="closeEpicChat()">&times;</button>
+      <div class="chat-header-actions">
+        <button class="chat-clear-btn" onclick="clearEpicChat()" title="Clear Chat History">
+          <span>🗑️</span>
+        </button>
+        <button class="chat-close" onclick="closeEpicChat()">&times;</button>
+      </div>
     </div>
     <div class="chat-container">
       <!-- Current Epic Context Display -->
@@ -574,7 +1138,12 @@
   <div class="chat-modal-content">
     <div class="chat-header">
       <span>💬 User Story Chat</span>
-      <button class="chat-close" onclick="closeUserStoryChat()">&times;</button>
+      <div class="chat-header-actions">
+        <button class="chat-clear-btn" onclick="clearUserStoryChat()" title="Clear Chat History">
+          <span>🗑️</span>
+        </button>
+        <button class="chat-close" onclick="closeUserStoryChat()">&times;</button>
+      </div>
     </div>
     <div class="chat-container">
       <!-- Current User Story Context Display -->
@@ -1100,6 +1669,18 @@
     }
   }
 
+  // Initialize card animations
+  function initializeCardAnimations() {
+    const cards = document.querySelectorAll('.epic-card, .user-story-card');
+    cards.forEach((card, index) => {
+      card.style.setProperty('--i', index);
+      // Add a small delay for staggered animations
+      setTimeout(() => {
+        card.style.animationPlayState = 'running';
+      }, index * 100);
+    });
+  }
+
   // Parse epics when page loads
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, checking for epics content...');
@@ -1107,6 +1688,9 @@
     if (epicsContainer) {
       parseAndFormatEpics();
     }
+    
+    // Initialize card animations
+    initializeCardAnimations();
     
     // Also check for user stories content
     console.log('DOM loaded, checking for user stories content...');
@@ -1352,6 +1936,53 @@
   function closeEpicChat() {
     const modal = document.getElementById('epic-chat-modal');
     modal.style.display = 'none';
+  }
+
+  function clearEpicChat() {
+    // Clear the chat messages container (keep only the initial AI message)
+    const chatMessages = document.getElementById('epic-chat-messages');
+    if (chatMessages) {
+      chatMessages.innerHTML = `
+        <div class="chat-message assistant">
+          <div class="chat-avatar assistant">AI</div>
+          <div class="chat-bubble">
+            Hello! I'm here to help you with your epics. I can:
+            <br>• Refine existing epic descriptions
+            <br>• Generate new epics based on your requirements
+            <br>• Improve epic titles and details
+            <br>• Suggest epic priorities and breakdowns
+            <br><br>What would you like to work on with your epics?
+          </div>
+        </div>
+      `;
+    }
+    
+    // Clear the chat history array
+    epicChatHistory = [];
+    
+    // Clear the input field
+    const chatInput = document.getElementById('epic-chat-input');
+    if (chatInput) {
+      chatInput.value = '';
+    }
+    
+    // Send clear request to backend to clear server-side history
+    fetch('/epic-chat-clear', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Epic chat history cleared on server:', data);
+    })
+    .catch(error => {
+      console.error('Error clearing epic chat history on server:', error);
+    });
+    
+    console.log('Epic chat cleared successfully');
   }
 
   function updateEpicContext() {
@@ -1686,6 +2317,53 @@
   function closeUserStoryChat() {
     const modal = document.getElementById('user-story-chat-modal');
     modal.style.display = 'none';
+  }
+
+  function clearUserStoryChat() {
+    // Clear the chat messages container (keep only the initial AI message)
+    const chatMessages = document.getElementById('user-story-chat-messages');
+    if (chatMessages) {
+      chatMessages.innerHTML = `
+        <div class="chat-message assistant">
+          <div class="chat-avatar assistant">AI</div>
+          <div class="chat-bubble">
+            Hello! I'm here to help you with your user stories. I can:
+            <br>• Refine existing user story details
+            <br>• Generate additional user stories
+            <br>• Improve user story priorities and descriptions
+            <br>• Suggest better acceptance criteria
+            <br><br>What would you like to work on with your user stories?
+          </div>
+        </div>
+      `;
+    }
+    
+    // Clear the chat history array
+    userStoryChatHistory = [];
+    
+    // Clear the input field
+    const chatInput = document.getElementById('user-story-chat-input');
+    if (chatInput) {
+      chatInput.value = '';
+    }
+    
+    // Send clear request to backend to clear server-side history
+    fetch('/user-story-chat-clear', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('User story chat history cleared on server:', data);
+    })
+    .catch(error => {
+      console.error('Error clearing user story chat history on server:', error);
+    });
+    
+    console.log('User story chat cleared successfully');
   }
 
   function updateUserStoryContext() {

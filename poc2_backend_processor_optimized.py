@@ -155,9 +155,14 @@ def home():
             }
             .feature-grid { 
                 display: grid; 
-                grid-template-columns: 1fr 1fr; 
+                grid-template-columns: 1fr 1fr 1fr; 
                 gap: 20px; 
                 margin-top: 30px; 
+            }
+            @media (max-width: 1024px) {
+                .feature-grid {
+                    grid-template-columns: 1fr 1fr;
+                }
             }
             @media (max-width: 768px) {
                 .feature-grid {
@@ -222,6 +227,32 @@ def home():
                 color: #ccc;
                 font-style: italic;
             }
+            .btn-danger { 
+                background-color: #dc3545; 
+            }
+            .btn-danger:hover { 
+                background-color: #c82333; 
+            }
+            .btn-danger:disabled { 
+                background-color: #6c757d; 
+                cursor: not-allowed;
+            }
+            .clear-status {
+                margin-top: 10px;
+                padding: 10px;
+                border-radius: 4px;
+                display: none;
+            }
+            .clear-status.success {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+            .clear-status.error {
+                background-color: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
         </style>
     </head>
     <body>
@@ -258,6 +289,15 @@ def home():
                 </div>
                 
                 <div class="feature-card">
+                    <h3>Clear Vector Database</h3>
+                    <p>Remove all stored documents from the vector database. This will clear all PRD documents, summaries, and chunks. <strong>This action cannot be undone.</strong></p>
+                    <button onclick="clearVectorDatabase()" class="btn btn-danger" id="clearDbBtn">
+                        🗑️ Clear All Documents
+                    </button>
+                    <div id="clearStatus" class="clear-status"></div>
+                </div>
+                
+                <div class="feature-card">
                     <h3>RAG Features</h3>
                     <p>This system uses Retrieval Augmented Generation with:</p>
                     <ul>
@@ -274,6 +314,59 @@ def home():
                 <p>PRD Parser Agent replaced with RAG summaries | 50%+ faster processing | Reduced token costs</p>
             </div>
         </div>
+        
+        <script>
+            async function clearVectorDatabase() {
+                const clearBtn = document.getElementById('clearDbBtn');
+                const statusDiv = document.getElementById('clearStatus');
+                
+                // Confirm action
+                if (!confirm('Are you sure you want to clear ALL documents from the vector database? This action cannot be undone.')) {
+                    return;
+                }
+                
+                // Show loading state
+                clearBtn.disabled = true;
+                clearBtn.innerHTML = '🔄 Clearing Database...';
+                statusDiv.style.display = 'none';
+                
+                try {
+                    const response = await fetch('/vector-db-clear', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        statusDiv.innerHTML = `✅ ${result.message}`;
+                        statusDiv.className = 'clear-status success';
+                        statusDiv.style.display = 'block';
+                    } else {
+                        statusDiv.innerHTML = `❌ Error: ${result.message}`;
+                        statusDiv.className = 'clear-status error';
+                        statusDiv.style.display = 'block';
+                    }
+                    
+                } catch (error) {
+                    console.error('Error clearing vector database:', error);
+                    statusDiv.innerHTML = `❌ Network error: ${error.message}`;
+                    statusDiv.className = 'clear-status error';
+                    statusDiv.style.display = 'block';
+                } finally {
+                    // Reset button state
+                    clearBtn.disabled = false;
+                    clearBtn.innerHTML = '🗑️ Clear All Documents';
+                    
+                    // Hide status after 5 seconds
+                    setTimeout(() => {
+                        statusDiv.style.display = 'none';
+                    }, 5000);
+                }
+            }
+        </script>
     </body>
     </html>
     """
