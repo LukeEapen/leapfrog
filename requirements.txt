@@ -55,7 +55,6 @@ diskcache>=5.6.3       # Persistent disk caching
 python-dotenv==1.0.0
 colorama==0.4.6
 tenacity>=8.2.2        # For retry logic
-concurrent-futures>=3.1.1  # For parallel processing
 multiprocessing-logging>=0.3.4  # Thread-safe logging
 
 # Web UI & Visualization
