@@ -6,328 +6,635 @@
   <title>User Story Drafting Solution</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
+    /* Modern CSS Variables for Design System */
+    :root {
+      --primary-red: #d0021b;
+      --primary-red-dark: #a0011a;
+      --primary-red-light: #ff1744;
+      --primary-red-lighter: #fff5f5;
+      --background-dark: #1a1d23;
+      --background-darker: #121419;
+      --background-light: #2a2d35;
+      --surface-primary: #ffffff;
+      --surface-secondary: #f8fafc;
+      --surface-tertiary: #f1f5f9;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-light: #ffffff;
+      --text-muted: #94a3b8;
+      --border-light: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --spacing-xs: 0.5rem;
+      --spacing-sm: 0.75rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      --spacing-2xl: 3rem;
+    }
+
+    /* Modern Body Styling with Gradient */
     body {
-      background-color: #2f323a;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, var(--background-darker) 0%, var(--background-dark) 100%);
+      color: var(--text-light);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
       margin: 0;
       padding: 0;
       min-height: 100vh;
-    }
-    .main-container {
-      max-width: 900px;
-      margin: 20px auto;
-      background: #fff;
-      border: none;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-    }
-    .top-bar {
-      background-color: #d0021b;
-      color: white;
-      padding: 12px 20px;
-      font-size: 14px;
-      font-weight: 500;
       position: relative;
     }
-    .back-button {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: white;
-      font-size: 14px;
-      cursor: pointer;
-      padding: 8px 16px;
-      border-radius: 4px;
-      transition: all 0.2s ease;
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 20% 80%, rgba(208, 2, 27, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
     }
+
+    /* Enhanced Main Container */
+    .main-container {
+      max-width: 1000px;
+      margin: var(--spacing-xl) auto;
+      background: var(--surface-primary);
+      border: none;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      position: relative;
+      animation: pageSlideIn 0.6s ease-out;
+    }
+
+    @keyframes pageSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Enhanced Top Bar */
+    .top-bar {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      padding: var(--spacing-lg) var(--spacing-xl);
+      font-size: 0.875rem;
+      font-weight: 600;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .top-bar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .back-button {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      backdrop-filter: blur(10px);
+    }
+
     .back-button:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.25);
       color: white;
       transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
     }
+
+    .back-button:active {
+      transform: translateY(0);
+    }
+
+    /* Enhanced Story Header */
     .story-header {
-      background-color: #444;
+      background: linear-gradient(135deg, var(--background-light) 0%, #3a3d47 100%);
       color: white;
-      padding: 16px 20px;
+      padding: var(--spacing-lg);
       margin: 0;
-      font-size: 18px;
-      font-weight: 600;
+      font-size: 1.375rem;
+      font-weight: 700;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid var(--primary-red);
     }
+
+    .story-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
+    }
+
+    /* Enhanced Content Container */
     .content-container {
       background: white;
       margin: 0;
-      padding: 28px;
-      color: #000;
+      padding: var(--spacing-xl);
+      color: var(--text-primary);
+      position: relative;
     }
+
+    /* Enhanced Epic Info Section */
     .epic-info-section {
-      margin-bottom: 28px;
-      padding: 20px;
-      border-bottom: 1px solid #e2e8f0;
-      background: #f8f9fa;
-      border-radius: 6px;
-      border: 1px solid #ddd;
-    }
-    .epic-label {
-      color: #d0021b;
-      font-weight: 700;
-      font-size: 14px;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .epic-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 12px;
-      line-height: 1.4;
-    }
-    .info-row {
-      display: flex;
-      gap: 28px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-    .info-item {
-      display: flex;
-      align-items: center;
-      font-size: 14px;
-      background: white;
-      padding: 8px 12px;
-      border-radius: 4px;
-      border: 1px solid #ddd;
-    }
-    .info-label {
-      font-weight: 600;
-      margin-right: 8px;
-      color: #666;
-    }
-    .priority-high {
-      color: #d0021b;
-      font-weight: 600;
-      padding: 2px 8px;
-      background: rgba(208, 2, 27, 0.1);
-      border-radius: 4px;
-    }
-    .section-container {
-      margin-bottom: 20px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      background: white;
+      margin-bottom: var(--spacing-lg);
+      padding: var(--spacing-lg);
+      background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary) 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      position: relative;
       overflow: hidden;
       transition: all 0.3s ease;
     }
+
+    .epic-info-section:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .epic-info-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    .epic-label {
+      color: var(--primary-red);
+      font-weight: 700;
+      font-size: 0.875rem;
+      margin-bottom: var(--spacing-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .epic-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-md);
+      line-height: 1.4;
+    }
+
+    .info-row {
+      display: flex;
+      gap: var(--spacing-xl);
+      margin-bottom: var(--spacing-md);
+      flex-wrap: wrap;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+      background: white;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+
+    .info-item:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .info-label {
+      font-weight: 600;
+      margin-right: var(--spacing-sm);
+      color: var(--text-secondary);
+    }
+
+    .priority-high {
+      color: #ef4444;
+      font-weight: 600;
+      background: #fef2f2;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid #fecaca;
+    }
+
+    /* Enhanced Section Container */
+    .section-container {
+      margin-bottom: var(--spacing-lg);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      background: white;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
     .section-container:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary-red);
     }
+
+    .section-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+      transform-origin: left;
+    }
+
+    .section-container:hover::before {
+      transform: scaleX(1);
+    }
+
     .section-header {
-      background-color: #444;
+      background: linear-gradient(135deg, var(--text-primary) 0%, #374151 100%);
       color: white;
-      padding: 14px 20px;
+      padding: var(--spacing-md) var(--spacing-xl);
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-weight: 600;
-      font-size: 15px;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+
     .section-content {
-      padding: 20px;
-      line-height: 1.6;
-      color: #333;
+      padding: var(--spacing-lg);
+      line-height: 1.7;
+      color: var(--text-primary);
       background: white;
+      font-size: 1rem;
     }
+
+    /* Enhanced Chat Button */
     .chat-btn {
-      background: rgba(255, 255, 255, 0.1);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
       border: 1px solid rgba(255, 255, 255, 0.3);
       color: white;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-size: 12px;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-      font-weight: 500;
+      gap: var(--spacing-xs);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
     }
+
+    .chat-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
     .chat-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
       color: white;
       transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: var(--shadow-md);
     }
-    .requirements-list {
+
+    .chat-btn:hover::before {
+      left: 100%;
+    }
+
+    .chat-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Enhanced Lists */
+    .requirements-list, .criteria-list {
       list-style: none;
       padding: 0;
       margin: 0;
     }
-    .requirements-list li {
-      padding: 12px 16px;
-      border-bottom: 1px solid #f0f0f0;
-      font-size: 14px;
-      color: #333;
-      background: #f8f9fa;
-      margin-bottom: 2px;
-      border-radius: 4px;
-      transition: all 0.2s ease;
+
+    .requirements-list li, .criteria-list li {
+      padding: var(--spacing-md) var(--spacing-lg);
+      border-bottom: 1px solid var(--border-light);
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      background: var(--surface-secondary);
+      margin-bottom: 0.25rem;
+      border-radius: var(--radius-md);
+      transition: all 0.3s ease;
+      position: relative;
     }
-    .requirements-list li:hover {
-      background: #e9ecef;
+
+    .requirements-list li:hover, .criteria-list li:hover {
+      background: var(--primary-red-lighter);
       transform: translateX(4px);
+      box-shadow: var(--shadow-sm);
     }
-    .requirements-list li:last-child {
+
+    .requirements-list li:last-child, .criteria-list li:last-child {
       border-bottom: none;
     }
-    .tagged-requirements-section .section-content {
-      background: #fff5f5;
-      border: 1px solid #fed7d7;
-      border-radius: 4px;
-    }
-    .criteria-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+
     .criteria-list li {
-      padding: 10px 16px;
-      color: #333;
-      font-size: 14px;
-      position: relative;
-      padding-left: 28px;
-      background: #f8f9fa;
-      margin-bottom: 4px;
-      border-radius: 4px;
-      border-left: 3px solid #d0021b;
-      transition: all 0.2s ease;
+      border-left: 3px solid var(--primary-red);
+      padding-left: var(--spacing-xl);
     }
-    .criteria-list li:hover {
-      background: #e9ecef;
-      border-left-color: #a0011a;
-    }
+
     .criteria-list li:before {
       content: "✓";
       position: absolute;
-      left: 8px;
-      color: #d0021b;
+      left: var(--spacing-sm);
+      color: var(--primary-red);
       font-weight: bold;
+      font-size: 1rem;
     }
+
+    /* Enhanced Tagged Requirements Section */
+    .tagged-requirements-section .section-content {
+      background: var(--primary-red-lighter);
+      border: 1px solid #fed7d7;
+      border-radius: var(--radius-md);
+    }
+
+    /* Enhanced Submit Button */
+    .submit-btn {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      border: none;
+      padding: var(--spacing-lg) var(--spacing-xl);
+      border-radius: var(--radius-lg);
+      font-weight: 700;
+      font-size: 1.125rem;
+      cursor: pointer;
+      width: 100%;
+      margin-top: var(--spacing-xl);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-lg);
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--primary-red-light) 0%, var(--primary-red) 100%);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .submit-btn:hover:not(:disabled)::before {
+      left: 100%;
+    }
+
+    .submit-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+      background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Hardcoded Content Styling */
     .hardcoded-content {
       color: #007bff !important;
       font-style: italic;
       font-weight: 500;
     }
+
     .story-header .hardcoded-content {
       color: #e2e8f0 !important;
     }
+
     .epic-title .hardcoded-content {
       color: #007bff !important;
     }
-    .submit-btn {
-      background-color: #d0021b;
-      color: white;
-      border: none;
-      padding: 16px 32px;
-      border-radius: 4px;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 24px;
-      font-size: 16px;
+
+    /* Enhanced Description */
+    .enhanced-description {
+      background: var(--surface-secondary);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-md);
+      border-left: 4px solid var(--primary-red);
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--text-primary);
+    }
+
+    /* Validation Summary */
+    #validation-summary {
+      background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary) 100%);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      margin-top: var(--spacing-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    #validation-summary h6 {
+      color: var(--primary-red);
+      font-weight: 700;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    /* Story Name and Multiple Stories */
+    .story-name-section {
+      background: white;
+      padding: var(--spacing-md);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .multiple-stories-summary {
+      background: var(--surface-secondary);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .story-item {
+      background: white !important;
+      border-left: 3px solid var(--primary-red) !important;
+      border-radius: var(--radius-md);
       transition: all 0.3s ease;
+      padding: var(--spacing-md);
+      margin-bottom: var(--spacing-sm);
     }
-    .submit-btn:hover {
-      background-color: #a0011a;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(208, 2, 27, 0.3);
+
+    .story-item:hover {
+      transform: translateX(4px);
+      box-shadow: var(--shadow-md);
     }
-    .submit-btn:active {
-      transform: translateY(0);
-    }
-    .hidden {
-      display: none;
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 1024px) {
+
+    /* Enhanced Responsive Design */
+    @media (max-width: 1200px) {
       .main-container {
-        margin: 15px;
+        margin: var(--spacing-lg);
         max-width: none;
       }
     }
-    
+
     @media (max-width: 768px) {
+      :root {
+        --spacing-xl: 1.5rem;
+        --spacing-2xl: 2rem;
+      }
+
       .main-container {
-        margin: 10px;
-        border-radius: 4px;
+        margin: var(--spacing-md);
+        border-radius: var(--radius-lg);
       }
+
       .content-container {
-        padding: 20px;
+        padding: var(--spacing-lg);
       }
+
       .info-row {
         flex-direction: column;
-        gap: 12px;
+        gap: var(--spacing-md);
       }
+
       .info-item {
         width: 100%;
         justify-content: space-between;
       }
+
       .chat-btn {
-        padding: 6px 12px;
-        font-size: 11px;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.75rem;
+      }
+
+      .section-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        text-align: center;
+      }
+
+      .story-header {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        text-align: center;
+        font-size: 1.25rem;
+      }
+
+      .submit-btn {
+        font-size: 1rem;
+        padding: var(--spacing-md) var(--spacing-lg);
       }
     }
-    
+
     @media (max-width: 480px) {
       .main-container {
-        margin: 5px;
+        margin: var(--spacing-sm);
       }
+
       .content-container {
-        padding: 16px;
+        padding: var(--spacing-md);
       }
+
       .epic-info-section {
-        padding: 16px;
+        padding: var(--spacing-md);
       }
+
       .section-header {
-        padding: 12px 16px;
-        font-size: 14px;
+        padding: var(--spacing-md);
+        font-size: 0.875rem;
       }
+
       .section-content {
-        padding: 16px;
+        padding: var(--spacing-md);
+      }
+
+      .top-bar {
+        padding: var(--spacing-md);
+        font-size: 0.8rem;
+      }
+
+      .story-header {
+        padding: var(--spacing-md);
+        font-size: 1.1rem;
       }
     }
-    
-    /* Story name section styling */
-    .story-name-section {
-      background: white;
-      padding: 12px;
-      border-radius: 4px;
-      border: 1px solid #ddd;
-    }
-    
-    /* Multiple stories summary styling */
-    .multiple-stories-summary {
-      background: #f8f9fa;
-      padding: 16px;
-      border-radius: 4px;
-      border: 1px solid #ddd;
-    }
-    
-    .story-item {
-      background: white !important;
-      border-left: 3px solid #d0021b !important;
-      border-radius: 4px;
-      transition: all 0.2s ease;
-    }
-    
-    .story-item:hover {
-      transform: translateX(4px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Chat Modal Styles - Right Bottom Corner Positioning */
-    /* Chat Modal Styles - Right Side Full Height */
+
+    /* Chat Modal Styles - Enhanced for Modern Design */
     .chat-modal {
       display: none !important;
       position: fixed !important;
@@ -349,7 +656,7 @@
       margin: 0;
       padding: 0;
       border: none;
-      border-radius: 12px 0 0 12px;
+      border-radius: var(--radius-xl) 0 0 var(--radius-xl);
       width: 100%;
       height: 100%;
       box-shadow: -8px 0 32px rgba(0, 0, 0, 0.2);
@@ -357,25 +664,57 @@
       flex-direction: column;
       overflow: hidden;
       position: relative;
-      border-left: 1px solid #e2e8f0;
+      border-left: 1px solid var(--border-light);
     }
     
     .chat-header {
-      background-color: #d0021b;
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
       color: white;
-      padding: 16px 20px;
+      padding: var(--spacing-lg) var(--spacing-xl);
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-weight: 600;
-      font-size: 16px;
+      font-size: 1rem;
+    }
+    
+    .chat-header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .chat-clear-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: var(--spacing-sm);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      font-weight: normal;
+    }
+    
+    .chat-clear-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+    
+    .chat-clear-btn:active {
+      transform: scale(0.95);
     }
     
     .chat-close {
       background: none;
       border: none;
       color: white;
-      font-size: 28px;
+      font-size: 1.75rem;
       cursor: pointer;
       padding: 0;
       width: 40px;
@@ -401,18 +740,18 @@
     
     .chat-messages {
       flex: 1;
-      padding: 24px;
+      padding: var(--spacing-xl);
       overflow-y: auto;
-      background: #f8f9fa;
+      background: var(--surface-secondary);
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: var(--spacing-lg);
     }
     
     .chat-message {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: var(--spacing-md);
       max-width: 80%;
     }
     
@@ -432,84 +771,88 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 1rem;
       font-weight: bold;
       flex-shrink: 0;
     }
     
     .chat-avatar.user {
-      background: #d0021b;
+      background: var(--primary-red);
       color: white;
     }
     
     .chat-avatar.assistant {
-      background: #f8f9fa;
+      background: var(--surface-secondary);
       color: #8B4513;
       border: 2px solid #007bff;
     }
     
     .chat-bubble {
-      background: rgb(140, 138, 236);
-      border-radius: 12px;
-      padding: 12px 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      border: 1px solid #e2e8f0;
+      background: rgb(224, 224, 235);
+      border-radius: var(--radius-xl);
+      padding: var(--spacing-md) var(--spacing-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
       word-wrap: break-word;
-      line-height: 1.5;
+      line-height: 1.6;
       color: #8B4513;
+      font-size: 0.875rem;
     }
     
     .chat-message.user .chat-bubble {
-      background: #d0021b;
+      background: var(--primary-red);
       color: white;
-      border-color: #d0021b;
+      border-color: var(--primary-red);
     }
     
     .chat-input-area {
-      padding: 24px;
+      padding: var(--spacing-xl);
       background: white;
-      border-top: 1px solid #e2e8f0;
+      border-top: 1px solid var(--border-light);
       display: flex;
-      gap: 16px;
+      gap: var(--spacing-lg);
       align-items: flex-end;
     }
     
     .chat-input {
       flex: 1;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-size: 14px;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md) var(--spacing-lg);
+      font-size: 0.875rem;
       resize: none;
       min-height: 44px;
       max-height: 120px;
       font-family: inherit;
+      transition: border-color 0.2s ease;
     }
     
     .chat-input:focus {
       outline: none;
-      border-color: #d0021b;
+      border-color: var(--primary-red);
       box-shadow: 0 0 0 2px rgba(208, 2, 27, 0.1);
     }
     
     .chat-send-btn {
-      background: #d0021b;
+      background: var(--primary-red);
       color: white;
       border: none;
-      border-radius: 8px;
-      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md) var(--spacing-lg);
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
       height: 44px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: var(--spacing-sm);
+      font-size: 0.875rem;
     }
     
     .chat-send-btn:hover:not(:disabled) {
-      background: #a0011a;
+      background: var(--primary-red-dark);
       transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
     }
     
     .chat-send-btn:disabled {
@@ -521,8 +864,8 @@
     .chat-loading {
       display: flex;
       align-items: center;
-      gap: 8px;
-      color: #666;
+      gap: var(--spacing-sm);
+      color: var(--text-secondary);
       font-style: italic;
     }
     
@@ -542,26 +885,27 @@
     }
     
     .current-description {
-      background: #fff5f5;
+      background: var(--primary-red-lighter);
       border: 1px solid #fed7d7;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 24px;
+      border-radius: var(--radius-md);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
     }
     
     .current-description h6 {
-      color: #d0021b;
+      color: var(--primary-red);
       font-weight: 600;
-      margin-bottom: 8px;
-      font-size: 14px;
+      margin-bottom: var(--spacing-sm);
+      font-size: 0.875rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     
     .current-description-text {
-      color: #333;
+      color: var(--text-primary);
       line-height: 1.6;
       margin: 0;
+      font-size: 0.875rem;
     }
     
     /* Responsive Chat Modal */
@@ -585,17 +929,17 @@
       }
       
       .chat-input-area {
-        padding: 12px;
+        padding: var(--spacing-md);
       }
       
       .chat-input {
-        font-size: 13px;
-        padding: 8px 12px;
+        font-size: 0.8rem;
+        padding: var(--spacing-sm) var(--spacing-md);
       }
       
       .chat-send-btn {
-        padding: 8px 12px;
-        font-size: 13px;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.8rem;
       }
     }
     
@@ -609,24 +953,428 @@
       }
       
       .chat-header {
-        padding: 12px 16px;
-        font-size: 14px;
+        padding: var(--spacing-md) var(--spacing-lg);
+        font-size: 0.875rem;
+      }
+      
+      .chat-clear-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 0.875rem;
+      }
+      
+      .chat-close {
+        width: 32px;
+        height: 32px;
+        font-size: 1.5rem;
       }
       
       .chat-messages {
-        padding: 15px;
-        gap: 12px;
+        padding: var(--spacing-md);
+        gap: var(--spacing-md);
       }
       
       .chat-avatar {
         width: 30px;
         height: 30px;
-        font-size: 14px;
+        font-size: 0.875rem;
       }
       
       .chat-bubble {
-        padding: 10px 12px;
-        font-size: 13px;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.8rem;
+      }
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+      }
+
+      .chat-btn {
+        display: none !important;
+      }
+
+      .submit-btn {
+        display: none !important;
+      }
+
+      .top-bar {
+        background: #f8f9fa !important;
+        color: black !important;
+      }
+
+      .section-header {
+        background: #f8f9fa !important;
+        color: black !important;
+      }
+    }
+
+    /* Animation for spinner in submit button */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Enhanced Focus Management */
+    *:focus {
+      outline: 2px solid var(--primary-red);
+      outline-offset: 2px;
+    }
+
+    /* Modern Loading States */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(26, 29, 35, 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 999999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(208, 2, 27, 0.3);
+      border-top: 4px solid var(--primary-red);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    /* Enhanced Toast Notifications */
+    .toast {
+      position: fixed;
+      bottom: var(--spacing-xl);
+      right: var(--spacing-xl);
+      background: white;
+      color: var(--text-primary);
+      padding: var(--spacing-lg) var(--spacing-xl);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      border-left: 4px solid var(--primary-red);
+      z-index: 100000;
+      transform: translateX(400px);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      max-width: 400px;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.success {
+      border-left-color: #10b981;
+    }
+
+    .toast.error {
+      border-left-color: #ef4444;
+    }
+
+    .toast.warning {
+      border-left-color: #f59e0b;
+    }
+
+    /* Enhanced Section Animations */
+    .section-container {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: sectionSlideIn 0.6s ease-out forwards;
+    }
+
+    .section-container:nth-child(1) { animation-delay: 0.1s; }
+    .section-container:nth-child(2) { animation-delay: 0.2s; }
+    .section-container:nth-child(3) { animation-delay: 0.3s; }
+    .section-container:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes sectionSlideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Improved User Feedback */
+    .button-pulse {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(208, 2, 27, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(208, 2, 27, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(208, 2, 27, 0);
+      }
+    }
+
+    /* Smooth Transitions for All Interactive Elements */
+    button, .chat-btn, .submit-btn, .back-button, .info-item, .section-container {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Enhanced Dark Mode Support (if needed in future) */
+    @media (prefers-color-scheme: dark) {
+      .main-container {
+        background: var(--background-light);
+        color: var(--text-light);
+      }
+      
+      .section-container {
+        background: var(--background-light);
+        border-color: var(--border-medium);
+      }
+      
+      .section-content {
+        background: var(--background-light);
+        color: var(--text-light);
+      }
+    }
+
+    /* Enhanced Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* High Contrast Mode Support */
+    @media (prefers-contrast: high) {
+      .section-container {
+        border-width: 2px;
+      }
+      
+      .chat-btn, .submit-btn, .back-button {
+        border-width: 2px;
+      }
+    }
+
+    /* Modern Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--surface-secondary);
+      border-radius: var(--radius-sm);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-medium);
+      border-radius: var(--radius-sm);
+      transition: background 0.2s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-red);
+    }
+
+    /* Modern Selection Styling */
+    ::selection {
+      background: rgba(208, 2, 27, 0.2);
+      color: var(--text-primary);
+    }
+
+    /* Enhanced Typography */
+    h1, h2, h3, h4, h5, h6 {
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+    }
+
+    p {
+      line-height: 1.6;
+      margin-bottom: var(--spacing-md);
+    }
+
+    /* Modern Input Styling */
+    input, textarea, select {
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-sm) var(--spacing-md);
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      background: white;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--primary-red);
+      box-shadow: 0 0 0 3px rgba(208, 2, 27, 0.1);
+      outline: none;
+    }
+
+    /* Modern Card Hover Effects */
+    .epic-info-section:hover,
+    .section-container:hover {
+      box-shadow: var(--shadow-xl);
+      border-color: var(--primary-red-light);
+    }
+
+    /* Improved Status Indicators */
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .status-warning {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .status-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    /* Modern Badge Styling */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--surface-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-light);
+    }
+
+    .badge-primary {
+      background: var(--primary-red-lighter);
+      color: var(--primary-red);
+      border-color: rgba(208, 2, 27, 0.2);
+    }
+
+    /* Enhanced Error States */
+    .form-error {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+
+    .error-message {
+      color: #ef4444;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .error-message::before {
+      content: "⚠️";
+      font-size: 1rem;
+    }
+
+    /* Modern Progress Indicators */
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--surface-tertiary);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: var(--spacing-md) 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    /* Enhanced List Styling */
+    .modern-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+
+    .modern-list-item {
+      background: white;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      transition: all 0.2s ease;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .modern-list-item:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-red);
+    }
+
+    .modern-list-item::before {
+      content: "✓";
+      width: 20px;
+      height: 20px;
+      background: var(--primary-red);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    /* Enhanced Grid Layout */
+    .modern-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--spacing-lg);
+    }
+
+    @media (max-width: 768px) {
+      .modern-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Enhanced Mobile Experience */
+    @media (max-width: 480px) {
+      .toast {
+        right: var(--spacing-md);
+        left: var(--spacing-md);
+        max-width: none;
+      }
+
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
       }
     }
   </style>
@@ -663,36 +1411,45 @@
     
     <!-- Error Message Display -->
     {% if error_message %}
-    <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
-      <strong>⚠️ Error:</strong> {{ error_message }}
+    <div class="status-indicator status-error" style="padding: var(--spacing-lg); margin-bottom: var(--spacing-lg); border-radius: var(--radius-lg); display: flex; align-items: center; gap: var(--spacing-md); background: #fee2e2; border: 1px solid #fecaca; color: #991b1b;">
+      <span style="font-size: 1.5rem;">⚠️</span>
+      <div>
+        <strong>Error:</strong> {{ error_message }}
+      </div>
     </div>
     {% endif %}
     
     <!-- Success Message Display -->
     {% if success_message %}
-    <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
-      <strong>✅ Success:</strong> {{ success_message }}
+    <div class="status-indicator status-success" style="padding: var(--spacing-lg); margin-bottom: var(--spacing-lg); border-radius: var(--radius-lg); display: flex; align-items: center; gap: var(--spacing-md); background: #dcfce7; border: 1px solid #bbf7d0; color: #166534;">
+      <span style="font-size: 1.5rem;">✅</span>
+      <div>
+        <strong>Success:</strong> {{ success_message }}
+      </div>
     </div>
     {% endif %}
     
     <!-- Epic Information Section -->
     <div class="epic-info-section">
-      <div class="epic-label">Epic:</div>
+      <div class="epic-label">
+        <span>🎯</span> Epic
+      </div>
       <div class="epic-title">
         {{ epic_title or '<span class="hardcoded-content">******</span>' | safe }}
-        <button class="chat-btn" onclick="openEpicChat()" style="margin-left: 10px;">
-          <span>💬 Chat</span>
-        </button>
       </div>
 
       <div class="info-row">
         <div class="info-item">
-          <span class="info-label">Priority:</span>
-          <span class="priority-high">{{ priority or '<span class="hardcoded-content">High</span>' | safe }}</span>
+          <span class="info-label">
+            <span>⚡</span> Priority:
+          </span>
+          <span class="priority-high badge badge-primary">{{ priority or '<span class="hardcoded-content">High</span>' | safe }}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">Responsible systems:</span>
-          <span>{{ responsible_systems or '<span class="hardcoded-content">CAPS, CMS</span>' | safe }}</span>
+          <span class="info-label">
+            <span>🔧</span> Responsible systems:
+          </span>
+          <span class="badge">{{ responsible_systems or '<span class="hardcoded-content">CAPS, CMS</span>' | safe }}</span>
         </div>
       </div>
     </div>
@@ -701,7 +1458,7 @@
     <!-- Description Section -->
     <div class="section-container">
       <div class="section-header">
-        <span>Description</span>
+        <span>📝 Description</span>
         <button class="chat-btn" onclick="openDescriptionChat()">
           <span>💬 Chat</span>
         </button>
@@ -710,21 +1467,34 @@
         {% if multiple_stories %}
           <!-- Multiple Stories Summary -->
           <div class="multiple-stories-summary">
-            <h6>Selected Stories ({{ story_count }}):</h6>
-            {% for story in stories %}
-              <div class="story-item" style="margin-bottom: 12px; padding: 8px; border-left: 3px solid #dc3545; background: #f8f9fa;">
-                <strong>{{ story.name }}</strong>
-                <p style="margin: 4px 0; font-size: 14px; color: #666;">{{ story.description }}</p>
-                <small style="color: #999;">Priority: {{ story.priority }} | System: {{ story.system }}</small>
-              </div>
-            {% endfor %}
+            <h6 style="color: var(--primary-red); margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: var(--spacing-xs);">
+              <span>📚</span> Selected Stories ({{ story_count }}):
+            </h6>
+            <div class="modern-grid">
+              {% for story in stories %}
+                <div class="story-item modern-list-item" style="margin-bottom: var(--spacing-md); border-left: 3px solid var(--primary-red); background: var(--surface-secondary);">
+                  <div>
+                    <strong style="color: var(--text-primary); font-size: 1.1rem;">{{ story.name }}</strong>
+                    <p style="margin: var(--spacing-xs) 0; font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5;">{{ story.description }}</p>
+                    <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-sm);">
+                      <span class="badge badge-primary">Priority: {{ story.priority }}</span>
+                      <span class="badge">System: {{ story.system }}</span>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
           </div>
         {% else %}
           <!-- Enhanced Description from User Description Agent -->
-          <div class="enhanced-description">
-            {{ user_story_description or '<span class="hardcoded-content">As a new borrower, I want to input my personal information (e.g., name, SSN) so that the system can accurately create my customer profile and initiate the onboarding process. This ensures that downstream verification steps (e.g. KYC, credit checks) can proceed without manual data correction or re-entry.</span>' | safe }}
+          <div class="enhanced-description" style="position: relative;">
+            <div style="display: flex; align-items: center; gap: var(--spacing-xs); margin-bottom: var(--spacing-md); color: var(--primary-red); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+              <span>📋</span> User Story Description
+            </div>
+            <div style="font-size: 1rem; line-height: 1.7; color: var(--text-primary);">
+              {{ user_story_description or '<span class="hardcoded-content">As a new borrower, I want to input my personal information (e.g., name, SSN) so that the system can accurately create my customer profile and initiate the onboarding process. This ensures that downstream verification steps (e.g. KYC, credit checks) can proceed without manual data correction or re-entry.</span>' | safe }}
+            </div>
           </div>
-          
         {% endif %}
       </div>
     </div>
@@ -732,22 +1502,25 @@
     <!-- Acceptance Criteria Section -->
     <div class="section-container">
       <div class="section-header">
-        <span>Acceptance criteria</span>
+        <span>✅ Acceptance Criteria</span>
         <button class="chat-btn" onclick="openAcceptanceCriteriaChat()">
           <span>💬 Chat</span>
         </button>
       </div>
       <div class="section-content">
-        <ul class="criteria-list">
+        <div style="display: flex; align-items: center; gap: var(--spacing-xs); margin-bottom: var(--spacing-lg); color: var(--primary-red); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+          <span>📋</span> Success Criteria
+        </div>
+        <ul class="criteria-list modern-list">
           {% if acceptance_criteria %}
             {% for criterion in acceptance_criteria %}
-            <li>{{ criterion }}</li>
+            <li class="modern-list-item" style="border-left: 3px solid var(--primary-red);">{{ criterion }}</li>
             {% endfor %}
           {% else %}
-          <li><span class="hardcoded-content">System prompts for full name, date of birth, Social Security Number, email address, phone number, and residential address</span></li>
-          <li><span class="hardcoded-content">Mandatory fields must be completed before progressing</span></li>
-          <li><span class="hardcoded-content">Input formats are validated (e.g., MM/DD/YYYY for DOB, 9-digit SSN, phone with area code)</span></li>
-          <li><span class="hardcoded-content">Errors are surfaced clearly and immediately for any missing or invalid entries</span></li>
+          <li class="modern-list-item" style="border-left: 3px solid var(--primary-red);"><span class="hardcoded-content">System prompts for full name, date of birth, Social Security Number, email address, phone number, and residential address</span></li>
+          <li class="modern-list-item" style="border-left: 3px solid var(--primary-red);"><span class="hardcoded-content">Mandatory fields must be completed before progressing</span></li>
+          <li class="modern-list-item" style="border-left: 3px solid var(--primary-red);"><span class="hardcoded-content">Input formats are validated (e.g., MM/DD/YYYY for DOB, 9-digit SSN, phone with area code)</span></li>
+          <li class="modern-list-item" style="border-left: 3px solid var(--primary-red);"><span class="hardcoded-content">Errors are surfaced clearly and immediately for any missing or invalid entries</span></li>
           {% endif %}
         </ul>
       </div>
@@ -756,37 +1529,52 @@
     <!-- Tagged Requirements Section -->
     <div class="section-container tagged-requirements-section">
       <div class="section-header">
-        <span>Tagged requirements</span>
+        <span>🏷️ Tagged Requirements</span>
         <button class="chat-btn" onclick="openRequirementsChat()">
           <span>💬 Chat</span>
         </button>
       </div>
       <div class="section-content">
-        <ul class="requirements-list">
+        <div style="display: flex; align-items: center; gap: var(--spacing-xs); margin-bottom: var(--spacing-lg); color: var(--primary-red); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
+          <span>📋</span> Technical Requirements
+        </div>
+        <ul class="requirements-list modern-list">
           {% if tagged_requirements %}
             {% for requirement in tagged_requirements %}
-            <li>{{ requirement }}</li>
+            <li class="modern-list-item" style="border-left: 3px solid var(--primary-red);">{{ requirement }}</li>
             {% endfor %}
           {% else %}
-          <li><span class="hardcoded-content">TBD</span></li>
-
+          <li class="modern-list-item" style="border-left: 3px solid var(--primary-red);"><span class="hardcoded-content">TBD - Requirements to be defined</span></li>
           {% endif %}
         </ul>
       </div>
     </div>
 
     <!-- Submit Button -->
-    <button type="button" class="submit-btn" onclick="submitToJira()" id="jira-submit-btn">
-      Submit & export to Jira
+    <button type="button" class="submit-btn button-pulse" onclick="submitToJira()" id="jira-submit-btn">
+      <span>🚀</span> Submit & Export to Jira
     </button>
     
-    <!-- Data Validation Summary -->
-    <div id="validation-summary" style="margin-top: 16px; padding: 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ddd; display: none;">
-      <h6 style="margin-bottom: 8px; color: #333;">📋 Submission Summary:</h6>
-      <div id="validation-details" style="font-size: 14px; color: #666;"></div>
+    <!-- Enhanced Data Validation Summary -->
+    <div id="validation-summary" class="status-indicator status-success" style="margin-top: var(--spacing-lg); padding: var(--spacing-lg); background: var(--surface-secondary); border-radius: var(--radius-lg); border: 1px solid var(--border-light); display: none; box-shadow: var(--shadow-sm);">
+      <h6 style="margin-bottom: var(--spacing-sm); color: var(--primary-red); display: flex; align-items: center; gap: var(--spacing-xs);">
+        <span>📋</span> Submission Summary:
+      </h6>
+      <div id="validation-details" style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6;"></div>
     </div>
     </div>
   </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div style="text-align: center; color: white;">
+      <div class="loading-spinner"></div>
+      <p style="margin-top: var(--spacing-lg); font-size: 1.1rem; font-weight: 600;">Processing your request...</p>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" style="position: fixed; bottom: var(--spacing-xl); right: var(--spacing-xl); z-index: 100001;"></div>
 
   <!-- Hidden form with data for Jira submission -->
   <form id="jira-form" action="/submit-jira-ticket" method="POST" style="display: none;">
@@ -804,7 +1592,12 @@
     <div class="chat-modal-content">
       <div class="chat-header">
         <span>💬 Edit Description</span>
-        <button class="chat-close" onclick="closeDescriptionChat()">&times;</button>
+        <div class="chat-header-actions">
+          <button class="chat-clear-btn" onclick="clearDescriptionChat()" title="Clear Chat">
+            🗑️
+          </button>
+          <button class="chat-close" onclick="closeDescriptionChat()">&times;</button>
+        </div>
       </div>
       <div class="chat-container">
         <!-- Current Description Display -->
@@ -845,7 +1638,12 @@
     <div class="chat-modal-content">
       <div class="chat-header">
         <span>💬 Edit Acceptance Criteria</span>
-        <button class="chat-close" onclick="closeAcceptanceCriteriaChat()">&times;</button>
+        <div class="chat-header-actions">
+          <button class="chat-clear-btn" onclick="clearAcceptanceCriteriaChat()" title="Clear Chat">
+            🗑️
+          </button>
+          <button class="chat-close" onclick="closeAcceptanceCriteriaChat()">&times;</button>
+        </div>
       </div>
       <div class="chat-container">
         <!-- Current Criteria Display -->
@@ -887,7 +1685,12 @@
     <div class="chat-modal-content">
       <div class="chat-header">
         <span>💬 Edit Tagged Requirements</span>
-        <button class="chat-close" onclick="closeRequirementsChat()">&times;</button>
+        <div class="chat-header-actions">
+          <button class="chat-clear-btn" onclick="clearRequirementsChat()" title="Clear Chat">
+            🗑️
+          </button>
+          <button class="chat-close" onclick="closeRequirementsChat()">&times;</button>
+        </div>
       </div>
       <div class="chat-container">
         <!-- Current Requirements Display -->
@@ -930,7 +1733,12 @@
     <div class="chat-modal-content">
       <div class="chat-header">
         <span>💬 Edit Epic</span>
-        <button class="chat-close" onclick="closeEpicChat()">&times;</button>
+        <div class="chat-header-actions">
+          <button class="chat-clear-btn" onclick="clearEpicChat()" title="Clear Chat">
+            🗑️
+          </button>
+          <button class="chat-close" onclick="closeEpicChat()">&times;</button>
+        </div>
       </div>
       <div class="chat-container">
         <!-- Current Epic Display -->
@@ -972,7 +1780,12 @@
     <div class="chat-modal-content">
       <div class="chat-header">
         <span>💬 Edit User Story</span>
-        <button class="chat-close" onclick="closeUserStoryChat()">&times;</button>
+        <div class="chat-header-actions">
+          <button class="chat-clear-btn" onclick="clearUserStoryChat()" title="Clear Chat">
+            🗑️
+          </button>
+          <button class="chat-close" onclick="closeUserStoryChat()">&times;</button>
+        </div>
       </div>
       <div class="chat-container">
         <!-- Current User Story Display -->
@@ -1017,33 +1830,31 @@
   function submitToJira() {
     console.log('Submitting to Jira...');
     
-    // Show validation summary
+    // Remove pulse animation from submit button
+    removeButtonPulse('jira-submit-btn');
+    
+    // Enhanced validation with modern UI feedback
+    if (!validateForm()) {
+      return;
+    }
+    
+    // Show validation summary with modern styling
     showValidationSummary();
     
-    // Show loading state
+    // Show modern loading state
     const submitBtn = document.querySelector('.submit-btn');
     const originalText = submitBtn.innerHTML;
     
     submitBtn.disabled = true;
     submitBtn.innerHTML = `
-      <span style="display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></span>
+      <div class="loading-spinner" style="width: 20px; height: 20px; margin-right: var(--spacing-sm);"></div>
       Submitting to Jira...
     `;
     
-    // Add CSS animation for spinner
-    if (!document.getElementById('spinner-style')) {
-      const style = document.createElement('style');
-      style.id = 'spinner-style';
-      style.textContent = `
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `;
-      document.head.appendChild(style);
-    }
+    // Show loading overlay
+    showLoading('Preparing your Jira ticket...');
     
-    // Get form data and validate
+    // Get form data
     const form = document.getElementById('jira-form');
     const formData = new FormData(form);
     
@@ -1053,50 +1864,55 @@
       console.log(`${key}: ${value}`);
     }
     
-    // Validate required fields
+    // Get values for confirmation
     const userStoryName = formData.get('user_story_name');
     const userStoryDescription = formData.get('user_story_description');
+    const epicTitle = formData.get('epic_title');
+    const priority = formData.get('priority');
+    const systems = formData.get('responsible_systems');
     
-    if (!userStoryName || userStoryName.trim() === '') {
-      alert('Error: User story name is required');
-      resetSubmitButton(submitBtn, originalText);
-      return;
-    }
+    // Hide loading overlay temporarily for confirmation
+    hideLoading();
     
-    if (!userStoryDescription || userStoryDescription.trim() === '') {
-      alert('Error: User story description is required');
-      resetSubmitButton(submitBtn, originalText);
-      return;
-    }
-    
-    // Ask for final confirmation
-    const confirmMessage = `You are about to create a Jira ticket with the following details:
+    // Enhanced confirmation dialog
+    const confirmMessage = `🚀 Ready to Submit to Jira
 
 📋 Story: ${userStoryName}
-🎯 Epic: ${formData.get('epic_title') || 'N/A'}
-⚡ Priority: ${formData.get('priority') || 'High'}
-🔧 Systems: ${formData.get('responsible_systems') || 'N/A'}
+🎯 Epic: ${epicTitle || 'N/A'}
+⚡ Priority: ${priority || 'High'}
+🔧 Systems: ${systems || 'N/A'}
 
 Do you want to proceed?`;
     
     if (!confirm(confirmMessage)) {
       resetSubmitButton(submitBtn, originalText);
+      addButtonPulse('jira-submit-btn');
+      showToast('Submission cancelled', 'warning', 3000);
       return;
     }
     
-    // Submit the form
+    // Show loading overlay again for submission
+    showLoading('Creating Jira ticket...');
+    
+    // Submit the form with modern UI feedback
     fetch('/submit-jira-ticket', {
       method: 'POST',
       body: formData
     })
     .then(response => {
+      hideLoading();
+      
       if (response.ok) {
         console.log('Jira submission successful');
-        // Show success message briefly before redirect
+        
+        // Show modern success state
         submitBtn.innerHTML = `
-          <span style="margin-right: 8px;">✅</span>
+          <span style="margin-right: var(--spacing-sm);">✅</span>
           Success! Redirecting...
         `;
+        
+        // Show success toast
+        showToast('Jira ticket created successfully! Redirecting...', 'success', 3000);
         
         // Redirect to the response page after a brief delay
         setTimeout(() => {
@@ -1105,15 +1921,19 @@ Do you want to proceed?`;
             document.write(html);
             document.close();
           });
-        }, 1000);
+        }, 1500);
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     })
     .catch(error => {
       console.error('Error submitting to Jira:', error);
-      alert(`Failed to submit to Jira: ${error.message}\n\nPlease check the console for more details and try again.`);
+      hideLoading();
+      
+      // Show modern error feedback
+      showToast(`Failed to submit to Jira: ${error.message}. Please try again.`, 'error', 8000);
       resetSubmitButton(submitBtn, originalText);
+      addButtonPulse('jira-submit-btn');
     });
   }
   
@@ -1289,7 +2109,7 @@ Do you want to proceed?`;
       
       // Remove loading message
       const loadingMsg = document.getElementById(loadingMessageId);
-      if (loadingMsg) loadingMsg.remove();
+      if ( loadingMsg) loadingMsg.remove();
       
       if (data.success) {
         // Get the AI response - check both possible response properties
@@ -1897,532 +2717,225 @@ Do you want to proceed?`;
     saveUserStoryData();
   }
   
-  // Save user story data to localStorage for persistence
-  function saveUserStoryData() {
-    const data = {
-      epic_title: document.querySelector('input[name="epic_title"]').value,
-      user_story_name: document.querySelector('input[name="user_story_name"]').value,
-      user_story_description: document.querySelector('input[name="user_story_description"]').value,
-      priority: document.querySelector('input[name="priority"]').value,
-      responsible_systems: document.querySelector('input[name="responsible_systems"]').value,
-      acceptance_criteria: document.querySelector('input[name="acceptance_criteria"]').value,
-      tagged_requirements: document.querySelector('input[name="tagged_requirements"]').value,
-      timestamp: new Date().toISOString()
-    };
-    
-    localStorage.setItem('current_user_story', JSON.stringify(data));
-    console.log('User story data saved to localStorage');
+  // Modern UI Utilities
+  function showLoading(message = 'Processing your request...') {
+    const overlay = document.getElementById('loading-overlay');
+    const messageElement = overlay.querySelector('p');
+    messageElement.textContent = message;
+    overlay.style.display = 'flex';
   }
-  
-  // Auto-save data when form changes
+
+  function hideLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    overlay.style.display = 'none';
+  }
+
+  function showToast(message, type = 'success', duration = 5000) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+    toast.innerHTML = `
+      <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+        <span style="font-size: 1.2rem;">${icon}</span>
+        <span>${message}</span>
+      </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Trigger the animation
+    requestAnimationFrame(() => {
+      toast.classList.add('show');
+    });
+    
+    // Auto-remove after duration
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    }, duration);
+  }
+
+  function animateButton(button, text, icon = '') {
+    const originalText = button.innerHTML;
+    button.innerHTML = `${icon} ${text}`;
+    button.style.transform = 'scale(0.95)';
+    
+    setTimeout(() => {
+      button.style.transform = 'scale(1)';
+    }, 150);
+    
+    return originalText;
+  }
+
+  function addButtonPulse(buttonId) {
+    const button = document.getElementById(buttonId);
+    if (button) {
+      button.classList.add('button-pulse');
+    }
+  }
+
+  function removeButtonPulse(buttonId) {
+    const button = document.getElementById(buttonId);
+    if (button) {
+      button.classList.remove('button-pulse');
+    }
+  }
+
+  // Enhanced form validation with visual feedback
+  function validateForm() {
+    const form = document.getElementById('jira-form');
+    const formData = new FormData(form);
+    let isValid = true;
+    const errors = [];
+
+    // Check required fields
+    const requiredFields = [
+      { name: 'user_story_name', label: 'User Story Name' },
+      { name: 'user_story_description', label: 'User Story Description' },
+      { name: 'epic_title', label: 'Epic Title' }
+    ];
+
+    requiredFields.forEach(field => {
+      const value = formData.get(field.name);
+      if (!value || value.trim() === '') {
+        isValid = false;
+        errors.push(`${field.label} is required`);
+      }
+    });
+
+    if (!isValid) {
+      showToast(`Please fix the following errors:\n${errors.join('\n')}`, 'error', 8000);
+    }
+
+    return isValid;
+  }
+
+  // Initialize modern animations when page loads
   document.addEventListener('DOMContentLoaded', function() {
+    // Add staggered animations to sections
+    const sections = document.querySelectorAll('.section-container');
+    sections.forEach((section, index) => {
+      section.style.animationDelay = `${(index + 1) * 0.1}s`;
+    });
+
+    // Add pulse animation to submit button
+    setTimeout(() => {
+      addButtonPulse('jira-submit-btn');
+    }, 2000);
+
+    // Add hover effects to info items
+    const infoItems = document.querySelectorAll('.info-item');
+    infoItems.forEach(item => {
+      item.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px) scale(1.02)';
+        this.style.boxShadow = 'var(--shadow-lg)';
+      });
+      
+      item.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+        this.style.boxShadow = 'var(--shadow-sm)';
+      });
+    });
+
+    // Show welcome toast
+    setTimeout(() => {
+      showToast('Welcome! Review your user story details and click Submit when ready.', 'success', 4000);
+    }, 1000);
+  });
+
+  // Enhanced window unload handling
+  window.addEventListener('beforeunload', function(e) {
     const form = document.getElementById('jira-form');
     if (form) {
-      // Save data every 30 seconds
-      setInterval(saveUserStoryData, 30000);
-      
-      // Save data when user leaves the page
-      window.addEventListener('beforeunload', saveUserStoryData);
-    }
-    
-    // Log current form data for debugging
-    console.log('Page loaded. Current form data:');
-    const formData = new FormData(document.getElementById('jira-form'));
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
-    }
-    
-    // Add debug button (remove in production)
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      addDebugButton();
+      saveUserStoryData();
     }
   });
-  
-  // Epic Chat Functions
-  function openEpicChat() {
-    const modal = document.getElementById('epic-chat-modal');
-    if (!modal) {
-      alert('❌ Error: Epic chat modal not found. Please reload the page and try again.');
+
+  function clearDescriptionChat() {
+    if (!confirm('Are you sure you want to clear this chat? This action cannot be undone.')) {
       return;
     }
     
-    const currentEpicDisplay = document.getElementById('current-epic-display');
-    
-    // Get current epic title
-    let currentEpic = '';
-    const hiddenInput = document.querySelector('input[name="epic_title"]');
-    const displayElement = document.querySelector('.epic-title');
-    
-    if (hiddenInput && hiddenInput.value) {
-      currentEpic = hiddenInput.value;
-    } else if (displayElement) {
-      currentEpic = displayElement.textContent.trim();
-    } else {
-      currentEpic = 'No epic available';
-    }
-    
-    // Update the current epic display in the modal
-    if (currentEpicDisplay) {
-      currentEpicDisplay.textContent = currentEpic;
-    }
-    
-    // Show the modal
-    modal.style.display = 'block';
-    
-    // Focus on the input
-    setTimeout(() => {
-      const inputElement = document.getElementById('epic-chat-input');
-      if (inputElement) {
-        inputElement.focus();
-      }
-    }, 100);
-    
-    // Add event listener for Enter key
-    const chatInput = document.getElementById('epic-chat-input');
-    if (chatInput && !chatInput.hasAttribute('data-listener-added')) {
-      chatInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendEpicMessage();
-        }
-      });
-      chatInput.setAttribute('data-listener-added', 'true');
-    }
-  }
-  
-  function closeEpicChat() {
-    const modal = document.getElementById('epic-chat-modal');
-    modal.style.display = 'none';
-  }
-  
-  function sendEpicMessage() {
-    const input = document.getElementById('epic-chat-input');
-    const message = input.value.trim();
-    
-    if (!message) return;
-    
-    // Add user message to chat
-    addEpicChatMessage(message, 'user');
-    
-    // Clear input
-    input.value = '';
-    
-    // Show loading state
-    const sendBtn = document.getElementById('epic-send-btn');
-    sendBtn.disabled = true;
-    sendBtn.innerHTML = '<span class="chat-loading-dots"></span> Processing';
-    
-    // Add loading message
-    const loadingMessageId = addEpicChatMessage('', 'assistant', true);
-    
-    // Get current epic and story context
-    const epicInput = document.querySelector('input[name="epic_title"]');
-    const currentEpic = epicInput ? epicInput.value : '';
-    
-    const storyContext = document.querySelector('input[name="user_story_name"]').value + ': ' + 
-                        document.querySelector('input[name="user_story_description"]').value;
-    
-    // Call backend API
-    fetch('/epic-chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: message,
-        current_epic: currentEpic,
-        story_context: storyContext
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Epic Chat API Response:', data);
+    const messagesContainer = document.getElementById('description-chat-messages');
+    if (messagesContainer) {
+      // Keep only the initial AI message if it exists
+      const assistantMessage = messagesContainer.querySelector('.chat-message.assistant');
+      messagesContainer.innerHTML = '';
       
-      // Remove loading message
-      const loadingMsg = document.getElementById(loadingMessageId);
-      if (loadingMsg) loadingMsg.remove();
-      
-      if (data.success) {
-        // Get the AI response - check both possible response properties
-        const aiResponse = data.message || data.response || 'No response received';
-        console.log('AI Response:', aiResponse);
-        
-        // Add AI response
-        addEpicChatMessage(aiResponse, 'assistant');
-        
-        // If there's an updated epic, offer to apply it
-        if (data.updated_epic && data.updated_epic.trim()) {
-          const buttonId = 'apply-epic-btn-' + Date.now();
-          
-          addEpicChatMessage(
-            `Here's the updated epic. Would you like me to apply this change?
-            
-            <div style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; font-style: italic;">
-              ${data.updated_epic}
-            </div>
-            
-            <button id="${buttonId}" 
-                    style="background: #d0021b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
-              ✓ Apply This Epic
-            </button>`, 
-            'assistant'
-          );
-          
-          // Add click event listener to the button
-          setTimeout(() => {
-            const button = document.getElementById(buttonId);
-            if (button) {
-              button.addEventListener('click', () => {
-                applyEpicUpdate(data.updated_epic);
-              });
-            }
-          }, 100);
-        }
-      } else {
-        addEpicChatMessage('Sorry, I encountered an error processing your request. Please try again.', 'assistant');
+      if (assistantMessage) {
+        messagesContainer.appendChild(assistantMessage);
       }
       
-      // Reset send button
-      sendBtn.disabled = false;
-      sendBtn.innerHTML = '<span>📤</span> Send';
-    })
-    .catch(error => {
-      console.error('Error calling epic chat API:', error);
-      
-      // Remove loading message
-      const loadingMsg = document.getElementById(loadingMessageId);
-      if (loadingMsg) loadingMsg.remove();
-      
-      // Show error message
-      addEpicChatMessage('Sorry, I encountered a connection error. Please check your internet connection and try again.', 'assistant');
-      
-      // Reset send button
-      sendBtn.disabled = false;
-      sendBtn.innerHTML = '<span>📤</span> Send';
-    });
+      showToast('Description chat cleared successfully', 'success', 3000);
+    }
   }
-  
-  function addEpicChatMessage(message, sender, isLoading = false) {
+
+  function clearAcceptanceCriteriaChat() {
+    if (!confirm('Are you sure you want to clear this chat? This action cannot be undone.')) {
+      return;
+    }
+    
+    const messagesContainer = document.getElementById('criteria-chat-messages');
+    if (messagesContainer) {
+      // Keep only the initial AI message if it exists
+      const assistantMessage = messagesContainer.querySelector('.chat-message.assistant');
+      messagesContainer.innerHTML = '';
+      
+      if (assistantMessage) {
+        messagesContainer.appendChild(assistantMessage);
+      }
+      
+      showToast('Acceptance Criteria chat cleared successfully', 'success', 3000);
+    }
+  }
+
+  function clearRequirementsChat() {
+    if (!confirm('Are you sure you want to clear this chat? This action cannot be undone.')) {
+      return;
+    }
+    
+    const messagesContainer = document.getElementById('requirements-chat-messages');
+    if (messagesContainer) {
+      // Keep only the initial AI message if it exists
+      const assistantMessage = messagesContainer.querySelector('.chat-message.assistant');
+      messagesContainer.innerHTML = '';
+      
+      if (assistantMessage) {
+        messagesContainer.appendChild(assistantMessage);
+      }
+      
+      showToast('Requirements chat cleared successfully', 'success', 3000);
+    }
+  }
+
+  function clearEpicChat() {
+    if (!confirm('Are you sure you want to clear this chat? This action cannot be undone.')) {
+      return;
+    }
+    
     const messagesContainer = document.getElementById('epic-chat-messages');
-    const messageDiv = document.createElement('div');
-    const messageId = 'epic-msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    messageDiv.id = messageId;
-    
-    if (isLoading) {
-      messageDiv.className = 'chat-message assistant';
-      messageDiv.innerHTML = `
-        <div class="chat-avatar assistant">AI</div>
-        <div class="chat-bubble">
-          <div class="chat-loading-dots"></div>
-        </div>
-      `;
-    } else {
-      messageDiv.className = `chat-message ${sender}`;
-      
-      if (sender === 'user') {
-        messageDiv.innerHTML = `
-          <div class="chat-bubble">${message}</div>
-          <div class="chat-avatar user">You</div>
-        `;
-      } else {
-        messageDiv.innerHTML = `
-          <div class="chat-avatar assistant">AI</div>
-          <div class="chat-bubble">${message}</div>
-        `;
-      }
+    if (messagesContainer) {
+      messagesContainer.innerHTML = '';
+      showToast('Epic chat cleared successfully', 'success', 3000);
     }
-    
-    messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
-    return messageId;
   }
-  
-  function applyEpicUpdate(newEpic) {
-    // Update the hidden input
-    const epicInput = document.querySelector('input[name="epic_title"]');
-    if (epicInput) {
-      epicInput.value = newEpic;
-    }
-    
-    // Update the display
-    const epicDisplay = document.querySelector('.epic-title');
-    if (epicDisplay) {
-      epicDisplay.innerHTML = newEpic;
-    }
-    
-    // Update the modal display
-    const currentEpicDisplay = document.getElementById('current-epic-display');
-    if (currentEpicDisplay) {
-      currentEpicDisplay.textContent = newEpic;
-    }
-    
-    // Save to localStorage
-    saveUserStoryData();
-    
-    // Show success message
-    addEpicChatMessage('✅ Epic updated successfully! The changes are now applied to your story.', 'assistant');
-  }
-  
-  // User Story Chat Functions
-  function openUserStoryChat() {
-    const modal = document.getElementById('user-story-chat-modal');
-    if (!modal) {
-      alert('❌ Error: User story chat modal not found. Please reload the page and try again.');
+
+  function clearUserStoryChat() {
+    if (!confirm('Are you sure you want to clear this chat? This action cannot be undone.')) {
       return;
     }
     
-    const currentUserStoryDisplay = document.getElementById('current-user-story-display');
-    
-    // Get current user story
-    let currentUserStory = '';
-    const hiddenInput = document.querySelector('input[name="user_story_name"]');
-    const displayElement = document.querySelector('.story-header');
-    
-    if (hiddenInput && hiddenInput.value) {
-      currentUserStory = hiddenInput.value;
-    } else if (displayElement) {
-      currentUserStory = displayElement.textContent.replace('User story: ', '').trim();
-    } else {
-      currentUserStory = 'No user story available';
-    }
-    
-    // Update the current user story display in the modal
-    if (currentUserStoryDisplay) {
-      currentUserStoryDisplay.textContent = currentUserStory;
-    }
-    
-    // Show the modal
-    modal.style.display = 'block';
-    
-    // Focus on the input
-    setTimeout(() => {
-      const inputElement = document.getElementById('user-story-chat-input');
-      if (inputElement) {
-        inputElement.focus();
-      }
-    }, 100);
-    
-    // Add event listener for Enter key
-    const chatInput = document.getElementById('user-story-chat-input');
-    if (chatInput && !chatInput.hasAttribute('data-listener-added')) {
-      chatInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendUserStoryMessage();
-        }
-      });
-      chatInput.setAttribute('data-listener-added', 'true');
-    }
-  }
-  
-  function closeUserStoryChat() {
-    const modal = document.getElementById('user-story-chat-modal');
-    modal.style.display = 'none';
-  }
-  
-  function sendUserStoryMessage() {
-    const input = document.getElementById('user-story-chat-input');
-    const message = input.value.trim();
-    
-    if (!message) return;
-    
-    // Add user message to chat
-    addUserStoryChatMessage(message, 'user');
-    
-    // Clear input
-    input.value = '';
-    
-    // Show loading state
-    const sendBtn = document.getElementById('user-story-send-btn');
-    sendBtn.disabled = true;
-    sendBtn.innerHTML = '<span class="chat-loading-dots"></span> Processing';
-    
-    // Add loading message
-    const loadingMessageId = addUserStoryChatMessage('', 'assistant', true);
-    
-    // Get current user story and context
-    const userStoryInput = document.querySelector('input[name="user_story_name"]');
-    const currentUserStory = userStoryInput ? userStoryInput.value : '';
-    
-    const epicTitle = document.querySelector('input[name="epic_title"]').value;
-    const description = document.querySelector('input[name="user_story_description"]').value;
-    
-    // Call backend API
-    fetch('/user-story-chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: message,
-        current_user_story: currentUserStory,
-        epic_title: epicTitle,
-        description: description
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('User Story Chat API Response:', data);
-      
-      // Remove loading message
-      const loadingMsg = document.getElementById(loadingMessageId);
-      if (loadingMsg) loadingMsg.remove();
-      
-      if (data.success) {
-        // Get the AI response - check both possible response properties
-        const aiResponse = data.message || data.response || 'No response received';
-        console.log('AI Response:', aiResponse);
-        
-        // Add AI response
-        addUserStoryChatMessage(aiResponse, 'assistant');
-        
-        // If there's an updated user story, offer to apply it
-        if (data.updated_user_story && data.updated_user_story.trim()) {
-          const buttonId = 'apply-user-story-btn-' + Date.now();
-          
-          addUserStoryChatMessage(
-            `Here's the updated user story. Would you like me to apply this change?
-            
-            <div style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; font-style: italic;">
-              ${data.updated_user_story}
-            </div>
-            
-            <button id="${buttonId}" 
-                    style="background: #d0021b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
-              ✓ Apply This User Story
-            </button>`, 
-            'assistant'
-          );
-          
-          // Add click event listener to the button
-          setTimeout(() => {
-            const button = document.getElementById(buttonId);
-            if (button) {
-              button.addEventListener('click', () => {
-                applyUserStoryUpdate(data.updated_user_story);
-              });
-            }
-          }, 100);
-        }
-      } else {
-        console.error('API returned error:', data);
-        const errorMsg = data.error || 'Sorry, I encountered an error processing your request. Please try again.';
-        addUserStoryChatMessage(errorMsg, 'assistant');
-      }
-      
-      // Reset send button
-      sendBtn.disabled = false;
-      sendBtn.innerHTML = '<span>📤</span> Send';
-    })
-    .catch(error => {
-      console.error('Error calling user story chat API:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack
-      });
-      
-      // Remove loading message
-      const loadingMsg = document.getElementById(loadingMessageId);
-      if (loadingMsg) loadingMsg.remove();
-      
-      // Show error message
-      addUserStoryChatMessage('Sorry, I encountered a connection error. Please check your internet connection and try again.', 'assistant');
-      
-      // Reset send button
-      sendBtn.disabled = false;
-      sendBtn.innerHTML = '<span>📤</span> Send';
-    });
-  }
-  
-  function addUserStoryChatMessage(message, sender, isLoading = false) {
     const messagesContainer = document.getElementById('user-story-chat-messages');
-    const messageDiv = document.createElement('div');
-    const messageId = 'user-story-msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    messageDiv.id = messageId;
-    
-    if (isLoading) {
-      messageDiv.className = 'chat-message assistant';
-      messageDiv.innerHTML = `
-        <div class="chat-avatar assistant">AI</div>
-        <div class="chat-bubble">
-          <div class="chat-loading-dots"></div>
-        </div>
-      `;
-    } else {
-      messageDiv.className = `chat-message ${sender}`;
-      
-      if (sender === 'user') {
-        messageDiv.innerHTML = `
-          <div class="chat-bubble">${message}</div>
-          <div class="chat-avatar user">You</div>
-        `;
-      } else {
-        messageDiv.innerHTML = `
-          <div class="chat-avatar assistant">AI</div>
-          <div class="chat-bubble">${message}</div>
-        `;
-      }
+    if (messagesContainer) {
+      messagesContainer.innerHTML = '';
+      showToast('User Story chat cleared successfully', 'success', 3000);
     }
-    
-    messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
-    return messageId;
-  }
-  
-  function applyUserStoryUpdate(newUserStory) {
-    // Update the hidden input
-    const userStoryInput = document.querySelector('input[name="user_story_name"]');
-    if (userStoryInput) {
-      userStoryInput.value = newUserStory;
-    }
-    
-    // Update the display
-    const storyDisplay = document.querySelector('.story-header');
-    if (storyDisplay) {
-      storyDisplay.innerHTML = `User story: ${newUserStory}
-        <button class="chat-btn" onclick="openUserStoryChat()" style="margin-left: 10px; float: right;">
-          <span>💬 Chat</span>
-        </button>`;
-    }
-    
-    // Update the modal display
-    const currentUserStoryDisplay = document.getElementById('current-user-story-display');
-    if (currentUserStoryDisplay) {
-      currentUserStoryDisplay.textContent = newUserStory;
-    }
-    
-    // Save to localStorage
-    saveUserStoryData();
-    
-    // Show success message
-    addUserStoryChatMessage('✅ User story updated successfully! The changes are now applied.', 'assistant');
-  }
-  
-  function addDebugButton() {
-    const debugBtn = document.createElement('button');
-    debugBtn.textContent = '🐛 Debug Info';
-    debugBtn.style.cssText = `
-      position: fixed; top: 10px; right: 10px; z-index: 9999;
-      background: #007bff; color: white; border: none; padding: 8px 12px;
-      border-radius: 4px; font-size: 12px; cursor: pointer;
-    `;
-    debugBtn.onclick = function() {
-      const formData = new FormData(document.getElementById('jira-form'));
-      let debugInfo = 'Form Data:\n';
-      for (let [key, value] of formData.entries()) {
-        debugInfo += `${key}: ${value}\n`;
-      }
-      debugInfo += `\nURL: ${window.location.href}`;
-      debugInfo += `\nTimestamp: ${new Date().toISOString()}`;
-      
-      // Copy to clipboard and show alert
-      navigator.clipboard.writeText(debugInfo).then(() => {
-        alert('Debug info copied to clipboard!\n\n' + debugInfo);
-      });
-    };
-    document.body.appendChild(debugBtn);
   }
 </script>
 </body>

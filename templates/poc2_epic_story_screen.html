@@ -1201,24 +1201,51 @@
   }
 
   function showButtonLoading(button, spinner, timer, buttonText, loadingText) {
-    if (!button || !spinner || !timer) {
-      console.error('showButtonLoading: missing elements');
+    if (!button) {
+      console.error('showButtonLoading: button element is null');
       return null;
     }
 
     try {
       button.disabled = true;
-      spinner.style.display = 'block';
       
+      // Show spinner if available
+      if (spinner) {
+        spinner.style.display = 'block';
+      } else {
+        console.warn('showButtonLoading: spinner element not found');
+      }
+      
+      // Update button text if available
       const btnTextElement = button.querySelector('.btn-text');
       if (btnTextElement) {
         btnTextElement.textContent = loadingText;
+      } else {
+        console.warn('showButtonLoading: .btn-text element not found');
       }
       
-      timer.textContent = '0:00';
-      const intervalId = startTimer(null, timer);
-      
-      return intervalId;
+      // Start timer if available
+      if (timer) {
+        timer.textContent = '0:00';
+        const intervalId = startTimer(null, timer);
+        if (intervalId) {
+          return intervalId;
+        } else {
+          console.warn('showButtonLoading: failed to start timer, creating fallback');
+          // Fallback timer implementation
+          let seconds = 0;
+          return setInterval(() => {
+            seconds++;
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            const timeString = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            if (timer) timer.textContent = timeString;
+          }, 1000);
+        }
+      } else {
+        console.warn('showButtonLoading: timer element not found');
+        return null;
+      }
     } catch (error) {
       console.error('Error in showButtonLoading:', error);
       return null;
@@ -1226,21 +1253,37 @@
   }
 
   function hideButtonLoading(button, spinner, timer, originalText, timerInterval) {
-    if (!button || !spinner || !timer) {
-      console.warn('hideButtonLoading: some elements are null');
+    if (!button) {
+      console.warn('hideButtonLoading: button element is null');
       return;
     }
 
     try {
       button.disabled = false;
-      spinner.style.display = 'none';
       
+      // Hide spinner if available
+      if (spinner) {
+        spinner.style.display = 'none';
+      } else {
+        console.warn('hideButtonLoading: spinner element not found');
+      }
+      
+      // Restore button text if available
       const btnTextElement = button.querySelector('.btn-text');
       if (btnTextElement) {
         btnTextElement.textContent = originalText;
+      } else {
+        console.warn('hideButtonLoading: .btn-text element not found');
       }
       
-      timer.textContent = '';
+      // Clear timer if available
+      if (timer) {
+        timer.textContent = '';
+      } else {
+        console.warn('hideButtonLoading: timer element not found');
+      }
+      
+      // Clear timer interval
       if (timerInterval) {
         clearInterval(timerInterval);
       }
@@ -1698,6 +1741,26 @@
     if (userStoriesContainer && userStoriesContainer.innerHTML.trim()) {
       parseAndFormatUserStories();
     }
+    
+    // Validate button elements are present for debugging
+    const approveBtn = document.getElementById('approveEpicsBtn');
+    const approveSpinner = document.getElementById('approveSpinner');
+    const approveTimer = document.getElementById('approveTimer');
+    const proceedBtn = document.getElementById('proceedBtn');
+    const proceedSpinner = document.getElementById('proceedSpinner');
+    const proceedTimerEl = document.getElementById('proceedTimer');
+    
+    console.log('Button element validation:');
+    console.log('  - Approve button:', !!approveBtn);
+    console.log('  - Approve spinner:', !!approveSpinner);
+    console.log('  - Approve timer:', !!approveTimer);
+    console.log('  - Proceed button:', !!proceedBtn);
+    console.log('  - Proceed spinner:', !!proceedSpinner);
+    console.log('  - Proceed timer:', !!proceedTimerEl);
+    
+    // Ensure spinners are initially hidden
+    if (approveSpinner) approveSpinner.style.display = 'none';
+    if (proceedSpinner) proceedSpinner.style.display = 'none';
   });
   
   // Also try after a slight delay in case content is loaded asynchronously
@@ -1720,6 +1783,12 @@
     const approveBtn = document.getElementById('approveEpicsBtn');
     const approveSpinner = document.getElementById('approveSpinner');
     const approveTimerEl = document.getElementById('approveTimer');
+    
+    // Prevent double submission
+    if (approveBtn.disabled) {
+      console.log('Epic approval already in progress, ignoring duplicate submission');
+      return;
+    }
     
     // Get current epics content to preserve it
     const epicsContainer = document.getElementById('epics-container');
@@ -1757,8 +1826,21 @@
       return;
     }
     
-    // Show loading spinner and start timer
-    approveTimer = showButtonLoading(approveBtn, approveSpinner, approveTimerEl, 'Approve Epic(s)', 'Processing...');
+    // Show loading spinner and start timer with better error handling
+    let timerInterval = null;
+    try {
+      timerInterval = showButtonLoading(approveBtn, approveSpinner, approveTimerEl, 'Approve Epic(s)', 'Processing...');
+      if (!timerInterval) {
+        console.warn('Timer interval not started, fallback loading state');
+        approveBtn.disabled = true;
+        if (approveSpinner) approveSpinner.style.display = 'block';
+        const btnText = approveBtn.querySelector('.btn-text');
+        if (btnText) btnText.textContent = 'Processing...';
+      }
+    } catch (error) {
+      console.error('Error starting loading state:', error);
+      approveBtn.disabled = true;
+    }
     
     // Create form data with selected epics, their content, and current HTML
     const formData = new FormData();
@@ -1776,24 +1858,52 @@
       
       if (response.ok) {
         const html = await response.text();
+        // Store timer state before page replacement
+        if (timerInterval && approveTimerEl) {
+          sessionStorage.setItem('epicApprovalTime', approveTimerEl.textContent || '0:00');
+        }
+        
         document.open();
         document.write(html);
         document.close();
         
-        // After the new page loads, try to parse user stories
+        // After the new page loads, try to parse user stories and restore state
         setTimeout(function() {
           parseAndFormatUserStories();
+          
+          // Try to restore timer display (though the actual timer won't continue)
+          const restoredTime = sessionStorage.getItem('epicApprovalTime');
+          if (restoredTime) {
+            const timerEl = document.getElementById('approveTimer');
+            if (timerEl) {
+              timerEl.textContent = restoredTime;
+            }
+            sessionStorage.removeItem('epicApprovalTime');
+          }
         }, 1000);
       } else {
-        console.error('Error submitting epic approval:', response.statusText);
+        console.error('Error submitting epic approval:', response.status, response.statusText);
         alert('Error processing epic approval. Please try again.');
       }
     } catch (error) {
       console.error('Error submitting epic approval:', error);
       alert('Network error. Please check your connection and try again.');
     } finally {
-      // Hide loading spinner and timer
-      hideButtonLoading(approveBtn, approveSpinner, approveTimerEl, 'Approve Epic(s)', approveTimer);
+      // Hide loading spinner and timer with better error handling
+      try {
+        hideButtonLoading(approveBtn, approveSpinner, approveTimerEl, 'Approve Epic(s)', timerInterval);
+      } catch (error) {
+        console.error('Error hiding loading state:', error);
+        // Fallback cleanup
+        if (approveBtn) {
+          approveBtn.disabled = false;
+          const btnText = approveBtn.querySelector('.btn-text');
+          if (btnText) btnText.textContent = 'Approve Epic(s)';
+        }
+        if (approveSpinner) approveSpinner.style.display = 'none';
+        if (approveTimerEl) approveTimerEl.textContent = '';
+        if (timerInterval) clearInterval(timerInterval);
+      }
     }
   });
 
@@ -1806,6 +1916,12 @@
     const proceedBtn = document.getElementById('proceedBtn');
     const proceedSpinner = document.getElementById('proceedSpinner');
     const proceedTimerEl = document.getElementById('proceedTimer');
+    
+    // Prevent double submission
+    if (proceedBtn && proceedBtn.disabled) {
+      console.log('Proceed submission already in progress, ignoring duplicate submission');
+      return;
+    }
     
     // Check current form field values
     const storyIdField = document.getElementById("selected_story_id");
@@ -1838,19 +1954,47 @@
       console.log('✅ Form fields already have values, proceeding with current values');
     }
     
-    // Show loading spinner and start timer
+    // Show loading spinner and start timer with better error handling
     let timerInterval = null;
-    if (proceedBtn && proceedSpinner && proceedTimerEl) {
-      timerInterval = showButtonLoading(proceedBtn, proceedSpinner, proceedTimerEl, 'Proceed To Selection', 'Processing...');
-    } else {
-      console.warn('Some proceed button elements not found');
-      if (proceedBtn) {
-        proceedBtn.disabled = true;
-        proceedBtn.innerHTML = `
-          <span style="display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite;"></span>
-          <span style="margin-left: 8px;">Processing...</span>
-        `;
+    try {
+      if (proceedBtn && proceedSpinner && proceedTimerEl) {
+        timerInterval = showButtonLoading(proceedBtn, proceedSpinner, proceedTimerEl, 'Proceed To Selection', 'Processing...');
+        if (!timerInterval) {
+          console.warn('Timer interval not started for proceed button, using fallback');
+          proceedBtn.disabled = true;
+          proceedSpinner.style.display = 'block';
+          const btnText = proceedBtn.querySelector('.btn-text');
+          if (btnText) btnText.textContent = 'Processing...';
+          proceedTimerEl.textContent = '0:00';
+          
+          // Manual timer fallback
+          let seconds = 0;
+          timerInterval = setInterval(() => {
+            seconds++;
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            const timeString = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            proceedTimerEl.textContent = timeString;
+          }, 1000);
+        }
+      } else {
+        console.warn('Some proceed button elements not found:', {
+          button: !!proceedBtn,
+          spinner: !!proceedSpinner,
+          timer: !!proceedTimerEl
+        });
+        
+        if (proceedBtn) {
+          proceedBtn.disabled = true;
+          proceedBtn.innerHTML = `
+            <span style="display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+            <span style="margin-left: 8px;">Processing...</span>
+          `;
+        }
       }
+    } catch (error) {
+      console.error('Error starting proceed loading state:', error);
+      if (proceedBtn) proceedBtn.disabled = true;
     }
 
     try {
@@ -1903,16 +2047,30 @@
       console.error('Error submitting user story selection:', error);
       alert('Network error. Please check your connection and try again.');
     } finally {
-      // Hide loading spinner and timer
-      if (proceedBtn && proceedSpinner && proceedTimerEl && timerInterval) {
-        hideButtonLoading(proceedBtn, proceedSpinner, proceedTimerEl, 'Proceed To Selection', timerInterval);
-      } else if (proceedBtn) {
-        proceedBtn.disabled = false;
-        proceedBtn.innerHTML = `
-          <span class="btn-spinner" id="proceedSpinner" style="display: none;"></span>
-          <span class="btn-text">Proceed To Selection</span>
-          <span class="btn-timer" id="proceedTimer"></span>
-        `;
+      // Hide loading spinner and timer with better error handling
+      try {
+        if (proceedBtn && proceedSpinner && proceedTimerEl && timerInterval) {
+          hideButtonLoading(proceedBtn, proceedSpinner, proceedTimerEl, 'Proceed To Selection', timerInterval);
+        } else if (proceedBtn) {
+          proceedBtn.disabled = false;
+          proceedBtn.innerHTML = `
+            <span class="btn-spinner" id="proceedSpinner" style="display: none;"></span>
+            <span class="btn-text">Proceed To Selection</span>
+            <span class="btn-timer" id="proceedTimer"></span>
+          `;
+          if (timerInterval) clearInterval(timerInterval);
+        }
+      } catch (error) {
+        console.error('Error hiding proceed loading state:', error);
+        // Final fallback cleanup
+        if (proceedBtn) {
+          proceedBtn.disabled = false;
+          const btnText = proceedBtn.querySelector('.btn-text');
+          if (btnText) btnText.textContent = 'Proceed To Selection';
+        }
+        if (proceedSpinner) proceedSpinner.style.display = 'none';
+        if (proceedTimerEl) proceedTimerEl.textContent = '';
+        if (timerInterval) clearInterval(timerInterval);
       }
     }
   });
@@ -2688,6 +2846,18 @@
     const userStoriesContainer = document.getElementById('user-stories-container');
     if (!userStoriesContainer) return;
 
+    // Store current form values before updating
+    const currentFormValues = {
+      storyId: document.getElementById('selected_story_id')?.value || '',
+      storyName: document.getElementById('selected_story_name')?.value || '',
+      storyDescription: document.getElementById('selected_story_description')?.value || '',
+      storyPriority: document.getElementById('selected_story_priority')?.value || '',
+      storySystems: document.getElementById('selected_story_systems')?.value || '',
+      epicTitle: document.getElementById('selected_epic_title')?.value || ''
+    };
+    
+    console.log('Preserving current form values before apply:', currentFormValues);
+
     // Format the user stories as a table
     let formattedHTML = `
       <div class="table-responsive">
@@ -2703,6 +2873,24 @@
           </thead>
           <tbody>
     `;
+    
+    // Find which story was previously selected
+    let selectedIndex = 0;
+    let foundMatch = false;
+    
+    userStoriesData.forEach((story, index) => {
+      const storyId = story.story_id || `US-${index + 1}`;
+      const storyName = story.name || story.title || 'Untitled Story';
+      
+      // Check if this story matches the previously selected one
+      if (!foundMatch && currentFormValues.storyId && 
+          (storyId === currentFormValues.storyId || 
+           storyName === currentFormValues.storyName)) {
+        selectedIndex = index;
+        foundMatch = true;
+        console.log(`Found matching story at index ${index}: ${storyName}`);
+      }
+    });
     
     userStoriesData.forEach((story, index) => {
       const storyId = story.story_id || `US-${index + 1}`;
@@ -2725,6 +2913,9 @@
         priorityClass = 'badge-success';
       }
       
+      // Select this story if it matches the previously selected one or is the first story
+      const isSelected = (foundMatch && index === selectedIndex) || (!foundMatch && index === 0);
+      
       formattedHTML += `
         <tr>
           <td>
@@ -2734,7 +2925,7 @@
               data-name="${escapedName}" 
               data-description="${escapedDescription}"
               data-priority="${storyPriority}"
-              data-systems="${storySystems}"${index === 0 ? ' checked' : ''}>
+              data-systems="${storySystems}"${isSelected ? ' checked' : ''}>
               <label class="form-check-label" for="story_${index + 1}"></label>
             </div>
           </td>
@@ -2763,10 +2954,38 @@
       userStoriesSection.classList.remove('hidden');
     }
     
+    // Trigger change event on the selected checkbox to populate hidden fields
+    setTimeout(() => {
+      const selectedCheckbox = document.querySelector('input[name="user_story_ids"]:checked');
+      if (selectedCheckbox) {
+        console.log('Triggering change event on selected checkbox after apply');
+        selectedCheckbox.dispatchEvent(new Event('change'));
+        
+        // If we had previous form values and this is a different story, restore them
+        if (foundMatch && currentFormValues.storyName) {
+          setTimeout(() => {
+            const storyIdField = document.getElementById('selected_story_id');
+            const storyNameField = document.getElementById('selected_story_name');
+            const storyDescField = document.getElementById('selected_story_description');
+            const storyPriorityField = document.getElementById('selected_story_priority');
+            const storySystemsField = document.getElementById('selected_story_systems');
+            const epicTitleField = document.getElementById('selected_epic_title');
+            
+            // Restore epic title if it was previously set
+            if (epicTitleField && currentFormValues.epicTitle) {
+              epicTitleField.value = currentFormValues.epicTitle;
+            }
+            
+            console.log('Context preserved after user story apply');
+          }, 100);
+        }
+      }
+    }, 100);
+    
     updateUserStoryContext();
     
     // Show success message
-    addUserStoryMessage('assistant', '✅ User story updates have been applied to the page successfully!');
+    addUserStoryMessage('assistant', '✅ User story updates have been applied to the page successfully! Your previous selection has been preserved.');
   }
 
   // Handle Enter key for chat inputs
