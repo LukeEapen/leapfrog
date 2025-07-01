@@ -4,19 +4,19 @@ flask[async]==3.0.0
 Flask-Limiter==3.5.0
 Werkzeug>=3.0.1         # Flask dependency for security features
 
-# AI and Language Processing
+# AI and Language Processing - Deployment optimized
 openai>=1.10.0,<2.0.0
 tiktoken>=0.5.1        # For token counting - relaxed pinning for compatibility
-langgraph>=0.0.55      # Updated to newer compatible version
-langchain-core>=0.1.45 # Updated to newer compatible version
-langchain-openai>=0.1.0 # Updated to newer compatible version
+# langgraph>=0.0.55      # Updated to newer compatible version - commented out for deployment
+# langchain-core>=0.1.45 # Updated to newer compatible version - commented out for deployment
+# langchain-openai>=0.1.0 # Updated to newer compatible version - commented out for deployment
 
-# Vector Database & RAG
-chromadb>=0.4.0         # Vector database
-sentence-transformers>=2.2.0  # Embeddings
-faiss-cpu>=1.7.0        # Facebook AI Similarity Search
+# Vector Database & RAG - Optimized for deployment
+# chromadb>=0.4.0         # Vector database - commented out for deployment
+# sentence-transformers>=2.2.0  # Embeddings - heavy memory usage, commented out
+# faiss-cpu>=1.7.0        # Facebook AI Similarity Search - commented out for deployment
 numpy>=1.24.0,<2.0.0    # For vector operations - added upper bound for stability
-scikit-learn>=1.3.0     # For additional ML operations
+# scikit-learn>=1.3.0     # For additional ML operations - commented out for deployment
 
 # Performance & Async Processing
 aiohttp>=3.9.1         # For async HTTP requests
@@ -24,11 +24,11 @@ asyncio-throttle>=1.0.2  # Rate limiting for async calls
 httpx>=0.25.0          # Modern async HTTP client
 # uvloop>=0.19.0         # High-performance event loop (Unix only) - Windows not supported
 
-google-generativeai>=0.3.0
+# google-generativeai>=0.3.0  # Commented out for deployment - can add back if needed
 
-# API Frameworks
-fastapi>=0.110.0
-uvicorn>=0.29.0         # ASGI server for FastAPI
+# API Frameworks - Commented out for Flask-only deployment
+# fastapi>=0.110.0
+# uvicorn>=0.29.0         # ASGI server for FastAPI
 
 # Document Processing
 python-docx==1.1.0
@@ -46,10 +46,10 @@ email-validator==2.1.0   # For email validation in forms
 PyJWT>=2.8.0           # For JWT token handling
 bcrypt>=4.1.0          # For password hashing
 
-# Storage & Caching
-redis>=4.5.1
+# Storage & Caching - Lightweight for deployment
+# redis>=4.5.1           # Commented out for deployment
 cachetools>=5.3.0      # In-memory caching
-diskcache>=5.6.3       # Persistent disk caching
+# diskcache>=5.6.3       # Persistent disk caching - commented out for deployment
 
 # Utilities
 python-dotenv==1.0.0
@@ -57,15 +57,15 @@ colorama==0.4.6
 tenacity>=8.2.2        # For retry logic
 multiprocessing-logging>=0.3.4  # Thread-safe logging
 
-# Web UI & Visualization
-streamlit>=1.32.0
+# Web UI & Visualization - Commented out for deployment
+# streamlit>=1.32.0       # Heavy memory usage - commented out
 
 # Jira Integration
 jira>=3.5.0            # For Jira API integration
 
-# Testing & Development (optional)
-pytest==7.4.3
-pytest-asyncio==0.21.1
-pytest-cov==4.1.0
-black>=23.12.0         # Code formatting
+# Testing & Development (commented out for deployment)
+# pytest==7.4.3
+# pytest-asyncio==0.21.1
+# pytest-cov==4.1.0
+# black>=23.12.0         # Code formatting
 flake8>=7.0.0          # Code linting
