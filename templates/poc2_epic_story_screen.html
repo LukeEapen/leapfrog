@@ -1203,6 +1203,23 @@
       </button>
     </form>
   </div>
+
+  <!-- System Mapping Section -->
+  <div class="section-header" style="margin-top: var(--spacing-xl);">
+    <span>🗺️ System Mapping</span>
+    <div style="display: flex; gap: var(--spacing-sm);">
+      <button class="chat-btn" onclick="openSystemMapping()" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+        <span>🏗️</span>
+        Create System Map
+      </button>
+    </div>
+  </div>
+  <div class="info-card" style="margin-bottom: var(--spacing-xl);">
+    <p style="margin: 0; color: var(--text-secondary);">
+      📋 Create and manage system mappings by dragging and dropping systems from the available list to your custom mapping. 
+      <br><strong>🎯 Use this to:</strong> Define system relationships, create deployment maps, or organize technical architecture.
+    </p>
+  </div>
 </div>
 </div>
 
@@ -3457,10 +3474,13 @@
     }
     
     // Restore selected user stories context from backend (for back navigation)
-    {% if selected_story_ids %}
-      console.log('Restoring selected story context from backend:', {{ selected_story_ids|tojson }});
-      restoreSelectedStoryContext({{ selected_story_ids|tojson }});
-    {% endif %}
+    // Debug: Log current user stories data
+    console.log('Current user stories section visibility:', document.getElementById('user-stories-section').classList.contains('hidden'));
+    const userStoriesContainer = document.getElementById('user-stories-container');
+    if (userStoriesContainer) {
+      console.log('User stories container content length:', userStoriesContainer.innerHTML.length);
+      console.log('User stories container first 200 chars:', userStoriesContainer.innerHTML.substring(0, 200));
+    }
     
     // Close modals when clicking outside
     window.addEventListener('click', function(e) {
@@ -3477,6 +3497,16 @@
   });
 
   // Back Button Functionality
+  // Function to open System Mapping interface
+  function openSystemMapping() {
+    try {
+      window.location.href = '/system-mapping';
+    } catch (error) {
+      console.error('Error opening system mapping:', error);
+      alert('Unable to open System Mapping. Please try again.');
+    }
+  }
+
   function goBack() {
     // Navigate back to the user story input page
     try {
@@ -3494,6 +3524,27 @@
     }
   }
 
+</script>
+
+<!-- Data script for template variables -->
+{% if selected_story_ids %}
+<script>
+  // Set up restoration data
+  window.restoreStoryData = {{ selected_story_ids|tojson }};
+</script>
+{% endif %}
+
+<!-- Restoration script -->
+<script>
+  // This script handles the restoration of selected story context from backend
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.restoreStoryData) {
+      console.log('Restoring selected story context from backend:', window.restoreStoryData);
+      setTimeout(function() {
+        restoreSelectedStoryContext(window.restoreStoryData);
+      }, 1000); // Wait a bit longer to ensure user stories are rendered
+    }
+  });
 </script>
 
 </body>

@@ -308,6 +308,18 @@ def home():
                         <li>Single-agent optimization</li>
                     </ul>
                 </div>
+                
+                <div class="feature-card">
+                    <h3>🗺️ System Mapping</h3>
+                    <p>Create and manage system mappings with an intuitive drag-and-drop interface. Map systems for technical architecture and deployment planning.</p>
+                    <ul>
+                        <li>Drag & drop system selection</li>
+                        <li>Custom mapping creation</li>
+                        <li>CSV export functionality</li>
+                        <li>AI-powered mapping assistance</li>
+                    </ul>
+                    <a href="/system-mapping" class="btn">🏗️ Create System Map</a>
+                </div>
             </div>
             
             <div class="footer-text">
@@ -1915,9 +1927,33 @@ def show_epic_results():
         
         if stored_epics:
             logger.info("Retrieved epic and user story data from session")
+            
+            # Check if stored user stories are valid/displayable
+            user_stories_to_display = stored_user_stories
+            
+            # If user stories are empty or just raw JSON, we need to provide a placeholder
+            if not stored_user_stories or stored_user_stories.strip() == "":
+                logger.info("No user stories found in session, user needs to select epics first")
+                user_stories_to_display = ""
+            elif stored_user_stories.startswith('[') or stored_user_stories.startswith('{'):
+                # Stored user stories are raw JSON from agent - provide information message
+                logger.info("User stories in session are raw JSON format, showing instruction message")
+                user_stories_to_display = """
+                <div class="info-message" style="text-align: center; padding: 2rem; background: var(--surface-secondary); border-radius: 8px; border: 1px dashed var(--border-medium);">
+                    <h6 style="color: var(--primary-red); margin-bottom: 1rem;">🔄 User Stories Available</h6>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                        User stories have been generated for your selected epics. 
+                        <br>Please select the epics above and click "Approve & Generate User Stories" to view them.
+                    </p>
+                    <div style="background: var(--primary-red-lighter); padding: 1rem; border-radius: 4px; color: var(--text-primary);">
+                        <small><strong>💡 Tip:</strong> Your previous work has been preserved. Simply reselect your epics to continue.</small>
+                    </div>
+                </div>
+                """
+            
             return render_template("poc2_epic_story_screen.html", 
                                  epics=stored_epics, 
-                                 user_stories=stored_user_stories,
+                                 user_stories=user_stories_to_display,
                                  selected_story_ids=selected_story_ids)
         
         # Fallback: Provide sample epics for testing Epic Chat functionality
@@ -2165,8 +2201,10 @@ def approve_epics():
         user_stories_content = "\n".join(user_stories)
         
         # Store the updated user stories in session for back navigation
+        # Store both the raw content and a more structured format for better restoration
         session['current_user_stories'] = user_stories_content
-        logger.info("Updated user stories data in session")
+        session['current_user_stories_structured'] = user_story_list  # Store structured data too
+        logger.info("Updated user stories data in session with both raw and structured formats")
         
         processing_time = time.time() - start_time
         logger.info(f"User story generation completed in {processing_time:.2f} seconds")
@@ -4367,6 +4405,245 @@ def submit_jira_ticket():
         logger.error(f"Error in Jira ticket submission: {str(e)}")
         return render_template('poc2_user_story_details.html', 
                              error_message=f"Error submitting to Jira: {str(e)}")
+
+@app.route("/system-mapping", methods=["GET"])
+def system_mapping():
+    """Serve the system mapping drag-and-drop interface."""
+    logger.info("GET request received for system mapping interface")
+    try:
+        return render_template("system_mapping.html")
+    except Exception as e:
+        logger.error(f"Error serving system mapping page: {str(e)}")
+        return f"Error loading system mapping page: {str(e)}", 500
+
+@app.route("/download-system-mapping", methods=["POST"])
+def download_system_mapping():
+    """Handle system mapping CSV download."""
+    logger.info("POST request received for system mapping CSV download")
+    try:
+        # Get the selected systems from the request
+        selected_systems = request.json.get('systems', [])
+        logger.info(f"Received {len(selected_systems)} selected systems for CSV download")
+        
+        # Create CSV content
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow(['System Name', 'Description', 'Selected'])
+        
+        # Write selected systems
+        for system in selected_systems:
+            writer.writerow([
+                system.get('name', ''),
+                system.get('description', ''),
+                'Yes'
+            ])
+        
+        csv_content = output.getvalue()
+        output.close()
+        
+        return jsonify({
+            'success': True,
+            'csv_content': csv_content,
+            'filename': f'system_mapping_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generating system mapping CSV: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route("/system-mapping-chat", methods=["POST"])
+def system_mapping_chat():
+    """Handle chat requests for system mapping assistance."""
+    logger.info("Request received for system mapping chat")
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No JSON data provided"}), 400
+            
+        user_message = data.get("message", "").strip()
+        current_systems = data.get("current_systems", [])
+        available_systems = data.get("available_systems", [])
+        
+        if not user_message:
+            return jsonify({"success": False, "error": "Message is required"}), 400
+        
+        logger.info(f"Processing system mapping chat request: {user_message[:100]}...")
+        
+        # Create a prompt for the AI to help with system mapping
+        system_prompt = """You are a technical architect AI assistant specializing in system mapping and technical architecture. 
+        You help users select and organize systems for their technical implementations based on their requirements.
+        
+        Available Systems:
+        - Customer acquisition platform: Captures applications from digital channels
+        - Credit decision engine: Automated credit policies and risk scoring
+        - Application review system: Manual interventions and compliance checks
+        - Fraud detection platform: Monitors suspicious patterns and behaviors
+        - Document management platform: Document storage and verification
+        - Agent support tool: UI for agents to manage applications
+        - Customer data repository: Golden source for personal data
+        - Account creation engine: Initializes financial product accounts
+        - Product configuration database: Product metadata and rules
+        - Card issuance manager: Generates cards and configures features
+        - Card manufacturing coordinator: External vendor coordination
+        - Payment setup module: Payment preferences configuration
+        - Financial ledger initializer: Journal entries and GL accounts
+        - Settlement configuration module: Fund routing configuration
+        - Statement preference manager: Statement delivery preferences
+        - Authorization control layer: Real-time transaction validation
+        - Notification delivery engine: Customer alerts and updates
+        - Credit behavior monitor: Post-booking risk monitoring
+        - Credit bureau interface: Bureau data transmission
+        - Loyalty program manager: Rewards program integration
+        - Customer servicing portal: Customer self-service requests
+        
+        Guidelines:
+        - Suggest relevant systems based on user requirements
+        - Explain why certain systems are needed
+        - Consider system dependencies and integration points
+        - Provide architectural guidance
+        - Be specific about system capabilities
+        
+        Format your response as JSON with:
+        {
+          "message": "Your helpful response",
+          "suggestions": [
+            {"system": "System Name", "reason": "Why this system is recommended"}
+          ],
+          "warnings": ["Any warnings or considerations"]
+        }"""
+        
+        current_systems_text = ", ".join(current_systems) if current_systems else "None selected"
+        available_systems_text = ", ".join(available_systems) if available_systems else "All systems available"
+        
+        user_prompt = f"""Current Selected Systems: {current_systems_text}
+
+Available Systems: {available_systems_text}
+
+User Request: {user_message}
+
+Please provide system mapping recommendations and guidance based on the user's request."""
+
+        # Use OpenAI to generate system mapping assistance
+        try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=800,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content.strip()
+            
+            # Try to parse as JSON, fallback to plain text
+            try:
+                import json
+                parsed_response = json.loads(ai_response)
+                return jsonify({
+                    "success": True,
+                    "message": parsed_response.get("message", ai_response),
+                    "suggestions": parsed_response.get("suggestions", []),
+                    "warnings": parsed_response.get("warnings", [])
+                })
+            except json.JSONDecodeError:
+                return jsonify({
+                    "success": True,
+                    "message": ai_response,
+                    "suggestions": [],
+                    "warnings": []
+                })
+            
+        except Exception as ai_error:
+            logger.error(f"OpenAI API error: {str(ai_error)}")
+            
+            # Fallback to rule-based processing
+            fallback_response = process_system_mapping_fallback(user_message, current_systems)
+            return jsonify({
+                "success": True,
+                "message": fallback_response["message"],
+                "suggestions": fallback_response["suggestions"],
+                "warnings": fallback_response["warnings"]
+            })
+            
+    except Exception as e:
+        logger.error(f"Error in system mapping chat: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+def process_system_mapping_fallback(user_message, current_systems):
+    """Fallback processing for system mapping when AI is not available."""
+    lower_message = user_message.lower()
+    
+    suggestions = []
+    warnings = []
+    message = "I can help you with system mapping! "
+    
+    # Analyze user intent
+    if any(word in lower_message for word in ['credit', 'loan', 'approve', 'decision']):
+        suggestions.extend([
+            {"system": "Credit decision engine", "reason": "Essential for credit assessment and approval workflows"},
+            {"system": "Credit bureau interface", "reason": "Required for credit history and reporting"},
+            {"system": "Customer data repository", "reason": "Needed for customer information storage"}
+        ])
+        message += "For credit-related functionality, I recommend these core systems."
+        
+    elif any(word in lower_message for word in ['fraud', 'security', 'detect', 'risk']):
+        suggestions.extend([
+            {"system": "Fraud detection platform", "reason": "Primary fraud monitoring and prevention"},
+            {"system": "Authorization control layer", "reason": "Real-time transaction security"},
+            {"system": "Customer data repository", "reason": "Customer profile for risk assessment"}
+        ])
+        message += "For fraud detection and security, these systems work together."
+        
+    elif any(word in lower_message for word in ['card', 'payment', 'transaction']):
+        suggestions.extend([
+            {"system": "Card issuance manager", "reason": "Manages card creation and configuration"},
+            {"system": "Payment setup module", "reason": "Handles payment preferences and setup"},
+            {"system": "Authorization control layer", "reason": "Controls transaction approvals"},
+            {"system": "Settlement configuration module", "reason": "Manages payment routing and settlement"}
+        ])
+        message += "For card and payment processing, these systems are essential."
+        
+    elif any(word in lower_message for word in ['customer', 'service', 'support']):
+        suggestions.extend([
+            {"system": "Customer servicing portal", "reason": "Self-service customer interface"},
+            {"system": "Agent support tool", "reason": "Agent interface for customer support"},
+            {"system": "Customer data repository", "reason": "Customer information access"}
+        ])
+        message += "For customer service functionality, these systems are recommended."
+        
+    elif any(word in lower_message for word in ['onboard', 'acquisition', 'application']):
+        suggestions.extend([
+            {"system": "Customer acquisition platform", "reason": "Captures and processes new applications"},
+            {"system": "Document management platform", "reason": "Handles required documentation"},
+            {"system": "Application review system", "reason": "Manual review and compliance checks"},
+            {"system": "Account creation engine", "reason": "Creates accounts after approval"}
+        ])
+        message += "For customer onboarding, this end-to-end flow is recommended."
+        
+    else:
+        message += "Could you be more specific about your use case? For example: 'I need systems for credit approval', 'What do I need for fraud detection?', 'Help me set up payment processing', etc."
+    
+    # Add warnings based on current selection
+    if len(current_systems) > 10:
+        warnings.append("You have selected many systems. Consider if all are necessary for your specific use case.")
+    
+    if "Customer data repository" not in current_systems and len(current_systems) > 3:
+        warnings.append("Consider adding Customer data repository as most systems depend on customer data.")
+    
+    return {
+        "message": message,
+        "suggestions": suggestions,
+        "warnings": warnings
+    }
 
 if __name__ == "__main__":
     try:

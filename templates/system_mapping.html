@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Mapping - Drag & Drop Interface</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    /* Modern CSS Variables for Design System */
+    :root {
+      --primary-red: #d0021b;
+      --primary-red-dark: #a0011a;
+      --primary-red-light: #ff1744;
+      --primary-red-lighter: #fff5f5;
+      --background-dark: #1a1d23;
+      --background-darker: #121419;
+      --background-light: #2a2d35;
+      --surface-primary: #ffffff;
+      --surface-secondary: #f8fafc;
+      --surface-tertiary: #f1f5f9;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-light: #ffffff;
+      --text-muted: #94a3b8;
+      --border-light: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --spacing-xs: 0.5rem;
+      --spacing-sm: 0.75rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      --spacing-2xl: 3rem;
+    }
+
+    /* Modern Body Styling with Gradient */
+    body {
+      background: linear-gradient(135deg, var(--background-darker) 0%, var(--background-dark) 100%);
+      color: var(--text-light);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      position: relative;
+      margin: 0;
+      padding: 0;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 20% 80%, rgba(208, 2, 27, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Enhanced Header Bar */
+    .header-bar {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 1.5rem;
+      padding: var(--spacing-lg) var(--spacing-xl);
+      border-radius: var(--radius-xl) var(--radius-xl) var(--radius-lg) var(--radius-lg);
+      margin-bottom: var(--spacing-xl);
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-title {
+      flex: 1;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    .back-btn-header {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    .back-btn-header:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(-2px);
+    }
+
+    .back-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Main Container */
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--spacing-lg);
+    }
+
+    /* System Tables Container */
+    .systems-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-xl);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    /* Table Styling */
+    .system-table {
+      background: var(--surface-primary);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      min-height: 500px;
+    }
+
+    .table-header {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      padding: var(--spacing-lg);
+      font-weight: 700;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .table-body {
+      padding: var(--spacing-md);
+      max-height: 450px;
+      overflow-y: auto;
+    }
+
+    /* System Items */
+    .system-item {
+      background: var(--surface-secondary);
+      border: 2px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      margin-bottom: var(--spacing-sm);
+      cursor: grab;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .system-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-red-light);
+    }
+
+    .system-item.dragging {
+      opacity: 0.5;
+      transform: rotate(5deg);
+      cursor: grabbing;
+    }
+
+    .system-name {
+      font-weight: 700;
+      color: var(--primary-red);
+      margin-bottom: var(--spacing-xs);
+      font-size: 1rem;
+    }
+
+    .system-description {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+
+    /* Drop Zone Styling */
+    .drop-zone {
+      border: 2px dashed var(--border-medium);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-xl);
+      text-align: center;
+      color: var(--text-muted);
+      background: var(--surface-tertiary);
+      transition: all 0.3s ease;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .drop-zone.drag-over {
+      border-color: var(--primary-red);
+      background: var(--primary-red-lighter);
+      color: var(--primary-red);
+      transform: scale(1.02);
+    }
+
+    .drop-zone-icon {
+      font-size: 3rem;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .drop-zone-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: var(--spacing-md);
+      justify-content: center;
+      margin-top: var(--spacing-xl);
+    }
+
+    .action-btn {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      border: none;
+      padding: var(--spacing-md) var(--spacing-xl);
+      border-radius: var(--radius-lg);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      min-width: 160px;
+      justify-content: center;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .action-btn.secondary {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    }
+
+    .action-btn.success {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+
+    /* Selected Systems Count */
+    .selection-info {
+      background: var(--surface-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .selection-count {
+      font-weight: 700;
+      color: var(--primary-red);
+      font-size: 1.1rem;
+    }
+
+    .selection-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .small-btn {
+      background: var(--surface-secondary);
+      border: 1px solid var(--border-medium);
+      color: var(--text-primary);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .small-btn:hover {
+      background: var(--primary-red);
+      color: white;
+      border-color: var(--primary-red);
+    }
+
+    /* Toast Notifications */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--surface-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow-xl);
+      z-index: 1000;
+      min-width: 300px;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.success {
+      border-left: 4px solid #059669;
+    }
+
+    .toast.error {
+      border-left: 4px solid #dc2626;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .systems-container {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+      }
+      
+      .main-container {
+        padding: var(--spacing-md);
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    /* Scrollbar Styling */
+    .table-body::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .table-body::-webkit-scrollbar-track {
+      background: var(--surface-tertiary);
+      border-radius: var(--radius-sm);
+    }
+
+    .table-body::-webkit-scrollbar-thumb {
+      background: var(--border-medium);
+      border-radius: var(--radius-sm);
+    }
+
+    .table-body::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-red);
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Header -->
+    <div class="header-bar">
+      <button type="button" class="back-btn-header" onclick="goBack()">
+        <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m12 19-7-7 7-7"/>
+          <path d="m19 12H5"/>
+        </svg>
+        <span>Back</span>
+      </button>
+      <span class="header-title">🗺️ System Mapping Interface</span>
+      <button class="action-btn" onclick="openSystemMappingChat()" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); margin: 0; padding: 8px 16px; font-size: 0.9rem;">
+        <span>💬</span>
+        <span>AI Assistant</span>
+      </button>
+    </div>
+
+    <!-- Selection Info -->
+    <div class="selection-info">
+      <div class="selection-count">
+        <span id="selected-count">0</span> systems selected for mapping
+      </div>
+      <div class="selection-actions">
+        <button class="small-btn" onclick="clearSelection()">Clear All</button>
+        <button class="small-btn" onclick="selectAll()">Select All</button>
+      </div>
+    </div>
+
+    <!-- Main Systems Container -->
+    <div class="systems-container">
+      <!-- Available Systems -->
+      <div class="system-table">
+        <div class="table-header">
+          <span>📋</span>
+          <span>Available Systems</span>
+          <span style="margin-left: auto; font-size: 0.9rem; opacity: 0.8;">Drag systems to the right →</span>
+        </div>
+        <div class="table-body" id="available-systems">
+          <!-- Systems will be populated here -->
+        </div>
+      </div>
+
+      <!-- Selected Systems -->
+      <div class="system-table">
+        <div class="table-header">
+          <span>🎯</span>
+          <span>Your System Mapping</span>
+          <span style="margin-left: auto; font-size: 0.9rem; opacity: 0.8;">Drop systems here</span>
+        </div>
+        <div class="table-body" id="selected-systems">
+          <div class="drop-zone" id="drop-zone">
+            <div class="drop-zone-icon">🗂️</div>
+            <div class="drop-zone-text">Drag and drop systems here to create your mapping</div>
+            <div style="font-size: 0.9rem; opacity: 0.7; margin-top: var(--spacing-sm);">
+              Build your custom system architecture by selecting relevant systems
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button class="action-btn secondary" onclick="goBack()">
+        <span>⬅️</span>
+        <span>Back to Epics</span>
+      </button>
+      <button class="action-btn" onclick="previewMapping()" id="preview-btn" disabled>
+        <span>👁️</span>
+        <span>Preview Mapping</span>
+      </button>
+      <button class="action-btn success" onclick="generateCSV()" id="generate-btn" disabled>
+        <span>📄</span>
+        <span>Generate CSV</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <script>
+    // System data from the CSV
+    const systemsData = [
+      {
+        name: "Customer acquisition platform",
+        description: "Captures and initiates applications from prospective customers through digital or assisted channels, enabling lead management, identity capture, and initial qualification checks including soft credit pulls."
+      },
+      {
+        name: "Credit decision engine",
+        description: "Applies automated credit policies, risk scoring models, and underwriting rules to approve, decline, or refer applications, often integrating with credit bureaus and internal risk data."
+      },
+      {
+        name: "Application review system",
+        description: "Manages manual interventions for applications flagged by the credit engine or fraud tools, including secondary reviews, compliance checks, and data enrichment."
+      },
+      {
+        name: "Fraud detection platform",
+        description: "Monitors applications for suspicious patterns or behaviors using velocity rules, device fingerprinting, and behavioral analytics to prevent identity theft and synthetic fraud."
+      },
+      {
+        name: "Document management platform",
+        description: "Ingests, stores, and verifies documents submitted by applicants such as IDs, proof of income, and address verification, supporting both automated validation and manual review."
+      },
+      {
+        name: "Agent support tool",
+        description: "Provides a user interface for agents to access application data, update customer records, handle escalations, and complete onboarding actions not handled automatically."
+      },
+      {
+        name: "Customer data repository",
+        description: "Serves as the golden source of truth for personal data including names, contact information, demographics, and identifiers, and synchronizes across operational systems."
+      },
+      {
+        name: "Account creation engine",
+        description: "Initializes the financial product account once the application is approved, assigning internal identifiers and setting account-level terms, billing cycles, and statuses."
+      },
+      {
+        name: "Product configuration database",
+        description: "Maintains metadata about financial products including pricing, features, eligibility rules, and servicing logic used during origination and ongoing lifecycle management."
+      },
+      {
+        name: "Card issuance manager",
+        description: "Generates card numbers, assigns BINs, configures card features (e.g. contactless, digital wallets), and initiates issuance workflows based on customer selection."
+      },
+      {
+        name: "Card manufacturing coordinator",
+        description: "Manages handoff to external vendors for card production, ensuring secure transmission of personalization data and tracking fulfillment SLAs."
+      },
+      {
+        name: "Payment setup module",
+        description: "Enables configuration of payment preferences including autopay, linked external bank accounts, ACH setup, and direct debit enrollment during onboarding."
+      },
+      {
+        name: "Financial ledger initializer",
+        description: "Creates the initial journal entries for the new account, maps revenue and cost lines to appropriate GL accounts, and ensures financial control setup."
+      },
+      {
+        name: "Settlement configuration module",
+        description: "Defines how incoming and outgoing funds related to the account are routed through processors, acquirers, or settlement networks based on product type."
+      },
+      {
+        name: "Statement preference manager",
+        description: "Sets up customer preferences for receiving statements including delivery channel (paper, email, app) and frequency, and initializes statement cycle setup."
+      },
+      {
+        name: "Authorization control layer",
+        description: "Validates real-time transaction requests against cardholder limits, controls, fraud rules, and authorization strategies before approving or declining."
+      },
+      {
+        name: "Notification delivery engine",
+        description: "Delivers alerts and updates to customers regarding application status, approvals, card shipment, and payment setup through SMS, email, or push channels."
+      },
+      {
+        name: "Credit behavior monitor",
+        description: "Applies post-booking strategies to monitor spend, detect high-risk behavior, and adjust credit exposure dynamically using behavioral data."
+      },
+      {
+        name: "Credit bureau interface",
+        description: "Transmits customer and account data to credit bureaus as per regulatory requirements and updates bureau records periodically with payment performance and balances."
+      },
+      {
+        name: "Loyalty program manager",
+        description: "Links the account to eligible rewards programs, tracks earn and redemption activity, and synchronizes balances with third-party loyalty platforms."
+      },
+      {
+        name: "Customer servicing portal",
+        description: "Supports customer-initiated servicing requests such as account updates, disputes, reissuance, and inquiries across channels post-origination."
+      }
+    ];
+
+    let selectedSystems = [];
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+      populateAvailableSystems();
+      setupDragAndDrop();
+      updateSelectionCount();
+    });
+
+    // Populate available systems
+    function populateAvailableSystems() {
+      const container = document.getElementById('available-systems');
+      
+      if (!container) {
+        console.error('available-systems container not found!');
+        return;
+      }
+      
+      container.innerHTML = '';
+
+      systemsData.forEach((system, index) => {
+        const systemElement = createSystemElement(system, index);
+        container.appendChild(systemElement);
+      });
+    }
+
+    // Create system element
+    function createSystemElement(system, index) {
+      const div = document.createElement('div');
+      div.className = 'system-item';
+      div.draggable = true;
+      div.dataset.systemIndex = index;
+      
+      div.innerHTML = `
+        <div class="system-name">${system.name}</div>
+        <div class="system-description">${system.description}</div>
+      `;
+
+      return div;
+    }
+
+    // Setup drag and drop functionality
+    function setupDragAndDrop() {
+      const availableContainer = document.getElementById('available-systems');
+      const selectedContainer = document.getElementById('selected-systems');
+      const dropZone = document.getElementById('drop-zone');
+
+      // Drag start
+      availableContainer.addEventListener('dragstart', function(e) {
+        if (e.target.classList.contains('system-item')) {
+          e.target.classList.add('dragging');
+          e.dataTransfer.setData('text/plain', e.target.dataset.systemIndex);
+        }
+      });
+
+      // Drag end
+      availableContainer.addEventListener('dragend', function(e) {
+        if (e.target.classList.contains('system-item')) {
+          e.target.classList.remove('dragging');
+        }
+      });
+
+      // Drop zone events
+      selectedContainer.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+      });
+
+      selectedContainer.addEventListener('dragleave', function(e) {
+        if (!selectedContainer.contains(e.relatedTarget)) {
+          dropZone.classList.remove('drag-over');
+        }
+      });
+
+      selectedContainer.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        
+        const systemIndex = e.dataTransfer.getData('text/plain');
+        const system = systemsData[parseInt(systemIndex)];
+        
+        if (system && !selectedSystems.find(s => s.name === system.name)) {
+          selectedSystems.push(system);
+          updateSelectedSystems();
+          updateSelectionCount();
+          updateButtonStates();
+          showToast('System added to mapping!', 'success');
+        }
+      });
+    }
+
+    // Update selected systems display
+    function updateSelectedSystems() {
+      const container = document.getElementById('selected-systems');
+      
+      if (selectedSystems.length === 0) {
+        container.innerHTML = `
+          <div class="drop-zone" id="drop-zone">
+            <div class="drop-zone-icon">🗂️</div>
+            <div class="drop-zone-text">Drag and drop systems here to create your mapping</div>
+            <div style="font-size: 0.9rem; opacity: 0.7; margin-top: var(--spacing-sm);">
+              Build your custom system architecture by selecting relevant systems
+            </div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = selectedSystems.map((system, index) => `
+          <div class="system-item" style="position: relative;">
+            <button onclick="removeSystem(${index})" style="position: absolute; top: 8px; right: 8px; background: #dc2626; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
+            <div class="system-name">${system.name}</div>
+            <div class="system-description">${system.description}</div>
+          </div>
+        `).join('');
+      }
+
+      // Re-setup drop zone if needed
+      const dropZone = document.getElementById('drop-zone');
+      if (dropZone && selectedSystems.length === 0) {
+        setupDragAndDrop();
+      }
+    }
+
+    // Remove system from selection
+    function removeSystem(index) {
+      selectedSystems.splice(index, 1);
+      updateSelectedSystems();
+      updateSelectionCount();
+      updateButtonStates();
+      showToast('System removed from mapping', 'success');
+    }
+
+    // Update selection count
+    function updateSelectionCount() {
+      document.getElementById('selected-count').textContent = selectedSystems.length;
+    }
+
+    // Update button states
+    function updateButtonStates() {
+      const previewBtn = document.getElementById('preview-btn');
+      const generateBtn = document.getElementById('generate-btn');
+      
+      const hasSelection = selectedSystems.length > 0;
+      previewBtn.disabled = !hasSelection;
+      generateBtn.disabled = !hasSelection;
+    }
+
+    // Clear all selections
+    function clearSelection() {
+      selectedSystems = [];
+      updateSelectedSystems();
+      updateSelectionCount();
+      updateButtonStates();
+      showToast('All systems cleared', 'success');
+    }
+
+    // Select all systems
+    function selectAll() {
+      selectedSystems = [...systemsData];
+      updateSelectedSystems();
+      updateSelectionCount();
+      updateButtonStates();
+      showToast('All systems selected', 'success');
+    }
+
+    // Preview mapping
+    function previewMapping() {
+      if (selectedSystems.length === 0) {
+        showToast('No systems selected for preview', 'error');
+        return;
+      }
+
+      const preview = selectedSystems.map((system, index) => 
+        `${index + 1}. ${system.name}`
+      ).join('\n');
+
+      alert(`System Mapping Preview:\n\n${preview}\n\nTotal: ${selectedSystems.length} systems`);
+    }
+
+    // Generate CSV
+    function generateCSV() {
+      if (selectedSystems.length === 0) {
+        showToast('No systems selected for CSV generation', 'error');
+        return;
+      }
+
+      // Create CSV content
+      const csvHeader = 'System name,Description\n';
+      const csvContent = selectedSystems.map(system => 
+        `"${system.name}","${system.description}"`
+      ).join('\n');
+      
+      const csv = csvHeader + csvContent;
+
+      // Create and download file
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `system_mapping_${new Date().toISOString().split('T')[0]}.csv`;
+      
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      showToast(`CSV file generated with ${selectedSystems.length} systems!`, 'success');
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'success') {
+      const toastContainer = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+          <span style="font-size: 1.2rem;">${type === 'success' ? '✅' : '❌'}</span>
+          <span>${message}</span>
+        </div>
+      `;
+
+      toastContainer.appendChild(toast);
+      
+      // Show toast
+      setTimeout(() => toast.classList.add('show'), 100);
+      
+      // Hide and remove toast
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toastContainer.removeChild(toast), 300);
+      }, 3000);
+    }
+
+    // Go back function
+    function goBack() {
+      try {
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          window.location.href = '/epic-results';
+        }
+      } catch (error) {
+        console.error('Error navigating back:', error);
+        window.location.href = '/epic-results';
+      }
+    }
+
+    // System Mapping Chat Functions
+    function openSystemMappingChat() {
+      document.getElementById('system-mapping-chat-modal').style.display = 'block';
+      loadChatHistory();
+    }
+
+    function closeSystemMappingChat() {
+      document.getElementById('system-mapping-chat-modal').style.display = 'none';
+    }
+
+    function clearSystemMappingChat() {
+      if (confirm('Clear all chat history?')) {
+        document.getElementById('system-mapping-chat-messages').innerHTML = `
+          <div class="chat-message assistant">
+            <div class="chat-avatar assistant">AI</div>
+            <div class="chat-bubble">
+              Hello! I'm your System Mapping AI Assistant. I can help you:
+              <ul>
+                <li>🎯 Select relevant systems for your architecture</li>
+                <li>🔗 Understand system dependencies and integration points</li>
+                <li>⚡ Optimize your system mapping for specific use cases</li>
+                <li>📋 Provide recommendations based on industry best practices</li>
+              </ul>
+              What would you like to build? For example: "I need systems for credit card processing" or "Help me design a fraud detection architecture"
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function loadChatHistory() {
+      // Initialize with welcome message if no history
+      const messagesContainer = document.getElementById('system-mapping-chat-messages');
+      if (!messagesContainer.innerHTML.trim()) {
+        messagesContainer.innerHTML = `
+          <div class="chat-message assistant">
+            <div class="chat-avatar assistant">AI</div>
+            <div class="chat-bubble">
+              Hello! I'm your System Mapping AI Assistant. I can help you:
+              <ul>
+                <li>🎯 Select relevant systems for your architecture</li>
+                <li>🔗 Understand system dependencies and integration points</li>
+                <li>⚡ Optimize your system mapping for specific use cases</li>
+                <li>📋 Provide recommendations based on industry best practices</li>
+              </ul>
+              What would you like to build? For example: "I need systems for credit card processing" or "Help me design a fraud detection architecture"
+            </div>
+          </div>
+        `;
+      }
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    async function sendSystemMappingChatMessage() {
+      const input = document.getElementById('system-mapping-chat-input');
+      const message = input.value.trim();
+      
+      if (!message) return;
+      
+      const messagesContainer = document.getElementById('system-mapping-chat-messages');
+      const sendButton = document.getElementById('system-mapping-send-btn');
+      
+      // Add user message
+      messagesContainer.innerHTML += `
+        <div class="chat-message user">
+          <div class="chat-bubble">${message}</div>
+          <div class="chat-avatar user">You</div>
+        </div>
+      `;
+      
+      input.value = '';
+      sendButton.disabled = true;
+      sendButton.innerHTML = '<span class="spinner"></span> Thinking...';
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      
+      try {
+        const currentSystems = selectedSystems.map(s => s.name);
+        const availableSystems = systemsData.map(s => s.name);
+        
+        const response = await fetch('/system-mapping-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: message,
+            current_systems: currentSystems,
+            available_systems: availableSystems
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          let responseHtml = `<div class="chat-message assistant">
+            <div class="chat-avatar assistant">AI</div>
+            <div class="chat-bubble">${result.message}`;
+          
+          // Add suggestions if available
+          if (result.suggestions && result.suggestions.length > 0) {
+            responseHtml += `<br><br><strong>💡 Recommended Systems:</strong><ul>`;
+            result.suggestions.forEach(suggestion => {
+              responseHtml += `<li><strong>${suggestion.system}:</strong> ${suggestion.reason}</li>`;
+            });
+            responseHtml += `</ul>`;
+          }
+          
+          // Add warnings if available
+          if (result.warnings && result.warnings.length > 0) {
+            responseHtml += `<br><br><strong>⚠️ Considerations:</strong><ul>`;
+            result.warnings.forEach(warning => {
+              responseHtml += `<li>${warning}</li>`;
+            });
+            responseHtml += `</ul>`;
+          }
+          
+          responseHtml += `</div></div>`;
+          messagesContainer.innerHTML += responseHtml;
+          
+          // Auto-select suggested systems if user wants
+          if (result.suggestions && result.suggestions.length > 0) {
+            messagesContainer.innerHTML += `
+              <div class="chat-message assistant">
+                <div class="chat-avatar assistant">AI</div>
+                <div class="chat-bubble">
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button onclick="applySuggestions(${JSON.stringify(result.suggestions).replace(/"/g, '&quot;')})" 
+                            class="action-btn" style="margin: 0; padding: 8px 16px; font-size: 0.9rem; width: 100%;">
+                      ✅ Apply All Suggestions (${result.suggestions.length} systems)
+                    </button>
+                    <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
+                      ${result.suggestions.map((suggestion, index) => `
+                        <button onclick="applySingleSuggestion('${suggestion.system.replace(/'/g, "\\'")}', ${index})" 
+                                class="small-btn" style="margin: 0; padding: 4px 8px; font-size: 0.8rem; border-radius: 12px;">
+                          + ${suggestion.system}
+                        </button>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          
+          // Add quick action buttons for common operations
+          messagesContainer.innerHTML += `
+            <div class="chat-message assistant">
+              <div class="chat-avatar assistant">AI</div>
+              <div class="chat-bubble">
+                <strong>Quick Actions:</strong><br>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+                  <button onclick="chatQuickAction('clear')" class="small-btn" style="margin: 0; padding: 4px 8px; font-size: 0.8rem;">
+                    🗑️ Clear All
+                  </button>
+                  <button onclick="chatQuickAction('current')" class="small-btn" style="margin: 0; padding: 4px 8px; font-size: 0.8rem;">
+                    📋 Show Current
+                  </button>
+                  <button onclick="chatQuickAction('suggest-removal')" class="small-btn" style="margin: 0; padding: 4px 8px; font-size: 0.8rem;">
+                    ➖ Suggest Removals
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          messagesContainer.innerHTML += `
+            <div class="chat-message assistant">
+              <div class="chat-avatar assistant">AI</div>
+              <div class="chat-bubble">Sorry, I encountered an error. Please try again.</div>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Chat error:', error);
+        messagesContainer.innerHTML += `
+          <div class="chat-message assistant">
+            <div class="chat-avatar assistant">AI</div>
+            <div class="chat-bubble">Sorry, I'm having trouble connecting. Please try again later.</div>
+          </div>
+        `;
+      }
+      
+      sendButton.disabled = false;
+      sendButton.innerHTML = 'Send';
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function applySuggestions(suggestions) {
+      let appliedCount = 0;
+      let skippedCount = 0;
+      
+      suggestions.forEach(suggestion => {
+        const system = systemsData.find(s => s.name === suggestion.system);
+        if (system && !selectedSystems.find(s => s.name === system.name)) {
+          selectedSystems.push(system);
+          appliedCount++;
+        } else {
+          skippedCount++;
+        }
+      });
+      
+      updateSelectedSystems();
+      updateSelectionCount();
+      updateButtonStates();
+      
+      let message = `Applied ${appliedCount} AI suggestions!`;
+      if (skippedCount > 0) {
+        message += ` (${skippedCount} already selected)`;
+      }
+      showToast(message, 'success');
+      
+      // Add feedback to chat
+      const messagesContainer = document.getElementById('system-mapping-chat-messages');
+      messagesContainer.innerHTML += `
+        <div class="chat-message assistant">
+          <div class="chat-avatar assistant">AI</div>
+          <div class="chat-bubble">
+            ✅ <strong>Applied ${appliedCount} systems to your mapping!</strong><br>
+            ${skippedCount > 0 ? `<em>Note: ${skippedCount} systems were already in your selection.</em><br>` : ''}
+            Your mapping now contains <strong>${selectedSystems.length} systems</strong>.
+          </div>
+        </div>
+      `;
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function applySingleSuggestion(systemName, suggestionIndex) {
+      const system = systemsData.find(s => s.name === systemName);
+      
+      if (!system) {
+        showToast('System not found!', 'error');
+        return;
+      }
+      
+      if (selectedSystems.find(s => s.name === system.name)) {
+        showToast(`${systemName} is already in your mapping`, 'error');
+        return;
+      }
+      
+      selectedSystems.push(system);
+      updateSelectedSystems();
+      updateSelectionCount();
+      updateButtonStates();
+      showToast(`Added ${systemName} to mapping!`, 'success');
+      
+      // Add feedback to chat
+      const messagesContainer = document.getElementById('system-mapping-chat-messages');
+      messagesContainer.innerHTML += `
+        <div class="chat-message assistant">
+          <div class="chat-avatar assistant">AI</div>
+          <div class="chat-bubble">
+            ✅ Added <strong>${systemName}</strong> to your system mapping!<br>
+            <em>Your mapping now contains ${selectedSystems.length} systems.</em>
+          </div>
+        </div>
+      `;
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function chatQuickAction(action) {
+      const messagesContainer = document.getElementById('system-mapping-chat-messages');
+      
+      switch(action) {
+        case 'clear':
+          if (selectedSystems.length === 0) {
+            messagesContainer.innerHTML += `
+              <div class="chat-message assistant">
+                <div class="chat-avatar assistant">AI</div>
+                <div class="chat-bubble">Your system mapping is already empty! 😊</div>
+              </div>
+            `;
+          } else {
+            const count = selectedSystems.length;
+            clearSelection();
+            messagesContainer.innerHTML += `
+              <div class="chat-message assistant">
+                <div class="chat-avatar assistant">AI</div>
+                <div class="chat-bubble">✅ Cleared ${count} systems from your mapping. You can start fresh now!</div>
+              </div>
+            `;
+          }
+          break;
+          
+        case 'current':
+          if (selectedSystems.length === 0) {
+            messagesContainer.innerHTML += `
+              <div class="chat-message assistant">
+                <div class="chat-avatar assistant">AI</div>
+                <div class="chat-bubble">📋 <strong>Current System Mapping:</strong><br><em>No systems selected yet. Start by dragging systems or asking for recommendations!</em></div>
+              </div>
+            `;
+          } else {
+            const systemsList = selectedSystems.map((system, index) => 
+              `${index + 1}. <strong>${system.name}</strong>`
+            ).join('<br>');
+            messagesContainer.innerHTML += `
+              <div class="chat-message assistant">
+                <div class="chat-avatar assistant">AI</div>
+                <div class="chat-bubble">
+                  📋 <strong>Current System Mapping (${selectedSystems.length} systems):</strong><br>
+                  ${systemsList}
+                  <br><br>
+                  <div style="display: flex; gap: 6px; margin-top: 8px;">
+                    <button onclick="generateCSV()" class="small-btn" style="margin: 0; padding: 4px 8px; font-size: 0.8rem;">
+                      📄 Export CSV
+                    </button>
+                    <button onclick="previewMapping()" class="small-btn" style="margin: 0; padding: 4px 8px; font-size: 0.8rem;">
+                      👁️ Preview
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          break;
+          
+        case 'suggest-removal':
+          if (selectedSystems.length === 0) {
+            messagesContainer.innerHTML += `
+              <div class="chat-message assistant">
+                <div class="chat-avatar assistant">AI</div>
+                <div class="chat-bubble">No systems to remove! Your mapping is empty. 😊</div>
+              </div>
+            `;
+          } else if (selectedSystems.length <= 3) {
+            messagesContainer.innerHTML += `
+              <div class="chat-message assistant">
+                <div class="chat-avatar assistant">AI</div>
+                <div class="chat-bubble">
+                  Your mapping looks lean with only ${selectedSystems.length} systems. Consider what specific use case you're targeting to determine if any should be removed.
+                  <br><br>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
+                    ${selectedSystems.map((system, index) => `
+                      <button onclick="removeSystemFromChat(${index})" 
+                              class="small-btn" style="margin: 0; padding: 4px 8px; font-size: 0.8rem; background: #dc2626; color: white;">
+                        ✕ ${system.name}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+            `;
+          } else {
+            messagesContainer.innerHTML += `
+              <div class="chat-message assistant">
+                <div class="chat-avatar assistant">AI</div>
+                <div class="chat-bubble">
+                  With ${selectedSystems.length} systems, you might want to focus on your core requirements. Here are your current systems:
+                  <br><br>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
+                    ${selectedSystems.map((system, index) => `
+                      <button onclick="removeSystemFromChat(${index})" 
+                              class="small-btn" style="margin: 0; padding: 4px 8px; font-size: 0.8rem; background: #dc2626; color: white;">
+                        ✕ ${system.name}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          break;
+      }
+      
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function removeSystemFromChat(index) {
+      const systemName = selectedSystems[index].name;
+      removeSystem(index);
+      
+      const messagesContainer = document.getElementById('system-mapping-chat-messages');
+      messagesContainer.innerHTML += `
+        <div class="chat-message assistant">
+          <div class="chat-avatar assistant">AI</div>
+          <div class="chat-bubble">
+            ✅ Removed <strong>${systemName}</strong> from your mapping!<br>
+            <em>Your mapping now contains ${selectedSystems.length} systems.</em>
+          </div>
+        </div>
+      `;
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Enter key support for chat
+    document.addEventListener('DOMContentLoaded', function() {
+      const chatInput = document.getElementById('system-mapping-chat-input');
+      if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendSystemMappingChatMessage();
+          }
+        });
+      }
+    });
+  </script>
+
+  <!-- System Mapping Chat Modal -->
+  <div id="system-mapping-chat-modal" class="chat-modal" style="display: none;">
+    <div class="chat-modal-content">
+      <div class="chat-header">
+        <span>🤖 System Mapping AI Assistant</span>
+        <div class="chat-header-actions">
+          <button class="chat-clear-btn" onclick="clearSystemMappingChat()" title="Clear Chat History">
+            <span>🗑️</span>
+          </button>
+          <button class="chat-close" onclick="closeSystemMappingChat()">&times;</button>
+        </div>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="system-mapping-chat-messages">
+          <!-- Messages will be populated here -->
+        </div>
+        <div class="chat-input-container">
+          <input type="text" id="system-mapping-chat-input" placeholder="Ask about system mapping..." class="chat-input">
+          <button onclick="sendSystemMappingChatMessage()" id="system-mapping-send-btn" class="chat-send-btn">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Chat Modal Styles */
+    .chat-modal {
+      display: none;
+      position: fixed;
+      z-index: 99999;
+      right: 0;
+      top: 0;
+      width: 600px;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(2px);
+    }
+    
+    .chat-modal-content {
+      background-color: white;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .chat-header {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      padding: var(--spacing-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    
+    .chat-header-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+    
+    .chat-clear-btn, .chat-close {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      border-radius: var(--radius-sm);
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s ease;
+    }
+    
+    .chat-clear-btn:hover, .chat-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 80px);
+    }
+    
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-lg);
+      background: var(--surface-secondary);
+    }
+    
+    .chat-message {
+      display: flex;
+      margin-bottom: var(--spacing-lg);
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .chat-message.user {
+      justify-content: flex-end;
+    }
+    
+    .chat-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+    
+    .chat-avatar.assistant {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      margin-right: var(--spacing-md);
+    }
+    
+    .chat-avatar.user {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+      color: white;
+      margin-left: var(--spacing-md);
+    }
+    
+    .chat-bubble {
+      background: white;
+      padding: var(--spacing-md);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      max-width: 400px;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+    
+    .chat-message.user .chat-bubble {
+      background: var(--primary-red);
+      color: white;
+    }
+    
+    .chat-input-container {
+      display: flex;
+      padding: var(--spacing-lg);
+      border-top: 1px solid var(--border-light);
+      background: white;
+      gap: var(--spacing-sm);
+    }
+    
+    .chat-input {
+      flex: 1;
+      padding: var(--spacing-md);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      font-size: 1rem;
+      outline: none;
+    }
+    
+    .chat-input:focus {
+      border-color: var(--primary-red);
+      box-shadow: 0 0 0 3px rgba(208, 2, 27, 0.1);
+    }
+    
+    .chat-send-btn {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      border: none;
+      padding: var(--spacing-md) var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .chat-send-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .chat-send-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .spinner {
+      width: 12px;
+      height: 12px;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</body>
+</html>
