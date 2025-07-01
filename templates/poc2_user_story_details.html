@@ -3938,15 +3938,67 @@ Do you want to proceed?`;
       }
       
       if (data.success) {
+        // Check if the response contains JSON that needs to be parsed
+        let aiResponse = data.response;
+        let updatedTraceability = data.updated_traceability;
+        
+        // Try to parse the response if it appears to be JSON
+        if (typeof aiResponse === 'string' && (aiResponse.trim().startsWith('{') || aiResponse.trim().startsWith('```json'))) {
+          try {
+            // Clean up the response if it's wrapped in markdown code blocks
+            let cleanResponse = aiResponse.trim();
+            if (cleanResponse.startsWith('```json')) {
+              cleanResponse = cleanResponse.replace(/```json\s*/, '').replace(/```\s*$/, '');
+            }
+            
+            const parsedResponse = JSON.parse(cleanResponse);
+            
+            // Extract the actual message from the JSON
+            if (parsedResponse.message || parsedResponse.response) {
+              aiResponse = parsedResponse.message || parsedResponse.response;
+            }
+            
+            // Extract updated traceability if available
+            if (parsedResponse.traceability_matrix || parsedResponse.updated_traceability) {
+              updatedTraceability = parsedResponse.traceability_matrix || parsedResponse.updated_traceability;
+            }
+            
+            console.log('Parsed JSON response for traceability:', { aiResponse, updatedTraceability });
+          } catch (parseError) {
+            console.log('Could not parse traceability AI response as JSON, using as-is');
+            // If parsing fails, use the original response
+          }
+        }
+        
         // Add AI response
-        addTraceabilityChatMessage(data.response, 'assistant');
+        addTraceabilityChatMessage(aiResponse, 'assistant');
         
         // Update traceability matrix if provided
-        if (data.updated_traceability) {
+        if (updatedTraceability) {
           const traceabilityContent = document.getElementById('traceability-content');
           if (traceabilityContent) {
-            traceabilityContent.innerHTML = data.updated_traceability;
+            // Preserve the proper structure for traceability content
+            let rawContentDiv = traceabilityContent.querySelector('.traceability-raw-content');
+            let formattedContentDiv = traceabilityContent.querySelector('.traceability-formatted-content');
+            
+            // If the structure doesn't exist, create it
+            if (!rawContentDiv || !formattedContentDiv) {
+              traceabilityContent.innerHTML = `
+                <div class="traceability-raw-content" style="display: none;">${updatedTraceability}</div>
+                <div class="traceability-formatted-content">
+                  <!-- Content will be dynamically formatted by JavaScript -->
+                </div>
+              `;
+            } else {
+              // Update existing structure
+              rawContentDiv.textContent = updatedTraceability;
+              formattedContentDiv.innerHTML = '<!-- Content will be dynamically formatted by JavaScript -->';
+            }
+            
             formatTraceabilityContent(); // Re-format the content
+            
+            // Show success message in chat
+            addTraceabilityChatMessage('✅ Traceability matrix updated successfully!', 'assistant');
           }
         }
       } else {

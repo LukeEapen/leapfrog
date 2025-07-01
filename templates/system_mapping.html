@@ -884,23 +884,47 @@
         const result = await response.json();
         
         if (result.success) {
+          // Check if the message contains JSON that needs to be parsed
+          let aiMessage = result.message;
+          let suggestions = result.suggestions || [];
+          let warnings = result.warnings || [];
+          
+          // Try to parse the message if it appears to be JSON
+          if (typeof aiMessage === 'string' && (aiMessage.trim().startsWith('{') || aiMessage.trim().startsWith('```json'))) {
+            try {
+              // Clean up the message if it's wrapped in markdown code blocks
+              let cleanMessage = aiMessage.trim();
+              if (cleanMessage.startsWith('```json')) {
+                cleanMessage = cleanMessage.replace(/```json\s*/, '').replace(/```\s*$/, '');
+              }
+              
+              const parsedMessage = JSON.parse(cleanMessage);
+              aiMessage = parsedMessage.message || 'I can help you with system mapping recommendations.';
+              suggestions = parsedMessage.suggestions || suggestions;
+              warnings = parsedMessage.warnings || warnings;
+            } catch (parseError) {
+              console.log('Could not parse AI message as JSON, using as-is');
+              // If parsing fails, use the original message
+            }
+          }
+          
           let responseHtml = `<div class="chat-message assistant">
             <div class="chat-avatar assistant">AI</div>
-            <div class="chat-bubble">${result.message}`;
+            <div class="chat-bubble">${aiMessage}`;
           
           // Add suggestions if available
-          if (result.suggestions && result.suggestions.length > 0) {
+          if (suggestions && suggestions.length > 0) {
             responseHtml += `<br><br><strong>💡 Recommended Systems:</strong><ul>`;
-            result.suggestions.forEach(suggestion => {
+            suggestions.forEach(suggestion => {
               responseHtml += `<li><strong>${suggestion.system}:</strong> ${suggestion.reason}</li>`;
             });
             responseHtml += `</ul>`;
           }
           
           // Add warnings if available
-          if (result.warnings && result.warnings.length > 0) {
+          if (warnings && warnings.length > 0) {
             responseHtml += `<br><br><strong>⚠️ Considerations:</strong><ul>`;
-            result.warnings.forEach(warning => {
+            warnings.forEach(warning => {
               responseHtml += `<li>${warning}</li>`;
             });
             responseHtml += `</ul>`;
@@ -910,18 +934,18 @@
           messagesContainer.innerHTML += responseHtml;
           
           // Auto-select suggested systems if user wants
-          if (result.suggestions && result.suggestions.length > 0) {
+          if (suggestions && suggestions.length > 0) {
             messagesContainer.innerHTML += `
               <div class="chat-message assistant">
                 <div class="chat-avatar assistant">AI</div>
                 <div class="chat-bubble">
                   <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button onclick="applySuggestions(${JSON.stringify(result.suggestions).replace(/"/g, '&quot;')})" 
+                    <button onclick="applySuggestions(${JSON.stringify(suggestions).replace(/"/g, '&quot;')})" 
                             class="action-btn" style="margin: 0; padding: 8px 16px; font-size: 0.9rem; width: 100%;">
-                      ✅ Apply All Suggestions (${result.suggestions.length} systems)
+                      ✅ Apply All Suggestions (${suggestions.length} systems)
                     </button>
                     <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
-                      ${result.suggestions.map((suggestion, index) => `
+                      ${suggestions.map((suggestion, index) => `
                         <button onclick="applySingleSuggestion('${suggestion.system.replace(/'/g, "\\'")}', ${index})" 
                                 class="small-btn" style="margin: 0; padding: 4px 8px; font-size: 0.8rem; border-radius: 12px;">
                           + ${suggestion.system}
