@@ -415,11 +415,217 @@
       font-size: 1rem;
     }
 
-    /* Enhanced Tagged Requirements Section */
-    .tagged-requirements-section .section-content {
-      background: var(--primary-red-lighter);
-      border: 1px solid #fed7d7;
+    /* Enhanced Traceability Matrix Section */
+    .traceability-matrix-section .section-content {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border: 1px solid #bae6fd;
       border-radius: var(--radius-md);
+    }
+
+    .traceability-content {
+      background: var(--surface-primary) !important;
+      border: 1px solid var(--border-light) !important;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .traceability-content:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-red) !important;
+    }
+
+    /* Enhanced table styling within traceability content */
+    .traceability-content table,
+    .traceability-content .traceability-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: var(--spacing-md);
+      margin-bottom: var(--spacing-md);
+      background: white;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+    }
+
+    .traceability-content th {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white !important;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: var(--spacing-md) var(--spacing-lg);
+      text-align: left;
+      vertical-align: top;
+      border: none;
+      position: relative;
+    }
+
+    .traceability-content th::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .traceability-content td {
+      padding: var(--spacing-md) var(--spacing-lg);
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--border-light);
+      border-right: 1px solid var(--border-light);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .traceability-content td:last-child {
+      border-right: none;
+    }
+
+    .traceability-content tr:nth-child(even) {
+      background-color: var(--surface-secondary);
+    }
+
+    .traceability-content tr:hover {
+      background-color: var(--primary-red-lighter) !important;
+      transform: scale(1.001);
+      transition: all 0.2s ease;
+    }
+
+    .traceability-content tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Enhanced content formatting */
+    .traceability-content h1,
+    .traceability-content h2,
+    .traceability-content h3,
+    .traceability-content h4 {
+      color: var(--primary-red);
+      font-weight: 600;
+      margin-top: var(--spacing-lg);
+      margin-bottom: var(--spacing-md);
+      padding-bottom: var(--spacing-xs);
+      border-bottom: 2px solid var(--primary-red-lighter);
+    }
+
+    .traceability-content h1 { font-size: 1.5rem; }
+    .traceability-content h2 { font-size: 1.25rem; }
+    .traceability-content h3 { font-size: 1.1rem; }
+    .traceability-content h4 { font-size: 1rem; }
+
+    .traceability-content ul,
+    .traceability-content ol {
+      margin: var(--spacing-md) 0;
+      padding-left: var(--spacing-xl);
+    }
+
+    .traceability-content li {
+      margin-bottom: var(--spacing-xs);
+      line-height: 1.6;
+    }
+
+    .traceability-content p {
+      margin-bottom: var(--spacing-md);
+      line-height: 1.6;
+    }
+
+    .traceability-content strong,
+    .traceability-content b {
+      color: var(--primary-red);
+      font-weight: 600;
+    }
+
+    .traceability-content code {
+      background: var(--surface-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: var(--radius-sm);
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.85rem;
+      border: 1px solid var(--border-light);
+    }
+
+    .traceability-content pre {
+      background: var(--surface-secondary);
+      padding: var(--spacing-md);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      border: 1px solid var(--border-light);
+      margin: var(--spacing-md) 0;
+    }
+
+    .traceability-content blockquote {
+      border-left: 4px solid var(--primary-red);
+      padding-left: var(--spacing-md);
+      margin: var(--spacing-md) 0;
+      font-style: italic;
+      color: var(--text-secondary);
+      background: var(--surface-secondary);
+      padding: var(--spacing-md);
+      border-radius: 0 var(--radius-md) var(--spacing-md) 0;
+    }
+
+    /* Loading state for traceability content */
+    .traceability-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-xl);
+      color: var(--text-muted);
+    }
+
+    .traceability-loading::after {
+      content: '';
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-light);
+      border-top: 2px solid var(--primary-red);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: var(--spacing-sm);
+    }
+
+    /* Responsive design for traceability tables */
+    @media (max-width: 768px) {
+      .traceability-content table {
+        font-size: 0.8rem;
+      }
+      
+      .traceability-content th,
+      .traceability-content td {
+        padding: var(--spacing-sm);
+      }
+      
+      .traceability-content th {
+        color: white !important; /* Ensure white text in headers */
+      }
+      
+      .traceability-content {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    /* Print styles for traceability matrix */
+    @media print {
+      .traceability-matrix-section {
+        page-break-inside: avoid;
+      }
+      
+      .traceability-content table {
+        border: 1px solid #000 !important;
+      }
+      
+      .traceability-content th {
+        background: #f0f0f0 !important;
+        color: #000 !important;
+      }
     }
 
     /* Enhanced Submit Button */
@@ -1533,27 +1739,38 @@
       </div>
     </div>
 
-    <!-- Tagged Requirements Section -->
-    <div class="section-container tagged-requirements-section">
+    <!-- Traceability Matrix Section -->
+    <div class="section-container traceability-matrix-section">
       <div class="section-header">
-        <span>🏷️ Tagged Requirements</span>
-        <button class="chat-btn" onclick="openRequirementsChat()">
-          <span>💬 Chat</span>
-        </button>
+        <span>🔗 Traceability Matrix</span>
+        <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+          <div style="font-size: 0.875rem; color: var(--text-muted); font-weight: 400;">User Story → PRD Requirements Mapping</div>
+          <button class="chat-btn" onclick="openTraceabilityChat()">
+            <span>� Chat</span>
+          </button>
+        </div>
       </div>
       <div class="section-content">
         <div style="display: flex; align-items: center; gap: var(--spacing-xs); margin-bottom: var(--spacing-lg); color: var(--primary-red); font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">
-          <span>📋</span> Technical Requirements
+          <span>📊</span> Requirements Mapping
         </div>
-        <ul class="requirements-list modern-list">
-          {% if tagged_requirements %}
-            {% for requirement in tagged_requirements %}
-            <li class="modern-list-item" style="border-left: 3px solid var(--primary-red);">{{ requirement }}</li>
-            {% endfor %}
+        <div class="traceability-content" id="traceability-content" style="background: var(--surface-primary) !important; padding: var(--spacing-lg); border-radius: var(--radius-md); border: 1px solid var(--border-light) !important; line-height: 1.6; color: var(--text-primary); overflow-x: auto;">
+          {% if traceability_matrix %}
+            <div class="traceability-raw-content" style="display: none;">{{ traceability_matrix }}</div>
+            <div class="traceability-formatted-content">
+              <!-- Content will be dynamically formatted by JavaScript -->
+            </div>
           {% else %}
-          <li class="modern-list-item" style="border-left: 3px solid var(--primary-red);"><span class="hardcoded-content">TBD - Requirements to be defined</span></li>
+            <div style="color: var(--text-muted); font-style: italic;">
+              <span>📋</span> Traceability mapping not available. 
+              <br><br>This section shows the relationship between user stories and their corresponding PRD requirements, enabling:
+              <br>• Requirements tracking and compliance
+              <br>• Design validation against business needs  
+              <br>• Testing coverage verification
+              <br>• Change impact analysis
+            </div>
           {% endif %}
-        </ul>
+        </div>
       </div>
     </div>
 
@@ -1592,6 +1809,7 @@
     <input type="hidden" name="responsible_systems" value="{{ responsible_systems or 'CAPS, CMS' }}">
     <input type="hidden" name="acceptance_criteria" value="{% if acceptance_criteria %}{{ acceptance_criteria|join('|||') }}{% else %}System prompts for full name, date of birth, Social Security Number, email address, phone number, and residential address|||Mandatory fields must be completed before progressing|||Input formats are validated (e.g., MM/DD/YYYY for DOB, 9-digit SSN, phone with area code)|||Errors are surfaced clearly and immediately for any missing or invalid entries{% endif %}">
     <input type="hidden" name="tagged_requirements" value="{% if tagged_requirements %}{{ tagged_requirements|join('|||') }}{% else %}TBD {% endif %}">
+    <input type="hidden" name="traceability_matrix" value="{{ traceability_matrix or 'Traceability mapping not available.' }}">
   </form>
 
   <!-- Description Chat Modal -->
@@ -1687,46 +1905,49 @@
     </div>
   </div>
 
-  <!-- Tagged Requirements Chat Modal -->
-  <div id="requirements-chat-modal" class="chat-modal">
+  <!-- Traceability Matrix Chat Modal -->
+  <div id="traceability-chat-modal" class="chat-modal">
     <div class="chat-modal-content">
       <div class="chat-header">
-        <span>💬 Edit Tagged Requirements</span>
+        <span>💬 Edit Traceability Matrix</span>
         <div class="chat-header-actions">
-          <button class="chat-clear-btn" onclick="clearRequirementsChat()" title="Clear Chat">
+          <button class="chat-clear-btn" onclick="clearTraceabilityChat()" title="Clear Chat">
             🗑️
           </button>
-          <button class="chat-close" onclick="closeRequirementsChat()">&times;</button>
+          <button class="chat-close" onclick="closeTraceabilityChat()">&times;</button>
         </div>
       </div>
       <div class="chat-container">
-        <!-- Current Requirements Display -->
+        <!-- Current Traceability Display -->
         <div class="current-description">
-          <h6>Current Tagged Requirements:</h6>
-          <ul id="current-requirements-display" class="requirements-list"></ul>
+          <h6>Current Traceability Matrix:</h6>
+          <div id="current-traceability-display" class="traceability-preview" style="background: var(--surface-secondary); padding: var(--spacing-md); border-radius: var(--radius-md); max-height: 200px; overflow-y: auto; font-size: 0.875rem; border: 1px solid var(--border-light);">
+            <!-- Traceability content will be displayed here -->
+          </div>
         </div>
         
         <!-- Chat Messages -->
-        <div class="chat-messages" id="requirements-chat-messages">
+        <div class="chat-messages" id="traceability-chat-messages">
           <div class="chat-message assistant">
             <div class="chat-avatar assistant">AI</div>
             <div class="chat-bubble">
-              Hello! I'm here to help you refine your tagged requirements. You can ask me to:
-              <br>• Add compliance and regulatory requirements
-              <br>• Include security and privacy standards
-              <br>• Add performance and scalability requirements
-              <br>• Include integration and API requirements
-              <br>• Add accessibility standards
-              <br>• Include audit and monitoring requirements
-              <br><br>What type of requirements would you like to add or modify?
+              Hello! I'm here to help you enhance your traceability matrix. You can ask me to:
+              <br>• Add more detailed requirement mappings
+              <br>• Include compliance traceability links
+              <br>• Map user stories to specific PRD sections
+              <br>• Add bidirectional traceability relationships
+              <br>• Include impact analysis information
+              <br>• Add test case traceability links
+              <br>• Include change request mappings
+              <br><br>What aspects of the traceability matrix would you like to improve or expand?
             </div>
           </div>
         </div>
         
         <!-- Chat Input -->
         <div class="chat-input-area">
-          <textarea id="requirements-chat-input" class="chat-input" placeholder="Ask me to improve the tagged requirements..." rows="1"></textarea>
-          <button class="chat-send-btn" onclick="sendRequirementsMessage()" id="requirements-send-btn">
+          <textarea id="traceability-chat-input" class="chat-input" placeholder="Ask me to improve the traceability matrix..." rows="1"></textarea>
+          <button class="chat-send-btn" onclick="sendTraceabilityMessage()" id="traceability-send-btn">
             <span>📤</span>
             Send
           </button>
@@ -1831,7 +2052,10 @@
 
 <script>
   function goBack() {
-    // Navigate to the epic results screen instead of using browser back
+    console.log('Back button clicked - navigating to epic results with context preservation');
+    
+    // Navigate to the epic results screen with preserved context
+    // The backend will handle restoring the selected user stories from session
     window.location.href = '/epic-results';
   }
 
@@ -3325,6 +3549,508 @@ Do you want to proceed?`;
     // Auto-save the changes
     saveUserStoryData();
   }
+
+  // Function to format and beautify traceability matrix content
+  function formatTraceabilityContent() {
+    const traceabilityContainer = document.getElementById('traceability-content');
+    if (!traceabilityContainer) return;
+
+    const rawContentDiv = traceabilityContainer.querySelector('.traceability-raw-content');
+    const formattedContentDiv = traceabilityContainer.querySelector('.traceability-formatted-content');
+    
+    if (!rawContentDiv || !formattedContentDiv) return;
+
+    let rawContent = rawContentDiv.textContent || rawContentDiv.innerText || '';
+    if (!rawContent.trim()) return;
+
+    try {
+      // Show loading state
+      formattedContentDiv.innerHTML = '<div class="traceability-loading">Formatting traceability matrix...</div>';
+
+      // Clean up the content
+      rawContent = rawContent.trim();
+
+      // Convert markdown-like content to HTML
+      let formattedContent = rawContent;
+
+      // Convert headers
+      formattedContent = formattedContent.replace(/^#{4}\s+(.+)$/gm, '<h4>$1</h4>');
+      formattedContent = formattedContent.replace(/^#{3}\s+(.+)$/gm, '<h3>$1</h3>');
+      formattedContent = formattedContent.replace(/^#{2}\s+(.+)$/gm, '<h2>$1</h2>');
+      formattedContent = formattedContent.replace(/^#{1}\s+(.+)$/gm, '<h1>$1</h1>');
+
+      // Convert bold text
+      formattedContent = formattedContent.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      formattedContent = formattedContent.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+      // Convert tables (pipe-separated format) with fixed headers
+      const tableRegex = /(\|.+\|[\r\n]+)+/g;
+      const tables = formattedContent.match(tableRegex);
+      
+      // Define the required column headers
+      const requiredHeaders = [
+        'User Story ID',
+        'User Story Title', 
+        'PRD Section Name or ID',
+        'Matching Requirement Summary',
+        'Reason for Match'
+      ];
+      
+      if (tables) {
+        tables.forEach(tableText => {
+          const lines = tableText.trim().split(/[\r\n]+/);
+          let tableHtml = '<table class="traceability-table">';
+          
+          // Always use the required headers regardless of AI output
+          tableHtml += '<thead><tr>';
+          requiredHeaders.forEach(header => {
+            tableHtml += `<th>${header}</th>`;
+          });
+          tableHtml += '</tr></thead><tbody>';
+          
+          lines.forEach((line, index) => {
+            if (line.trim() && line.includes('|')) {
+              const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
+              
+              if (index === 0) {
+                // Skip original header row since we're using fixed headers
+                return;
+              } else if (index === 1 && cells.every(cell => cell.match(/^-+$/))) {
+                // Skip separator row
+                return;
+              } else {
+                // Data row - ensure we have exactly 5 columns
+                tableHtml += '<tr>';
+                for (let i = 0; i < requiredHeaders.length; i++) {
+                  const cellContent = cells[i] || '';
+                  tableHtml += `<td>${cellContent}</td>`;
+                }
+                tableHtml += '</tr>';
+              }
+            }
+          });
+          
+          tableHtml += '</tbody></table>';
+          formattedContent = formattedContent.replace(tableText, tableHtml);
+        });
+      } else {
+        // If no table format detected, try to create a table from the content
+        // Look for patterns that might represent traceability data
+        const lines = formattedContent.split(/[\r\n]+/);
+        let hasTraceabilityData = false;
+        let tableData = [];
+        
+        // Check if content contains traceability-related keywords
+        const traceabilityKeywords = ['user story', 'story id', 'prd section', 'requirement', 'match'];
+        const contentLower = formattedContent.toLowerCase();
+        
+        if (traceabilityKeywords.some(keyword => contentLower.includes(keyword))) {
+          hasTraceabilityData = true;
+          
+          // Try to extract data from the content
+          lines.forEach(line => {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('**')) {
+              // This might be data content, try to split it
+              if (trimmed.includes(':') || trimmed.includes('-') || trimmed.includes('|')) {
+                // Attempt to parse as data
+                const parts = trimmed.split(/[:\-|]/);
+                if (parts.length >= 2) {
+                  tableData.push(parts.map(p => p.trim()));
+                }
+              }
+            }
+          });
+          
+          // Create table with proper headers if we found any data
+          if (tableData.length > 0) {
+            let tableHtml = '<table class="traceability-table"><thead><tr>';
+            requiredHeaders.forEach(header => {
+              tableHtml += `<th>${header}</th>`;
+            });
+            tableHtml += '</tr></thead><tbody>';
+            
+            tableData.forEach(row => {
+              tableHtml += '<tr>';
+              for (let i = 0; i < requiredHeaders.length; i++) {
+                const cellContent = row[i] || '';
+                tableHtml += `<td>${cellContent}</td>`;
+              }
+              tableHtml += '</tr>';
+            });
+            
+            tableHtml += '</tbody></table>';
+            
+            // Replace the original content with the table
+            formattedContent = tableHtml + '<br><div class="original-content" style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: var(--surface-secondary); border-radius: var(--radius-md);"><strong>Original Content:</strong><br>' + formattedContent + '</div>';
+          }
+        }
+      }
+
+      // Convert bullet points
+      formattedContent = formattedContent.replace(/^[\s]*[-•*]\s+(.+)$/gm, '<li>$1</li>');
+      
+      // Wrap consecutive list items in ul tags
+      formattedContent = formattedContent.replace(/(<li>.*<\/li>)/gs, function(match) {
+        return '<ul>' + match + '</ul>';
+      });
+
+      // Convert line breaks to paragraphs
+      const paragraphs = formattedContent.split(/\n\s*\n/);
+      formattedContent = paragraphs.map(para => {
+        para = para.trim();
+        if (!para) return '';
+        if (para.includes('<h1>') || para.includes('<h2>') || para.includes('<h3>') || 
+            para.includes('<h4>') || para.includes('<table') || para.includes('<ul>') || 
+            para.includes('<li>')) {
+          return para;
+        }
+        return `<p>${para.replace(/\n/g, '<br>')}</p>`;
+      }).join('');
+
+      // Clean up empty elements
+      formattedContent = formattedContent.replace(/<p><\/p>/g, '');
+      formattedContent = formattedContent.replace(/<ul><\/ul>/g, '');
+      
+      // Add special styling for specific content - highlight the required headers
+      const headerPattern = /(User Story ID|User Story Title|PRD Section Name or ID|Matching Requirement Summary|Reason for Match)/gi;
+      formattedContent = formattedContent.replace(headerPattern, 
+        '<strong style="color: var(--primary-red);">$&</strong>');
+
+      // Set the formatted content
+      setTimeout(() => {
+        formattedContentDiv.innerHTML = formattedContent || '<p style="color: var(--text-muted); font-style: italic;">No traceability data to display.</p>';
+        
+        // Ensure at least one table with proper headers exists
+        let existingTables = formattedContentDiv.querySelectorAll('table');
+        if (existingTables.length === 0) {
+          // Create a table with proper headers and placeholder content
+          const requiredHeaders = [
+            'User Story ID',
+            'User Story Title', 
+            'PRD Section Name or ID',
+            'Matching Requirement Summary',
+            'Reason for Match'
+          ];
+          
+          let tableHtml = '<table class="traceability-table"><thead><tr>';
+          requiredHeaders.forEach(header => {
+            tableHtml += `<th>${header}</th>`;
+          });
+          tableHtml += '</tr></thead><tbody>';
+          tableHtml += '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); font-style: italic; padding: var(--spacing-xl);">Traceability matrix data will be displayed here when available</td></tr>';
+          tableHtml += '</tbody></table>';
+          
+          // Add the table to the content
+          if (formattedContentDiv.innerHTML.trim()) {
+            formattedContentDiv.innerHTML += '<br>' + tableHtml;
+          } else {
+            formattedContentDiv.innerHTML = tableHtml;
+          }
+        }
+        
+        // Add interactive features to tables and ensure correct headers
+        const allTables = formattedContentDiv.querySelectorAll('table');
+        allTables.forEach(table => {
+          table.style.marginTop = 'var(--spacing-md)';
+          table.style.marginBottom = 'var(--spacing-md)';
+          
+          // Ensure table has correct headers
+          const thead = table.querySelector('thead');
+          if (thead) {
+            const headerRow = thead.querySelector('tr');
+            if (headerRow) {
+              const requiredHeaders = [
+                'User Story ID',
+                'User Story Title', 
+                'PRD Section Name or ID',
+                'Matching Requirement Summary',
+                'Reason for Match'
+              ];
+              
+              // Replace existing headers with required ones
+              headerRow.innerHTML = '';
+              requiredHeaders.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+              });
+            }
+          }
+          
+          // Add hover effects to rows
+          const rows = table.querySelectorAll('tbody tr');
+          rows.forEach(row => {
+            row.addEventListener('mouseenter', function() {
+              this.style.backgroundColor = 'var(--primary-red-lighter)';
+              this.style.transform = 'scale(1.001)';
+            });
+            row.addEventListener('mouseleave', function() {
+              this.style.backgroundColor = '';
+              this.style.transform = '';
+            });
+          });
+        });
+      }, 300);
+
+    } catch (error) {
+      console.error('Error formatting traceability content:', error);
+      formattedContentDiv.innerHTML = `
+        <div style="color: var(--text-muted);">
+          <p><strong>Raw Traceability Data:</strong></p>
+          <pre style="background: var(--surface-secondary); padding: var(--spacing-md); border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap;">${rawContent}</pre>
+        </div>
+      `;
+    }
+  }
+
+  // Traceability Chat Functions
+  function openTraceabilityChat() {
+    console.log('openTraceabilityChat called');
+    
+    const modal = document.getElementById('traceability-chat-modal');
+    console.log('Traceability modal element:', modal);
+    
+    if (!modal) {
+      console.error('Traceability modal element not found!');
+      alert('❌ Error: Traceability chat modal not found. Please reload the page and try again.');
+      return;
+    }
+    
+    const currentTraceabilityDisplay = document.getElementById('current-traceability-display');
+    console.log('Current traceability display element:', currentTraceabilityDisplay);
+    
+    // Get current traceability matrix content
+    let currentTraceability = '';
+    const traceabilityContent = document.getElementById('traceability-content');
+    if (traceabilityContent) {
+      currentTraceability = traceabilityContent.textContent || traceabilityContent.innerText || '';
+    }
+    
+    // Update the preview display in the modal
+    if (currentTraceabilityDisplay && traceabilityContent) {
+      currentTraceabilityDisplay.innerHTML = traceabilityContent.innerHTML || 'No traceability matrix available';
+    }
+    
+    // Prepare context for chat
+    const context = {
+      userStory: {
+        title: document.querySelector('input[name="user_story_name"]')?.value || '',
+        description: document.querySelector('input[name="user_story_description"]')?.value || '',
+        acceptanceCriteria: document.querySelector('input[name="acceptance_criteria"]')?.value || ''
+      },
+      currentTraceability: currentTraceability.trim(),
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('Traceability chat context:', context);
+    
+    // Show modal with animation
+    modal.style.display = 'block';
+    setTimeout(() => {
+      modal.style.opacity = '1';
+    }, 10);
+    
+    // Add initial context message if chat is empty
+    const chatContainer = document.getElementById('traceability-chat-messages');
+    if (chatContainer && chatContainer.children.length <= 1) {
+      // Clear any existing messages first
+      chatContainer.innerHTML = '';
+      
+      addTraceabilityChatMessage(
+        'Hello! I can help you with the traceability matrix for this user story. You can ask me to:\n\n' +
+        '• Explain how requirements map to this user story\n' +
+        '• Suggest improvements to the traceability matrix\n' +
+        '• Help identify missing requirement mappings\n' +
+        '• Clarify requirement relationships\n\n' +
+        'What would you like to know about the traceability matrix?',
+        'assistant'
+      );
+    }
+    
+    // Focus on input
+    const input = document.getElementById('traceability-chat-input');
+    if (input) {
+      setTimeout(() => input.focus(), 100);
+    }
+  }
+
+  function closeTraceabilityChat() {
+    const modal = document.getElementById('traceability-chat-modal');
+    if (modal) {
+      modal.style.opacity = '0';
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+    }
+  }
+
+  function sendTraceabilityMessage() {
+    const input = document.getElementById('traceability-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addTraceabilityChatMessage(message, 'user');
+    
+    // Clear input
+    input.value = '';
+    
+    // Show loading state
+    const sendBtn = document.getElementById('traceability-send-btn');
+    if (sendBtn) {
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending...';
+    }
+    
+    // Add loading message
+    const loadingMessageId = 'loading-' + Date.now();
+    addTraceabilityChatMessage('Analyzing traceability matrix...', 'assistant', true, loadingMessageId);
+    
+    // Get current context
+    const context = {
+      userStory: {
+        title: document.querySelector('input[name="user_story_title"]')?.value || '',
+        description: document.querySelector('input[name="user_story_description"]')?.value || '',
+        acceptanceCriteria: document.querySelector('input[name="acceptance_criteria"]')?.value || ''
+      },
+      currentTraceability: document.getElementById('traceability-content')?.textContent || '',
+      userMessage: message,
+      sessionContext: sessionStorage.getItem('userStoryContext') || '{}',
+      timestamp: new Date().toISOString()
+    };
+    
+    // Send to backend
+    fetch('/chat_traceability', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(context)
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Remove loading message
+      const loadingElement = document.getElementById(loadingMessageId);
+      if (loadingElement) {
+        loadingElement.remove();
+      }
+      
+      if (data.success) {
+        // Add AI response
+        addTraceabilityChatMessage(data.response, 'assistant');
+        
+        // Update traceability matrix if provided
+        if (data.updated_traceability) {
+          const traceabilityContent = document.getElementById('traceability-content');
+          if (traceabilityContent) {
+            traceabilityContent.innerHTML = data.updated_traceability;
+            formatTraceabilityContent(); // Re-format the content
+          }
+        }
+      } else {
+        addTraceabilityChatMessage(
+          '❌ Sorry, I encountered an error: ' + (data.error || 'Unknown error occurred'),
+          'assistant'
+        );
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      
+      // Remove loading message
+      const loadingElement = document.getElementById(loadingMessageId);
+      if (loadingElement) {
+        loadingElement.remove();
+      }
+      
+      addTraceabilityChatMessage(
+        '❌ Sorry, I encountered a network error. Please check your connection and try again.',
+        'assistant'
+      );
+    })
+    .finally(() => {
+      // Reset send button
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send';
+      }
+    });
+  }
+
+  function addTraceabilityChatMessage(message, sender, isLoading = false, messageId = null) {
+    const chatContainer = document.getElementById('traceability-chat-messages');
+    if (!chatContainer) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}`;
+    if (messageId) messageDiv.id = messageId;
+    
+    const avatar = document.createElement('div');
+    avatar.className = `chat-avatar ${sender}`;
+    avatar.textContent = sender === 'user' ? 'U' : 'AI';
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble';
+    
+    if (isLoading) {
+      bubble.innerHTML = `
+        <div class="chat-loading">
+          <div class="chat-loading-dots"></div>
+          ${message}
+        </div>
+      `;
+    } else {
+      // Convert markdown-like formatting
+      let formattedMessage = message
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br>');
+      
+      bubble.innerHTML = formattedMessage;
+    }
+    
+    messageDiv.appendChild(avatar);
+    messageDiv.appendChild(bubble);
+    chatContainer.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  function clearTraceabilityChat() {
+    const chatContainer = document.getElementById('traceability-chat-messages');
+    if (chatContainer) {
+      chatContainer.innerHTML = '';
+      // Add welcome message back
+      addTraceabilityChatMessage(
+        'Hello! I can help you with the traceability matrix for this user story. What would you like to know?',
+        'assistant'
+      );
+    }
+  }
+
+  // Add Enter key support for traceability chat
+  document.addEventListener('DOMContentLoaded', function() {
+    const traceabilityChatInput = document.getElementById('traceability-chat-input');
+    if (traceabilityChatInput) {
+      traceabilityChatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendTraceabilityMessage();
+        }
+      });
+    }
+  });
+
+  // Initialize traceability formatting when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add a small delay to ensure all content is loaded
+    setTimeout(() => {
+      formatTraceabilityContent();
+    }, 500);
+  });
 </script>
 </body>
 </html>

@@ -1570,120 +1570,139 @@ def document_upload_preview():
             additional_docs.seek(0)
             logger.info(f"Additional docs: {additional_docs.filename}, size: {docs_size:,} bytes")
 
-        # Process CSV file first if provided (store in vector DB)
+        # Process CSV file with smart optimization based on file size
         csv_summary = ""
         if csv_file and csv_file.filename.lower().endswith('.csv'):
-            logger.info("Processing CSV file for vector database storage")
-            try:
-                csv_summary = process_csv_to_vector_db(csv_file)
-                logger.info(f"CSV processing completed: {csv_summary[:100]}...")
-            except Exception as e:
-                logger.warning(f"CSV processing failed: {e}")
-                csv_summary = f"Warning: Failed to process {csv_file.filename}: {str(e)}"
+            csv_file.seek(0, 2)  # Seek to end to get size
+            csv_size = csv_file.tell()
+            csv_file.seek(0)  # Reset to beginning
+            
+            # Apply fast preview mode only for large CSV files (>10KB)
+            if csv_size > 10240:  # 10KB threshold
+                logger.info(f"Large CSV file detected ({csv_size:,} bytes), using fast preview mode")
+                try:
+                    # For large files, read first few rows only for performance
+                    content = csv_file.read(2048).decode('utf-8', errors='ignore')  # Read first 2KB only
+                    lines = content.split('\n')[:10]  # First 10 lines only
+                    csv_summary = f"CSV Preview ({csv_file.filename}):\n" + '\n'.join(lines)
+                    if len(lines) >= 10:
+                        csv_summary += "\n[... more rows available - full processing during epic generation]"
+                    logger.info(f"Large CSV preview completed: {len(lines)} lines shown")
+                except Exception as e:
+                    logger.warning(f"CSV preview failed: {e}")
+                    csv_summary = f"CSV file uploaded: {csv_file.filename} (will be processed during epic generation)"
+            else:
+                logger.info(f"Small CSV file detected ({csv_size:,} bytes), using full processing")
+                try:
+                    # For small files, process fully for richer preview
+                    csv_summary = process_csv_to_vector_db(csv_file)
+                    if not csv_summary:
+                        # Fallback to simple preview if processing fails
+                        csv_file.seek(0)
+                        content = csv_file.read().decode('utf-8', errors='ignore')
+                        lines = content.split('\n')[:20]  # Show more lines for small files
+                        csv_summary = f"CSV Content ({csv_file.filename}):\n" + '\n'.join(lines)
+                except Exception as e:
+                    logger.warning(f"CSV processing failed: {e}")
+                    csv_summary = f"CSV file uploaded: {csv_file.filename}"
         elif csv_file:
             logger.warning(f"Uploaded file {csv_file.filename} is not a CSV file")
             csv_summary = f"Warning: {csv_file.filename} is not a CSV file"
 
-        # Optimized file reading - avoid parallel processing for large files
-        logger.info("Reading uploaded files with optimized processing")
+        # Smart file reading with size-based optimization approach
+        logger.info("Reading uploaded files with smart size-based processing")
         
         prd_content = ""
         docs_content = ""
         
-        # Read PRD file with size optimization
+        # Read PRD file with smart optimization based on size
         if prd_file:
             logger.info(f"Reading PRD file: {prd_file.filename}")
             prd_content = safe_read(prd_file)
             if prd_content:
                 logger.info(f"PRD content length: {len(prd_content):,} characters")
-                # For large files, truncate early to avoid processing overhead
-                if len(prd_content) > 100000:  # 100KB text threshold
-                    logger.info("Large PRD detected, using optimized processing")
-                    prd_content = prd_content[:100000] + "\n\n[Content truncated for performance - full content will be used in epic generation]"
+                # Apply aggressive truncation only for very large files (>30KB)
+                if len(prd_content) > 30000:  # 30KB text threshold
+                    logger.info("Large PRD detected, using aggressive truncation for preview speed")
+                    prd_content = prd_content[:30000] + "\n\n[Content truncated for fast preview - full content will be used in epic generation]"
+                else:
+                    logger.info("Small-medium PRD detected, preserving full content for rich preview")
         
-        # Read additional docs with size optimization  
+        # Read additional docs with smart optimization based on size
         if additional_docs:
             logger.info(f"Reading additional docs: {additional_docs.filename}")
             docs_content = safe_read(additional_docs)
             if docs_content:
                 logger.info(f"Docs content length: {len(docs_content):,} characters")
-                # For large files, truncate for preview
-                if len(docs_content) > 50000:  # 50KB text threshold
-                    logger.info("Large additional docs detected, using optimized processing")
-                    docs_content = docs_content[:50000] + "\n\n[Content truncated for performance - full content will be used in epic generation]"
+                # Apply aggressive truncation only for large files (>20KB)
+                if len(docs_content) > 20000:  # 20KB text threshold
+                    logger.info("Large additional docs detected, using aggressive truncation for preview speed")
+                    docs_content = docs_content[:20000] + "\n\n[Content truncated for fast preview - full content will be used in epic generation]"
+                else:
+                    logger.info("Small-medium additional docs detected, preserving full content for rich preview")
 
-        # Create simple summaries without expensive RAG processing for large files
-        logger.info("Creating optimized summaries for preview")
+        # Create summaries with smart processing based on file size
+        logger.info("Creating summaries with size-adaptive processing")
         
-        # Process PRD summary - avoid RAG for large files
+        # Process PRD summary with smart approach
         prd_summary = ""
         if prd_content and len(prd_content.strip()) > 50:
-            if len(prd_content) > 20000:  # For large files, use simple truncated summary
-                logger.info("Using optimized summary for large PRD file")
-                prd_summary = prd_content[:15000] + "\n\n[Summary truncated for preview - full content will be processed during epic generation]"
+            prd_raw_length = len(prd_content)
+            logger.info(f"Processing PRD summary (content length: {prd_raw_length:,} chars)")
+            
+            # For small files (≤30KB), use full RAG processing for rich summaries
+            if prd_raw_length <= 30000 and not prd_content.endswith("[Content truncated for fast preview - full content will be used in epic generation]"):
+                logger.info("Small PRD file detected, using full RAG processing for rich preview")
+                try:
+                    prd_summary = create_rag_summary(prd_content, prd_file.filename if prd_file else "prd_document", max_summary_length=8000)
+                except Exception as e:
+                    logger.warning(f"RAG processing failed for PRD, using fallback: {e}")
+                    prd_summary = create_intelligent_summary_fallback(prd_content, prd_file.filename if prd_file else "prd_document", max_summary_length=5000)
             else:
-                logger.info("Creating enhanced summary for smaller PRD file")
-                # Only use RAG for smaller files to avoid performance issues
-                if is_valid_content(prd_content) and prd_collection and embedding_model:
-                    try:
-                        prd_summary = create_rag_summary(prd_content, prd_file.filename if prd_file else "prd_content", max_summary_length=15000)
-                    except Exception as e:
-                        logger.warning(f"RAG summary failed, using fallback: {e}")
-                        prd_summary = create_intelligent_summary_fallback(prd_content, prd_file.filename if prd_file else "prd_content", max_summary_length=15000)
+                # For large files, use fast simple truncation
+                logger.info("Large PRD file detected, using fast truncation for preview")
+                if len(prd_content) > 3000:
+                    prd_summary = prd_content[:3000] + "\n\n[Preview truncated - full content will be processed during epic generation]"
                 else:
-                    prd_summary = create_intelligent_summary_fallback(prd_content, prd_file.filename if prd_file else "prd_content", max_summary_length=15000)
+                    prd_summary = prd_content
         else:
             logger.warning("PRD content is too short or invalid")
             prd_summary = "No valid PRD content available - please check file format and content."
 
-        # Process additional docs summary - avoid RAG for large files  
+        # Process additional docs summary with smart approach
         docs_summary = ""
         if docs_content and len(docs_content.strip()) > 50:
-            if len(docs_content) > 20000:  # For large files, use simple truncated summary
-                logger.info("Using optimized summary for large additional docs")
-                docs_summary = docs_content[:10000] + "\n\n[Summary truncated for preview - full content will be processed during epic generation]"
+            docs_raw_length = len(docs_content)
+            logger.info(f"Processing additional docs summary (content length: {docs_raw_length:,} chars)")
+            
+            # For small files (≤20KB), use full RAG processing for rich summaries
+            if docs_raw_length <= 20000 and not docs_content.endswith("[Content truncated for fast preview - full content will be used in epic generation]"):
+                logger.info("Small additional docs detected, using full RAG processing for rich preview")
+                try:
+                    docs_summary = create_rag_summary(docs_content, additional_docs.filename if additional_docs else "additional_docs", max_summary_length=5000)
+                except Exception as e:
+                    logger.warning(f"RAG processing failed for additional docs, using fallback: {e}")
+                    docs_summary = create_intelligent_summary_fallback(docs_content, additional_docs.filename if additional_docs else "additional_docs", max_summary_length=3000)
             else:
-                logger.info("Creating enhanced summary for smaller additional docs")
-                # Only use RAG for smaller files
-                if is_valid_content(docs_content) and prd_collection and embedding_model:
-                    try:
-                        docs_summary = create_rag_summary(docs_content, additional_docs.filename if additional_docs else "additional_docs", max_summary_length=10000)
-                    except Exception as e:
-                        logger.warning(f"RAG summary failed for docs, using fallback: {e}")
-                        docs_summary = create_intelligent_summary_fallback(docs_content, additional_docs.filename if additional_docs else "additional_docs", max_summary_length=10000)
+                # For large files, use fast simple truncation
+                logger.info("Large additional docs detected, using fast truncation for preview")
+                if len(docs_content) > 2000:
+                    docs_summary = docs_content[:2000] + "\n\n[Preview truncated - full content will be processed during epic generation]"
                 else:
-                    docs_summary = create_intelligent_summary_fallback(docs_content, additional_docs.filename if additional_docs else "additional_docs", max_summary_length=10000)
+                    docs_summary = docs_content
         else:
             logger.warning("Additional docs content is too short or invalid")
             docs_summary = "No valid additional documentation available - please check file format and content."
         
+        # Log final processing results
         logger.info(f"PRD summary length: {len(prd_summary)} characters")
         logger.info(f"Additional docs summary length: {len(docs_summary)} characters")
         
-        # Print RAG summaries to console for debugging
-        print("\n" + "=" * 100)
-        print("RAG-PROCESSED DOCUMENT SUMMARIES:")
-        print("=" * 100)
-        
-        if context:
-            print("USER CONTEXT:")
-            print("-" * 50)
-            print(context)
-            print("-" * 50)
-        
-        if prd_summary:
-            print("PRD SUMMARY:")
-            print("-" * 50)
-            print(prd_summary)
-            print("-" * 50)
-        
-        if docs_summary:
-            print("ADDITIONAL DOCS SUMMARY:")
-            print("-" * 50)
-            print(docs_summary)
-            print("-" * 50)
-        
-        print("=" * 100 + "\n")
+        # Smart debug output - detailed for small files, minimal for large files
+        if (prd_content and len(prd_content) <= 30000) or (docs_content and len(docs_content) <= 20000):
+            logger.info("Small files detected - debug output enabled for detailed analysis")
+        else:
+            logger.info("Large files detected - debug output minimized for performance")
         
         # Create preview data
         preview_data = {
@@ -1881,12 +1900,39 @@ def show_epic_results():
         stored_epics = session.get('current_epics')
         stored_user_stories = session.get('current_user_stories', '')
         
+        # Check for navigation context from user story details back button
+        navigation_context = session.get('user_story_navigation_context')
+        selected_story_ids = None
+        
+        if navigation_context:
+            # User is coming back from user story details - restore selected stories
+            selected_story_ids = navigation_context.get('selected_story_ids', [])
+            logger.info(f"Restoring selected story context for back navigation: {selected_story_ids}")
+            
+            # Clear the navigation context after use to prevent stale state
+            session.pop('user_story_navigation_context', None)
+            session.modified = True
+        
         if stored_epics:
             logger.info("Retrieved epic and user story data from session")
-            return render_template("poc2_epic_story_screen.html", epics=stored_epics, user_stories=stored_user_stories)
+            return render_template("poc2_epic_story_screen.html", 
+                                 epics=stored_epics, 
+                                 user_stories=stored_user_stories,
+                                 selected_story_ids=selected_story_ids)
         
         # Fallback: Provide sample epics for testing Epic Chat functionality
         logger.info("No stored data found, using sample epics")
+        
+        # Check for navigation context even for sample data
+        navigation_context = session.get('user_story_navigation_context')
+        selected_story_ids = None
+        
+        if navigation_context:
+            selected_story_ids = navigation_context.get('selected_story_ids', [])
+            logger.info(f"Restoring selected story context for sample data: {selected_story_ids}")
+            session.pop('user_story_navigation_context', None)
+            session.modified = True
+        
         sample_epics = """
         <div class="epic-card" data-epic-id="epic_1">
           <div style="display: flex; align-items: center; gap: 10px;">
@@ -2000,7 +2046,10 @@ def show_epic_results():
           }
         ]"""
         
-        return render_template("poc2_epic_story_screen.html", epics=sample_epics, user_stories=sample_user_stories)
+        return render_template("poc2_epic_story_screen.html", 
+                                 epics=sample_epics, 
+                                 user_stories=sample_user_stories,
+                                 selected_story_ids=selected_story_ids)
 
 @app.route("/approve-epics", methods=["POST"])
 def approve_epics():
@@ -2300,6 +2349,32 @@ def user_story_details():
             
             description_response = ask_assistant_from_file_optimized("poc2_agent5_description", description_prompt)
             
+            # Call the Traceability Agent to map User Stories to PRD requirements
+            logger.info("Processing Traceability Agent to map user stories to PRD requirements")
+            
+            # Prepare traceability context with user story details and PRD content from vector DB
+            traceability_context = f"""
+User Story Analysis for Traceability Mapping:
+
+Selected User Stories:
+- Story ID: {selected_story_id}
+- Story Name: {story_name}
+- Story Description: {selected_story_description}
+- Epic Title: {epic_title}
+- Priority: {priority}
+- Systems: {responsible_systems}
+
+Instructions: Map these user stories to the corresponding requirements in the PRD using the vector database. 
+Create a traceability matrix showing the relationship between each user story and its source requirements.
+"""
+            
+            try:
+                traceability_response = ask_assistant_from_file_optimized("poc2_traceability_agent", traceability_context)
+                logger.info(f"Traceability mapping completed, response length: {len(traceability_response)} characters")
+            except Exception as e:
+                logger.error(f"Traceability agent failed: {e}")
+                traceability_response = "Traceability mapping temporarily unavailable. Please try again later."
+            
             # Parse the description response
             enhanced_description = selected_story_description  # Default fallback
             try:
@@ -2401,9 +2476,10 @@ def user_story_details():
                 'priority': priority,
                 'responsible_systems': responsible_systems,
                 'acceptance_criteria': acceptance_criteria,
-                'tagged_requirements': tagged_requirements
+                'tagged_requirements': tagged_requirements,
+                'traceability_matrix': traceability_response
             }
-            logger.info("Stored selected story details in session")
+            logger.info("Stored selected story details in session with traceability matrix")
             
               # For AJAX requests, return JSON for navigation
             if request.is_json:
@@ -2412,6 +2488,7 @@ def user_story_details():
                     "story_id": selected_story_id,
                     "story_name": story_name,
                     "enhanced_description": enhanced_description,
+                    "traceability_matrix": traceability_response,
                     "html": render_template(
                         "poc2_user_story_details.html",
                         epic_title=epic_title,
@@ -2422,10 +2499,23 @@ def user_story_details():
                         responsible_systems=responsible_systems,
                         acceptance_criteria=acceptance_criteria,
                         tagged_requirements=tagged_requirements,
+                        traceability_matrix=traceability_response,
                         story_id=selected_story_id
                     ),
-                    "message": "User story processed successfully with enhanced description"
+                    "message": "User story processed successfully with enhanced description and traceability mapping"
                 })
+            
+            # Store navigation context in session for back button functionality
+            session['user_story_navigation_context'] = {
+                'selected_story_ids': story_ids,
+                'selected_stories_data': selected_stories_data,
+                'epic_title': epic_title,
+                'source_epic_data': session.get('current_epics', ''),
+                'source_user_stories': session.get('current_user_stories', ''),
+                'navigation_timestamp': datetime.now().isoformat()
+            }
+            session.modified = True
+            logger.info(f"Stored navigation context for story IDs: {story_ids}")
             
             # For regular form submission, render the template directly
             return render_template(
@@ -2438,6 +2528,7 @@ def user_story_details():
                 responsible_systems=responsible_systems,
                 acceptance_criteria=acceptance_criteria,
                 tagged_requirements=tagged_requirements,
+                traceability_matrix=traceability_response,
                 story_id=selected_story_id
             )
             
@@ -2462,6 +2553,7 @@ def user_story_details():
                 tagged_requirements = session_data.get('tagged_requirements', [
                     "TBD"
                 ])
+                traceability_matrix = session_data.get('traceability_matrix', 'Traceability mapping not available.')
                 
                 # Clean up session data after use
                 session.pop('selected_story_data', None)
@@ -2499,6 +2591,30 @@ def user_story_details():
                 logger.info(f"Processing User Description Agent prompt: {description_prompt}")
                 
                 description_response = ask_assistant_from_file_optimized("poc2_agent5_description", description_prompt)
+                
+                # Call the Traceability Agent to map User Stories to PRD requirements
+                logger.info("Processing Traceability Agent to map user stories to PRD requirements (GET request)")
+                
+                # Prepare traceability context with user story details and PRD content from vector DB
+                traceability_context = f"""
+User Story Analysis for Traceability Mapping:
+
+Selected User Stories:
+- Story Name: {final_story_name}
+- Story Description: {final_story_description}
+- Epic Title: {epic_title}
+- Priority: {priority}
+
+Instructions: Map these user stories to the corresponding requirements in the PRD using the vector database. 
+Create a traceability matrix showing the relationship between each user story and its source requirements.
+"""
+                
+                try:
+                    traceability_response = ask_assistant_from_file_optimized("poc2_traceability_agent", traceability_context)
+                    logger.info(f"Traceability mapping completed (GET), response length: {len(traceability_response)} characters")
+                except Exception as e:
+                    logger.error(f"Traceability agent failed (GET): {e}")
+                    traceability_response = "Traceability mapping temporarily unavailable. Please try again later."
                 
                 # Parse the description response
                 enhanced_description = final_story_description  # Default fallback
@@ -2568,6 +2684,7 @@ def user_story_details():
                 
                 user_story_title = final_story_name
                 user_story_description = enhanced_description  # Use enhanced description
+                traceability_matrix = traceability_response
         
             return render_template(
                 "poc2_user_story_details.html",
@@ -2579,6 +2696,7 @@ def user_story_details():
                 responsible_systems=responsible_systems,
                 acceptance_criteria=acceptance_criteria,
                 tagged_requirements=tagged_requirements,
+                traceability_matrix=traceability_matrix if 'traceability_matrix' in locals() else 'Traceability mapping not available.',
                 story_id=story_id
             )
         
@@ -3910,6 +4028,214 @@ I'm here to help you refine and improve your user story: **"{user_story_name or 
 
 💡 **Note:** This page focuses on refining THIS specific user story. If you need to manage multiple stories or remove stories entirely, please use the epic management screen."""
 
+@app.route("/chat_traceability", methods=["POST"])
+def chat_traceability():
+    """Handle chat requests for traceability matrix refinement and enhancement."""
+    logger.info("Request received for traceability matrix chat")
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No JSON data provided"}), 400
+            
+        user_message = data.get("userMessage", "").strip()
+        context = data.get("sessionContext", "{}")
+        
+        if not user_message:
+            return jsonify({"success": False, "error": "Message is required"}), 400
+        
+        # Extract context information
+        user_story_title = data.get("userStory", {}).get("title", "")
+        user_story_description = data.get("userStory", {}).get("description", "")
+        acceptance_criteria = data.get("userStory", {}).get("acceptanceCriteria", "")
+        current_traceability = data.get("currentTraceability", "")
+        
+        logger.info(f"Traceability chat message: {user_message}")
+        logger.info(f"Context - Story: {user_story_title}")
+        
+        # Build context string for AI
+        context_text = f"""
+Current User Story Context:
+- Story Title: {user_story_title or 'Not specified'}
+- Description: {user_story_description or 'Not specified'}
+- Acceptance Criteria: {acceptance_criteria or 'Not specified'}
+- Current Traceability Matrix: {current_traceability or 'Not available'}
+"""
+        
+        # System prompt for traceability matrix chat
+        system_prompt = f"""You are an expert systems analyst and requirements traceability specialist. You help create, analyze, and improve traceability matrices that map user stories to PRD requirements, design documents, and testing artifacts.
+
+{context_text}
+
+Your role is to:
+1. Analyze and improve traceability matrices between user stories and PRD requirements
+2. Identify missing traceability links and suggest improvements
+3. Help create bidirectional traceability relationships
+4. Ensure comprehensive coverage of requirements traceability
+5. Suggest impact analysis approaches for requirement changes
+6. Help with compliance and audit traceability documentation
+7. Create structured, readable traceability matrices in table format
+
+When enhancing traceability matrices, you should:
+- Create clear mappings between user stories and specific PRD requirements
+- Include requirement IDs, descriptions, and traceability relationships
+- Suggest forward and backward traceability links
+- Include test case traceability where relevant
+- Format output as readable tables or structured text
+- Identify gaps in requirement coverage
+- Suggest additional traceability dimensions (design documents, test cases, compliance standards)
+
+For traceability matrix outputs, use this format:
+| User Story | PRD Requirement ID | Requirement Description | Traceability Type | Test Coverage |
+|------------|-------------------|------------------------|-------------------|---------------|
+| [Story ID] | [REQ-ID] | [Description] | [Forward/Backward/Bidirectional] | [Test Case IDs] |
+
+Always provide structured, professional traceability information that would be suitable for project documentation and compliance audits."""
+
+        user_prompt = f"User Request: {user_message}\n\nContext: Please analyze and enhance the traceability matrix for the current user story."
+
+        # Use OpenAI to generate traceability guidance
+        try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=2000,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content.strip()
+            logger.info(f"Generated traceability chat response: {ai_response[:200]}...")
+            
+            # Check if the response includes an updated traceability matrix
+            updated_traceability = None
+            if "|" in ai_response and "User Story" in ai_response:
+                # Response contains a table format - extract it as updated traceability
+                updated_traceability = ai_response
+            
+            return jsonify({
+                "success": True,
+                "response": ai_response,
+                "updated_traceability": updated_traceability
+            })
+            
+        except Exception as e:
+            logger.error(f"OpenAI API error in traceability chat: {str(e)}")
+            
+            # Provide a fallback response for common traceability questions
+            fallback_response = generate_traceability_fallback_response(user_message, user_story_title, current_traceability)
+            
+            return jsonify({
+                "success": True,
+                "response": fallback_response,
+                "updated_traceability": None
+            })
+    
+    except Exception as e:
+        logger.error(f"Error in traceability chat: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+def generate_traceability_fallback_response(user_message, user_story_title, current_traceability):
+    """Generate a fallback response for traceability chat when OpenAI is unavailable."""
+    lower_message = user_message.lower()
+    
+    if any(word in lower_message for word in ['improve', 'enhance', 'better']):
+        return f"""🔗 **Traceability Matrix Enhancement Suggestions**
+
+For the user story "{user_story_title or 'Current Story'}", here are ways to improve traceability:
+
+**1. Forward Traceability:**
+• Map story to specific PRD requirements (REQ-001, REQ-002, etc.)
+• Link to design documents and technical specifications
+• Connect to test cases and test scenarios
+
+**2. Backward Traceability:**
+• Trace back to business objectives and goals
+• Link to stakeholder requirements and needs
+• Connect to compliance and regulatory requirements
+
+**3. Bidirectional Traceability:**
+• Ensure changes can be traced in both directions
+• Maintain impact analysis capabilities
+• Enable change management tracking
+
+**4. Coverage Analysis:**
+• Verify all acceptance criteria map to requirements
+• Ensure no orphaned requirements exist
+• Validate test coverage completeness
+
+Would you like me to help create a specific traceability matrix table for this user story?"""
+    
+    elif any(word in lower_message for word in ['table', 'format', 'matrix']):
+        return f"""📊 **Traceability Matrix Table Format**
+
+Here's a recommended structure for your traceability matrix:
+
+| User Story | PRD Requirement | Requirement Description | Traceability Type | Test Case |
+|------------|----------------|------------------------|-------------------|-----------|
+| {user_story_title or 'US-001'} | REQ-001 | User authentication and authorization | Forward | TC-001 |
+| {user_story_title or 'US-001'} | REQ-002 | Data validation and input sanitization | Forward | TC-002 |
+| {user_story_title or 'US-001'} | REQ-003 | Error handling and user feedback | Forward | TC-003 |
+
+**Traceability Types:**
+• **Forward**: User Story → Requirements → Design → Tests
+• **Backward**: Tests ← Design ← Requirements ← User Story  
+• **Bidirectional**: Maintains links in both directions
+
+This format helps with compliance audits, impact analysis, and requirement coverage verification."""
+    
+    elif any(word in lower_message for word in ['missing', 'gaps', 'coverage']):
+        return f"""🔍 **Traceability Gap Analysis**
+
+Common gaps in traceability matrices:
+
+**Missing Forward Links:**
+• User story not mapped to specific PRD requirements
+• Requirements not linked to design documents
+• Design elements not connected to test cases
+
+**Missing Backward Links:**
+• Requirements not traced to business objectives
+• User stories not linked to stakeholder needs
+• Test cases not mapped back to acceptance criteria
+
+**Coverage Gaps:**
+• Orphaned requirements with no implementing stories
+• User stories without corresponding test coverage
+• Acceptance criteria not validated by specific tests
+
+**For "{user_story_title or 'your story'}":**
+Consider mapping to requirements for data validation, user interface design, error handling, security, and performance specifications.
+
+Would you like help identifying specific requirements that should be traced to this user story?"""
+    
+    else:
+        return f"""🔗 **Traceability Matrix Assistant**
+
+I can help you enhance the traceability matrix for "{user_story_title or 'your user story'}".
+
+**Current Traceability Status:**
+{current_traceability[:200] + '...' if current_traceability and len(current_traceability) > 200 else current_traceability or 'No traceability matrix currently available'}
+
+**I can help with:**
+• Creating structured traceability tables
+• Identifying missing requirement mappings
+• Analyzing traceability coverage gaps
+• Suggesting bidirectional traceability links
+• Formatting for compliance documentation
+
+**Common requests:**
+- "Create a traceability table for this user story"
+- "What requirements should this story map to?"
+- "Improve the traceability matrix format"
+- "Identify missing traceability links"
+
+What aspect of traceability would you like to work on?"""
+
 @app.route("/submit-jira-ticket", methods=["POST"])
 def submit_jira_ticket():
     """Submit user story details to Jira as a ticket."""
@@ -3924,6 +4250,7 @@ def submit_jira_ticket():
         responsible_systems = request.form.get("responsible_systems", "")
         acceptance_criteria_raw = request.form.get("acceptance_criteria", "")
         tagged_requirements_raw = request.form.get("tagged_requirements", "")
+        traceability_matrix = request.form.get("traceability_matrix", "")
         
         logger.info(f"Submitting Jira ticket for story: {user_story_name}")
         logger.info(f"Epic: {epic_title}")
@@ -3955,6 +4282,11 @@ def submit_jira_ticket():
             for i, requirement in enumerate(tagged_requirements, 1):
                 jira_description += f"• {requirement}\n"
         
+        # Add traceability matrix to description
+        if traceability_matrix and traceability_matrix.strip() != 'Traceability mapping not available.':
+            jira_description += "\n\n*Traceability Matrix (User Story → PRD Requirements):*\n"
+            jira_description += f"{traceability_matrix}\n"
+        
         # Add system information
         if responsible_systems:
             jira_description += f"\n\n*Responsible Systems:* {responsible_systems}"
@@ -3967,7 +4299,8 @@ def submit_jira_ticket():
             'priority': priority,
             'responsible_systems': responsible_systems,
             'acceptance_criteria': acceptance_criteria,
-            'tagged_requirements': tagged_requirements
+            'tagged_requirements': tagged_requirements,
+            'traceability_matrix': traceability_matrix
         }
         
         # Try to create Jira ticket using the Jira connector
