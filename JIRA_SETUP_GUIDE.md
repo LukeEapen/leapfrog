@@ -37,6 +37,17 @@ The JIRA submission was not actually saving stories to JIRA because the backend 
 - Provide user-friendly error messages for common JIRA configuration issues
 - Show warnings when story is created successfully but some fields were skipped
 
+### 4. Traceability Matrix Markdown Display - FIXED ✅
+**Problem**: Traceability Matrix was displaying markdown syntax as plain text instead of rendering it properly.
+
+**Root Cause**: The traceability matrix content was being displayed with `white-space: pre-wrap` which preserved text formatting but didn't convert markdown to HTML.
+
+**Fix**: Added markdown-to-HTML conversion for traceability matrix display:
+- Created `markdownToHtml()` function to convert markdown syntax to proper HTML
+- Added comprehensive CSS styling for rendered markdown elements (headers, lists, tables, code blocks)
+- Enhanced table formatting with borders and alternating row colors
+- Maintained responsive design and consistent styling with the rest of the interface
+
 ## What Was Changed
 
 1. **Backend Integration**: Modified `poc2_backend_processor_three_section.py` to:
@@ -89,6 +100,12 @@ Make sure your JIRA user (lalluluke@gmail.com) has:
 - JIRA tickets should show actual system names (e.g., "Customer acquisition platform, Credit decision engine") 
 - No more hardcoded "CAPS, CMS" unless no systems are specified
 - Systems should appear in the JIRA description under "Responsible Systems:"
+
+**Check Traceability Matrix Display:**
+- Traceability matrix should now render markdown properly (headers, bold text, lists, tables)
+- No more raw markdown syntax visible (e.g., `## Header` should appear as styled header)
+- Tables should display with proper borders and formatting
+- Code blocks should have syntax highlighting background
 
 ## Troubleshooting
 

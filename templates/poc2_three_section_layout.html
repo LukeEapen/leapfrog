@@ -1868,6 +1868,103 @@
     .summary-box::-webkit-scrollbar-thumb:hover {
       background: #d0021b;
     }
+
+    /* Traceability Matrix Markdown Styling */
+    .traceability-matrix h4,
+    .traceability-matrix h5,
+    .traceability-matrix h6 {
+      margin: 0.5rem 0 0.3rem 0;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .traceability-matrix h4 {
+      font-size: 1.1rem;
+      color: #667eea;
+      border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+      padding-bottom: 0.2rem;
+    }
+
+    .traceability-matrix h5 {
+      font-size: 1rem;
+      color: #764ba2;
+    }
+
+    .traceability-matrix h6 {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .traceability-matrix p {
+      margin: 0.4rem 0;
+      line-height: 1.5;
+    }
+
+    .traceability-matrix ul {
+      margin: 0.5rem 0;
+      padding-left: 1.2rem;
+    }
+
+    .traceability-matrix li {
+      margin: 0.2rem 0;
+      line-height: 1.4;
+    }
+
+    .traceability-matrix strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .traceability-matrix em {
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .traceability-matrix code {
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85em;
+    }
+
+    .traceability-matrix pre {
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      overflow-x: auto;
+    }
+
+    .traceability-matrix pre code {
+      background: transparent;
+      color: var(--text-primary);
+      padding: 0;
+    }
+
+    .traceability-matrix table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .traceability-matrix table td {
+      border: 1px solid var(--border-light);
+      padding: 0.4rem 0.6rem;
+      text-align: left;
+    }
+
+    .traceability-matrix table tr:nth-child(even) {
+      background: rgba(102, 126, 234, 0.03);
+    }
+
+    .traceability-matrix table tr:first-child {
+      background: rgba(102, 126, 234, 0.08);
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -2562,6 +2659,66 @@
     document.getElementById('submit-jira-btn').style.display = 'none';
   }
 
+  // Simple markdown to HTML converter for traceability matrix
+  function markdownToHtml(markdown) {
+    if (!markdown || markdown === 'Not available') {
+      return '<p class="text-muted">Not available</p>';
+    }
+    
+    let html = markdown
+      // Convert headers (must be at start of line)
+      .replace(/^### (.+)$/gm, '<h6>$1</h6>')
+      .replace(/^## (.+)$/gm, '<h5>$1</h5>')
+      .replace(/^# (.+)$/gm, '<h4>$1</h4>')
+      // Convert bold text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/__(.*?)__/g, '<strong>$1</strong>')
+      // Convert italic text
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/_(.*?)_/g, '<em>$1</em>')
+      // Convert code blocks first (to avoid conflicts)
+      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      // Convert tables (improved handling)
+      .replace(/^\|(.+)\|$/gm, function(match, content) {
+        const cells = content.split('|').map(cell => cell.trim()).filter(cell => cell);
+        return '<tr>' + cells.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+      })
+      // Convert bullet points (must be at start of line)
+      .replace(/^[\*\-] (.+)$/gm, '<li>$1</li>')
+      // Convert numbered lists (must be at start of line)
+      .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+      // Convert horizontal rules
+      .replace(/^---+$/gm, '<hr>')
+      // Convert line breaks (double newlines become paragraph breaks)
+      .replace(/\n\s*\n/g, '</p><p>')
+      .replace(/\n/g, '<br>');
+    
+    // Post-process to wrap consecutive list items in ul tags
+    html = html.replace(/(<li>.*?<\/li>)(?:\s*<br>\s*<li>.*?<\/li>)*/g, function(match) {
+      const items = match.replace(/<br>\s*/g, '').match(/<li>.*?<\/li>/g);
+      return '<ul>' + items.join('') + '</ul>';
+    });
+    
+    // Post-process to wrap consecutive table rows in table tags
+    if (html.includes('<tr>')) {
+      html = html.replace(/(<tr>.*?<\/tr>)(?:\s*<br>\s*<tr>.*?<\/tr>)*/g, function(match) {
+        const rows = match.replace(/<br>\s*/g, '').match(/<tr>.*?<\/tr>/g);
+        return '<table class="table table-sm table-bordered">' + rows.join('') + '</table>';
+      });
+    }
+    
+    // Wrap content in paragraphs if it doesn't start with a block element
+    if (!html.match(/^<(h[1-6]|ul|table|pre|hr)/)) {
+      html = '<p>' + html + '</p>';
+    }
+    
+    // Clean up empty paragraphs and extra breaks
+    html = html.replace(/<p><\/p>/g, '').replace(/<p><br><\/p>/g, '');
+    
+    return html;
+  }
+
   // Display story details in the third section
   function displayStoryDetails(storyDetails) {
     const storyDetailsEmpty = document.getElementById('story-details-empty');
@@ -2618,8 +2775,8 @@
           <button class="chat-btn" onclick="openStoryDetailsChat('traceability')">💬 Chat</button>
         </div>
         <div class="detail-content">
-          <div style="white-space: pre-wrap; font-family: monospace; background: var(--surface-tertiary); padding: var(--spacing-md); border-radius: var(--radius-sm); border: 1px solid var(--border-light);">
-            ${traceabilityMatrix}
+          <div class="traceability-matrix" style="background: var(--surface-tertiary); padding: var(--spacing-md); border-radius: var(--radius-sm); border: 1px solid var(--border-light);">
+            ${markdownToHtml(traceabilityMatrix)}
           </div>
         </div>
       </div>
