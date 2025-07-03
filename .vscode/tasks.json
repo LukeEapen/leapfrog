@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Run Flask backend (three section)",
+			"command": "set FLASK_APP=poc2_backend_processor_optimized.py && set FLASK_ENV=development && flask run --port=5000",
+			"group": "build",
+			"isBackground": true
+		}
+	]
+}
