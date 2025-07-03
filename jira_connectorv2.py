@@ -71,6 +71,71 @@ def create_epic():
         app.logger.error(f"Error creating epic: {e}")  # Log the full error
         return f"❌ Error creating epic: {e}", 500
 
+@app.route('/create_story', methods=['POST'])
+def create_story():
+    """Create a user story in JIRA."""
+    
+    project_key = request.form.get('project_key', 'SCRUM')
+    summary = request.form.get('summary', 'Auto Story Summary')
+    description = request.form.get('description', 'Auto Description')
+    assignee = request.form.get('assignee')
+    reporter = request.form.get('reporter')
+    priority = request.form.get('priority', 'High')
+    labels = request.form.getlist('labels')
+    components = request.form.getlist('components')
+    epic_link = request.form.get('epic_link')  # Optional epic to link to
+    
+    issue_dict = {
+        'project': {'key': project_key},
+        'summary': summary,
+        'description': description,
+        'issuetype': {'name': 'Story'},
+        'priority': {'name': priority}
+    }
+    
+    # Add optional fields if they exist
+    if assignee:
+        issue_dict['assignee'] = {'name': assignee}
+    if reporter:
+        issue_dict['reporter'] = {'name': reporter}
+    if labels:
+        issue_dict['labels'] = labels
+    if components:
+        issue_dict['components'] = [{'name': component} for component in components]
+    if epic_link:
+        # Epic Link field - this might be a custom field depending on your JIRA setup
+        issue_dict['customfield_10014'] = epic_link  # Common Epic Link field ID
+    
+    try:
+        new_issue = jira.create_issue(fields=issue_dict)
+        return f"✅ Story created: {new_issue.key}"
+    except Exception as e:
+        app.logger.error(f"Error creating story: {e}")
+        return f"❌ Error creating story: {e}", 500
+
+
+def create_story_programmatic(project_key, summary, description, priority='High', assignee=None, epic_link=None):
+    """Create a user story programmatically (for use by other modules)."""
+    
+    issue_dict = {
+        'project': {'key': project_key},
+        'summary': summary,
+        'description': description,
+        'issuetype': {'name': 'Story'},
+        'priority': {'name': priority}
+    }
+    
+    if assignee:
+        issue_dict['assignee'] = {'name': assignee}
+    if epic_link:
+        issue_dict['customfield_10014'] = epic_link  # Epic Link field
+    
+    try:
+        new_issue = jira.create_issue(fields=issue_dict)
+        return {'success': True, 'key': new_issue.key, 'id': new_issue.id}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
 @app.route('/')
 def index():
     return render_template('jira-interface.html')

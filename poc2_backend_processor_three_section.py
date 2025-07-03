@@ -4,6 +4,9 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import lru_cache
 from cachetools import TTLCache
+# Add JIRA integration
+from jira import JIRA
+from dotenv import load_dotenv
 import os
 import json
 import logging
@@ -19,6 +22,27 @@ import traceback
 import logging
 import csv
 import io
+
+# Load environment variables
+load_dotenv()
+
+# JIRA Configuration
+JIRA_SERVER = 'https://lalluluke.atlassian.net/'
+JIRA_EMAIL = 'lalluluke@gmail.com'
+JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")
+JIRA_PROJECT_KEY = 'SCRUM'
+
+# Initialize JIRA client if credentials are available
+jira_client = None
+if JIRA_API_TOKEN:
+    try:
+        jira_client = JIRA(server=JIRA_SERVER, basic_auth=(JIRA_EMAIL, JIRA_API_TOKEN))
+        logging.info("JIRA client initialized successfully")
+    except Exception as e:
+        logging.error(f"Failed to initialize JIRA client: {e}")
+        jira_client = None
+else:
+    logging.warning("JIRA_API_TOKEN not found in environment variables")
 
 # Vector Database and RAG imports - Optional for deployment
 try:
@@ -141,6 +165,82 @@ logger.info(f"Cache size: {MAX_CACHE_SIZE} items, TTL: {CACHE_TTL}s")
 def get_cache_key(prompt):
     """Generate a cache key from the prompt."""
     return hashlib.md5(prompt.encode('utf-8')).hexdigest()
+
+def create_jira_story(summary, description, priority='High', epic_link=None, acceptance_criteria=None, responsible_systems=None):
+    """Create a user story in JIRA."""
+    if not jira_client:
+        return {'success': False, 'error': 'JIRA client not available'}
+    
+    # Format description with responsible systems and acceptance criteria
+    formatted_description = description
+    
+    # Add responsible systems if provided
+    if responsible_systems:
+        formatted_description += f"\n\n*Responsible Systems:* {responsible_systems}\n"
+    
+    # Add acceptance criteria if provided
+    if acceptance_criteria and isinstance(acceptance_criteria, list) and acceptance_criteria:
+        formatted_description += "\n*Acceptance Criteria:*\n"
+        for i, criteria in enumerate(acceptance_criteria, 1):
+            if criteria.strip():
+                formatted_description += f"{i}. {criteria.strip()}\n"
+    
+    issue_dict = {
+        'project': {'key': JIRA_PROJECT_KEY},
+        'summary': summary,
+        'description': formatted_description,
+        'issuetype': {'name': 'Story'}
+    }
+    
+    # Try to add priority if it's available in the project (some JIRA setups don't allow it)
+    try:
+        if priority and priority.lower() in ['low', 'medium', 'high', 'highest', 'lowest']:
+            issue_dict['priority'] = {'name': priority}
+    except Exception as e:
+        logger.warning(f"Priority field not available in JIRA project: {e}")
+    
+    # Add epic link if provided (this might need adjustment based on your JIRA setup)
+    if epic_link:
+        # Common Epic Link field IDs: customfield_10014, customfield_10008, customfield_10011
+        issue_dict['customfield_10014'] = epic_link
+    
+    try:
+        new_issue = jira_client.create_issue(fields=issue_dict)
+        logger.info(f"Successfully created JIRA story: {new_issue.key}")
+        return {
+            'success': True, 
+            'key': new_issue.key, 
+            'id': new_issue.id,
+            'url': f"{JIRA_SERVER}browse/{new_issue.key}"
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error creating JIRA story: {error_message}")
+        
+        # Provide more user-friendly error messages for common issues
+        if 'priority' in error_message.lower():
+            error_message = "Priority field is not available in your JIRA project. The story will be created without priority."
+            # Try again without priority
+            try:
+                issue_dict_no_priority = {k: v for k, v in issue_dict.items() if k != 'priority'}
+                new_issue = jira_client.create_issue(fields=issue_dict_no_priority)
+                logger.info(f"Successfully created JIRA story without priority: {new_issue.key}")
+                return {
+                    'success': True, 
+                    'key': new_issue.key, 
+                    'id': new_issue.id,
+                    'url': f"{JIRA_SERVER}browse/{new_issue.key}",
+                    'warning': 'Story created successfully, but priority field was not available in your JIRA project.'
+                }
+            except Exception as e2:
+                logger.error(f"Failed to create story even without priority: {e2}")
+                error_message = f"JIRA configuration issue: {str(e2)}"
+        elif 'field' in error_message.lower() and 'cannot be set' in error_message.lower():
+            error_message = "Some fields are not available in your JIRA project configuration. Please check your JIRA project settings."
+        elif 'permission' in error_message.lower():
+            error_message = "You don't have permission to create stories in this JIRA project. Please contact your JIRA administrator."
+        
+        return {'success': False, 'error': error_message}
 
 def store_document_in_vector_db(content, filename, doc_type="prd"):
     """Store document content in vector database for RAG retrieval."""
@@ -405,9 +505,21 @@ Return the response as a JSON array of user story objects with the following str
         
         # Ensure all user stories have required fields
         for i, story in enumerate(user_stories):
+            # Map 'name' to 'title' for consistency with frontend
+            if 'name' in story and 'title' not in story:
+                story['title'] = story['name']
+            
+            # Create proper user story description if missing
             if not story.get('description'):
-                logger.warning(f"User story {i} missing description, adding fallback")
-                story['description'] = f"As a user, I want to {story.get('title', 'accomplish a task').lower()} so that I can achieve my objectives."
+                story_title = story.get('title', story.get('name', f'User Story {i+1}'))
+                # Create a proper user story format
+                story['description'] = f"As a user, I want to {story_title.lower()} so that I can achieve my business objectives."
+                
+            # Ensure systems are properly formatted
+            if 'systems' in story and isinstance(story['systems'], list):
+                story['responsible_systems'] = ', '.join(story['systems'])
+            elif not story.get('responsible_systems'):
+                story['responsible_systems'] = 'CAPS, CMS'  # fallback
         
         # Store user stories in session
         session['user_stories'] = user_stories
@@ -805,8 +917,14 @@ def three_section_submit_jira():
         
         logger.info(f"Submitting to Jira: {user_story_name}")
         
-        # Here you would integrate with actual Jira API
-        # For now, we'll simulate success
+        # Create the story in JIRA
+        jira_result = create_jira_story(
+            summary=user_story_name,
+            description=user_story_description,
+            priority=priority,
+            acceptance_criteria=acceptance_criteria,
+            responsible_systems=responsible_systems
+        )
         
         # Store submission data for potential export
         submission_data = {
@@ -818,7 +936,8 @@ def three_section_submit_jira():
             'acceptance_criteria': acceptance_criteria,
             'tagged_requirements': tagged_requirements,
             'traceability_matrix': traceability_matrix,
-            'submitted_at': datetime.now().isoformat()
+            'submitted_at': datetime.now().isoformat(),
+            'jira_result': jira_result
         }
         
         # Store in session for potential retrieval
@@ -826,7 +945,14 @@ def three_section_submit_jira():
             session['jira_submissions'] = []
         session['jira_submissions'].append(submission_data)
         
-        logger.info("Jira submission completed successfully")
+        if jira_result['success']:
+            logger.info(f"Jira submission completed successfully: {jira_result['key']}")
+            ticket_id = jira_result['key']
+            success_message = f"Successfully submitted to Jira: {jira_result['key']}"
+        else:
+            logger.error(f"Jira submission failed: {jira_result['error']}")
+            ticket_id = f"ERROR-{int(time.time())}"
+            success_message = f"Jira submission failed: {jira_result['error']}"
         
         # Check if this is an AJAX request by looking at headers
         is_ajax = (request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 
@@ -834,19 +960,31 @@ def three_section_submit_jira():
         
         if is_ajax:
             # AJAX request - return JSON
-            return jsonify({
-                "success": True,
-                "message": "Successfully submitted to Jira",
-                "ticket_id": f"TST-{int(time.time())}",
+            response_data = {
+                "success": jira_result['success'],
+                "message": success_message,
+                "ticket_id": ticket_id,
                 "epic_title": epic_title,
-                "user_story_name": user_story_name
-            })
+                "user_story_name": user_story_name,
+                "jira_url": jira_result.get('url', '') if jira_result['success'] else '',
+                "error": jira_result.get('error', '') if not jira_result['success'] else ''
+            }
+            
+            # Add warning if present (e.g., priority field not available)
+            if jira_result.get('warning'):
+                response_data['warning'] = jira_result['warning']
+                
+            return jsonify(response_data)
         else:
             # Regular form submission - return HTML page
             return render_template('jira_success.html', 
                                  epic_title=epic_title,
                                  user_story_name=user_story_name,
-                                 ticket_id=f"TST-{int(time.time())}")
+                                 ticket_id=ticket_id,
+                                 success=jira_result['success'],
+                                 jira_url=jira_result.get('url', '') if jira_result['success'] else '',
+                                 error_message=jira_result.get('error', '') if not jira_result['success'] else '',
+                                 warning=jira_result.get('warning', ''))
         
     except Exception as e:
         logger.error(f"Error in Jira submission: {str(e)}")

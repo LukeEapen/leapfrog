@@ -3351,7 +3351,7 @@ Do you want to proceed?`;
       formData.append('user_story_name', selectedUserStory?.title || selectedUserStory?.name || '');
       formData.append('user_story_description', selectedUserStory?.description || selectedUserStory?.summary || '');
       formData.append('priority', selectedEpic?.priority || 'High');
-      formData.append('responsible_systems', 'CAPS, CMS');
+      formData.append('responsible_systems', selectedUserStory?.responsible_systems || (selectedUserStory?.systems ? selectedUserStory.systems.join(', ') : 'CAPS, CMS'));
       formData.append('acceptance_criteria', (currentStoryDetails?.acceptance_criteria || []).join('|||'));
       formData.append('tagged_requirements', (currentStoryDetails?.tagged_requirements || []).join('|||'));
       formData.append('traceability_matrix', currentStoryDetails?.traceability_matrix || '');
@@ -3375,6 +3375,17 @@ Do you want to proceed?`;
       if (data.success) {
         // Success - show success message in the story details section
         const storyDetailsDiv = document.getElementById('story-details');
+        const jiraLinkHtml = data.jira_url ? 
+          `<p class="mb-3"><a href="${data.jira_url}" target="_blank" class="btn btn-outline-primary">
+            <i class="fas fa-external-link-alt"></i> View in Jira
+          </a></p>` : '';
+        
+        // Show warning if there was one (e.g., priority field not available)
+        const warningHtml = data.warning ? 
+          `<div class="alert alert-warning mt-3" style="font-size: 0.9em;">
+            <i class="fas fa-exclamation-triangle"></i> ${data.warning}
+          </div>` : '';
+        
         storyDetailsDiv.innerHTML = `
           <div class="success-container text-center py-5">
             <div class="text-success mb-3">
@@ -3386,6 +3397,8 @@ Do you want to proceed?`;
               <strong>Story:</strong> ${data.user_story_name || selectedUserStory?.title || selectedUserStory?.name || 'Unknown'}<br>
               <strong>Ticket ID:</strong> ${data.ticket_id || 'TST-' + Math.floor(Date.now() / 1000)}
             </p>
+            ${jiraLinkHtml}
+            ${warningHtml}
             <button class="btn btn-primary" onclick="location.reload()">
               <i class="fas fa-plus"></i> Create Another Story
             </button>
@@ -3397,6 +3410,26 @@ Do you want to proceed?`;
         
         console.log('Successfully submitted to Jira:', data);
       } else {
+        // Show error message
+        const storyDetailsDiv = document.getElementById('story-details');
+        storyDetailsDiv.innerHTML = `
+          <div class="error-container text-center py-5">
+            <div class="text-danger mb-3">
+              <i class="fas fa-exclamation-triangle fa-3x"></i>
+            </div>
+            <h4 class="text-danger">Failed to Submit to Jira</h4>
+            <p class="mb-3 text-danger">${data.error || data.message || 'Unknown error occurred'}</p>
+            <p class="text-muted">Please check your JIRA configuration and try again.</p>
+            <button class="btn btn-secondary" onclick="location.reload()">
+              <i class="fas fa-refresh"></i> Try Again
+            </button>
+          </div>
+        `;
+        
+        // Reset submit button
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit to Jira';
+        submitBtn.disabled = false;
+        
         throw new Error(data.error || 'Failed to submit to Jira');
       }
       

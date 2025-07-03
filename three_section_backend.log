@@ -1,0 +1,68 @@
+2025-07-03 11:05:24,412 - __main__ - INFO - Three Section Backend Launcher started
+2025-07-03 11:05:24,413 - __main__ - WARNING - Jira environment variables not set. Jira integration will be disabled.
+2025-07-03 11:05:24,414 - __main__ - INFO - Starting Flask server on port 5001
+2025-07-03 11:05:24,468 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.154:5001
+2025-07-03 11:05:24,468 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-03 11:05:24,468 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-03 11:05:25,025 - __main__ - INFO - Three Section Backend Launcher started
+2025-07-03 11:05:25,026 - __main__ - WARNING - Jira environment variables not set. Jira integration will be disabled.
+2025-07-03 11:05:25,027 - __main__ - INFO - Starting Flask server on port 5001
+2025-07-03 11:05:25,053 - werkzeug - WARNING -  * Debugger is active!
+2025-07-03 11:05:25,063 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-03 11:06:36,470 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2025 11:06:36] "GET /three-section HTTP/1.1" 200 -
+2025-07-03 11:06:37,338 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2025 11:06:37] "[33mGET /three-section-get-epics HTTP/1.1[0m" 404 -
+2025-07-03 11:06:55,330 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2025 11:06:55] "[31m[1mPOST /three-section-document-upload HTTP/1.1[0m" 405 -
+2025-07-03 11:07:19,816 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2025 11:07:19] "[31m[1mPOST /three-section-document-upload HTTP/1.1[0m" 405 -
+2025-07-03 11:08:06,063 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\launch_three_section.py', reloading
+2025-07-03 11:08:06,067 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\launch_three_section.py', reloading
+2025-07-03 11:08:06,071 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\launch_three_section.py', reloading
+2025-07-03 11:08:06,153 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\launch_three_section_20250703110806.py', reloading
+2025-07-03 11:08:06,160 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\launch_three_section_20250703110806.py', reloading
+2025-07-03 11:08:06,536 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-03 11:08:07,415 - __main__ - INFO - Three Section Backend Launcher started
+2025-07-03 11:08:07,415 - __main__ - WARNING - Jira environment variables not set. Jira integration will be disabled.
+2025-07-03 11:08:07,417 - __main__ - INFO - Starting Flask server on port 5001
+2025-07-03 11:08:07,462 - werkzeug - WARNING -  * Debugger is active!
+2025-07-03 11:08:07,464 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-03 11:08:25,010 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\launch_three_section.py', reloading
+2025-07-03 11:08:25,010 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\launch_three_section.py', reloading
+2025-07-03 11:08:25,026 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\launch_three_section.py', reloading
+2025-07-03 11:08:25,059 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\launch_three_section_20250703110825.py', reloading
+2025-07-03 11:08:25,062 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\launch_three_section_20250703110825.py', reloading
+2025-07-03 11:08:25,797 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-03 11:08:26,380 - __main__ - INFO - Three Section Backend Launcher started
+2025-07-03 11:08:26,380 - __main__ - WARNING - Jira environment variables not set. Jira integration will be disabled.
+2025-07-03 11:08:26,380 - __main__ - INFO - Starting Flask server on port 5001
+2025-07-03 11:08:26,411 - werkzeug - WARNING -  * Debugger is active!
+2025-07-03 11:08:26,415 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-03 11:08:35,105 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\launch_three_section.py', reloading
+2025-07-03 11:08:35,105 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\launch_three_section.py', reloading
+2025-07-03 11:08:35,105 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\launch_three_section.py', reloading
+2025-07-03 11:08:35,120 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\launch_three_section_20250703110835.py', reloading
+2025-07-03 11:08:35,122 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\launch_three_section_20250703110835.py', reloading
+2025-07-03 11:08:35,621 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-03 11:08:36,271 - __main__ - INFO - Three Section Backend Launcher started
+2025-07-03 11:08:36,271 - __main__ - WARNING - Jira environment variables not set. Jira integration will be disabled.
+2025-07-03 11:08:36,271 - __main__ - INFO - Starting Flask server on port 5001
+2025-07-03 11:08:36,315 - werkzeug - WARNING -  * Debugger is active!
+2025-07-03 11:08:36,315 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-03 11:08:40,644 - __main__ - INFO - Three Section Backend Launcher started
+2025-07-03 11:08:40,644 - __main__ - WARNING - Jira environment variables not set. Jira integration will be disabled.
+2025-07-03 11:08:40,644 - __main__ - INFO - Starting Flask server on port 5001
+2025-07-03 11:08:40,688 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.154:5001
+2025-07-03 11:08:40,688 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-03 11:08:40,711 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-03 11:08:41,169 - __main__ - INFO - Three Section Backend Launcher started
+2025-07-03 11:08:41,169 - __main__ - WARNING - Jira environment variables not set. Jira integration will be disabled.
+2025-07-03 11:08:41,184 - __main__ - INFO - Starting Flask server on port 5001
+2025-07-03 11:08:41,208 - werkzeug - WARNING -  * Debugger is active!
+2025-07-03 11:08:41,215 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-03 11:08:45,901 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2025 11:08:45] "GET /three-section HTTP/1.1" 200 -
+2025-07-03 11:08:46,827 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2025 11:08:46] "[33mGET /three-section-get-epics HTTP/1.1[0m" 404 -
+2025-07-03 11:08:59,356 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2025 11:08:59] "[31m[1mPOST /three-section-document-upload HTTP/1.1[0m" 405 -
