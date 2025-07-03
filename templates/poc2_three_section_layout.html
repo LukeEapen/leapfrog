@@ -1,0 +1,3153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Epic & User Story Management - Three Section Layout</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    /* Modern CSS Variables for Design System */
+    :root {
+      --primary-red: #d0021b;
+      --primary-red-dark: #a0011a;
+      --primary-red-light: #ff1744;
+      --primary-red-lighter: #fff5f5;
+      --background-dark: #1a1d23;
+      --background-darker: #121419;
+      --background-light: #2a2d35;
+      --surface-primary: #ffffff;
+      --surface-secondary: #f8fafc;
+      --surface-tertiary: #f1f5f9;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-light: #ffffff;
+      --text-muted: #94a3b8;
+      --border-light: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --spacing-xs: 0.5rem;
+      --spacing-sm: 0.75rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      --spacing-2xl: 3rem;
+    }
+
+    /* Modern Body Styling with Dark Gradient */
+    body {
+      background: linear-gradient(135deg, var(--background-darker) 0%, var(--background-dark) 100%);
+      color: var(--text-light);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 20% 80%, rgba(208, 2, 27, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Enhanced Main Container - Full Width */
+    .main-container {
+      width: 100%;
+      margin: 0;
+      background: var(--surface-primary);
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+      animation: pageSlideIn 0.6s ease-out;
+      min-height: 100vh;
+    }
+
+    @keyframes pageSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Enhanced Top Bar */
+    .header-bar {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      padding: var(--spacing-lg) var(--spacing-xl);
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .header-bar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .header-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: white;
+      margin: 0;
+    }
+
+    .back-button {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      backdrop-filter: blur(10px);
+      text-decoration: none;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+      text-decoration: none;
+    }
+
+    .back-button:active {
+      transform: translateY(0);
+    }
+
+    /* Enhanced Three Section Layout - Full Width */
+    .three-section-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--spacing-lg);
+      min-height: calc(100vh - 120px);
+      padding: var(--spacing-lg);
+      color: var(--text-primary);
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* Enhanced Section Styling */
+    .section {
+      background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary) 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
+    }
+
+    .section:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .section-header {
+      background: linear-gradient(135deg, var(--background-light) 0%, #3a3d47 100%);
+      color: white;
+      padding: var(--spacing-lg);
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-light);
+      position: relative;
+    }
+
+    .section-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-lg);
+      background: white;
+    }
+
+    /* Enhanced Epic Section */
+    .epic-item {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-md);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .epic-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .epic-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary-red);
+    }
+
+    .epic-item:hover::before {
+      opacity: 1;
+    }
+
+    .epic-item.selected {
+      background: linear-gradient(135deg, var(--primary-red-lighter) 0%, rgba(208, 2, 27, 0.05) 100%);
+      border-color: var(--primary-red);
+      box-shadow: var(--shadow-md);
+    }
+
+    .epic-item.selected::before {
+      opacity: 1;
+    }
+
+    .epic-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .epic-description {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .epic-meta {
+      display: flex;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-sm);
+      font-size: 0.8rem;
+    }
+
+    .epic-priority {
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+    }
+
+    .priority-high {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .priority-medium {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .priority-low {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    /* Enhanced User Story Section */
+    .user-story-item {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-md);
+      margin-bottom: var(--spacing-sm);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .user-story-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .user-story-item:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+      border-color: #3b82f6;
+    }
+
+    .user-story-item:hover::before {
+      opacity: 1;
+    }
+
+    .user-story-item.selected {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+      border-color: #3b82f6;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .user-story-item.selected::before {
+      opacity: 1;
+    }
+
+    .user-story-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .user-story-summary {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    /* Enhanced Selection Card Styles for User Stories */
+    .selection-card {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-md);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-md);
+    }
+
+    .selection-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .selection-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: #3b82f6;
+    }
+
+    .selection-card:hover::before {
+      opacity: 1;
+    }
+
+    .selection-card.selected,
+    .selection-card:has(input[type="radio"]:checked) {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+      border-color: #3b82f6;
+      box-shadow: var(--shadow-md);
+    }
+
+    .selection-card.selected::before,
+    .selection-card:has(input[type="radio"]:checked)::before {
+      opacity: 1;
+    }
+
+    .card-radio {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      position: relative;
+      flex-shrink: 0;
+      margin-top: var(--spacing-xs);
+    }
+
+    .card-radio input[type="radio"] {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+    }
+
+    .card-radio label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-medium);
+      border-radius: 50%;
+      background: var(--surface-primary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-radio input[type="radio"]:checked + label {
+      border-color: #3b82f6;
+      background: #3b82f6;
+    }
+
+    .card-radio input[type="radio"]:checked + label::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .card-radio input[type="radio"]:hover + label {
+      border-color: #3b82f6;
+      transform: scale(1.1);
+    }
+
+    .card-content {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--spacing-sm);
+      gap: var(--spacing-md);
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+      line-height: 1.4;
+      flex: 1;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    .card-description {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    /* Priority and Systems Badges */
+    .priority-badge {
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .systems-badge {
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+      color: #1e40af;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Enhanced Story Details Section */
+    .story-details-content {
+      padding: 0;
+      background: white;
+    }
+
+    .detail-section {
+      padding: var(--spacing-lg);
+      border-bottom: 1px solid var(--border-light);
+      background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary) 100%);
+      margin-bottom: var(--spacing-md);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+    }
+
+    .detail-section:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .detail-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .detail-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: var(--spacing-sm);
+      border-bottom: 2px solid var(--primary-red);
+    }
+
+    .detail-content {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .criteria-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .criteria-list li {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-sm) var(--spacing-md);
+      margin-bottom: var(--spacing-sm);
+      position: relative;
+      padding-left: 2.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .criteria-list li:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+      border-color: var(--primary-red);
+    }
+
+    .criteria-list li::before {
+      content: '✓';
+      position: absolute;
+      left: var(--spacing-md);
+      top: var(--spacing-sm);
+      color: var(--primary-red);
+      font-weight: bold;
+    }
+
+    /* Enhanced Chat Button */
+    .chat-btn {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      border: none;
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .chat-btn:hover {
+      transform: scale(1.05) translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Enhanced Empty State */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      padding: var(--spacing-lg);
+      color: var(--text-muted);
+      text-align: center;
+      background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary) 100%);
+      border-radius: var(--radius-lg);
+      border: 2px dashed var(--border-medium);
+      margin: var(--spacing-md);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: var(--spacing-md);
+      opacity: 0.6;
+      color: var(--primary-red);
+    }
+
+    .empty-state-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .empty-state-subtext {
+      font-size: 0.9rem;
+      margin-top: var(--spacing-sm);
+      color: var(--text-secondary);
+    }
+
+    .empty-state .btn {
+      margin-top: var(--spacing-lg);
+      white-space: nowrap;
+      max-width: 100%;
+      font-size: 0.9rem;
+      padding: var(--spacing-md) var(--spacing-lg);
+    }
+
+    /* Enhanced Loading State */
+    .loading-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100px;
+      color: var(--text-secondary);
+      background: var(--surface-secondary);
+      border-radius: var(--radius-lg);
+      margin: var(--spacing-md);
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-light);
+      border-top: 3px solid var(--primary-red);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: var(--spacing-md);
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Enhanced Action Buttons */
+    .action-btn {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      border: none;
+      padding: var(--spacing-md) var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      margin-top: var(--spacing-lg);
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .action-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .action-btn:hover::before {
+      left: 100%;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Enhanced File Upload Styles */
+    .form-control[type="file"] {
+      border: 2px dashed var(--border-medium);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary) 100%);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      color: var(--text-primary);
+    }
+
+    .form-control[type="file"]:hover {
+      border-color: var(--primary-red);
+      background: var(--surface-primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .form-control[type="file"]:focus {
+      outline: none;
+      border-color: var(--primary-red);
+      box-shadow: 0 0 0 3px rgba(208, 2, 27, 0.1);
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+      display: block;
+    }
+
+    /* Enhanced Upload Section Styling */
+    .upload-section {
+      background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary) 100%);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Enhanced Button Improvements */
+    .btn {
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      padding: var(--spacing-sm) var(--spacing-lg);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, var(--text-muted) 0%, var(--text-secondary) 100%);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-secondary:hover {
+      background: linear-gradient(135deg, var(--text-secondary) 0%, var(--text-primary) 100%);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      color: white;
+    }
+
+    /* Badge Styling */
+    .badge {
+      border-radius: var(--radius-sm);
+      padding: var(--spacing-sm) var(--spacing-md);
+      font-weight: 500;
+    }
+
+    .badge-secondary {
+      background: var(--text-light);
+      color: white;
+    }
+
+    /* Enhanced Responsive Design */
+    @media (max-width: 1200px) {
+      .three-section-container {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+      }
+      
+      .section:nth-child(3) {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-container {
+        margin: 0;
+        border-radius: 0;
+        width: 100%;
+      }
+      
+      .three-section-container {
+        grid-template-columns: 1fr;
+        height: auto;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
+        width: 100%;
+      }
+      
+      .section {
+        min-height: 400px;
+        width: 100%;
+      }
+      
+      .header-bar {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        text-align: center;
+        padding: var(--spacing-md);
+      }
+
+      .header-title {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* Modern Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--surface-tertiary);
+      border-radius: var(--radius-sm);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      border-radius: var(--radius-sm);
+      transition: background 0.3s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, var(--primary-red-dark) 0%, var(--primary-red) 100%);
+    }
+
+    /* Modern Selection Styling */
+    ::selection {
+      background: rgba(208, 2, 27, 0.2);
+      color: var(--text-primary);
+    }
+
+    /* Enhanced Focus Management */
+    *:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(208, 2, 27, 0.1);
+      border-radius: var(--radius-sm);
+    }
+
+    /* Enhanced Chat Modal Styles */
+    .chat-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      right: 0;
+      top: 0;
+      width: 400px;
+      height: 100vh;
+      background: var(--surface-primary);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--border-light);
+      box-shadow: var(--shadow-xl);
+      border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+    }
+
+    .chat-modal[style*="display: block"] {
+      display: flex !important;
+      flex-direction: column;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .chat-modal-content {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, var(--background-light) 0%, #3a3d47 100%);
+      color: white;
+      padding: var(--spacing-lg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-light);
+      position: relative;
+    }
+
+    .chat-header::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
+    }
+
+    .chat-close {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: var(--spacing-xs);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .chat-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-lg);
+    }
+
+    .chat-message {
+      margin-bottom: var(--spacing-md);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-sm);
+    }
+
+    .chat-message.user {
+      flex-direction: row-reverse;
+    }
+
+    .chat-bubble {
+      background: var(--surface-secondary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .chat-message.user .chat-bubble {
+      background: var(--primary-gradient);
+      color: white;
+      border-color: transparent;
+    }
+
+    .chat-input-area {
+      padding: var(--spacing-lg);
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .chat-input {
+      flex: 1;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    .chat-input:focus {
+      border-color: #667eea;
+    }
+
+    .chat-send-btn {
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .chat-send-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--surface-tertiary);
+      border-radius: var(--radius-sm);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-medium);
+      border-radius: var(--radius-sm);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-light);
+    }
+
+    /* Enhanced Selection Card Styles for User Stories */
+    .selection-card {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-md);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-md);
+    }
+
+    .selection-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .selection-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: #3b82f6;
+    }
+
+    .selection-card:hover::before {
+      opacity: 1;
+    }
+
+    .selection-card.selected,
+    .selection-card:has(input[type="radio"]:checked) {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+      border-color: #3b82f6;
+      box-shadow: var(--shadow-md);
+    }
+
+    .selection-card.selected::before,
+    .selection-card:has(input[type="radio"]:checked)::before {
+      opacity: 1;
+    }
+
+    .card-radio {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      position: relative;
+      flex-shrink: 0;
+      margin-top: var(--spacing-xs);
+    }
+
+    .card-radio input[type="radio"] {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+    }
+
+    .card-radio label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-medium);
+      border-radius: 50%;
+      background: var(--surface-primary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-radio input[type="radio"]:checked + label {
+      border-color: #3b82f6;
+      background: #3b82f6;
+    }
+
+    .card-radio input[type="radio"]:checked + label::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .card-radio input[type="radio"]:hover + label {
+      border-color: #3b82f6;
+      transform: scale(1.1);
+    }
+
+    .card-content {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--spacing-sm);
+      gap: var(--spacing-md);
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+      line-height: 1.4;
+      flex: 1;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    .card-description {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    /* Priority and Systems Badges */
+    .priority-badge {
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .priority-high {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .priority-medium {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .priority-low {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .systems-badge {
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+      color: #1e40af;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Step Indicators */
+    .step-indicators {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 2rem;
+      gap: 1rem;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--border-medium);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .step.active .step-number {
+      background: var(--primary-red);
+      color: white;
+    }
+
+    .step-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+    }
+
+    .step.active .step-label {
+      color: var(--text-primary);
+    }
+
+    .step-connector {
+      width: 60px;
+      height: 2px;
+      background: var(--border-medium);
+    }
+
+    /* Enhanced PRD Upload Modal with Full Features */
+  .chat-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    right: 0;
+    top: 0;
+    width: 400px;
+    height: 100vh;
+    background: var(--surface-primary);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid var(--border-light);
+    box-shadow: var(--shadow-xl);
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  }
+
+  .chat-modal[style*="display: block"] {
+    display: flex !important;
+    flex-direction: column;
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .chat-modal-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chat-header {
+    background: linear-gradient(135deg, var(--background-light) 0%, #3a3d47 100%);
+    color: white;
+    padding: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-light);
+    position: relative;
+  }
+
+  .chat-header::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
+  }
+
+  .chat-close {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .chat-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  .chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-lg);
+  }
+
+  .chat-message {
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .chat-message.user {
+    flex-direction: row-reverse;
+  }
+
+  .chat-bubble {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    max-width: 80%;
+    word-wrap: break-word;
+  }
+
+  .chat-message.user .chat-bubble {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+  }
+
+  .chat-input-area {
+    padding: var(--spacing-lg);
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    gap: var(--spacing-sm);
+  }
+
+  .chat-input {
+    flex: 1;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+
+  .chat-input:focus {
+    border-color: #667eea;
+  }
+
+  .chat-send-btn {
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .chat-send-btn:hover {
+    transform: scale(1.05);
+  }
+
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--surface-tertiary);
+    border-radius: var(--radius-sm);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-medium);
+    border-radius: var(--radius-sm);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-light);
+  }
+
+  /* Enhanced Selection Card Styles for User Stories */
+  .selection-card {
+    background: var(--surface-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .selection-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #06b6d4);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .selection-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: #3b82f6;
+  }
+
+  .selection-card:hover::before {
+    opacity: 1;
+  }
+
+  .selection-card.selected,
+  .selection-card:has(input[type="radio"]:checked) {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+    border-color: #3b82f6;
+    box-shadow: var(--shadow-md);
+  }
+
+  .selection-card.selected::before,
+  .selection-card:has(input[type="radio"]:checked)::before {
+    opacity: 1;
+  }
+
+  .card-radio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    position: relative;
+    flex-shrink: 0;
+    margin-top: var(--spacing-xs);
+  }
+
+  .card-radio input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+  }
+
+  .card-radio label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-medium);
+    border-radius: 50%;
+    background: var(--surface-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-radio input[type="radio"]:checked + label {
+    border-color: #3b82f6;
+    background: #3b82f6;
+  }
+
+  .card-radio input[type="radio"]:checked + label::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+  }
+
+  .card-radio input[type="radio"]:hover + label {
+    border-color: #3b82f6;
+    transform: scale(1.1);
+  }
+
+  .card-content {
+    flex: 1;
+    cursor: pointer;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-sm);
+    gap: var(--spacing-md);
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.4;
+    flex: 1;
+  }
+
+    .summary-box::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .summary-box::-webkit-scrollbar-track {
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+
+    .summary-box::-webkit-scrollbar-thumb {
+      background: #ced4da;
+      border-radius: 4px;
+      transition: background 0.2s ease;
+    }
+
+    .summary-box::-webkit-scrollbar-thumb:hover {
+      background: #d0021b;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hidden form for Jira submission -->
+  <form id="jira-form" action="/three-section-submit-jira" method="POST" style="display: none;">
+    <input type="hidden" name="epic_title" id="jira-epic-title">
+    <input type="hidden" name="user_story_name" id="jira-user-story-name">
+    <input type="hidden" name="user_story_description" id="jira-user-story-description">
+    <input type="hidden" name="priority" id="jira-priority">
+    <input type="hidden" name="responsible_systems" id="jira-responsible-systems">
+    <input type="hidden" name="acceptance_criteria" id="jira-acceptance-criteria">
+    <input type="hidden" name="tagged_requirements" id="jira-tagged-requirements">
+    <input type="hidden" name="traceability_matrix" id="jira-traceability-matrix">
+  </form>
+
+  <div class="main-container">
+    <!-- Header Bar -->
+    <div class="header-bar">
+      <h1 class="header-title">Epic & User Story Management</h1>
+    </div>
+
+    <!-- Three Section Layout -->
+    <div class="three-section-container">
+      <!-- Section 1: Epics List -->
+      <div class="section" id="epics-section">
+        <div class="section-header">
+          <span>📋 Epics</span>
+          <button class="chat-btn" onclick="openEpicChat()">
+            💬 Chat
+          </button>
+        </div>
+        <div class="section-content" id="epics-content">
+          <div class="loading-state" id="epics-loading">
+            <div class="loading-spinner"></div>
+            <span>Loading epics...</span>
+          </div>
+          <div class="empty-state" id="epics-empty" style="display: none;">
+            <div class="empty-state-icon">📋</div>
+            <div class="empty-state-text">No epics available</div>
+            <div class="empty-state-subtext">Upload a PRD to generate epics</div>
+            <button class="btn btn-primary mt-3" onclick="showPRDUpload()">
+              <i class="fas fa-upload mr-2"></i>Upload PRD, and Additional Document
+            </button>
+          </div>
+          <div id="epics-list"></div>
+        </div>
+      </div>
+
+      <!-- Section 2: User Stories List -->
+      <div class="section" id="user-stories-section">
+        <div class="section-header">
+          <span>📝 User Stories</span>
+          <button class="chat-btn" onclick="openUserStoryChat()" style="display: none;" id="user-story-chat-btn">
+            💬 Chat
+          </button>
+        </div>
+        <div class="section-content" id="user-stories-content">
+          <div class="empty-state" id="user-stories-empty">
+            <div class="empty-state-icon">📝</div>
+            <div class="empty-state-text">Select an epic</div>
+            <div class="empty-state-subtext">Choose an epic to view its user stories</div>
+          </div>
+          <div class="loading-state" id="user-stories-loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <span>Generating user stories...</span>
+          </div>
+          <div id="user-stories-list"></div>
+        </div>
+      </div>
+
+      <!-- Section 3: Story Details -->
+      <div class="section" id="story-details-section">
+        <div class="section-header">
+          <span>🔍 Story Details</span>
+        </div>
+        <div class="section-content story-details-content" id="story-details-content">
+          <div class="empty-state" id="story-details-empty">
+            <div class="empty-state-icon">🔍</div>
+            <div class="empty-state-text">Select a user story</div>
+            <div class="empty-state-subtext">Choose a user story to view its details</div>
+          </div>
+          <div id="story-details"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Button for Jira Submission -->
+    <button class="action-btn" id="submit-jira-btn" onclick="submitToJira()" style="display: none;">
+      🚀 Submit to Jira
+    </button>
+  </div>
+
+  <!-- Epic Chat Modal -->
+  <div id="epic-chat-modal" class="chat-modal">
+    <div class="chat-modal-content">
+      <div class="chat-header">
+        <h4 style="margin: 0;">Epic Chat</h4>
+        <button class="chat-close" onclick="closeEpicChat()">&times;</button>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="epic-chat-messages">
+          <div class="chat-message">
+            <div class="chat-bubble">
+              Hello! I can help you refine your epics. Ask me to make changes, add details, or reorganize them.
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" class="chat-input" id="epic-chat-input" placeholder="Ask about epics..." onkeypress="handleEpicChatEnter(event)">
+          <button class="chat-send-btn" onclick="sendEpicMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Story Chat Modal -->
+  <div id="user-story-chat-modal" class="chat-modal">
+    <div class="chat-modal-content">
+      <div class="chat-header">
+        <h4 style="margin: 0;">User Story Chat</h4>
+        <button class="chat-close" onclick="closeUserStoryChat()">&times;</button>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="user-story-chat-messages">
+          <div class="chat-message">
+            <div class="chat-bubble">
+              Hello! I can help you refine your user stories. Ask me to make changes, add details, or reorganize them.
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" class="chat-input" id="user-story-chat-input" placeholder="Ask about user stories..." onkeypress="handleUserStoryChatEnter(event)">
+          <button class="chat-send-btn" onclick="sendUserStoryMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Story Details Chat Modal -->
+  <div id="story-details-chat-modal" class="chat-modal">
+    <div class="chat-modal-content">
+      <div class="chat-header">
+        <h4 style="margin: 0;">Story Details Chat</h4>
+        <button class="chat-close" onclick="closeStoryDetailsChat()">&times;</button>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="story-details-chat-messages">
+          <div class="chat-message">
+            <div class="chat-bubble">
+              Hello! I can help you refine story details, acceptance criteria, and traceability.
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" class="chat-input" id="story-details-chat-input" placeholder="Ask about story details..." onkeypress="handleStoryDetailsChatEnter(event)">
+          <button class="chat-send-btn" onclick="sendStoryDetailsMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enhanced PRD Upload Modal with Full Features -->
+  <div id="prd-upload-modal" class="chat-modal">
+    <div class="chat-modal-content" style="max-width: 1000px; height: 90vh; overflow-y: auto;">
+      <div class="chat-header">
+        <h4 style="margin: 0;">📄 Upload PRD & Additional Documents</h4>
+        <button class="chat-close" onclick="closePRDUpload()">&times;</button>
+      </div>
+      <div class="chat-body" style="padding: 2rem;">
+        <div class="step-indicators" style="display: flex; justify-content: center; align-items: center; margin-bottom: 2rem; gap: 1rem;">
+          <div class="step active" id="step-1">
+            <div class="step-number">1</div>
+            <div class="step-label">Upload & Preview</div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" id="step-2">
+            <div class="step-number">2</div>
+            <div class="step-label">Generate Epics</div>
+          </div>
+        </div>
+
+        <!-- Step 1: Upload and Preview -->
+        <div class="upload-step" id="upload-step-1">
+          <form id="prd-upload-form" enctype="multipart/form-data">
+            <div class="form-group mb-4">
+              <label for="prd-file" class="form-label">
+                <strong>📄 Primary Requirements Document (PRD)</strong>
+              </label>
+              <input type="file" class="form-control" id="prd-file" name="prd_file" accept=".txt,.docx,.pdf,.md" required>
+              <div class="form-text" style="color: #6c757d; font-size: 0.875rem;">
+                Supported formats: TXT, DOCX, PDF, MD. This will be the main source for epic generation.
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label for="additional-file" class="form-label">
+                <strong>📋 Additional Documentation (Optional)</strong>
+              </label>
+              <input type="file" class="form-control" id="additional-file" name="additional_file" accept=".txt,.docx,.pdf,.md,.csv">
+              <div class="form-text" style="color: #6c757d; font-size: 0.875rem;">
+                Optional: Additional context, technical specs, or system mapping (CSV format supported).
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label for="context-notes" class="form-label">
+                <strong>💡 Context & Special Instructions (Optional)</strong>
+              </label>
+              <textarea class="form-control" id="context-notes" name="context_notes" rows="4" placeholder="Example:
+• Business constraints or timeline requirements
+• Technical architecture preferences  
+• Integration requirements with existing systems
+• Specific user personas or use cases
+• Compliance or security considerations"></textarea>
+              <div class="form-text" style="color: #6c757d; font-size: 0.875rem;">
+                Provide any additional context to guide epic generation.
+              </div>
+            </div>
+
+            <!-- Upload & Preview Button -->
+            <button type="submit" class="btn btn-primary btn-lg w-100 mb-4" id="prd-upload-btn">
+              <span class="btn-text">📄 Upload & Preview Documents</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Loading Spinner for Upload -->
+        <div class="loading-spinner" id="prd-loading-spinner" style="display: none;">
+          <div style="text-align: center; padding: 2rem;">
+            <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
+            <p style="margin: 0; color: #6c757d; font-weight: 500;">📄 Processing documents...</p>
+          </div>
+        </div>
+
+        <!-- Step 2: Preview and Generate Epics -->
+        <div class="upload-step" id="upload-step-2" style="display: none;">
+          <div class="document-preview" id="document-preview">
+            <!-- Alert Container -->
+            <div id="prd-alert-container"></div>
+            
+            <!-- PRD Summary Section -->
+            <div id="prd-summary-section" style="display: none;">
+              <h5><strong>📄 PRD Summary</strong></h5>
+              <div id="prd-filename-display" class="mb-2"></div>
+              <div class="summary-box" style="background: #f8f9fa; padding: 1rem; border-radius: 0.375rem; border: 1px solid #dee2e6; max-height: 200px; overflow-y: auto;">
+                <div id="prd-summary-content"></div>
+              </div>
+            </div>
+            
+            <!-- Additional Documents Section -->
+            <div id="additional-docs-section" style="display: none; margin-top: 1.5rem;">
+              <h5><strong>📋 Additional Documentation</strong></h5>
+              <div id="additional-docs-filename" class="mb-2"></div>
+              <div class="summary-box" style="background: #f8f9fa; padding: 1rem; border-radius: 0.375rem; border: 1px solid #dee2e6; max-height: 200px; overflow-y: auto;">
+                <div id="additional-docs-summary"></div>
+              </div>
+            </div>
+            
+            <!-- User Context Section -->
+            <div id="user-context-section" style="display: none; margin-top: 1.5rem;">
+              <h5><strong>💡 Your Additional Context</strong></h5>
+              <div class="summary-box" style="background: #f0f7ff; padding: 1rem; border-radius: 0.375rem; border: 1px solid #bee5eb;">
+                <div id="user-context-display"></div>
+              </div>
+            </div>
+            
+            <!-- Reset Button -->
+            <button type="button" class="btn btn-outline-secondary mt-3" id="reset-prd-btn" onclick="resetPRDUpload()" style="display: none;">
+              🔄 Start Over
+            </button>
+          </div>
+          
+          <button type="button" class="btn btn-primary btn-lg w-100 mt-4" id="generate-epics-btn" onclick="generateEpicsFromPRDData()">
+            <span class="btn-text">⚡ Generate Epics & User Stories</span>
+          </button>
+          
+          <!-- Loading state for epic generation -->
+          <div class="loading-spinner" id="prd-epic-spinner" style="display: none;">
+            <div style="text-align: center; padding: 2rem;">
+              <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 1rem;"></div>
+              <p style="margin-top: 1rem; color: #6c757d; font-weight: 500;">⚡ Generating epics and user stories...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Global state
+  let currentEpics = [];
+  let currentUserStories = [];
+  let selectedEpic = null;
+  let selectedUserStory = null;
+  let currentStoryDetails = null;
+
+  // Initialize the application
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('Three Section Layout initialized');
+    
+    // Safety check for required elements
+    const requiredElements = [
+      'epics-loading', 'epics-empty', 'epics-list',
+      'user-stories-empty', 'user-stories-loading', 'user-stories-list',
+      'story-details-empty', 'story-details'
+    ];
+    
+    let missingElements = [];
+    for (const elementId of requiredElements) {
+      if (!document.getElementById(elementId)) {
+        missingElements.push(elementId);
+      }
+    }
+    
+    if (missingElements.length > 0) {
+      console.error('Missing required elements:', missingElements);
+      return;
+    }
+    
+    // Initialize with a small delay to ensure DOM is fully ready
+    setTimeout(() => {
+      loadEpics();
+    }, 100);
+  });
+
+  // Load epics from session or backend
+  async function loadEpics() {
+    try {
+      console.log('Loading epics from backend...');
+      const response = await fetch('/three-section-get-epics');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Epic loading response:', data);
+      
+      if (data.success && data.epics && data.epics.length > 0) {
+        currentEpics = data.epics;
+        displayEpics(currentEpics);
+      } else {
+        console.log('No epics available, showing empty state');
+        showEpicsEmpty();
+      }
+    } catch (error) {
+      console.error('Error loading epics:', error);
+      showEpicsEmpty();
+    }
+  }
+
+  // Display epics in the first section
+  function displayEpics(epics) {
+    const epicsLoading = document.getElementById('epics-loading');
+    const epicsEmpty = document.getElementById('epics-empty');
+    const epicsList = document.getElementById('epics-list');
+
+    epicsLoading.style.display = 'none';
+    epicsEmpty.style.display = 'none';
+
+    if (!epics || epics.length === 0) {
+      showEpicsEmpty();
+      return;
+    }
+
+    let html = '';
+    epics.forEach((epic, index) => {
+      const priority = epic.priority || 'High';
+      const priorityClass = priority.toLowerCase().replace(' ', '-');
+      
+      html += `
+        <div class="epic-item" data-epic-id="${epic.id || index}" onclick="selectEpic(${index})">
+          <div class="epic-title">${epic.title || `Epic ${index + 1}`}</div>
+          <div class="epic-description">${epic.description || epic.summary || 'No description available'}</div>
+          <div class="epic-meta">
+            <span class="epic-priority priority-${priorityClass}">${priority}</span>
+            <span>ID: ${epic.id || `epic-${index + 1}`}</span>
+          </div>
+        </div>
+      `;
+    });
+
+    epicsList.innerHTML = html;
+  }
+
+  // Display epics using HTML from backend (with radio buttons)
+  function displayEpicsHTML(epicsHTML) {
+    const epicsLoading = document.getElementById('epics-loading');
+    const epicsEmpty = document.getElementById('epics-empty');
+    const epicsList = document.getElementById('epics-list');
+
+    epicsLoading.style.display = 'none';
+    epicsEmpty.style.display = 'none';
+
+    if (!epicsHTML || epicsHTML.trim() === '') {
+      showEpicsEmpty();
+      return;
+    }
+
+    epicsList.innerHTML = epicsHTML;
+    
+    // Add event listeners to radio buttons for epic selection
+    const radioButtons = epicsList.querySelectorAll('input[name="epic_selection"]');
+    radioButtons.forEach((radio, index) => {
+      radio.addEventListener('change', function() {
+        if (this.checked) {
+          selectEpicByRadio(this.value, index);
+        }
+      });
+    });
+    
+    // Auto-select the first epic if none selected
+    if (radioButtons.length > 0 && !Array.from(radioButtons).some(r => r.checked)) {
+      radioButtons[0].checked = true;
+      selectEpicByRadio(radioButtons[0].value, 0);
+    }
+  }
+
+  // Select epic by radio button value
+  async function selectEpicByRadio(epicId, epicIndex) {
+    // Find the epic by ID
+    const epic = currentEpics.find(e => e.id === epicId) || currentEpics[epicIndex];
+    if (!epic) {
+      console.error('Epic not found:', epicId);
+      return;
+    }
+    
+    selectedEpic = epic;
+    
+    // Show loading state for user stories
+    showUserStoriesLoading();
+    
+    // Clear story details
+    clearStoryDetails();
+
+    try {
+      const formData = new FormData();
+      formData.append('epic_ids', epic.id || `epic-${epicIndex + 1}`);
+      formData.append('selected_epic_contents', JSON.stringify({[epic.id || `epic-${epicIndex + 1}`]: epic}));
+
+      const response = await fetch('/three-section-approve-epics', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.user_stories) {
+        currentUserStories = data.user_stories;
+        displayUserStories(currentUserStories);
+        console.log('User stories loaded for epic:', epic.title);
+      } else {
+        throw new Error(data.error || 'Failed to load user stories');
+      }
+      
+    } catch (error) {
+      console.error('Error loading user stories:', error);
+      showUserStoriesError(`Error loading user stories: ${error.message}`);
+    }
+  }
+
+  // Show empty state for epics
+  function showEpicsEmpty() {
+    document.getElementById('epics-loading').style.display = 'none';
+    document.getElementById('epics-empty').style.display = 'flex';
+    document.getElementById('epics-list').innerHTML = '';
+  }
+
+  // Select an epic and load its user stories
+  async function selectEpic(epicIndex) {
+    // Remove previous selection
+    document.querySelectorAll('.epic-item').forEach(item => {
+      item.classList.remove('selected');
+    });
+
+    // Add selection to clicked epic
+    const epicItems = document.querySelectorAll('.epic-item');
+    if (epicItems[epicIndex]) {
+      epicItems[epicIndex].classList.add('selected');
+    }
+
+    selectedEpic = currentEpics[epicIndex];
+    
+    // Show loading state for user stories
+    showUserStoriesLoading();
+    
+    // Clear story details
+    clearStoryDetails();
+
+    try {
+      const formData = new FormData();
+      formData.append('epic_ids', selectedEpic.id || `epic-${epicIndex + 1}`);
+      formData.append('selected_epic_contents', JSON.stringify({[selectedEpic.id || `epic-${epicIndex + 1}`]: selectedEpic}));
+
+      const response = await fetch('/three-section-approve-epics', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.user_stories) {
+        currentUserStories = data.user_stories;
+        displayUserStories(currentUserStories);
+      } else {
+        showUserStoriesEmpty();
+      }
+    } catch (error) {
+      console.error('Error loading user stories:', error);
+      showUserStoriesEmpty();
+    }
+  }
+
+  // Show loading state for user stories
+  function showUserStoriesLoading() {
+    document.getElementById('user-stories-empty').style.display = 'none';
+    document.getElementById('user-stories-loading').style.display = 'flex';
+    document.getElementById('user-stories-list').innerHTML = '';
+    document.getElementById('user-story-chat-btn').style.display = 'none';
+  }
+
+  // Show empty state for user stories
+  function showUserStoriesEmpty() {
+    document.getElementById('user-stories-loading').style.display = 'none';
+    document.getElementById('user-stories-empty').style.display = 'flex';
+    document.getElementById('user-stories-list').innerHTML = '';
+    document.getElementById('user-story-chat-btn').style.display = 'none';
+  }
+
+  // Display user stories in the second section
+  function displayUserStories(userStories) {
+    const userStoriesLoading = document.getElementById('user-stories-loading');
+    const userStoriesEmpty = document.getElementById('user-stories-empty');
+    const userStoriesList = document.getElementById('user-stories-list');
+    const userStoryChatBtn = document.getElementById('user-story-chat-btn');
+
+    userStoriesLoading.style.display = 'none';
+    userStoriesEmpty.style.display = 'none';
+    userStoryChatBtn.style.display = 'inline-block';
+
+    if (!userStories || userStories.length === 0) {
+      showUserStoriesEmpty();
+      return;
+    }
+
+    let html = '';
+    userStories.forEach((story, index) => {
+      const storyTitle = story.title || story.name || `User Story ${index + 1}`;
+      const storySummary = story.description || story.summary || 'No description available';
+      const priority = story.priority || 'Medium';
+      const systems = story.systems || ['Unknown System'];
+      const systemsText = Array.isArray(systems) ? systems.join(', ') : systems;
+      
+      html += `
+        <div class="selection-card user-story-card" data-story-id="${story.id || index}">
+          <div class="card-radio">
+            <input type="radio" name="user-story-selection" value="${index}" id="story-${index}" onchange="selectUserStory(${index})">
+            <label for="story-${index}"></label>
+          </div>
+          <div class="card-content" onclick="document.getElementById('story-${index}').click()">
+            <div class="card-header">
+              <h3 class="card-title">${storyTitle}</h3>
+              <div class="card-meta">
+                <span class="priority-badge priority-${priority.toLowerCase()}">${priority}</span>
+                <span class="systems-badge">${systemsText}</span>
+              </div>
+            </div>
+            <div class="card-description">${storySummary.substring(0, 150)}${storySummary.length > 150 ? '...' : ''}</div>
+          </div>
+        </div>
+      `;
+    });
+
+    userStoriesList.innerHTML = html;
+  }
+
+  // Select a user story and navigate to details page
+  async function selectUserStory(storyIndex) {
+    selectedUserStory = currentUserStories[storyIndex];
+    
+    // Show loading state in the third section
+    showStoryDetailsLoading();
+    
+    try {
+      // Store the epic title in session for context
+      if (selectedEpic) {
+        sessionStorage.setItem('current_epic_title', selectedEpic.title || 'Unknown Epic');
+      }
+      
+      // Prepare form data for the API call
+      const formData = new FormData();
+      formData.append('selected_story_id', selectedUserStory.id || `US-${storyIndex + 1}`);
+      formData.append('selected_story_name', selectedUserStory.title || selectedUserStory.name || `User Story ${storyIndex + 1}`);
+      formData.append('selected_story_description', selectedUserStory.description || selectedUserStory.summary || '');
+      
+      // Call the API to get story details
+      const response = await fetch('/three-section-user-story-details', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.story_details) {
+        // Display the story details in the third section
+        displayStoryDetails(data.story_details);
+        
+        // Show the Jira submit button
+        const submitBtn = document.getElementById('submit-jira-btn');
+        if (submitBtn) {
+          submitBtn.style.display = 'block';
+        }
+        
+        console.log('Story details loaded successfully');
+      } else {
+        throw new Error(data.error || 'Failed to load story details');
+      }
+      
+    } catch (error) {
+      console.error('Error loading story details:', error);
+      showStoryDetailsError(`Error loading story details: ${error.message}`);
+    }
+  }
+
+  // Story Details Loading and Error Functions
+  function showStoryDetailsLoading() {
+    const storyDetailsEmpty = document.getElementById('story-details-empty');
+    const storyDetailsDiv = document.getElementById('story-details');
+    const submitBtn = document.getElementById('submit-jira-btn');
+    
+    storyDetailsEmpty.style.display = 'none';
+    if (submitBtn) {
+      submitBtn.style.display = 'none';
+    }
+    
+    storyDetailsDiv.innerHTML = `
+      <div class="loading-container text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+        <p class="mt-2">Loading story details...</p>
+      </div>
+    `;
+  }
+
+  function showStoryDetailsError(errorMessage) {
+    const storyDetailsEmpty = document.getElementById('story-details-empty');
+    const storyDetailsDiv = document.getElementById('story-details');
+    const submitBtn = document.getElementById('submit-jira-btn');
+    
+    storyDetailsEmpty.style.display = 'none';
+    if (submitBtn) {
+      submitBtn.style.display = 'none';
+    }
+    
+    storyDetailsDiv.innerHTML = `
+      <div class="error-container text-center py-4">
+        <div class="text-danger mb-2">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <p class="text-danger">${errorMessage}</p>
+        <button class="btn btn-outline-primary btn-sm" onclick="clearStoryDetails()">
+          <i class="fas fa-redo"></i> Clear
+        </button>
+      </div>
+    `;
+  }
+
+  // Clear story details
+  function clearStoryDetails() {
+    document.getElementById('story-details-empty').style.display = 'flex';
+    document.getElementById('story-details').innerHTML = '';
+    document.getElementById('submit-jira-btn').style.display = 'none';
+  }
+
+  // Display story details in the third section
+  function displayStoryDetails(storyDetails) {
+    const storyDetailsEmpty = document.getElementById('story-details-empty');
+    const storyDetailsDiv = document.getElementById('story-details');
+
+    storyDetailsEmpty.style.display = 'none';
+
+    const acceptanceCriteria = storyDetails.acceptance_criteria || [];
+    const taggedRequirements = storyDetails.tagged_requirements || [];
+    const traceabilityMatrix = storyDetails.traceability_matrix || 'Not available';
+
+    let html = `
+      <div class="detail-section">
+        <div class="detail-title">
+          Story Overview
+          <button class="chat-btn" onclick="openStoryDetailsChat('description')">💬 Chat</button>
+        </div>
+        <div class="detail-content">
+          <strong>Epic:</strong> ${selectedEpic?.title || 'Unknown Epic'}<br>
+          <strong>Story:</strong> ${selectedUserStory?.title || selectedUserStory?.name || 'Unknown Story'}<br>
+          <strong>Description:</strong> ${selectedUserStory?.description || selectedUserStory?.summary || 'No description available'}
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-title">
+          Acceptance Criteria
+          <button class="chat-btn" onclick="openStoryDetailsChat('criteria')">💬 Chat</button>
+        </div>
+        <div class="detail-content">
+          ${acceptanceCriteria.length > 0 ? 
+            `<ul class="criteria-list">${acceptanceCriteria.map(criteria => `<li>${criteria}</li>`).join('')}</ul>` :
+            '<p>No acceptance criteria defined yet.</p>'
+          }
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-title">
+          Tagged Requirements
+          <button class="chat-btn" onclick="openStoryDetailsChat('requirements')">💬 Chat</button>
+        </div>
+        <div class="detail-content">
+          ${taggedRequirements.length > 0 ? 
+            `<ul class="criteria-list">${taggedRequirements.map(req => `<li>${req}</li>`).join('')}</ul>` :
+            '<p>No tagged requirements defined yet.</p>'
+          }
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-title">
+          Traceability Matrix
+          <button class="chat-btn" onclick="openStoryDetailsChat('traceability')">💬 Chat</button>
+        </div>
+        <div class="detail-content">
+          <div style="white-space: pre-wrap; font-family: monospace; background: var(--surface-tertiary); padding: var(--spacing-md); border-radius: var(--radius-sm); border: 1px solid var(--border-light);">
+            ${traceabilityMatrix}
+          </div>
+        </div>
+      </div>
+    `;
+
+    storyDetailsDiv.innerHTML = html;
+  }
+
+  // Epic Chat Functions
+  function openEpicChat() {
+    document.getElementById('epic-chat-modal').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('epic-chat-input').focus();
+    }, 100);
+  }
+
+  function closeEpicChat() {
+    document.getElementById('epic-chat-modal').style.display = 'none';
+  }
+
+  function handleEpicChatEnter(event) {
+    if (event.key === 'Enter') {
+      sendEpicMessage();
+    }
+  }
+
+  async function sendEpicMessage() {
+    const input = document.getElementById('epic-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+
+    // Add user message to chat
+    addEpicChatMessage(message, 'user');
+    input.value = '';
+
+    try {
+      const response = await fetch('/three-section-epic-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: message,
+          epics: currentEpics
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        addEpicChatMessage(data.response, 'assistant');
+        
+        if (data.updated_epics) {
+          currentEpics = data.updated_epics;
+          displayEpics(currentEpics);
+        }
+      } else {
+        addEpicChatMessage('Sorry, there was an error processing your request.', 'assistant');
+      }
+    } catch (error) {
+      console.error('Error in epic chat:', error);
+      addEpicChatMessage('Sorry, there was a connection error.', 'assistant');
+    }
+  }
+
+  function addEpicChatMessage(message, sender) {
+    const messagesContainer = document.getElementById('epic-chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}`;
+    
+    messageDiv.innerHTML = `
+      <div class="chat-bubble">${message}</div>
+    `;
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  // User Story Chat Functions
+  function openUserStoryChat() {
+    document.getElementById('user-story-chat-modal').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('user-story-chat-input').focus();
+    }, 100);
+  }
+
+  function closeUserStoryChat() {
+    document.getElementById('user-story-chat-modal').style.display = 'none';
+  }
+
+  function handleUserStoryChatEnter(event) {
+    if (event.key === 'Enter') {
+      sendUserStoryMessage();
+    }
+  }
+
+  async function sendUserStoryMessage() {
+    const input = document.getElementById('user-story-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+
+    // Add user message to chat
+    addUserStoryChatMessage(message, 'user');
+    input.value = '';
+
+    try {
+      const response = await fetch('/three-section-user-story-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: message,
+          user_stories: currentUserStories,
+          epic: selectedEpic
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        addUserStoryChatMessage(data.response, 'assistant');
+        
+        if (data.updated_user_stories) {
+          currentUserStories = data.updated_user_stories;
+          displayUserStories(currentUserStories);
+        }
+      } else {
+        addUserStoryChatMessage('Sorry, there was an error processing your request.', 'assistant');
+      }
+    } catch (error) {
+      console.error('Error in user story chat:', error);
+      addUserStoryChatMessage('Sorry, there was a connection error.', 'assistant');
+    }
+  }
+
+  function addUserStoryChatMessage(message, sender) {
+    const messagesContainer = document.getElementById('user-story-chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}`;
+    
+    messageDiv.innerHTML = `
+      <div class="chat-bubble">${message}</div>
+    `;
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  // Story Details Chat Functions
+  function openStoryDetailsChat(section) {
+    document.getElementById('story-details-chat-modal').style.display = 'block';
+    // Store which section we're chatting about
+    document.getElementById('story-details-chat-modal').setAttribute('data-section', section);
+    setTimeout(() => {
+      document.getElementById('story-details-chat-input').focus();
+    }, 100);
+  }
+
+  function closeStoryDetailsChat() {
+    document.getElementById('story-details-chat-modal').style.display = 'none';
+  }
+
+  function handleStoryDetailsChatEnter(event) {
+    if (event.key === 'Enter') {
+      sendStoryDetailsMessage();
+    }
+  }
+
+  async function sendStoryDetailsMessage() {
+    const input = document.getElementById('story-details-chat-input');
+    const message = input.value.trim();
+    const section = document.getElementById('story-details-chat-modal').getAttribute('data-section');
+    
+    if (!message) return;
+
+    // Add user message to chat
+    addStoryDetailsChatMessage(message, 'user');
+    input.value = '';
+
+    try {
+      const response = await fetch('/three-section-story-details-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: message,
+          section: section,
+          story_details: currentStoryDetails,
+          user_story: selectedUserStory,
+          epic: selectedEpic
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        addStoryDetailsChatMessage(data.response, 'assistant');
+        
+        if (data.updated_story_details) {
+          currentStoryDetails = data.updated_story_details;
+          displayStoryDetails(currentStoryDetails);
+        }
+      } else {
+        addStoryDetailsChatMessage('Sorry, there was an error processing your request.', 'assistant');
+      }
+    } catch (error) {
+      console.error('Error in story details chat:', error);
+      addStoryDetailsChatMessage('Sorry, there was a connection error.', 'assistant');
+    }
+  }
+
+  function addStoryDetailsChatMessage(message, sender) {
+    const messagesContainer = document.getElementById('story-details-chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}`;
+    
+    messageDiv.innerHTML = `
+      <div class="chat-bubble">${message}</div>
+    `;
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  // Enhanced PRD Upload Functions with Full Features
+  let prdPreviewData = null;
+
+  // Timer utility functions for PRD upload - REMOVED (timer functionality disabled)
+
+  // Show PRD button loading without timer
+
+  function showPRDButtonLoading(button, spinner, loadingText) {
+    button.disabled = true;
+    if (spinner) {
+      spinner.style.display = 'inline-block';
+    }
+    const btnText = button.querySelector('.btn-text');
+    if (btnText) {
+      btnText.textContent = loadingText;
+    }
+  }
+
+  function hidePRDButtonLoading(button, spinner, originalText) {
+    button.disabled = false;
+    if (spinner) {
+      spinner.style.display = 'none';
+    }
+    const btnText = button.querySelector('.btn-text');
+    if (btnText) {
+      btnText.textContent = originalText;
+    }
+  }
+
+  // Show PRD alert messages
+  function showPRDAlert(message, type = 'info') {
+    const alertContainer = document.getElementById('prd-alert-container');
+    const alertId = 'prd-alert-' + Date.now();
+    
+    const alertHTML = `
+      <div class="alert alert-${type}" id="${alertId}" role="alert">
+        <div>
+          <strong>${type === 'success' ? '✅' : type === 'danger' ? '❌' : 'ℹ️'}</strong>
+          ${message}
+        </div>
+        <button type="button" class="btn-close" onclick="document.getElementById('${alertId}').remove()">×</button>
+      </div>
+    `;
+    
+    alertContainer.innerHTML = alertHTML;
+    
+    // Auto-remove success alerts after 5 seconds
+    if (type === 'success') {
+      setTimeout(() => {
+        const alert = document.getElementById(alertId);
+        if (alert) alert.remove();
+      }, 5000);
+    }
+  }
+
+  // Handle file selection and validation
+  function handlePRDFileSelect() {
+    const fileInput = document.getElementById('prd-file');
+    const file = fileInput.files[0];
+    
+    if (file) {
+      // Check file size
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (file.size > maxSize) {
+        showPRDAlert('File size exceeds 50MB limit. Please choose a smaller file.', 'danger');
+        fileInput.value = '';
+        return;
+      }
+      
+      // Show file info
+      const fileSize = (file.size / 1024).toFixed(1);
+      showPRDAlert(`PRD file selected: ${file.name} (${fileSize} KB)`, 'success');
+      
+      // Enable form submission if this is the first file
+      const submitBtn = document.getElementById('prd-upload-btn');
+      submitBtn.disabled = false;
+    }
+  }
+
+  function handleAdditionalFilesSelect() {
+    const fileInput = document.getElementById('additional-file');
+    const files = fileInput.files;
+    
+    if (files.length > 0) {
+      let totalSize = 0;
+      let fileNames = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        totalSize += files[i].size;
+        fileNames.push(files[i].name);
+      }
+      
+      // Check total size
+      const maxSize = 100 * 1024 * 1024; // 100MB total
+      if (totalSize > maxSize) {
+        showPRDAlert('Total file size exceeds 100MB limit. Please choose smaller files.', 'danger');
+        fileInput.value = '';
+        return;
+      }
+      
+      const totalSizeKB = (totalSize / 1024).toFixed(1);
+      showPRDAlert(`${files.length} additional file(s) selected (${totalSizeKB} KB total)`, 'success');
+    }
+  }
+
+  // Update step indicators
+  function updatePRDStepIndicator(activeStep) {
+    const step1 = document.getElementById('step-1');
+    const step2 = document.getElementById('step-2');
+    
+    // Reset classes
+    step1.className = 'step';
+    step2.className = 'step';
+    
+    if (activeStep === 1) {
+      step1.className = 'step active';
+    } else if (activeStep === 2) {
+      step1.className = 'step completed';
+      step2.className = 'step active';
+    }
+  }
+
+  // Show PRD upload modal
+  function showPRDUpload() {
+    document.getElementById('prd-upload-modal').style.display = 'block';
+    
+    // Reset modal state
+    resetPRDUpload();
+    
+    // Set initial step
+    updatePRDStepIndicator(1);
+  }
+
+  // Close PRD upload modal
+  function closePRDUpload() {
+    document.getElementById('prd-upload-modal').style.display = 'none';
+  }
+
+  // Reset PRD upload modal to initial state
+  function resetPRDUpload() {
+    // Clear form
+    document.getElementById('prd-document-form').reset();
+    
+    // Clear alerts
+    document.getElementById('prd-alert-container').innerHTML = '';
+    
+    // Hide preview sections
+    document.getElementById('prd-summary-section').style.display = 'none';
+    document.getElementById('additional-docs-section').style.display = 'none';
+    document.getElementById('user-context-section').style.display = 'none';
+    document.getElementById('prd-loading-spinner').style.display = 'none';
+    document.getElementById('prd-epic-spinner').style.display = 'none';
+    
+    // Show upload section
+    document.getElementById('upload-step-1').style.display = 'block';
+    
+    // Reset step indicator
+    updatePRDStepIndicator(1);
+    
+    // Reset buttons
+    const uploadBtn = document.getElementById('prd-upload-btn');
+    const generateBtn = document.getElementById('generate-epics-btn');
+    
+    hidePRDButtonLoading(uploadBtn, null, '🚀 Upload & Preview Documents');
+    hidePRDButtonLoading(generateBtn, null, '⚡ Generate Epics & User Stories');
+    
+    // Reset preview data
+    prdPreviewData = null;
+    
+    // Show reset button
+    document.getElementById('reset-prd-btn').style.display = 'none';
+  }
+
+  // Handle document upload and preview
+  async function handlePRDDocumentUpload(event) {
+    console.log('handlePRDDocumentUpload called');
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const uploadBtn = document.getElementById('prd-upload-btn');
+    const loadingSpinner = document.getElementById('prd-loading-spinner');
+    
+    console.log('Form elements found:', {
+      uploadBtn: !!uploadBtn,
+      loadingSpinner: !!loadingSpinner
+    });
+    
+    // Validate input
+    const prdFile = document.getElementById('prd-file').files[0];
+    const context = document.getElementById('context-notes').value.trim();
+    
+    console.log('Form data:', {
+      prdFile: !!prdFile,
+      context: context.length > 0
+    });
+    
+    if (!prdFile && !context) {
+      console.log('Validation failed - no file or context');
+      showPRDAlert('Please upload a PRD file or provide additional context.', 'danger');
+      return;
+    }
+    
+    // Check for large files and warn user
+    let totalSize = 0;
+    const allFiles = [
+      ...document.getElementById('prd-file').files,
+      ...document.getElementById('additional-file').files
+    ];
+    
+    for (const file of allFiles) {
+      totalSize += file.size;
+    }
+    
+    const largeFileThreshold = 20 * 1024; // 20KB
+    if (totalSize > largeFileThreshold) {
+      const proceed = confirm(
+        `Large files detected (${(totalSize / 1024).toFixed(1)} KB). ` +
+        'Processing may take 1-3 minutes. Do you want to continue?'
+      );
+      if (!proceed) {
+        return;
+      }
+    }
+    
+    try {
+      console.log('Starting upload process...');
+      // Show loading state
+      showPRDButtonLoading(uploadBtn, null, 'Processing...');
+      loadingSpinner.style.display = 'block';
+      
+      // Update loading message for large files
+      if (totalSize > largeFileThreshold) {
+        const loadingMessage = loadingSpinner.querySelector('p');
+        if (loadingMessage) {
+          loadingMessage.textContent = '📊 Processing large files - this may take a moment...';
+        }
+      }
+      
+      console.log('About to make fetch request to /three-section-document-upload');
+      // Make request with timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout - file processing took too long')), 300000);
+      });
+      
+      const fetchPromise = fetch('/three-section-document-upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      console.log('Waiting for response...');
+      const response = await Promise.race([fetchPromise, timeoutPromise]);
+      console.log('Response received:', response.status, response.statusText);
+      
+      const data = await response.json();
+      console.log('Response data:', data);
+      
+      if (data.success) {
+        console.log('Upload successful, showing preview');
+        // Store preview data
+        prdPreviewData = data;
+        
+        // Show preview section
+        displayPRDPreview(data);
+        
+        // Update step indicator
+        updatePRDStepIndicator(2);
+        
+        // Hide upload section and show preview
+        document.getElementById('upload-step-1').style.display = 'none';
+        document.getElementById('upload-step-2').style.display = 'block';
+        
+        showPRDAlert('Documents processed successfully! Review the summary and generate epics.', 'success');
+      } else {
+        console.log('Upload failed:', data.error);
+        throw new Error(data.error || 'Failed to process documents');
+      }
+      
+    } catch (error) {
+      console.error('Error uploading documents:', error);
+      showPRDAlert(`Error processing documents: ${error.message}`, 'danger');
+    } finally {
+      // Hide loading
+      loadingSpinner.style.display = 'none';
+      hidePRDButtonLoading(uploadBtn, null, '� Upload & Preview Documents');
+    }
+  }
+
+  // Display PRD preview data
+  function displayPRDPreview(data) {
+    // PRD Summary
+    if (data.prd_summary) {
+      const prdFilename = document.getElementById('prd-filename-display');
+      const prdSummary = document.getElementById('prd-summary-content');
+      
+      if (data.prd_filename) {
+        prdFilename.innerHTML = `<span class="filename-tag">${data.prd_filename}</span>`;
+      }
+      
+      prdSummary.textContent = data.prd_summary;
+      document.getElementById('prd-summary-section').style.display = 'block';
+    }
+    
+    // Additional Documents Summary
+    if (data.additional_summary) {
+      const docsFilename = document.getElementById('additional-docs-filename');
+      const docsSummary = document.getElementById('additional-docs-summary');
+      
+      if (data.additional_filenames && data.additional_filenames.length > 0) {
+        docsFilename.innerHTML = data.additional_filenames.map(filename => 
+          `<span class="filename-tag">${filename}</span>`
+        ).join('');
+      }
+      
+      docsSummary.textContent = data.additional_summary;
+      document.getElementById('additional-docs-section').style.display = 'block';
+    }
+    
+    // User Context
+    if (data.context) {
+      const userContext = document.getElementById('user-context-display');
+      userContext.textContent = data.context;
+      document.getElementById('user-context-section').style.display = 'block';
+    }
+    
+    // Show reset button
+    document.getElementById('reset-prd-btn').style.display = 'inline-block';
+  }
+
+  // Generate epics from PRD data
+  async function generateEpicsFromPRDData() {
+    if (!prdPreviewData) {
+      showPRDAlert('No preview data available. Please upload documents first.', 'danger');
+      return;
+    }
+    
+    const generateBtn = document.getElementById('generate-epics-btn');
+    const epicSpinner = document.getElementById('prd-epic-spinner');
+    const epicLoadingSpinner = document.getElementById('prd-epic-spinner');
+    
+    try {
+      // Show loading state
+      showPRDButtonLoading(generateBtn, epicSpinner, 'Generating...');
+      epicLoadingSpinner.style.display = 'block';
+      
+      // Prepare data for epic generation
+      const epicData = {
+        prd_summary: prdPreviewData.prd_summary,
+        additional_summary: prdPreviewData.additional_summary,
+        context: prdPreviewData.context,
+        prd_filename: prdPreviewData.prd_filename,
+        additional_filenames: prdPreviewData.additional_filenames
+      };
+      
+      const response = await fetch('/three-section-generate-epics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(epicData)
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.epics) {
+        // Store epics globally
+        currentEpics = data.epics;
+        
+        // Use the formatted HTML from backend if available, otherwise fall back to displayEpics
+        if (data.epics_html) {
+          displayEpicsHTML(data.epics_html);
+        } else {
+          displayEpics(currentEpics);
+        }
+        
+        // Close modal
+        closePRDUpload();
+        
+        // Show success message in main UI
+        console.log('Epics generated successfully:', data.epics);
+        
+      } else {
+        throw new Error(data.error || 'Failed to generate epics');
+      }
+      
+    } catch (error) {
+      console.error('Error generating epics:', error);
+      showPRDAlert(`Error generating epics: ${error.message}`, 'danger');
+    } finally {
+      // Hide loading
+      epicLoadingSpinner.style.display = 'none';
+      hidePRDButtonLoading(generateBtn, null, '⚡ Generate Epics & User Stories');
+    }
+  }
+
+  // Event listeners for PRD upload modal
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded - Setting up event listeners');
+    
+    // Form submission for document upload
+    const prdForm = document.getElementById('prd-upload-form');
+    console.log('PRD form found:', !!prdForm);
+    if (prdForm) {
+      prdForm.addEventListener('submit', handlePRDDocumentUpload);
+      console.log('Submit event listener added to PRD form');
+    }
+    
+    // Generate epics button
+    const generateBtn = document.getElementById('generate-epics-btn');
+    console.log('Generate button found:', !!generateBtn);
+    if (generateBtn) {
+      generateBtn.addEventListener('click', generateEpicsFromPRDData);
+      console.log('Click event listener added to generate button');
+    }
+  });
+
+  // Legacy function for compatibility (will be removed)
+  function handleFileSelect(type) {
+    // This function is kept for backwards compatibility but should not be used
+    console.warn('handleFileSelect is deprecated. Use handlePRDFileSelect or handleAdditionalFilesSelect instead.');
+  }
+
+  // Legacy function for compatibility (updated to use new system)
+  async function generateEpicsFromPRD() {
+    // For backwards compatibility, redirect to new function if preview data exists
+    if (prdPreviewData) {
+      return generateEpicsFromPRDData();
+    }
+    
+    // Otherwise, show modal for user to upload documents
+    showPRDUpload();
+  }
+
+  // Jira Submission
+  async function submitToJira() {
+    if (!selectedUserStory || !currentStoryDetails) {
+      alert('Please select a user story first.');
+      return;
+    }
+
+    // Show confirmation
+    const confirmMessage = `Submit to Jira?
+
+Epic: ${selectedEpic?.title || 'Unknown'}
+Story: ${selectedUserStory?.title || selectedUserStory?.name || 'Unknown'}
+Priority: ${selectedEpic?.priority || 'High'}
+
+Do you want to proceed?`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      // Show loading state on submit button
+      const submitBtn = document.getElementById('submit-jira-btn');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+      submitBtn.disabled = true;
+
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('epic_title', selectedEpic?.title || '');
+      formData.append('user_story_name', selectedUserStory?.title || selectedUserStory?.name || '');
+      formData.append('user_story_description', selectedUserStory?.description || selectedUserStory?.summary || '');
+      formData.append('priority', selectedEpic?.priority || 'High');
+      formData.append('responsible_systems', 'CAPS, CMS');
+      formData.append('acceptance_criteria', (currentStoryDetails?.acceptance_criteria || []).join('|||'));
+      formData.append('tagged_requirements', (currentStoryDetails?.tagged_requirements || []).join('|||'));
+      formData.append('traceability_matrix', currentStoryDetails?.traceability_matrix || '');
+
+      // Submit to Jira via AJAX
+      const response = await fetch('/three-section-submit-jira', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Parse JSON response (since we're sending X-Requested-With header)
+      const data = await response.json();
+      
+      if (data.success) {
+        // Success - show success message in the story details section
+        const storyDetailsDiv = document.getElementById('story-details');
+        storyDetailsDiv.innerHTML = `
+          <div class="success-container text-center py-5">
+            <div class="text-success mb-3">
+              <i class="fas fa-check-circle fa-3x"></i>
+            </div>
+            <h4 class="text-success">Successfully Submitted to Jira!</h4>
+            <p class="mb-3">
+              <strong>Epic:</strong> ${data.epic_title || selectedEpic?.title || 'Unknown'}<br>
+              <strong>Story:</strong> ${data.user_story_name || selectedUserStory?.title || selectedUserStory?.name || 'Unknown'}<br>
+              <strong>Ticket ID:</strong> ${data.ticket_id || 'TST-' + Math.floor(Date.now() / 1000)}
+            </p>
+            <button class="btn btn-primary" onclick="location.reload()">
+              <i class="fas fa-plus"></i> Create Another Story
+            </button>
+          </div>
+        `;
+        
+        // Hide submit button
+        submitBtn.style.display = 'none';
+        
+        console.log('Successfully submitted to Jira:', data);
+      } else {
+        throw new Error(data.error || 'Failed to submit to Jira');
+      }
+      
+    } catch (error) {
+      console.error('Error submitting to Jira:', error);
+      alert(`Error submitting to Jira: ${error.message}`);
+      
+      // Reset submit button
+      const submitBtn = document.getElementById('submit-jira-btn');
+      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit to Jira';
+      submitBtn.disabled = false;
+    }
+  }
+
+  // Close modals when clicking outside
+  window.addEventListener('click', function(e) {
+    const modals = document.querySelectorAll('.chat-modal');
+    modals.forEach(modal => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  });
+</script>
+</body>
+</html>
