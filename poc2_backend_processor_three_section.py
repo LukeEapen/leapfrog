@@ -802,15 +802,31 @@ You are an epic refinement assistant. When the user asks to modify, update, or c
 1. Provide a helpful response explaining what changes you're making in natural language
 2. Return the modified epics in a structured format
 
-If the user wants to modify epics, respond with:
-RESPONSE: [Your explanation of changes in natural language - no JSON formatting in this section]
-UPDATED_EPICS: [JSON array of modified epics with same structure as input]
+IMPORTANT FORMATTING RULES:
+- If the user wants to modify epics, you MUST respond with EXACTLY this format:
+  RESPONSE: [Your explanation in plain English - no JSON or technical formatting]
+  UPDATED_EPICS: [Valid JSON array of modified epics]
 
-If the user is just asking questions without wanting modifications, just provide a helpful response in natural language.
+- If the user is just asking questions without wanting modifications, just provide a helpful response in natural language.
 
-Important: The RESPONSE section should be in plain English, easy to read, and explain what you're doing. Do not put JSON or technical formatting in the RESPONSE section."""
+- The RESPONSE section must be conversational and explain what you're doing
+- The UPDATED_EPICS section must be valid JSON with the same structure as the input epics
+- Each epic should have: id, title, description, priority
 
+Example format when modifying:
+RESPONSE: I've updated the priority of the first epic from High to Low as requested. This change reflects a shift in project priorities.
+UPDATED_EPICS: [{{
+  "id": "epic-1",
+  "title": "Example Epic",
+  "description": "Example description",
+  "priority": "Low"
+}}]
+
+Current context: The user has {len(epics)} epics and wants to: {message}"""
+
+        logger.info(f"Sending chat prompt to epic agent: {chat_prompt[:200]}...")
         response = ask_assistant_from_file_optimized("poc2_agent2_epic_generator", chat_prompt)
+        logger.info(f"Received response from epic agent: {response[:200]}...")
         
         # Check if the response contains updated epics
         updated_epics = None
@@ -821,8 +837,9 @@ Important: The RESPONSE section should be in plain English, easy to read, and ex
                 epics_json = parts[1].strip()
                 
                 # Try to parse the updated epics
-                import json
                 updated_epics = json.loads(epics_json)
+                
+                logger.info(f"Successfully parsed updated epics: {len(updated_epics)} epics")
                 
                 return jsonify({
                     "success": True, 
@@ -831,9 +848,13 @@ Important: The RESPONSE section should be in plain English, easy to read, and ex
                 })
             except (json.JSONDecodeError, IndexError) as e:
                 logger.warning(f"Failed to parse updated epics: {e}")
+                logger.warning(f"Raw response was: {response}")
                 # Fall back to just returning the response
         
-        return jsonify({"success": True, "response": response})
+        # Clean up the response to remove any RESPONSE: prefix if it exists
+        clean_response = response.replace("RESPONSE:", "").strip()
+        logger.info(f"Returning clean response: {clean_response[:100]}...")
+        return jsonify({"success": True, "response": clean_response})
         
     except Exception as e:
         logger.error(f"Error in epic chat: {str(e)}")
@@ -855,43 +876,69 @@ def three_section_user_story_chat():
         
         # Create context for user story chat
         stories_context = ""
-        for story in user_stories:
-            stories_context += f"Story: {story.get('title', 'Unknown')}\n"
-            stories_context += f"Description: {story.get('description', 'No description')}\n"
-            stories_context += f"Priority: {story.get('priority', 'Medium')}\n\n"
+        for i, story in enumerate(user_stories):
+            stories_context += f"Story {i+1}: {story.get('title', story.get('name', 'Unknown'))}\n"
+            stories_context += f"Description: {story.get('description', story.get('summary', 'No description'))}\n"
+            stories_context += f"Priority: {story.get('priority', 'Medium')}\n"
+            stories_context += f"Systems: {story.get('systems', ['Unknown'])}\n\n"
         
-        chat_prompt = f"""Current Epic: {epic.get('title', 'Unknown')}
+        chat_prompt = f"""You are a helpful user story refinement assistant. You help users modify and improve their user stories in a conversational way.
+
+Current Epic: {epic.get('title', 'Unknown')}
+Epic Description: {epic.get('description', 'No description')}
 
 Current User Stories:
 {stories_context}
 
-User Message: {message}
+User Message: "{message}"
 
-You are a user story refinement assistant. When the user asks to modify, update, or change user stories, you should:
-1. Provide a helpful response explaining what changes you're making in natural language
-2. Return the modified user stories in a structured format
+Instructions:
+- If the user wants to modify, update, or change user stories, provide a helpful response in natural language explaining what changes you're making
+- Then provide the updated user stories in a specific format
+- If the user is just asking questions, provide helpful information about the user stories
 
-If the user wants to modify user stories, respond with:
-RESPONSE: [Your explanation of changes in natural language - no JSON formatting in this section]
-UPDATED_USER_STORIES: [JSON array of modified user stories with same structure as input]
+When making changes, respond in this EXACT format:
 
-If the user is just asking questions without wanting modifications, just provide a helpful response in natural language.
+RESPONSE: [Your explanation in natural language - be conversational and helpful. Explain what changes you're making and why they're beneficial. Do not include any JSON or technical formatting here.]
 
-Important: The RESPONSE section should be in plain English, easy to read, and explain what you're doing. Do not put JSON or technical formatting in the RESPONSE section."""
+UPDATED_USER_STORIES: [JSON array of the modified user stories with the same structure as the input, including id, title/name, description, priority, and systems fields]
+
+If you're not making changes, just provide a helpful conversational response without the UPDATED_USER_STORIES section.
+
+Examples of natural language responses:
+- "I've updated the priorities based on your feedback..."
+- "I've reorganized the user stories to better reflect..."
+- "I've added more detail to the descriptions..."
+- "I've adjusted the system assignments based on..."
+
+Remember: Keep the RESPONSE section conversational and in plain English. Save the technical JSON format only for the UPDATED_USER_STORIES section."""
         
-        response = ask_assistant_from_file_optimized("poc2_agent3_basic_user_story", chat_prompt)
+        # Use the epic generator agent as it's more flexible for conversational responses
+        response = ask_assistant_from_file_optimized("poc2_agent2_epic_generator", chat_prompt)
         
-        # Check if the response contains updated user stories
+        logger.info(f"User story chat raw response: {response}")
+        
+        # Parse the response to extract natural language and updated user stories
         updated_user_stories = None
+        response_text = response
+        
         if "UPDATED_USER_STORIES:" in response:
             try:
                 parts = response.split("UPDATED_USER_STORIES:")
                 response_text = parts[0].replace("RESPONSE:", "").strip()
                 stories_json = parts[1].strip()
                 
+                # Clean up the JSON part
+                if stories_json.startswith('```json'):
+                    stories_json = stories_json.replace('```json', '').replace('```', '').strip()
+                elif stories_json.startswith('```'):
+                    stories_json = stories_json.replace('```', '').strip()
+                
                 # Try to parse the updated user stories
                 import json
                 updated_user_stories = json.loads(stories_json)
+                
+                logger.info(f"Successfully parsed {len(updated_user_stories)} updated user stories")
                 
                 return jsonify({
                     "success": True, 
@@ -900,9 +947,16 @@ Important: The RESPONSE section should be in plain English, easy to read, and ex
                 })
             except (json.JSONDecodeError, IndexError) as e:
                 logger.warning(f"Failed to parse updated user stories: {e}")
+                logger.warning(f"Raw stories JSON: {stories_json}")
                 # Fall back to just returning the response
         
-        return jsonify({"success": True, "response": response})
+        # Clean up the response if it has the RESPONSE: prefix but no updates
+        if response_text.startswith("RESPONSE:"):
+            response_text = response_text.replace("RESPONSE:", "").strip()
+        
+        logger.info(f"User story chat final response: {response_text}")
+        
+        return jsonify({"success": True, "response": response_text})
         
     except Exception as e:
         logger.error(f"Error in user story chat: {str(e)}")

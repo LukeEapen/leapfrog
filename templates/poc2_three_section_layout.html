@@ -879,6 +879,10 @@
       gap: var(--spacing-xs);
       box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
       margin-left: var(--spacing-sm);
+      flex-shrink: 0;
+      box-sizing: border-box;
+      white-space: nowrap;
+      max-width: 140px;
     }
 
     .chat-apply-btn:hover {
@@ -908,6 +912,13 @@
       display: none;
       align-items: center;
       justify-content: space-between;
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+      overflow: hidden;
     }
 
     .chat-apply-container.show {
@@ -917,6 +928,12 @@
     .chat-apply-info {
       color: var(--text-secondary);
       font-size: 0.9rem;
+      flex: 1;
+      min-width: 0;
+      margin-right: var(--spacing-sm);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     /* Enhanced File Upload Styles */
@@ -1148,6 +1165,8 @@
       border-left: 1px solid var(--border-light);
       box-shadow: var(--shadow-xl);
       border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+      overflow: hidden;
+      box-sizing: border-box;
     }
 
     .chat-modal[style*="display: block"] {
@@ -1172,6 +1191,9 @@
       display: flex;
       flex-direction: column;
       color: #8B4513;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
     .chat-header {
@@ -1223,6 +1245,10 @@
       flex-direction: column;
       overflow: hidden;
       color: #8B4513;
+      position: relative;
+      height: 100%;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .chat-messages {
@@ -1263,6 +1289,10 @@
       border-top: 1px solid var(--border-light);
       display: flex;
       gap: var(--spacing-sm);
+      width: 100%;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      align-items: center;
     }
 
     .chat-input {
@@ -1272,6 +1302,8 @@
       padding: var(--spacing-md);
       outline: none;
       transition: border-color 0.3s ease;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .chat-input:focus {
@@ -1286,6 +1318,9 @@
       padding: var(--spacing-md);
       cursor: pointer;
       transition: all 0.3s ease;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      white-space: nowrap;
     }
 
     .chat-send-btn:hover {
@@ -1769,178 +1804,6 @@
     }
 
     /* Enhanced PRD Upload Modal with Full Features */
-  .chat-modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    right: 0;
-    top: 0;
-    width: 400px;
-    height: 100vh;
-    background: var(--surface-primary);
-    backdrop-filter: blur(20px);
-    border-left: 1px solid var(--border-light);
-    box-shadow: var(--shadow-xl);
-    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-  }
-
-  .chat-modal[style*="display: block"] {
-    display: flex !important;
-    flex-direction: column;
-    animation: slideIn 0.3s ease-out;
-  }
-
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-
-  .chat-modal-content {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .chat-header {
-    background: linear-gradient(135deg, var(--background-light) 0%, #3a3d47 100%);
-    color: #8B4513;
-    padding: var(--spacing-lg);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border-light);
-    position: relative;
-  }
-
-  .chat-header h4 {
-    color: #8B4513 !important;
-    margin: 0;
-  }
-
-  .chat-header::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
-  }
-
-  .chat-close {
-    background: rgba(139, 69, 19, 0.1);
-    border: 1px solid rgba(139, 69, 19, 0.2);
-    color: #8B4513;
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: var(--spacing-xs);
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-  }
-
-  .chat-close:hover {
-    background: rgba(139, 69, 19, 0.2);
-    transform: scale(1.1);
-  }
-
-  .chat-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: var(--spacing-lg);
-  }
-
-  .chat-message {
-    margin-bottom: var(--spacing-md);
-    display: flex;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
-  }
-
-  .chat-message.user {
-    flex-direction: row-reverse;
-  }
-
-  .chat-bubble {
-    background: var(--surface-secondary);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md);
-    max-width: 80%;
-    word-wrap: break-word;
-    color: #8B4513;
-  }
-
-  .chat-message.user .chat-bubble {
-    background: var(--primary-gradient);
-    color: #8B4513;
-    border-color: transparent;
-  }
-
-  .chat-input-area {
-    padding: var(--spacing-lg);
-    border-top: 1px solid var(--border-light);
-    display: flex;
-    gap: var(--spacing-sm);
-  }
-
-  .chat-input {
-    flex: 1;
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md);
-    outline: none;
-    transition: border-color 0.3s ease;
-    color: #8B4513;
-    background: white;
-  }
-
-  .chat-input::placeholder {
-    color: #A0522D;
-  }
-
-  .chat-input:focus {
-    border-color: #667eea;
-  }
-
-  .chat-send-btn {
-    background: var(--primary-gradient);
-    color: #8B4513;
-    border: none;
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-  }
-
-  .chat-send-btn:hover {
-    transform: scale(1.05);
-  }
-
-  .chat-send-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
 
   /* Loading dots animation for chat */
   .loading-dots {
@@ -2386,7 +2249,7 @@
             </div>
           </div>
         </div>
-        <div class="chat-apply-container show" id="epic-chat-apply-container">
+        <div class="chat-apply-container" id="epic-chat-apply-container">
           <div class="chat-apply-info">
             <span id="epic-apply-info">Ask me to modify your epics and I'll suggest changes for you to apply</span>
           </div>
@@ -2397,7 +2260,6 @@
         <div class="chat-input-area">
           <input type="text" class="chat-input" id="epic-chat-input" placeholder="Ask about epics... (Enter to send, Shift+Enter for new line, Esc to close)" onkeypress="handleEpicChatEnter(event)">
           <button class="chat-send-btn" onclick="sendEpicMessage()">Send</button>
-          <button class="chat-send-btn" onclick="testEnableApplyButton()" style="background: #28a745; margin-left: 5px; font-size: 12px;">🔧 Test Apply</button>
         </div>
       </div>
     </div>
@@ -2710,6 +2572,8 @@
   
   // Convert epics to radio button HTML format
   function convertEpicsToRadioFormat(epics) {
+    console.log('🔧 convertEpicsToRadioFormat called with:', epics);
+    
     if (!epics || epics.length === 0) {
       return '';
     }
@@ -2721,21 +2585,32 @@
       const epicId = epic.id || `epic-${index + 1}`;
       const isSelected = selectedEpicId === epicId;
       
+      // Ensure we have full content for display
+      const epicTitle = epic.title || `Epic ${index + 1}`;
+      const epicDescription = epic.description || epic.summary || 'No description available';
+      
+      console.log(`🔧 Processing epic ${index + 1}: ${epicTitle} (ID: ${epicId})`);
+      
       html += `
-        <div class="selection-card card-radio">
-          <input type="radio" id="epic_${epicId}" name="epic_selection" value="${epicId}" ${isSelected ? 'checked' : ''}>
-          <label for="epic_${epicId}">
-            <div class="epic-title">${epic.title || `Epic ${index + 1}`}</div>
-            <div class="epic-description">${epic.description || epic.summary || 'No description available'}</div>
-            <div class="epic-meta">
-              <span class="epic-priority priority-${priorityClass}">${priority}</span>
-              <span>ID: ${epicId}</span>
+        <div class="selection-card">
+          <div class="card-radio">
+            <input type="radio" id="epic_${epicId}" name="epic_selection" value="${epicId}" ${isSelected ? 'checked' : ''}>
+            <label for="epic_${epicId}"></label>
+          </div>
+          <div class="card-content">
+            <div class="card-header">
+              <h5 class="card-title">${epicTitle}</h5>
+              <div class="card-meta">
+                <span class="priority-badge priority-${priorityClass}">${priority}</span>
+              </div>
             </div>
-          </label>
+            <p class="card-description">${epicDescription}</p>
+          </div>
         </div>
       `;
     });
     
+    console.log('🔧 Generated radio HTML:', html.length, 'characters');
     return html;
   }
 
@@ -2772,6 +2647,21 @@
           showEpicSubmitButton();
         }
       });
+    });
+    
+    // Add click handlers to card content for easier selection
+    const selectionCards = epicsList.querySelectorAll('.selection-card');
+    selectionCards.forEach((card, index) => {
+      const cardContent = card.querySelector('.card-content');
+      if (cardContent) {
+        cardContent.addEventListener('click', function() {
+          const radio = card.querySelector('input[type="radio"]');
+          if (radio) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change'));
+          }
+        });
+      }
     });
     
     // Maintain current selection if available, otherwise auto-select the first epic
@@ -3328,54 +3218,27 @@
     document.getElementById('epic-chat-modal').style.display = 'none';
   }
 
-  // Test function to manually enable Apply button (for debugging)
-  function testEnableApplyButton() {
-    console.log('🔧 Test: Enabling Apply button manually');
-    if (!currentEpics || currentEpics.length === 0) {
-      addEpicChatMessage('⚠️ No epics available. Please generate epics first.', 'assistant');
-      return;
-    }
+  // Temporary test function for debugging - REMOVE AFTER TESTING
+  function debugEnableApply() {
+    console.log('🔧 DEBUG: Manually enabling Apply button for testing');
+    console.log('🔧 Current epics:', currentEpics);
+    console.log('🔧 isEpicSelectionMode:', isEpicSelectionMode);
     
-    pendingEpicChanges = currentEpics; // Set some test data
-    showEpicApplyButton('🔧 Test: Apply button has been enabled for testing');
-    addEpicChatMessage('🔧 Test: Apply button enabled manually. You can now test the Apply Changes functionality.', 'assistant');
-  }
-  
-  // Test function for Story Details Apply button
-  function testEnableStoryDetailsApplyButton() {
-    console.log('🔧 Test: Enabling Story Details Apply button manually');
-    if (!currentStoryDetails) {
-      const messagesContainer = document.getElementById('story-details-chat-messages');
-      if (messagesContainer) {
-        addStoryDetailsChatMessage('⚠️ No story details available. Please select a user story and load details first.', 'assistant');
-      }
-      return;
-    }
-    
-    pendingStoryDetailsChanges = currentStoryDetails; // Set some test data
-    showStoryDetailsApplyButton('🔧 Test: Apply button has been enabled for testing');
-    const messagesContainer = document.getElementById('story-details-chat-messages');
-    if (messagesContainer) {
-      addStoryDetailsChatMessage('🔧 Test: Apply button enabled manually. You can now test the Apply Changes functionality.', 'assistant');
-    }
-  }
-  
-  // Test function for User Story Apply button
-  function testEnableUserStoryApplyButton() {
-    console.log('🔧 Test: Enabling User Story Apply button manually');
-    if (!currentUserStories || currentUserStories.length === 0) {
-      const messagesContainer = document.getElementById('user-story-chat-messages');
-      if (messagesContainer) {
-        addUserStoryChatMessage('⚠️ No user stories available. Please select an epic and generate user stories first.', 'assistant');
-      }
-      return;
-    }
-    
-    pendingUserStoryChanges = currentUserStories; // Set some test data
-    showUserStoryApplyButton('🔧 Test: Apply button has been enabled for testing');
-    const messagesContainer = document.getElementById('user-story-chat-messages');
-    if (messagesContainer) {
-      addUserStoryChatMessage('🔧 Test: Apply button enabled manually. You can now test the Apply Changes functionality.', 'assistant');
+    if (currentEpics && currentEpics.length > 0) {
+      // Create test data with modified priorities
+      const testChanges = currentEpics.map((epic, index) => ({
+        ...epic,
+        priority: index % 2 === 0 ? 'Low' : 'Medium',
+        description: epic.description + ' [MODIFIED BY TEST]'
+      }));
+      
+      pendingEpicChanges = testChanges;
+      console.log('🔧 Test changes created:', testChanges);
+      
+      showEpicApplyButton('🔧 DEBUG: Apply button enabled for testing');
+      addEpicChatMessage('🔧 DEBUG: Apply button enabled manually. Test data will change priorities and add [MODIFIED BY TEST] to descriptions.', 'assistant');
+    } else {
+      addEpicChatMessage('⚠️ No epics available for testing.', 'assistant');
     }
   }
 
@@ -3415,6 +3278,9 @@
       return;
     }
 
+    console.log('🔧 Sending epic message:', message);
+    console.log('🔧 Current epics being sent:', currentEpics);
+
     // Add user message to chat
     addEpicChatMessage(message, 'user');
     input.value = '';
@@ -3443,24 +3309,20 @@
 
       const data = await response.json();
       
-      console.log('Epic chat response data:', data);
-      console.log('Updated epics in response:', data.updated_epics);
+      console.log('🔧 Epic chat response received:');
+      console.log('🔧 Full response data:', data);
+      console.log('🔧 Response text:', data.response);
+      console.log('🔧 Updated epics:', data.updated_epics);
+      console.log('🔧 Has updated_epics?', !!data.updated_epics);
+      console.log('🔧 Is array?', Array.isArray(data.updated_epics));
+      console.log('🔧 Array length:', data.updated_epics ? data.updated_epics.length : 'N/A');
       
       if (data.success) {
-        // Add the AI response - ensure it's properly formatted
+        // Add the AI response - it should already be in natural language from backend
         let aiResponse = data.response;
         
-        // Check if the response looks like JSON and try to format it better
-        if (aiResponse && (aiResponse.startsWith('{') || aiResponse.startsWith('['))) {
-          console.warn('🔧 Epic response appears to be JSON, attempting to format it better');
-          try {
-            const jsonData = JSON.parse(aiResponse);
-            // Convert JSON to a more readable format
-            aiResponse = `Here are the suggested changes:\n${JSON.stringify(jsonData, null, 2)}`;
-          } catch (e) {
-            console.warn('🔧 Could not parse Epic response as JSON, using as-is');
-          }
-        }
+        // Remove any JSON formatting detection - backend should handle this
+        console.log('🔧 Epic chat response received:', aiResponse);
         
         addEpicChatMessage(aiResponse, 'assistant');
         
@@ -3620,34 +3482,32 @@
 
       const data = await response.json();
       
-      console.log('User Story chat response data:', data);
-      console.log('Updated user stories in response:', data.updated_user_stories);
+      console.log('🔧 User Story chat response received:');
+      console.log('🔧 Full response data:', data);
+      console.log('🔧 Response text:', data.response);
+      console.log('🔧 Updated user stories:', data.updated_user_stories);
+      console.log('🔧 Has updated_user_stories?', !!data.updated_user_stories);
+      console.log('🔧 Is array?', Array.isArray(data.updated_user_stories));
+      console.log('🔧 Array length:', data.updated_user_stories ? data.updated_user_stories.length : 'N/A');
       
       if (data.success) {
-        // Add the AI response - ensure it's properly formatted
+        // Add the AI response - it should already be in natural language from backend
         let aiResponse = data.response;
         
-        // Check if the response looks like JSON and try to format it better
-        if (aiResponse && (aiResponse.startsWith('{') || aiResponse.startsWith('['))) {
-          console.warn('User Story response appears to be JSON, attempting to format it better');
-          try {
-            const jsonData = JSON.parse(aiResponse);
-            // Convert JSON to a more readable format
-            aiResponse = `Here are the suggested changes:\n${JSON.stringify(jsonData, null, 2)}`;
-          } catch (e) {
-            console.warn('Could not parse User Story response as JSON, using as-is');
-          }
-        }
+        // Remove any JSON formatting detection - backend should handle this
+        console.log('🔧 User Story chat response received:', aiResponse);
         
         addUserStoryChatMessage(aiResponse, 'assistant');
         
-        if (data.updated_user_stories) {
+        // Always check for updated_user_stories in the response, regardless of the format
+        if (data.updated_user_stories && Array.isArray(data.updated_user_stories) && data.updated_user_stories.length > 0) {
           pendingUserStoryChanges = data.updated_user_stories;
-          console.log('Pending user story changes set:', pendingUserStoryChanges);
+          console.log('🔧 Pending user story changes set:', pendingUserStoryChanges);
           showUserStoryApplyButton('AI has suggested changes to your user stories. Click Apply to update them.');
           addUserStoryChatMessage('💡 AI has suggested changes to your user stories. Review them and click "Apply Changes" when ready.', 'assistant');
         } else {
-          console.log('No updated_user_stories in response, Apply button will not be enabled');
+          console.log('🔧 No updated_user_stories in response, Apply button will not be enabled');
+          console.log('🔧 Response data structure:', data);
         }
       } else {
         addUserStoryChatMessage(`Sorry, there was an error: ${data.error || 'Unknown error'}`, 'assistant');
@@ -3915,10 +3775,9 @@
     if (pendingEpicChanges) {
       currentEpics = pendingEpicChanges;
       
-      // Determine how to display epics based on current mode
+      // If we were in selection mode, maintain it by converting to radio format
       if (isEpicSelectionMode) {
-        // We're in selection mode, so display with radio buttons
-        console.log('🔧 Converting to radio format for selection mode');
+        console.log('🔧 Was in selection mode, converting to radio format');
         const radioHTML = convertEpicsToRadioFormat(currentEpics);
         console.log('🔧 Generated radio HTML length:', radioHTML.length);
         displayEpicsHTML(radioHTML);
@@ -3937,12 +3796,19 @@
   }
 
   function applyUserStoryChanges() {
+    console.log('🔧 applyUserStoryChanges called');
+    console.log('🔧 pendingUserStoryChanges:', pendingUserStoryChanges);
+    
     if (pendingUserStoryChanges) {
       currentUserStories = pendingUserStoryChanges;
       displayUserStories(currentUserStories);
       pendingUserStoryChanges = null;
       hideUserStoryApplyButton();
       addUserStoryChatMessage('✅ User story changes have been applied successfully!', 'assistant');
+      console.log('🔧 User story changes applied successfully');
+    } else {
+      addUserStoryChatMessage('No pending changes to apply. Please ask me to modify your user stories first.', 'assistant');
+      console.log('🔧 No pending user story changes to apply');
     }
   }
 
@@ -3971,6 +3837,12 @@
       button.disabled = false;
       button.style.opacity = '1';
       button.style.backgroundColor = '#28a745'; // Green color for enabled state
+      
+      // Ensure the container is visible and properly positioned
+      container.style.display = 'flex';
+      container.style.position = 'relative';
+      container.style.zIndex = '1';
+      
       console.log('🔧 Apply button enabled successfully');
       console.log('🔧 Button state - disabled:', button.disabled, 'opacity:', button.style.opacity);
     } else {
@@ -3993,33 +3865,44 @@
   }
 
   function showUserStoryApplyButton(info = 'Changes suggested by AI are ready to apply') {
-    console.log('showUserStoryApplyButton called with info:', info);
+    console.log('🔧 showUserStoryApplyButton called with info:', info);
     const container = document.getElementById('user-story-chat-apply-container');
     const infoSpan = document.getElementById('user-story-apply-info');
     const button = document.getElementById('user-story-apply-btn');
     
-    console.log('User Story Apply Elements found:', { container: !!container, infoSpan: !!infoSpan, button: !!button });
+    console.log('🔧 User Story Apply Elements found:', { container: !!container, infoSpan: !!infoSpan, button: !!button });
     
     if (container && infoSpan && button) {
       infoSpan.textContent = info;
       container.classList.add('show');
       button.disabled = false;
       button.style.opacity = '1';
-      console.log('User Story Apply button enabled successfully');
+      button.style.backgroundColor = '#28a745'; // Green color for enabled state
+      
+      // Ensure the container is visible and properly positioned
+      container.style.display = 'flex';
+      container.style.position = 'relative';
+      container.style.zIndex = '1';
+      
+      console.log('🔧 User Story Apply button enabled successfully');
+      console.log('🔧 Button state - disabled:', button.disabled, 'opacity:', button.style.opacity);
     } else {
-      console.error('Failed to find required elements for User Story Apply button');
+      console.error('🔧 Failed to find required elements for User Story Apply button');
     }
   }
 
   function hideUserStoryApplyButton() {
+    console.log('🔧 hideUserStoryApplyButton called');
     const container = document.getElementById('user-story-chat-apply-container');
     const button = document.getElementById('user-story-apply-btn');
     const infoSpan = document.getElementById('user-story-apply-info');
     if (container && button && infoSpan) {
       button.disabled = true;
       button.style.opacity = '0.6';
+      button.style.backgroundColor = ''; // Reset to default color
       infoSpan.textContent = 'Ask me to modify user stories and I\'ll suggest changes for you to apply';
       container.classList.remove('show');
+      console.log('🔧 User Story Apply button disabled successfully');
     }
   }
 
