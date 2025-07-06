@@ -1,0 +1,164 @@
+2025-07-06 17:29:30,673 - __main__ - INFO - Three Section Backend Launcher started
+2025-07-06 17:29:30,674 - __main__ - INFO - Importing three section backend...
+2025-07-06 17:29:32,695 - root - INFO - JIRA client initialized successfully
+2025-07-06 17:29:41,376 - poc2_backend_processor_three_section - INFO - python-docx library available for DOCX file processing
+2025-07-06 17:29:41,376 - poc2_backend_processor_three_section - INFO - Initializing Vector Database and RAG components...
+2025-07-06 17:29:41,412 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-06 17:29:41,455 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+2025-07-06 17:29:41,455 - poc2_backend_processor_three_section - INFO - ChromaDB client initialized successfully
+2025-07-06 17:29:41,455 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-06 17:29:41,455 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-06 17:29:44,096 - poc2_backend_processor_three_section - INFO - Embedding model loaded successfully
+2025-07-06 17:29:44,096 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+2025-07-06 17:29:44,096 - poc2_backend_processor_three_section - INFO - ChromaDB collection initialized successfully
+2025-07-06 17:29:44,096 - poc2_backend_processor_three_section - INFO - Three Section Flask application starting up with performance optimizations...
+2025-07-06 17:29:44,096 - poc2_backend_processor_three_section - INFO - OpenAI API key configured: Yes
+2025-07-06 17:29:44,096 - poc2_backend_processor_three_section - INFO - Thread pool size: 4
+2025-07-06 17:29:44,096 - poc2_backend_processor_three_section - INFO - Cache size: 1000 items, TTL: 3600s
+2025-07-06 17:29:44,111 - __main__ - INFO - Backend module imported successfully
+2025-07-06 17:29:44,113 - __main__ - INFO - Starting Flask server on port 5001
+2025-07-06 17:29:44,140 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5001
+2025-07-06 17:29:44,140 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 17:29:44,145 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-06 17:29:44,268 - __main__ - INFO - Three Section Backend Launcher started
+2025-07-06 17:29:44,268 - __main__ - INFO - Importing three section backend...
+2025-07-06 17:29:45,509 - root - INFO - JIRA client initialized successfully
+2025-07-06 17:29:53,455 - poc2_backend_processor_three_section - INFO - python-docx library available for DOCX file processing
+2025-07-06 17:29:53,455 - poc2_backend_processor_three_section - INFO - Initializing Vector Database and RAG components...
+2025-07-06 17:29:53,490 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-06 17:29:53,542 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+2025-07-06 17:29:53,542 - poc2_backend_processor_three_section - INFO - ChromaDB client initialized successfully
+2025-07-06 17:29:53,542 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-06 17:29:53,542 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-06 17:29:56,066 - poc2_backend_processor_three_section - INFO - Embedding model loaded successfully
+2025-07-06 17:29:56,066 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+2025-07-06 17:29:56,066 - poc2_backend_processor_three_section - INFO - ChromaDB collection initialized successfully
+2025-07-06 17:29:56,081 - poc2_backend_processor_three_section - INFO - Three Section Flask application starting up with performance optimizations...
+2025-07-06 17:29:56,081 - poc2_backend_processor_three_section - INFO - OpenAI API key configured: Yes
+2025-07-06 17:29:56,082 - poc2_backend_processor_three_section - INFO - Thread pool size: 4
+2025-07-06 17:29:56,083 - poc2_backend_processor_three_section - INFO - Cache size: 1000 items, TTL: 3600s
+2025-07-06 17:29:56,086 - __main__ - INFO - Backend module imported successfully
+2025-07-06 17:29:56,088 - __main__ - INFO - Starting Flask server on port 5001
+2025-07-06 17:29:56,099 - werkzeug - WARNING -  * Debugger is active!
+2025-07-06 17:29:56,102 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-06 17:30:26,602 - poc2_backend_processor_three_section - INFO - Rendering three section layout
+2025-07-06 17:30:26,623 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2025 17:30:26] "GET /three-section HTTP/1.1" 200 -
+2025-07-06 17:30:27,475 - poc2_backend_processor_three_section - INFO - GET request to /three-section-get-epics
+2025-07-06 17:30:27,476 - poc2_backend_processor_three_section - INFO - No epics found in session - need to upload PRD first
+2025-07-06 17:30:27,477 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2025 17:30:27] "GET /three-section-get-epics HTTP/1.1" 200 -
+2025-07-06 17:30:44,336 - poc2_backend_processor_three_section - INFO - Processing enhanced document upload for three section layout
+2025-07-06 17:30:44,339 - poc2_backend_processor_three_section - INFO - PRD file: Yes
+2025-07-06 17:30:44,339 - poc2_backend_processor_three_section - INFO - Additional file: Yes
+2025-07-06 17:30:44,339 - poc2_backend_processor_three_section - INFO - Context provided: No
+2025-07-06 17:30:44,340 - poc2_backend_processor_three_section - INFO - Detected DOCX file: PRD_Document_2025-06-12 -User Stories-v1.docx
+2025-07-06 17:30:44,356 - poc2_backend_processor_three_section - INFO - Successfully extracted 11666 characters from DOCX file
+2025-07-06 17:30:44,356 - poc2_backend_processor_three_section - INFO - Creating PRD summary
+2025-07-06 17:30:50,844 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-06 17:30:50,846 - poc2_backend_processor_three_section - INFO - Created PRD summary: 11666 -> 2462 characters
+2025-07-06 17:30:50,846 - poc2_backend_processor_three_section - INFO - PRD processed: 11666 chars -> 2462 chars
+2025-07-06 17:30:50,847 - poc2_backend_processor_three_section - INFO - Successfully decoded file SystemMapping.csv using utf-8 encoding, length: 4072 characters
+2025-07-06 17:30:50,847 - poc2_backend_processor_three_section - INFO - Creating additional documents summary
+2025-07-06 17:30:57,940 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-06 17:30:57,941 - poc2_backend_processor_three_section - INFO - Created Additional Documents summary: 4098 -> 2283 characters
+2025-07-06 17:30:57,942 - poc2_backend_processor_three_section - INFO - Additional docs processed: 4098 chars -> 2283 chars
+2025-07-06 17:30:57,945 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2025 17:30:57] "POST /three-section-document-upload HTTP/1.1" 200 -
+2025-07-06 17:31:05,963 - poc2_backend_processor_three_section - INFO - Generating epics from processed documents
+2025-07-06 17:31:05,963 - poc2_backend_processor_three_section - INFO - Processing: PRD(2462 chars), Additional(2283 chars), Context(0 chars)
+2025-07-06 17:31:05,964 - poc2_backend_processor_three_section - INFO - Enhanced context length: 6880 characters
+2025-07-06 17:31:05,964 - poc2_backend_processor_three_section - INFO - Starting optimized assistant interaction: poc2_agent2_epic_generator
+2025-07-06 17:31:05,965 - poc2_backend_processor_three_section - INFO - Generating epics from processed documents
+2025-07-06 17:31:05,965 - poc2_backend_processor_three_section - INFO - Processing: PRD(2462 chars), Additional(2283 chars), Context(0 chars)
+2025-07-06 17:31:05,966 - poc2_backend_processor_three_section - INFO - Loaded system instructions from agents\poc2_agent2_epic_generator
+2025-07-06 17:31:05,966 - poc2_backend_processor_three_section - INFO - Enhanced context length: 6880 characters
+2025-07-06 17:31:05,967 - poc2_backend_processor_three_section - INFO - Starting optimized assistant interaction: poc2_agent2_epic_generator
+2025-07-06 17:31:05,968 - poc2_backend_processor_three_section - INFO - Loaded system instructions from agents\poc2_agent2_epic_generator
+2025-07-06 17:31:13,165 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-06 17:31:13,168 - poc2_backend_processor_three_section - INFO - Assistant response completed in 7.20 seconds
+2025-07-06 17:31:13,422 - poc2_backend_processor_three_section - INFO - Token usage - Prompt: 2,033, Response: 412, Total: 2,445
+2025-07-06 17:31:13,423 - poc2_backend_processor_three_section - INFO - Parsing epics response into structured format
+2025-07-06 17:31:13,423 - poc2_backend_processor_three_section - INFO - Successfully parsed JSON response with 5 epics
+2025-07-06 17:31:13,423 - poc2_backend_processor_three_section - INFO - Generated 5 epics successfully
+2025-07-06 17:31:13,425 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2025 17:31:13] "POST /three-section-generate-epics HTTP/1.1" 200 -
+2025-07-06 17:31:13,490 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-06 17:31:13,492 - poc2_backend_processor_three_section - INFO - Assistant response completed in 7.53 seconds
+2025-07-06 17:31:13,493 - poc2_backend_processor_three_section - INFO - Token usage - Prompt: 2,033, Response: 426, Total: 2,459
+2025-07-06 17:31:13,493 - poc2_backend_processor_three_section - INFO - Parsing epics response into structured format
+2025-07-06 17:31:13,493 - poc2_backend_processor_three_section - INFO - Successfully parsed JSON response with 5 epics
+2025-07-06 17:31:13,495 - poc2_backend_processor_three_section - INFO - Generated 5 epics successfully
+2025-07-06 17:31:13,497 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2025 17:31:13] "POST /three-section-generate-epics HTTP/1.1" 200 -
+2025-07-06 17:31:17,521 - poc2_backend_processor_three_section - INFO - Processing epic approval for three section layout
+2025-07-06 17:31:17,522 - poc2_backend_processor_three_section - INFO - Processing 1 selected epics
+2025-07-06 17:31:17,522 - poc2_backend_processor_three_section - INFO - Starting optimized assistant interaction: poc2_agent3_basic_user_story
+2025-07-06 17:31:17,523 - poc2_backend_processor_three_section - INFO - Loaded system instructions from agents\poc2_agent3_basic_user_story
+2025-07-06 17:31:21,906 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-06 17:31:21,908 - poc2_backend_processor_three_section - INFO - Assistant response completed in 4.39 seconds
+2025-07-06 17:31:21,910 - poc2_backend_processor_three_section - INFO - Token usage - Prompt: 1,701, Response: 242, Total: 1,943
+2025-07-06 17:31:21,910 - poc2_backend_processor_three_section - INFO - Generated user stories: [
+  {
+    "story_id": "US-1",
+    "name": "Aggregate end-of-day data for charged-off accounts",
+    "priority": "High",
+    "systems": [
+      "Customer data repository",
+      "Financial ledger initializer"
+    ]
+  },
+  {
+    "story_id": "US-2",
+    "name": "Integrate data processing with internal credit systems",
+    "priority": "High",
+    "systems": [
+      "Credit decision engine",
+      "Credit bureau interface"
+    ]
+  },
+  {
+    "story_id": "US-3",
+    "name": "Trigger workflows in risk and fraud systems",
+    "priority": "High",
+    "systems": [
+      "Fraud detection platform",
+      "Credit behavior monitor"
+    ]
+  },
+  {
+    "story_id": "US-4",
+    "name": "Ensure secure data handling processes",
+    "priority": "High",
+    "systems": [
+      "Application review system",
+      "Notification delivery engine"
+    ]
+  },
+  {
+    "story_id": "US-5",
+    "name": "Support timely risk management decisions",
+    "priority": "High",
+    "systems": [
+      "Customer acquisition platform",
+      "Credit decision engine"
+    ]
+  }
+]
+2025-07-06 17:31:21,911 - poc2_backend_processor_three_section - INFO - Generated 5 user stories
+2025-07-06 17:31:21,914 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2025 17:31:21] "POST /three-section-approve-epics HTTP/1.1" 200 -
+2025-07-06 17:31:49,798 - poc2_backend_processor_three_section - INFO - Getting user story details for three section layout
+2025-07-06 17:31:49,800 - poc2_backend_processor_three_section - INFO - Processing story details for: Ensure secure data handling processes
+2025-07-06 17:31:49,801 - poc2_backend_processor_three_section - INFO - Starting optimized assistant interaction: poc2_agent4_acceptanceCriteria_gen
+2025-07-06 17:31:49,801 - poc2_backend_processor_three_section - INFO - Loaded system instructions from agents\poc2_agent4_acceptanceCriteria_gen
+2025-07-06 17:31:52,843 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-06 17:31:52,845 - poc2_backend_processor_three_section - INFO - Assistant response completed in 3.04 seconds
+2025-07-06 17:31:52,848 - poc2_backend_processor_three_section - INFO - Token usage - Prompt: 540, Response: 238, Total: 778
+2025-07-06 17:31:52,849 - poc2_backend_processor_three_section - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-06 17:31:52,851 - poc2_backend_processor_three_section - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-06 17:31:54,957 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-06 17:31:54,960 - poc2_backend_processor_three_section - INFO - Assistant response completed in 2.11 seconds
+2025-07-06 17:31:54,962 - poc2_backend_processor_three_section - INFO - Token usage - Prompt: 210, Response: 129, Total: 339
+2025-07-06 17:31:54,963 - poc2_backend_processor_three_section - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-06 17:31:54,966 - poc2_backend_processor_three_section - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-06 17:31:58,415 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-06 17:31:58,416 - poc2_backend_processor_three_section - INFO - Assistant response completed in 3.45 seconds
+2025-07-06 17:31:58,417 - poc2_backend_processor_three_section - INFO - Token usage - Prompt: 275, Response: 258, Total: 533
+2025-07-06 17:31:58,417 - poc2_backend_processor_three_section - INFO - Story details generated successfully
+2025-07-06 17:31:58,419 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2025 17:31:58] "POST /three-section-user-story-details HTTP/1.1" 200 -

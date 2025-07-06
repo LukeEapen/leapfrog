@@ -3907,21 +3907,29 @@
   }
 
   function showStoryDetailsApplyButton(info = 'Changes suggested by AI are ready to apply') {
-    console.log('showStoryDetailsApplyButton called with info:', info);
+    console.log('🔧 showStoryDetailsApplyButton called with info:', info);
     const container = document.getElementById('story-details-chat-apply-container');
     const infoSpan = document.getElementById('story-details-apply-info');
     const button = document.getElementById('story-details-apply-btn');
     
-    console.log('Story Details Apply Elements found:', { container: !!container, infoSpan: !!infoSpan, button: !!button });
+    console.log('🔧 Story Details Apply Elements found:', { container: !!container, infoSpan: !!infoSpan, button: !!button });
     
     if (container && infoSpan && button) {
       infoSpan.textContent = info;
       container.classList.add('show');
       button.disabled = false;
       button.style.opacity = '1';
-      console.log('Story Details Apply button enabled successfully');
+      button.style.backgroundColor = '#28a745'; // Green color for enabled state
+      
+      // Ensure the container is visible and properly positioned
+      container.style.display = 'flex';
+      container.style.position = 'relative';
+      container.style.zIndex = '1';
+      
+      console.log('🔧 Story Details Apply button enabled successfully');
+      console.log('🔧 Button state - disabled:', button.disabled, 'opacity:', button.style.opacity);
     } else {
-      console.error('Failed to find required elements for Story Details Apply button');
+      console.error('🔧 Failed to find required elements for Story Details Apply button');
     }
   }
 

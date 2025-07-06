@@ -978,53 +978,83 @@ def three_section_story_details_chat():
         if not message:
             return jsonify({"success": False, "error": "No message provided"})
         
-        # Create context based on section
-        if section == 'criteria':
-            agent_file = "poc2_agent4_acceptanceCriteria_gen"
-            context = f"Acceptance Criteria: {story_details.get('acceptance_criteria', [])}"
-        elif section == 'requirements':
-            agent_file = "poc2_traceability_agent"
-            context = f"Tagged Requirements: {story_details.get('tagged_requirements', [])}"
-        elif section == 'traceability':
-            agent_file = "poc2_traceability_agent"
-            context = f"Traceability Matrix: {story_details.get('traceability_matrix', 'Not available')}"
-        else:
-            agent_file = "poc2_agent5_description"
-            context = f"Story Description: {user_story.get('description', 'No description')}"
+        # Create detailed context for story details chat
+        acceptance_criteria = story_details.get('acceptance_criteria', [])
+        tagged_requirements = story_details.get('tagged_requirements', [])
+        traceability_matrix = story_details.get('traceability_matrix', 'Not available')
         
-        chat_prompt = f"""Epic: {epic.get('title', 'Unknown')}
-User Story: {user_story.get('title', 'Unknown')}
-Story Description: {user_story.get('description', 'No description')}
-
-Current {section.title()}:
-{context}
-
-User Message: {message}
-
-You are a story details refinement assistant. When the user asks to modify, update, or change story details, you should:
-1. Provide a helpful response explaining what changes you're making in natural language
-2. Return the modified story details in a structured format
-
-If the user wants to modify story details, respond with:
-RESPONSE: [Your explanation of changes in natural language - no JSON formatting in this section]
-UPDATED_STORY_DETAILS: [JSON object with modified story details structure matching the input]
-
-If the user is just asking questions without wanting modifications, just provide a helpful response in natural language.
-
-Important: The RESPONSE section should be in plain English, easy to read, and explain what you're doing. Do not put JSON or technical formatting in the RESPONSE section."""
+        criteria_text = "\n".join([f"- {criteria}" for criteria in acceptance_criteria]) if acceptance_criteria else "No acceptance criteria defined yet"
+        requirements_text = "\n".join([f"- {req}" for req in tagged_requirements]) if tagged_requirements else "No tagged requirements defined yet"
         
-        response = ask_assistant_from_file_optimized(agent_file, chat_prompt)
+        chat_prompt = f"""You are a helpful story details assistant. You help users refine and improve story details, acceptance criteria, tagged requirements, and traceability information in a conversational way.
+
+Current Context:
+Epic: {epic.get('title', 'Unknown')}
+Epic Description: {epic.get('description', 'No description')}
+
+User Story: {user_story.get('title', user_story.get('name', 'Unknown'))}
+User Story Description: {user_story.get('description', user_story.get('summary', 'No description'))}
+
+Current Story Details:
+Acceptance Criteria:
+{criteria_text}
+
+Tagged Requirements:
+{requirements_text}
+
+Traceability Matrix:
+{traceability_matrix}
+
+User is specifically asking about: {section}
+User Message: "{message}"
+
+Instructions:
+- If the user wants to modify, update, or change story details, provide a helpful response in natural language explaining what changes you're making
+- Then provide the updated story details in a specific format
+- If the user is just asking questions, provide helpful information about the story details
+
+When making changes, respond in this EXACT format:
+
+RESPONSE: [Your explanation in natural language - be conversational and helpful. Explain what changes you're making and why they're beneficial. Do not include any JSON or technical formatting here.]
+
+UPDATED_STORY_DETAILS: [JSON object with the modified story details, maintaining the same structure as the input: {{"acceptance_criteria": [...], "tagged_requirements": [...], "traceability_matrix": "..."}}]
+
+If you're not making changes, just provide a helpful conversational response without the UPDATED_STORY_DETAILS section.
+
+Examples of natural language responses:
+- "I've refined the acceptance criteria to be more specific..."
+- "I've added additional requirements based on your feedback..."
+- "I've updated the traceability matrix to better reflect..."
+- "I've reorganized the criteria to improve clarity..."
+
+Remember: Keep the RESPONSE section conversational and in plain English. Save the technical JSON format only for the UPDATED_STORY_DETAILS section."""
         
-        # Check if the response contains updated story details
+        # Use the epic generator agent as it's more flexible for conversational responses
+        response = ask_assistant_from_file_optimized("poc2_agent2_epic_generator", chat_prompt)
+        
+        logger.info(f"Story details chat raw response: {response}")
+        
+        # Parse the response to extract natural language and updated story details
         updated_story_details = None
+        response_text = response
+        
         if "UPDATED_STORY_DETAILS:" in response:
             try:
                 parts = response.split("UPDATED_STORY_DETAILS:")
                 response_text = parts[0].replace("RESPONSE:", "").strip()
                 details_json = parts[1].strip()
                 
+                # Clean up the JSON part
+                if details_json.startswith('```json'):
+                    details_json = details_json.replace('```json', '').replace('```', '').strip()
+                elif details_json.startswith('```'):
+                    details_json = details_json.replace('```', '').strip()
+                
                 # Try to parse the updated story details
+                import json
                 updated_story_details = json.loads(details_json)
+                
+                logger.info(f"Successfully parsed updated story details")
                 
                 return jsonify({
                     "success": True, 
@@ -1033,9 +1063,16 @@ Important: The RESPONSE section should be in plain English, easy to read, and ex
                 })
             except (json.JSONDecodeError, IndexError) as e:
                 logger.warning(f"Failed to parse updated story details: {e}")
+                logger.warning(f"Raw details JSON: {details_json}")
                 # Fall back to just returning the response
         
-        return jsonify({"success": True, "response": response})
+        # Clean up the response if it has the RESPONSE: prefix but no updates
+        if response_text.startswith("RESPONSE:"):
+            response_text = response_text.replace("RESPONSE:", "").strip()
+        
+        logger.info(f"Story details chat final response: {response_text}")
+        
+        return jsonify({"success": True, "response": response_text})
         
     except Exception as e:
         logger.error(f"Error in story details chat: {str(e)}")
