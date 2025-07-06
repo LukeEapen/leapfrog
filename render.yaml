@@ -1,6 +1,11 @@
 services:
   - type: web
-    name: openai-assistant-ui
+    name: three-section-jira-ui
     runtime: python
-    buildCommand: ""
-    startCommand: python app.py
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python launch_three_section.py"
+    env:
+      - key: FLASK_ENV
+        value: production
+      - key: PORT
+        sync: false

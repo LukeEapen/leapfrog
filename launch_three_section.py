@@ -101,12 +101,15 @@ def main():
     
     # Get configuration
     port = int(os.environ.get("PORT", 5001))
-    debug = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
+    debug = os.environ.get("FLASK_ENV", "development").lower() != "production"
+    host = "0.0.0.0" if os.environ.get("FLASK_ENV") == "production" else "127.0.0.1"
     
     print(f"📊 Configuration:")
     print(f"   Port: {port}")
     print(f"   Debug: {debug}")
-    print(f"   URL: http://localhost:{port}/three-section")
+    print(f"   Host: {host}")
+    print(f"   Environment: {os.environ.get('FLASK_ENV', 'development')}")
+    print(f"   URL: http://{host}:{port}/three-section")
     
     # Start server with enhanced error handling
     try:
@@ -119,7 +122,7 @@ def main():
         print("⏹️  Press Ctrl+C to stop the server")
         print("=" * 40)
         
-        backend.app.run(host="0.0.0.0", port=port, debug=debug)
+        backend.app.run(host=host, port=port, debug=debug)
         
     except KeyboardInterrupt:
         logger.info("Server stopped by user (Ctrl+C)")

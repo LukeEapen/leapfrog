@@ -798,9 +798,40 @@ def three_section_epic_chat():
 
 User Message: {message}
 
-Provide helpful guidance about the epics. If the user wants to modify epics, provide suggestions but don't make changes unless explicitly requested."""
-        
+You are an epic refinement assistant. When the user asks to modify, update, or change epics, you should:
+1. Provide a helpful response explaining what changes you're making in natural language
+2. Return the modified epics in a structured format
+
+If the user wants to modify epics, respond with:
+RESPONSE: [Your explanation of changes in natural language - no JSON formatting in this section]
+UPDATED_EPICS: [JSON array of modified epics with same structure as input]
+
+If the user is just asking questions without wanting modifications, just provide a helpful response in natural language.
+
+Important: The RESPONSE section should be in plain English, easy to read, and explain what you're doing. Do not put JSON or technical formatting in the RESPONSE section."""
+
         response = ask_assistant_from_file_optimized("poc2_agent2_epic_generator", chat_prompt)
+        
+        # Check if the response contains updated epics
+        updated_epics = None
+        if "UPDATED_EPICS:" in response:
+            try:
+                parts = response.split("UPDATED_EPICS:")
+                response_text = parts[0].replace("RESPONSE:", "").strip()
+                epics_json = parts[1].strip()
+                
+                # Try to parse the updated epics
+                import json
+                updated_epics = json.loads(epics_json)
+                
+                return jsonify({
+                    "success": True, 
+                    "response": response_text,
+                    "updated_epics": updated_epics
+                })
+            except (json.JSONDecodeError, IndexError) as e:
+                logger.warning(f"Failed to parse updated epics: {e}")
+                # Fall back to just returning the response
         
         return jsonify({"success": True, "response": response})
         
@@ -836,9 +867,40 @@ Current User Stories:
 
 User Message: {message}
 
-Provide helpful guidance about the user stories. If the user wants to modify stories, provide suggestions but don't make changes unless explicitly requested."""
+You are a user story refinement assistant. When the user asks to modify, update, or change user stories, you should:
+1. Provide a helpful response explaining what changes you're making in natural language
+2. Return the modified user stories in a structured format
+
+If the user wants to modify user stories, respond with:
+RESPONSE: [Your explanation of changes in natural language - no JSON formatting in this section]
+UPDATED_USER_STORIES: [JSON array of modified user stories with same structure as input]
+
+If the user is just asking questions without wanting modifications, just provide a helpful response in natural language.
+
+Important: The RESPONSE section should be in plain English, easy to read, and explain what you're doing. Do not put JSON or technical formatting in the RESPONSE section."""
         
         response = ask_assistant_from_file_optimized("poc2_agent3_basic_user_story", chat_prompt)
+        
+        # Check if the response contains updated user stories
+        updated_user_stories = None
+        if "UPDATED_USER_STORIES:" in response:
+            try:
+                parts = response.split("UPDATED_USER_STORIES:")
+                response_text = parts[0].replace("RESPONSE:", "").strip()
+                stories_json = parts[1].strip()
+                
+                # Try to parse the updated user stories
+                import json
+                updated_user_stories = json.loads(stories_json)
+                
+                return jsonify({
+                    "success": True, 
+                    "response": response_text,
+                    "updated_user_stories": updated_user_stories
+                })
+            except (json.JSONDecodeError, IndexError) as e:
+                logger.warning(f"Failed to parse updated user stories: {e}")
+                # Fall back to just returning the response
         
         return jsonify({"success": True, "response": response})
         
@@ -885,9 +947,39 @@ Current {section.title()}:
 
 User Message: {message}
 
-Provide helpful guidance about this aspect of the story. If the user wants to modify content, provide suggestions but don't make changes unless explicitly requested."""
+You are a story details refinement assistant. When the user asks to modify, update, or change story details, you should:
+1. Provide a helpful response explaining what changes you're making in natural language
+2. Return the modified story details in a structured format
+
+If the user wants to modify story details, respond with:
+RESPONSE: [Your explanation of changes in natural language - no JSON formatting in this section]
+UPDATED_STORY_DETAILS: [JSON object with modified story details structure matching the input]
+
+If the user is just asking questions without wanting modifications, just provide a helpful response in natural language.
+
+Important: The RESPONSE section should be in plain English, easy to read, and explain what you're doing. Do not put JSON or technical formatting in the RESPONSE section."""
         
         response = ask_assistant_from_file_optimized(agent_file, chat_prompt)
+        
+        # Check if the response contains updated story details
+        updated_story_details = None
+        if "UPDATED_STORY_DETAILS:" in response:
+            try:
+                parts = response.split("UPDATED_STORY_DETAILS:")
+                response_text = parts[0].replace("RESPONSE:", "").strip()
+                details_json = parts[1].strip()
+                
+                # Try to parse the updated story details
+                updated_story_details = json.loads(details_json)
+                
+                return jsonify({
+                    "success": True, 
+                    "response": response_text,
+                    "updated_story_details": updated_story_details
+                })
+            except (json.JSONDecodeError, IndexError) as e:
+                logger.warning(f"Failed to parse updated story details: {e}")
+                # Fall back to just returning the response
         
         return jsonify({"success": True, "response": response})
         
