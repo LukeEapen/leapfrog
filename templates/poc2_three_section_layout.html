@@ -973,7 +973,7 @@
     .form-control[type="file"] {
       border: 2px dashed var(--border-medium);
       border-radius: var(--radius-lg);
-      padding: var(--spacing-xl);
+      padding: var(--spacing-lg);
       background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary) 100%);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       color: var(--text-primary);
@@ -985,6 +985,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      margin-bottom: var(--spacing-md);
     }
 
     .form-control[type="file"]::-webkit-file-upload-button {
@@ -993,12 +994,12 @@
       border: none;
       padding: 8px 16px;
       border-radius: var(--radius-md);
-      margin: 0px 16px 16px 8px;
+      margin: 8px 16px 8px 8px;
       cursor: pointer;
       font-weight: 500;
       transition: all 0.3s ease;
       display: inline-block;
-      vertical-align: top;
+      vertical-align: middle;
     }
 
     .form-control[type="file"]::-webkit-file-upload-button:hover {
@@ -2219,7 +2220,22 @@
     .selection-card .card-title,
     .epic-item .card-title,
     .card-title,
-    h5.card-title {
+    h5.card-title,
+    .selection-card h5.card-title,
+    .epic-item h5.card-title,
+    .card-content h5.card-title,
+    .card-header h5.card-title,
+    div.selection-card div.card-content div.card-header h5.card-title {
+      color: var(--primary-red) !important;
+    }
+
+    /* Additional Epic Title Overrides for Bootstrap */
+    h5 {
+      color: inherit;
+    }
+    
+    .selection-card h5,
+    .epic-item h5 {
       color: var(--primary-red) !important;
     }
   </style>
