@@ -988,18 +988,24 @@
       margin-bottom: var(--spacing-md);
     }
 
-    .form-control[type="file"]::-webkit-file-upload-button {
+   .form-control[type="file"]::-webkit-file-upload-button {
       background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
       color: white;
       border: none;
-      padding: 8px 16px;
+      padding: 4px 8px;
       border-radius: var(--radius-md);
-      margin: 8px 16px 8px 8px;
+      margin: 2px 6px 2px 2px;
       cursor: pointer;
       font-weight: 500;
+      font-size: 0.8rem;
       transition: all 0.3s ease;
       display: inline-block;
       vertical-align: middle;
+      min-width: 80px;
+      max-width: 100px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
     }
 
     .form-control[type="file"]::-webkit-file-upload-button:hover {

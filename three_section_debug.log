@@ -189,3 +189,68 @@
 2025-07-07 11:11:20,087 - poc2_backend_processor_three_section - INFO - Token usage - Prompt: 273, Response: 340, Total: 613
 2025-07-07 11:11:20,087 - poc2_backend_processor_three_section - INFO - Story details generated successfully
 2025-07-07 11:11:20,089 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 11:11:20] "POST /three-section-user-story-details HTTP/1.1" 200 -
+2025-07-07 13:19:31,345 - __main__ - INFO - Three Section Backend Launcher started
+2025-07-07 13:19:31,345 - __main__ - INFO - Importing three section backend...
+2025-07-07 13:19:33,247 - root - INFO - JIRA client initialized successfully
+2025-07-07 13:19:42,578 - poc2_backend_processor_three_section - INFO - python-docx library available for DOCX file processing
+2025-07-07 13:19:42,579 - poc2_backend_processor_three_section - INFO - Initializing Vector Database and RAG components...
+2025-07-07 13:19:42,609 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-07 13:19:42,657 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+2025-07-07 13:19:42,657 - poc2_backend_processor_three_section - INFO - ChromaDB client initialized successfully
+2025-07-07 13:19:42,660 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-07 13:19:42,660 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-07 13:19:45,420 - poc2_backend_processor_three_section - INFO - Embedding model loaded successfully
+2025-07-07 13:19:45,422 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+2025-07-07 13:19:45,427 - poc2_backend_processor_three_section - INFO - ChromaDB collection initialized successfully
+2025-07-07 13:19:45,430 - poc2_backend_processor_three_section - INFO - Three Section Flask application starting up with performance optimizations...
+2025-07-07 13:19:45,431 - poc2_backend_processor_three_section - INFO - OpenAI API key configured: Yes
+2025-07-07 13:19:45,432 - poc2_backend_processor_three_section - INFO - Thread pool size: 4
+2025-07-07 13:19:45,432 - poc2_backend_processor_three_section - INFO - Cache size: 1000 items, TTL: 3600s
+2025-07-07 13:19:45,436 - __main__ - INFO - Backend module imported successfully
+2025-07-07 13:19:45,439 - __main__ - INFO - Starting Flask server on port 5001
+2025-07-07 13:19:45,471 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5001
+2025-07-07 13:19:45,471 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-07 13:19:45,488 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-07 13:19:45,638 - __main__ - INFO - Three Section Backend Launcher started
+2025-07-07 13:19:45,639 - __main__ - INFO - Importing three section backend...
+2025-07-07 13:19:47,093 - root - INFO - JIRA client initialized successfully
+2025-07-07 13:19:56,106 - poc2_backend_processor_three_section - INFO - python-docx library available for DOCX file processing
+2025-07-07 13:19:56,106 - poc2_backend_processor_three_section - INFO - Initializing Vector Database and RAG components...
+2025-07-07 13:19:56,136 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-07 13:19:56,186 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+2025-07-07 13:19:56,186 - poc2_backend_processor_three_section - INFO - ChromaDB client initialized successfully
+2025-07-07 13:19:56,189 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-07 13:19:56,189 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-07 13:19:58,937 - poc2_backend_processor_three_section - INFO - Embedding model loaded successfully
+2025-07-07 13:19:58,938 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+2025-07-07 13:19:58,941 - poc2_backend_processor_three_section - INFO - ChromaDB collection initialized successfully
+2025-07-07 13:19:58,943 - poc2_backend_processor_three_section - INFO - Three Section Flask application starting up with performance optimizations...
+2025-07-07 13:19:58,943 - poc2_backend_processor_three_section - INFO - OpenAI API key configured: Yes
+2025-07-07 13:19:58,943 - poc2_backend_processor_three_section - INFO - Thread pool size: 4
+2025-07-07 13:19:58,944 - poc2_backend_processor_three_section - INFO - Cache size: 1000 items, TTL: 3600s
+2025-07-07 13:19:58,946 - __main__ - INFO - Backend module imported successfully
+2025-07-07 13:19:58,948 - __main__ - INFO - Starting Flask server on port 5001
+2025-07-07 13:19:58,962 - werkzeug - WARNING -  * Debugger is active!
+2025-07-07 13:19:58,965 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-07 13:20:13,523 - poc2_backend_processor_three_section - INFO - Rendering three section layout
+2025-07-07 13:20:13,546 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 13:20:13] "GET /three-section HTTP/1.1" 200 -
+2025-07-07 13:20:14,178 - poc2_backend_processor_three_section - INFO - GET request to /three-section-get-epics
+2025-07-07 13:20:14,179 - poc2_backend_processor_three_section - INFO - No epics found in session - need to upload PRD first
+2025-07-07 13:20:14,180 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 13:20:14] "GET /three-section-get-epics HTTP/1.1" 200 -
+2025-07-07 13:20:44,358 - poc2_backend_processor_three_section - INFO - Processing enhanced document upload for three section layout
+2025-07-07 13:20:44,360 - poc2_backend_processor_three_section - INFO - PRD file: Yes
+2025-07-07 13:20:44,360 - poc2_backend_processor_three_section - INFO - Additional file: Yes
+2025-07-07 13:20:44,360 - poc2_backend_processor_three_section - INFO - Context provided: No
+2025-07-07 13:20:44,360 - poc2_backend_processor_three_section - INFO - Detected DOCX file: PRD_Document_2025-06-12 -User Stories-v1.docx
+2025-07-07 13:20:44,383 - poc2_backend_processor_three_section - INFO - Successfully extracted 11666 characters from DOCX file
+2025-07-07 13:20:44,383 - poc2_backend_processor_three_section - INFO - Creating PRD summary
+2025-07-07 13:20:53,772 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-07 13:20:53,777 - poc2_backend_processor_three_section - INFO - Created PRD summary: 11666 -> 2571 characters
+2025-07-07 13:20:53,777 - poc2_backend_processor_three_section - INFO - PRD processed: 11666 chars -> 2571 chars
+2025-07-07 13:20:53,778 - poc2_backend_processor_three_section - INFO - Successfully decoded file SystemMapping.csv using utf-8 encoding, length: 4072 characters
+2025-07-07 13:20:53,778 - poc2_backend_processor_three_section - INFO - Creating additional documents summary
+2025-07-07 13:21:02,039 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-07 13:21:02,040 - poc2_backend_processor_three_section - INFO - Created Additional Documents summary: 4098 -> 2190 characters
+2025-07-07 13:21:02,040 - poc2_backend_processor_three_section - INFO - Additional docs processed: 4098 chars -> 2190 chars
+2025-07-07 13:21:02,046 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 13:21:02] "POST /three-section-document-upload HTTP/1.1" 200 -
