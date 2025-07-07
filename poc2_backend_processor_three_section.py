@@ -554,21 +554,50 @@ def three_section_user_story_details():
 Story: {story_name}
 Description: {story_description}
 
-Generate 4-6 specific, testable acceptance criteria in Given-When-Then format.
-Return as a JSON array of strings."""
+Generate 4-6 specific, testable acceptance criteria in Given-When-Then format for this specific story.
+The criteria should be directly related to the story name and description provided.
+
+IMPORTANT: Return ONLY a JSON array of strings, nothing else. Format:
+["Given...", "Given...", "Given..."]
+
+Do not include any explanatory text, just the JSON array."""
         
+        logger.info(f"Sending criteria prompt to agent: {criteria_prompt}")
         criteria_response = ask_assistant_from_file_optimized("poc2_agent4_acceptanceCriteria_gen", criteria_prompt)
+        logger.info(f"Agent criteria response: {criteria_response}")
         
         try:
+            # Try to parse as JSON first
             acceptance_criteria = json.loads(criteria_response)
             if not isinstance(acceptance_criteria, list):
                 acceptance_criteria = [criteria_response]
         except json.JSONDecodeError:
-            acceptance_criteria = [
-                "Given a user is on the login page, when they enter valid credentials, then they should be authenticated successfully",
-                "Given a user enters invalid credentials, when they attempt to login, then they should see an appropriate error message",
-                "Given a user is authenticated, when they access protected resources, then they should have appropriate permissions"
-            ]
+            # If JSON parsing fails, try to extract from the response
+            logger.warning(f"JSON parsing failed for criteria response: {criteria_response}")
+            
+            # Try to find JSON in the response
+            if 'acceptance_criteria' in criteria_response:
+                import re
+                json_match = re.search(r'\{.*"acceptance_criteria".*\}', criteria_response, re.DOTALL)
+                if json_match:
+                    try:
+                        parsed_json = json.loads(json_match.group())
+                        acceptance_criteria = parsed_json.get('acceptance_criteria', [])
+                    except:
+                        acceptance_criteria = []
+                else:
+                    acceptance_criteria = []
+            else:
+                acceptance_criteria = []
+            
+            # Generate story-specific fallback criteria if parsing completely fails
+            if not acceptance_criteria:
+                acceptance_criteria = [
+                    f"Given a user wants to {story_name.lower()}, when they initiate the action, then the system should respond appropriately",
+                    f"Given the {story_name.lower()} process is initiated, when all required data is provided, then the operation should complete successfully",
+                    f"Given invalid data is provided for {story_name.lower()}, when the user attempts the operation, then appropriate error messages should be displayed",
+                    f"Given a user completes {story_name.lower()}, when the operation is successful, then the system should provide confirmation"
+                ]
         
         # Generate tagged requirements
         requirements_prompt = f"""For the following user story, identify and tag relevant requirements:

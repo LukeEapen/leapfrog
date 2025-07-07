@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Epic & User Story Management - Three Section Layout</title>
+  <title>Product Management - Workbench</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
     /* Modern CSS Variables for Design System */
@@ -2262,7 +2262,7 @@
   <div class="main-container">
     <!-- Header Bar -->
     <div class="header-bar">
-      <h1 class="header-title">Epic & User Story Management</h1>
+      <h1 class="header-title">Product Management - Workbench</h1>
     </div>
 
     <!-- Three Section Layout -->
@@ -2301,9 +2301,6 @@
       <div class="section" id="user-stories-section">
         <div class="section-header">
           <span>📝 User Stories</span>
-          <button class="chat-btn" onclick="openUserStoryChat()" style="display: none;" id="user-story-chat-btn">
-            💬 Chat
-          </button>
         </div>
         <div class="section-content" id="user-stories-content">
           <div class="empty-state" id="user-stories-empty">
@@ -2370,37 +2367,6 @@
         <div class="chat-input-area">
           <input type="text" class="chat-input" id="epic-chat-input" placeholder="Ask about epics... (Enter to send, Shift+Enter for new line, Esc to close)" onkeypress="handleEpicChatEnter(event)">
           <button class="chat-send-btn" onclick="sendEpicMessage()">Send</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- User Story Chat Modal -->
-  <div id="user-story-chat-modal" class="chat-modal">
-    <div class="chat-modal-content">
-      <div class="chat-header">
-        <h4 style="margin: 0; color: white !important;">User Story Chat</h4>
-        <button class="chat-close" onclick="closeUserStoryChat()">&times;</button>
-      </div>
-      <div class="chat-container">
-        <div class="chat-messages" id="user-story-chat-messages">
-          <div class="chat-message">
-            <div class="chat-bubble">
-              Hello! I can help you refine your user stories. Ask me to make changes, add details, or reorganize them.
-            </div>
-          </div>
-        </div>
-        <div class="chat-apply-container" id="user-story-chat-apply-container">
-          <div class="chat-apply-info">
-            <span id="user-story-apply-info">Ask me to modify user stories and I'll suggest changes for you to apply</span>
-          </div>
-          <button class="chat-apply-btn" id="user-story-apply-btn" onclick="applyUserStoryChanges()" disabled style="opacity: 0.6;">
-            ✅ Apply Changes
-          </button>
-        </div>
-        <div class="chat-input-area">
-          <input type="text" class="chat-input" id="user-story-chat-input" placeholder="Ask about user stories... (Enter to send, Shift+Enter for new line, Esc to close)" onkeypress="handleUserStoryChatEnter(event)">
-          <button class="chat-send-btn" onclick="sendUserStoryMessage()">Send</button>
         </div>
       </div>
     </div>
@@ -2573,7 +2539,6 @@
   
   // Pending changes from chat interactions
   let pendingEpicChanges = null;
-  let pendingUserStoryChanges = null;
   let pendingStoryDetailsChanges = null;
   
   // Track if we're in selection mode (showing radio buttons)
@@ -2954,7 +2919,6 @@
     document.getElementById('user-stories-empty').style.display = 'none';
     document.getElementById('user-stories-loading').style.display = 'flex';
     document.getElementById('user-stories-list').innerHTML = '';
-    document.getElementById('user-story-chat-btn').style.display = 'none';
     hideUserStorySubmitButton();
   }
 
@@ -2963,7 +2927,6 @@
     document.getElementById('user-stories-loading').style.display = 'none';
     document.getElementById('user-stories-empty').style.display = 'flex';
     document.getElementById('user-stories-list').innerHTML = '';
-    document.getElementById('user-story-chat-btn').style.display = 'none';
     hideUserStorySubmitButton();
   }
 
@@ -2972,11 +2935,9 @@
     const userStoriesLoading = document.getElementById('user-stories-loading');
     const userStoriesEmpty = document.getElementById('user-stories-empty');
     const userStoriesList = document.getElementById('user-stories-list');
-    const userStoryChatBtn = document.getElementById('user-story-chat-btn');
 
     userStoriesLoading.style.display = 'none';
     userStoriesEmpty.style.display = 'none';
-    userStoryChatBtn.style.display = 'none';
     hideUserStorySubmitButton();
 
     userStoriesList.innerHTML = `
@@ -2997,11 +2958,9 @@
     const userStoriesLoading = document.getElementById('user-stories-loading');
     const userStoriesEmpty = document.getElementById('user-stories-empty');
     const userStoriesList = document.getElementById('user-stories-list');
-    const userStoryChatBtn = document.getElementById('user-story-chat-btn');
 
     userStoriesLoading.style.display = 'none';
     userStoriesEmpty.style.display = 'none';
-    userStoryChatBtn.style.display = 'inline-block';
     hideUserStorySubmitButton(); // Reset submit button when displaying new user stories
     
     // Clear completed states when displaying new user stories (from a new epic)
@@ -3282,8 +3241,7 @@
       <div class="detail-section">
         <div class="detail-title">
           Story Overview
-          <button class="chat-btn" onclick="openStoryDetailsChat('description')">💬 Chat</button>
-        </div>
+            </div>
         <div class="detail-content">
           <strong>Epic:</strong> ${selectedEpic?.title || 'Unknown Epic'}<br>
           <strong>Story:</strong> ${selectedUserStory?.title || selectedUserStory?.name || 'Unknown Story'}<br>
@@ -3582,179 +3540,6 @@
     }
   }
 
-  // User Story Chat Functions
-  function openUserStoryChat() {
-    // Clear previous chat history when opening
-    clearUserStoryChatHistory();
-    
-    // Initialize Apply button state
-    hideUserStoryApplyButton();
-    
-    document.getElementById('user-story-chat-modal').style.display = 'block';
-    setTimeout(() => {
-      document.getElementById('user-story-chat-input').focus();
-    }, 100);
-  }
-
-  function closeUserStoryChat() {
-    document.getElementById('user-story-chat-modal').style.display = 'none';
-  }
-
-  function clearUserStoryChatHistory() {
-    const messagesContainer = document.getElementById('user-story-chat-messages');
-    // Keep only the initial welcome message
-    messagesContainer.innerHTML = `
-      <div class="chat-message">
-        <div class="chat-bubble">
-          Hello! I can help you refine your user stories. Ask me to make changes, add details, or reorganize them.
-        </div>
-      </div>
-    `;
-    // Hide apply button and clear pending changes
-    hideUserStoryApplyButton();
-    pendingUserStoryChanges = null;
-  }
-
-  function handleUserStoryChatEnter(event) {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      sendUserStoryMessage();
-    } else if (event.key === 'Escape') {
-      closeUserStoryChat();
-    }
-  }
-
-  async function sendUserStoryMessage() {
-    const input = document.getElementById('user-story-chat-input');
-    const message = input.value.trim();
-    
-    if (!message) return;
-
-    // Validate that we have user stories and a selected epic to chat about
-    if (!currentUserStories || currentUserStories.length === 0) {
-      addUserStoryChatMessage('Please select an epic and generate user stories first before using the chat feature.', 'assistant');
-      return;
-    }
-
-    if (!selectedEpic) {
-      addUserStoryChatMessage('Please select an epic first before chatting about user stories.', 'assistant');
-      return;
-    }
-
-    // Add user message to chat
-    addUserStoryChatMessage(message, 'user');
-    input.value = '';
-
-    // Add loading message
-    const loadingId = addUserStoryChatMessage('...', 'assistant', true);
-
-    try {
-      const response = await fetch('/three-section-user-story-chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: message,
-          user_stories: currentUserStories,
-          epic: selectedEpic
-        })
-      });
-
-      // Remove loading message
-      removeUserStoryChatMessage(loadingId);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      console.log('🔧 User Story chat response received:');
-      console.log('🔧 Full response data:', data);
-      console.log('🔧 Response text:', data.response);
-      console.log('🔧 Updated user stories:', data.updated_user_stories);
-      console.log('🔧 Has updated_user_stories?', !!data.updated_user_stories);
-      console.log('🔧 Is array?', Array.isArray(data.updated_user_stories));
-      console.log('🔧 Array length:', data.updated_user_stories ? data.updated_user_stories.length : 'N/A');
-      
-      if (data.success) {
-        // Add the AI response - it should already be in natural language from backend
-        let aiResponse = data.response;
-        
-        // Remove any JSON formatting detection - backend should handle this
-        console.log('🔧 User Story chat response received:', aiResponse);
-        
-        addUserStoryChatMessage(aiResponse, 'assistant');
-        
-        // Always check for updated_user_stories in the response, regardless of the format
-        if (data.updated_user_stories && Array.isArray(data.updated_user_stories) && data.updated_user_stories.length > 0) {
-          pendingUserStoryChanges = data.updated_user_stories;
-          console.log('🔧 Pending user story changes set:', pendingUserStoryChanges);
-          showUserStoryApplyButton('AI has suggested changes to your user stories. Click Apply to update them.');
-          addUserStoryChatMessage('💡 AI has suggested changes to your user stories. Review them and click "Apply Changes" when ready.', 'assistant');
-        } else {
-          console.log('🔧 No updated_user_stories in response, Apply button will not be enabled');
-          console.log('🔧 Response data structure:', data);
-        }
-      } else {
-        addUserStoryChatMessage(`Sorry, there was an error: ${data.error || 'Unknown error'}`, 'assistant');
-      }
-    } catch (error) {
-      console.error('Error in user story chat:', error);
-      
-      // Remove loading message if it still exists
-      removeUserStoryChatMessage(loadingId);
-      
-      addUserStoryChatMessage('Sorry, there was a connection error. Please check your network and try again.', 'assistant');
-    }
-  }
-
-  function addUserStoryChatMessage(message, sender, isLoading = false) {
-    const messagesContainer = document.getElementById('user-story-chat-messages');
-    const messageDiv = document.createElement('div');
-    const messageId = 'msg-' + Date.now();
-    messageDiv.id = messageId;
-    messageDiv.className = `chat-message ${sender}`;
-    
-    if (isLoading) {
-      messageDiv.innerHTML = `
-        <div class="chat-bubble">
-          <div class="loading-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-      `;
-    } else {
-      // Escape HTML to prevent XSS, but allow line breaks
-      const escapedMessage = message
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-        .replace(/\n/g, '<br>');
-      
-      messageDiv.innerHTML = `
-        <div class="chat-bubble">${escapedMessage}</div>
-      `;
-    }
-    
-    messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
-    return messageId;
-  }
-
-  function removeUserStoryChatMessage(messageId) {
-    const messageDiv = document.getElementById(messageId);
-    if (messageDiv) {
-      messageDiv.remove();
-    }
-  }
-
   // Story Details Chat Functions
   function openStoryDetailsChat(section) {
     // Clear previous chat history when opening
@@ -3983,23 +3768,6 @@
     }
   }
 
-  function applyUserStoryChanges() {
-    console.log('🔧 applyUserStoryChanges called');
-    console.log('🔧 pendingUserStoryChanges:', pendingUserStoryChanges);
-    
-    if (pendingUserStoryChanges) {
-      currentUserStories = pendingUserStoryChanges;
-      displayUserStories(currentUserStories);
-      pendingUserStoryChanges = null;
-      hideUserStoryApplyButton();
-      addUserStoryChatMessage('✅ User story changes have been applied successfully!', 'assistant');
-      console.log('🔧 User story changes applied successfully');
-    } else {
-      addUserStoryChatMessage('No pending changes to apply. Please ask me to modify your user stories first.', 'assistant');
-      console.log('🔧 No pending user story changes to apply');
-    }
-  }
-
   function applyStoryDetailsChanges() {
     if (pendingStoryDetailsChanges) {
       currentStoryDetails = pendingStoryDetailsChanges;
@@ -4049,48 +3817,6 @@
       button.style.backgroundColor = ''; // Reset to default color
       infoSpan.textContent = 'Ask me to modify your epics and I\'ll suggest changes for you to apply';
       console.log('🔧 Apply button disabled successfully');
-    }
-  }
-
-  function showUserStoryApplyButton(info = 'Changes suggested by AI are ready to apply') {
-    console.log('🔧 showUserStoryApplyButton called with info:', info);
-    const container = document.getElementById('user-story-chat-apply-container');
-    const infoSpan = document.getElementById('user-story-apply-info');
-    const button = document.getElementById('user-story-apply-btn');
-    
-    console.log('🔧 User Story Apply Elements found:', { container: !!container, infoSpan: !!infoSpan, button: !!button });
-    
-    if (container && infoSpan && button) {
-      infoSpan.textContent = info;
-      container.classList.add('show');
-      button.disabled = false;
-      button.style.opacity = '1';
-      button.style.backgroundColor = '#28a745'; // Green color for enabled state
-      
-      // Ensure the container is visible and properly positioned
-      container.style.display = 'flex';
-      container.style.position = 'relative';
-      container.style.zIndex = '1';
-      
-      console.log('🔧 User Story Apply button enabled successfully');
-      console.log('🔧 Button state - disabled:', button.disabled, 'opacity:', button.style.opacity);
-    } else {
-      console.error('🔧 Failed to find required elements for User Story Apply button');
-    }
-  }
-
-  function hideUserStoryApplyButton() {
-    console.log('🔧 hideUserStoryApplyButton called');
-    const container = document.getElementById('user-story-chat-apply-container');
-    const button = document.getElementById('user-story-apply-btn');
-    const infoSpan = document.getElementById('user-story-apply-info');
-    if (container && button && infoSpan) {
-      button.disabled = true;
-      button.style.opacity = '0.6';
-      button.style.backgroundColor = ''; // Reset to default color
-      infoSpan.textContent = 'Ask me to modify user stories and I\'ll suggest changes for you to apply';
-      container.classList.remove('show');
-      console.log('🔧 User Story Apply button disabled successfully');
     }
   }
 
