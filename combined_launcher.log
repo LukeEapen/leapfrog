@@ -1,0 +1,52 @@
+2025-07-07 09:22:56,012 - __main__ - INFO - Combined launcher started
+2025-07-07 09:22:56,014 - __main__ - INFO - Starting optimized backend thread...
+2025-07-07 09:22:56,017 - optimized_backend - INFO - Starting optimized backend...
+2025-07-07 09:22:58,018 - __main__ - INFO - Starting three-section backend thread...
+2025-07-07 09:22:58,018 - three_section_backend - INFO - Starting three-section backend...
+2025-07-07 09:22:58,710 - root - INFO - JIRA client initialized successfully
+2025-07-07 09:23:08,615 - poc2_backend_processor_optimized - INFO - python-docx library available for DOCX file processing
+2025-07-07 09:23:08,616 - poc2_backend_processor_three_section - INFO - python-docx library available for DOCX file processing
+2025-07-07 09:23:08,617 - poc2_backend_processor_optimized - INFO - Initializing Vector Database and RAG components...
+2025-07-07 09:23:08,617 - poc2_backend_processor_three_section - INFO - Initializing Vector Database and RAG components...
+2025-07-07 09:23:08,676 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-07 09:23:08,677 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-07-07 09:23:08,710 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+2025-07-07 09:23:08,711 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+2025-07-07 09:23:08,711 - poc2_backend_processor_three_section - INFO - ChromaDB client initialized successfully
+2025-07-07 09:23:08,713 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-07 09:23:08,714 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-07 09:23:08,717 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-07-07 09:23:08,718 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-07-07 09:23:11,987 - poc2_backend_processor_optimized - INFO - Embedding model loaded successfully
+2025-07-07 09:23:11,988 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+2025-07-07 09:23:11,990 - poc2_backend_processor_optimized - INFO - ChromaDB collection initialized successfully
+2025-07-07 09:23:11,992 - poc2_backend_processor_optimized - INFO - Flask application starting up with performance optimizations...
+2025-07-07 09:23:11,992 - poc2_backend_processor_optimized - INFO - OpenAI API key configured: Yes
+2025-07-07 09:23:11,992 - poc2_backend_processor_optimized - INFO - Thread pool size: 4
+2025-07-07 09:23:11,992 - poc2_backend_processor_optimized - INFO - Cache size: 1000 items, TTL: 3600s
+2025-07-07 09:23:11,997 - optimized_backend - INFO - Optimized backend module imported successfully
+2025-07-07 09:23:11,998 - optimized_backend - INFO - Starting optimized backend Flask server on port 5000
+2025-07-07 09:23:12,020 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-07-07 09:23:12,022 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-07 09:23:12,053 - poc2_backend_processor_three_section - INFO - Embedding model loaded successfully
+2025-07-07 09:23:12,053 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+2025-07-07 09:23:12,055 - poc2_backend_processor_three_section - INFO - ChromaDB collection initialized successfully
+2025-07-07 09:23:12,056 - poc2_backend_processor_three_section - INFO - Three Section Flask application starting up with performance optimizations...
+2025-07-07 09:23:12,057 - poc2_backend_processor_three_section - INFO - OpenAI API key configured: Yes
+2025-07-07 09:23:12,057 - poc2_backend_processor_three_section - INFO - Thread pool size: 4
+2025-07-07 09:23:12,057 - poc2_backend_processor_three_section - INFO - Cache size: 1000 items, TTL: 3600s
+2025-07-07 09:23:12,061 - three_section_backend - INFO - Three-section backend module imported successfully
+2025-07-07 09:23:12,061 - three_section_backend - INFO - Starting three-section backend Flask server on port 5001
+2025-07-07 09:23:12,066 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5001
+2025-07-07 09:23:12,066 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-07 09:23:18,142 - poc2_backend_processor_three_section - INFO - Rendering three section layout
+2025-07-07 09:23:18,172 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 09:23:18] "GET /three-section HTTP/1.1" 200 -
+2025-07-07 09:23:18,977 - poc2_backend_processor_three_section - INFO - GET request to /three-section-get-epics
+2025-07-07 09:23:18,978 - poc2_backend_processor_three_section - INFO - No epics found in session - need to upload PRD first
+2025-07-07 09:23:18,979 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 09:23:18] "GET /three-section-get-epics HTTP/1.1" 200 -
+2025-07-07 09:23:23,194 - poc2_backend_processor_optimized - INFO - GET request received for home page
+2025-07-07 09:23:23,195 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 09:23:23] "GET / HTTP/1.1" 200 -
+2025-07-07 09:23:39,927 - poc2_backend_processor_optimized - INFO - GET request received for system mapping interface
+2025-07-07 09:23:39,938 - werkzeug - INFO - 127.0.0.1 - - [07/Jul/2025 09:23:39] "GET /system-mapping HTTP/1.1" 200 -
