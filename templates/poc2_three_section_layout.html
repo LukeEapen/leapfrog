@@ -973,13 +973,14 @@
     .form-control[type="file"] {
       border: 2px dashed var(--border-medium);
       border-radius: var(--radius-lg);
-      padding: var(--spacing-lg);
+      padding: var(--spacing-xl);
       background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary) 100%);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       color: var(--text-primary);
       width: 100%;
       min-height: 60px;
-      display: block;
+      display: flex;
+      align-items: center;
       box-sizing: border-box;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -992,10 +993,12 @@
       border: none;
       padding: 8px 16px;
       border-radius: var(--radius-md);
-      margin-right: 12px;
+      margin: 0px 16px 16px 8px;
       cursor: pointer;
       font-weight: 500;
       transition: all 0.3s ease;
+      display: inline-block;
+      vertical-align: top;
     }
 
     .form-control[type="file"]::-webkit-file-upload-button:hover {
@@ -1789,6 +1792,46 @@
       opacity: 1;
     }
 
+    /* Completed User Story Card Styles */
+    .modern-story-card.completed {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(21, 128, 61, 0.08) 100%);
+      border-color: #22c55e;
+      cursor: default;
+    }
+
+    .modern-story-card.completed::before {
+      background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+      opacity: 1;
+    }
+
+    .modern-story-card.completed:hover {
+      transform: none;
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.15);
+    }
+
+    .modern-story-card.completed .story-radio input[type="radio"] {
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .modern-story-card.completed .story-radio label {
+      cursor: not-allowed;
+      opacity: 0.6;
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+
+    .modern-story-card.completed .story-radio label::after {
+      content: '✓';
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+      width: auto;
+      height: auto;
+      border-radius: 0;
+      background: transparent;
+    }
+
     /* Step Indicators */
     .step-indicators {
       display: flex;
@@ -2170,6 +2213,14 @@
     .traceability-matrix table tr:first-child {
       background: rgba(102, 126, 234, 0.08);
       font-weight: 600;
+    }
+
+    /* Epic Card Title Override - Make Epic Titles Red */
+    .selection-card .card-title,
+    .epic-item .card-title,
+    .card-title,
+    h5.card-title {
+      color: var(--primary-red) !important;
     }
   </style>
 </head>
@@ -2930,6 +2981,9 @@
     userStoriesEmpty.style.display = 'none';
     userStoryChatBtn.style.display = 'inline-block';
     hideUserStorySubmitButton(); // Reset submit button when displaying new user stories
+    
+    // Clear completed states when displaying new user stories (from a new epic)
+    clearUserStoryCompletedStates();
 
     if (!userStories || userStories.length === 0) {
       showUserStoriesEmpty();
@@ -2975,6 +3029,12 @@
     });
 
     userStoriesList.innerHTML = html;
+    
+    // If story details are currently showing, mark the selected story as completed
+    const storyDetailsDiv = document.getElementById('story-details');
+    if (selectedUserStory && storyDetailsDiv && storyDetailsDiv.innerHTML.trim() !== '') {
+      markUserStoryAsCompleted();
+    }
     
     // Update chat placeholders with new context
     updateChatPlaceholders();
@@ -3022,6 +3082,9 @@
         currentStoryDetails = data.story_details;
         // Display the story details in the third section
         displayStoryDetails(data.story_details);
+        
+        // Mark the user story as completed (green background, disabled radio)
+        markUserStoryAsCompleted();
         
         // Show the Jira submit button
         const submitBtn = document.getElementById('submit-jira-btn');
@@ -3103,6 +3166,23 @@
     document.getElementById('story-details-empty').style.display = 'flex';
     document.getElementById('story-details').innerHTML = '';
     document.getElementById('submit-jira-btn').style.display = 'none';
+    
+    // Don't automatically clear completed states when clearing story details
+    // Only clear them when explicitly requested via clearUserStoryCompletedStates()
+  }
+
+  // Remove completed state from all user story cards
+  function clearUserStoryCompletedStates() {
+    const storyCards = document.querySelectorAll('.modern-story-card');
+    storyCards.forEach(card => {
+      card.classList.remove('completed');
+      
+      // Re-enable radio buttons
+      const radioInput = card.querySelector('input[type="radio"]');
+      if (radioInput) {
+        radioInput.disabled = false;
+      }
+    });
   }
 
   // Simple markdown to HTML converter for traceability matrix
@@ -3230,8 +3310,57 @@
 
     storyDetailsDiv.innerHTML = html;
     
+    // Mark the selected user story as completed
+    markUserStoryAsCompleted();
+    
     // Update chat placeholders with new context
     updateChatPlaceholders();
+  }
+
+  // Mark the selected user story as completed (green background, disabled radio)
+  function markUserStoryAsCompleted() {
+    console.log('markUserStoryAsCompleted called', { selectedUserStory, currentUserStories });
+    if (!selectedUserStory || !currentUserStories) return;
+    
+    // Find the index of the selected user story in the array
+    const selectedIndex = currentUserStories.findIndex(story => story === selectedUserStory);
+    if (selectedIndex === -1) return;
+    
+    // Find the user story card by data-story-id
+    const storyCards = document.querySelectorAll('.modern-story-card');
+    storyCards.forEach((card, index) => {
+      const storyId = card.getAttribute('data-story-id');
+      
+      // Check if this is the selected story
+      // Compare with the selected story's ID if it exists, otherwise compare with index
+      const expectedId = selectedUserStory.id || selectedIndex.toString();
+      
+      if (storyId === expectedId || storyId === selectedIndex.toString()) {
+        
+        // Add completed class
+        card.classList.add('completed');
+        
+        // Disable the radio button
+        const radioInput = card.querySelector('input[type="radio"]');
+        if (radioInput) {
+          radioInput.disabled = true;
+          radioInput.checked = true; // Keep it selected but disabled
+        }
+        
+        console.log('User story marked as completed:', selectedUserStory, 'at index:', selectedIndex);
+      }
+    });
+  }
+
+  // Helper function to get the index of the selected user story
+  function getSelectedUserStoryIndex() {
+    if (!selectedUserStory || !currentUserStories) return -1;
+    
+    return currentUserStories.findIndex(story => 
+      story.id === selectedUserStory.id || 
+      story.name === selectedUserStory.name ||
+      story.title === selectedUserStory.title
+    );
   }
 
   // Epic Chat Functions
