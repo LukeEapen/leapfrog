@@ -2244,6 +2244,84 @@
     .epic-item h5 {
       color: var(--primary-red) !important;
     }
+
+    /* Navigation Row Styles */
+    .navigation-row {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-bottom: 1px solid #dee2e6;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .navigation-info {
+      display: flex;
+      align-items: center;
+    }
+
+    .navigation-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .navigation-actions .btn {
+      transition: all 0.2s ease;
+    }
+
+    .navigation-actions .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* PRD Upload Button Centering */
+    #prd-upload-btn .btn-text,
+    #generate-epics-btn .btn-text {
+      display: block;
+      text-align: center;
+      width: 100%;
+    }
+
+    /* Center the button containers and content */
+    #prd-upload-btn,
+    #generate-epics-btn {
+      display: block;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    /* Center loading spinner content */
+    .loading-spinner {
+      text-align: center;
+    }
+
+    .loading-spinner div,
+    .loading-spinner p {
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .navigation-row {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+        padding: 1.5rem 1rem !important;
+      }
+      
+      .navigation-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.5rem !important;
+      }
+
+      .navigation-actions .btn {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem !important;
+        margin: 0.25rem;
+      }
+
+      .navigation-info span {
+        font-size: 0.95rem !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2265,6 +2343,34 @@
       <h1 class="header-title">Product Management - Workbench</h1>
     </div>
 
+    <!-- Navigation Row for POC Integration -->
+    <div class="navigation-row" style="background: linear-gradient(135deg, #b71c1c 0%, #8e0000 100%); border-bottom: 3px solid #6d0000; padding: 2rem 2.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(183, 28, 28, 0.4);">
+      <div class="navigation-info">
+        <span style="color: #ffffff; font-size: 1.1rem; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+          <i class="fas fa-puzzle-piece" style="color: #ffffff; margin-right: 0.75rem; font-size: 1.2rem;"></i>
+          This workbench integrates with other POCs for a complete workflow
+        </span>
+      </div>
+      <div class="navigation-actions" style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-light" onclick="showPRDUpload()" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+          <i class="fas fa-download" style="margin-right: 0.5rem;"></i>
+          Import PRD from PRD Drafting Solution
+        </button>
+        <button class="btn btn-light" onclick="openSystemMapping()" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+          <i class="fas fa-sitemap" style="margin-right: 0.5rem;"></i>
+          System Mapping
+        </button>
+        <button class="btn btn-light" onclick="window.open('/page1_input','_blank')" title="Go to PRD Generator" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+          <i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>
+          PRD Generator
+        </button>
+        <button class="btn btn-light" onclick="window.open('/architecture-generator','_blank')" title="Go to Architecture Generator" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+          <i class="fas fa-cogs" style="margin-right: 0.5rem;"></i>
+          Architecture Generator
+        </button>
+      </div>
+    </div>
+
     <!-- Three Section Layout -->
     <div class="three-section-container">
       <!-- Section 1: Epics List -->
@@ -2283,9 +2389,9 @@
           <div class="empty-state" id="epics-empty" style="display: none;">
             <div class="empty-state-icon">📋</div>
             <div class="empty-state-text">No epics available</div>
-            <div class="empty-state-subtext">Upload a PRD to generate epics</div>
+            <div class="empty-state-subtext">Import a PRD from the PRD Drafting Solution to generate epics</div>
             <button class="btn btn-primary mt-3" onclick="showPRDUpload()">
-              <i class="fas fa-upload mr-2"></i>Upload PRD, and Additional Document
+              <i class="fas fa-download mr-2"></i>Import PRD from PRD Drafting Solution
             </button>
           </div>
           <div id="epics-list"></div>
@@ -2407,7 +2513,7 @@
   <div id="prd-upload-modal" class="chat-modal">
     <div class="chat-modal-content" style="max-width: 1000px; height: 90vh; overflow-y: auto;">
       <div class="chat-header">
-        <h4 style="margin: 0; color: white !important;">📄 Upload PRD & Additional Documents</h4>
+        <h4 style="margin: 0; color: white !important;">📄 Import PRD from PRD Drafting Solution</h4>
         <button class="chat-close" onclick="closePRDUpload()">&times;</button>
       </div>
       <div class="chat-body" style="padding: 2rem;">
@@ -2462,17 +2568,19 @@
             </div>
 
             <!-- Upload & Preview Button -->
-            <button type="submit" class="btn btn-primary btn-lg w-100 mb-4" id="prd-upload-btn">
-              <span class="btn-text">📄 Upload & Preview Documents</span>
-              <span class="timer-display" id="upload-timer" style="display: none; margin-left: 10px; font-size: 0.9em;">(0:00)</span>
-            </button>
+            <div style="text-align: center;">
+              <button type="submit" class="btn btn-primary btn-lg mb-4" id="prd-upload-btn" style="width: auto; min-width: 300px;">
+                <span class="btn-text">📄 Import & Preview Documents</span>
+                <span class="timer-display" id="upload-timer" style="display: none; margin-left: 10px; font-size: 0.9em;">(0:00)</span>
+              </button>
+            </div>
           </form>
         </div>
 
         <!-- Loading Spinner for Upload - SPINNER REMOVED -->
         <div class="loading-spinner" id="prd-loading-spinner" style="display: none;">
           <div style="text-align: center; padding: 2rem;">
-            <p style="margin: 0; color: #6c757d; font-weight: 500;"></p>
+            <p style="margin: 0; color: #6c757d; font-weight: 500; text-align: center;"></p>
           </div>
         </div>
 
@@ -2514,14 +2622,16 @@
             </button>
           </div>
           
-          <button type="button" class="btn btn-primary btn-lg w-100 mt-4" id="generate-epics-btn" onclick="generateEpicsFromPRDData()">
-            <span class="btn-text">⚡ Generate Epics & User Stories</span>
-          </button>
+          <div style="text-align: center;">
+            <button type="button" class="btn btn-primary btn-lg mt-4" id="generate-epics-btn" onclick="generateEpicsFromPRDData()" style="width: auto; min-width: 300px;">
+              <span class="btn-text">⚡ Generate Epics & User Stories</span>
+            </button>
+          </div>
           
           <!-- Loading state for epic generation - SPINNER REMOVED -->
           <div class="loading-spinner" id="prd-epic-spinner" style="display: none;">
             <div style="text-align: center; padding: 2rem;">
-              <p style="margin-top: 1rem; color: #6c757d; font-weight: 500;"></p>
+              <p style="margin-top: 1rem; color: #6c757d; font-weight: 500; text-align: center;"></p>
             </div>
           </div>
         </div>
@@ -2976,8 +3086,14 @@
       const storyTitle = story.title || story.name || `User Story ${index + 1}`;
       const storySummary = story.description || story.summary || 'No description available';
       const priority = story.priority || 'Medium';
-      const systems = story.systems || story.responsible_systems || ['Unknown System'];
-      const systemsText = Array.isArray(systems) ? systems.join(', ') : systems;
+      
+      // Handle single system mapping - take the first system if it's an array
+      let responsibleSystem = 'Unknown System';
+      if (story.systems && Array.isArray(story.systems) && story.systems.length > 0) {
+        responsibleSystem = story.systems[0];
+      } else if (story.responsible_systems) {
+        responsibleSystem = story.responsible_systems;
+      }
       
       html += `
         <div class="modern-story-card" data-story-id="${story.id || index}">
@@ -2999,7 +3115,7 @@
               <div class="story-footer">
                 <div class="responsible-systems">
                   <i class="system-icon">🏗️</i>
-                  <span class="systems-text">${systemsText}</span>
+                  <span class="systems-text">${responsibleSystem}</span>
                 </div>
                 <div class="story-id">ID: ${story.id || `US-${index + 1}`}</div>
               </div>
@@ -3241,11 +3357,19 @@
       <div class="detail-section">
         <div class="detail-title">
           Story Overview
-            </div>
+        </div>
         <div class="detail-content">
           <strong>Epic:</strong> ${selectedEpic?.title || 'Unknown Epic'}<br>
           <strong>Story:</strong> ${selectedUserStory?.title || selectedUserStory?.name || 'Unknown Story'}<br>
-          <strong>Description:</strong> ${selectedUserStory?.description || selectedUserStory?.summary || 'No description available'}
+          <strong>Description:</strong> ${selectedUserStory?.description || selectedUserStory?.summary || 'No description available'}<br>
+          <strong>Responsible System:</strong> ${(() => {
+            if (selectedUserStory?.systems && Array.isArray(selectedUserStory.systems) && selectedUserStory.systems.length > 0) {
+              return selectedUserStory.systems[0];
+            } else if (selectedUserStory?.responsible_systems) {
+              return selectedUserStory.responsible_systems;
+            }
+            return 'Unknown System';
+          })()}
         </div>
       </div>
 
@@ -3265,19 +3389,6 @@
       <div class="detail-section">
         <div class="detail-title">
           Tagged Requirements
-          <button class="chat-btn" onclick="openStoryDetailsChat('requirements')">💬 Chat</button>
-        </div>
-        <div class="detail-content">
-          ${taggedRequirements.length > 0 ? 
-            `<ul class="criteria-list">${taggedRequirements.map(req => `<li>${req}</li>`).join('')}</ul>` :
-            '<p>No tagged requirements defined yet.</p>'
-          }
-        </div>
-      </div>
-
-      <div class="detail-section">
-        <div class="detail-title">
-          Traceability Matrix
           <button class="chat-btn" onclick="openStoryDetailsChat('traceability')">💬 Chat</button>
         </div>
         <div class="detail-content">
@@ -3875,7 +3986,15 @@
     const btnText = button.querySelector('.btn-text');
     if (btnText) {
       btnText.textContent = loadingText;
+      btnText.style.textAlign = 'center';
+      btnText.style.display = 'block';
+      btnText.style.width = '100%';
     }
+    
+    // Ensure the button itself is centered
+    button.style.textAlign = 'center';
+    button.style.display = 'block';
+    button.style.margin = '0 auto';
     
     // Start timer for upload button
     if (button.id === 'prd-upload-btn') {
@@ -3891,7 +4010,15 @@
     const btnText = button.querySelector('.btn-text');
     if (btnText) {
       btnText.textContent = originalText;
+      btnText.style.textAlign = 'center';
+      btnText.style.display = 'block';
+      btnText.style.width = '100%';
     }
+    
+    // Maintain button centering
+    button.style.textAlign = 'center';
+    button.style.display = 'block';
+    button.style.margin = '0 auto';
     
     // Stop timer for upload button
     if (button.id === 'prd-upload-btn') {
@@ -4030,6 +4157,22 @@
     updatePRDStepIndicator(1);
   }
 
+  // Open System Mapping functionality
+  function openSystemMapping() {
+    // Open the system mapping page from the three-section backend
+    const systemMappingUrl = '/system-mapping';
+    
+    // Try to open in a new tab/window
+    const newWindow = window.open(systemMappingUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+    
+    // If popup is blocked, show an alternative
+    if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+      // Fallback: redirect to system mapping page
+      alert('Opening System Mapping functionality...\n\nPopup blocked. Redirecting to System Mapping page.');
+      window.location.href = systemMappingUrl;
+    }
+  }
+
   // Close PRD upload modal
   function closePRDUpload() {
     document.getElementById('prd-upload-modal').style.display = 'none';
@@ -4060,7 +4203,7 @@
     const uploadBtn = document.getElementById('prd-upload-btn');
     const generateBtn = document.getElementById('generate-epics-btn');
     
-    hidePRDButtonLoading(uploadBtn, null, '🚀 Upload & Preview Documents');
+    hidePRDButtonLoading(uploadBtn, null, '� Import & Preview Documents');
     hidePRDButtonLoading(generateBtn, null, '⚡ Generate Epics & User Stories');
     
     // Reset preview data
@@ -4190,7 +4333,7 @@
     } finally {
       // Hide loading
       loadingSpinner.style.display = 'none';
-      hidePRDButtonLoading(uploadBtn, null, '� Upload & Preview Documents');
+      hidePRDButtonLoading(uploadBtn, null, '📄 Import & Preview Documents');
     }
   }
 

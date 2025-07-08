@@ -512,14 +512,17 @@ Return the response as a JSON array of user story objects with the following str
             # Create proper user story description if missing
             if not story.get('description'):
                 story_title = story.get('title', story.get('name', f'User Story {i+1}'))
-                # Create a proper user story format
-                story['description'] = f"As a user, I want to {story_title.lower()} so that I can achieve my business objectives."
+                # Create a more meaningful user story format that relates to the title
+                story['description'] = f"As a customer, I want to {story_title.lower()} so that I can complete my business requirements efficiently."
                 
-            # Ensure systems are properly formatted
+            # Ensure systems are properly formatted - use only the first (most important) system
             if 'systems' in story and isinstance(story['systems'], list):
-                story['responsible_systems'] = ', '.join(story['systems'])
+                # Take only the first system (most important one)
+                primary_system = story['systems'][0] if story['systems'] else 'Customer acquisition platform'
+                story['systems'] = [primary_system]  # Keep as single-item array for consistency
+                story['responsible_systems'] = primary_system  # Single system as string
             elif not story.get('responsible_systems'):
-                story['responsible_systems'] = 'CAPS, CMS'  # fallback
+                story['responsible_systems'] = 'Customer acquisition platform'  # fallback to single system
         
         # Store user stories in session
         session['user_stories'] = user_stories
@@ -791,7 +794,7 @@ Create a formatted traceability matrix showing relationships between requirement
                              user_story_name=story_name,
                              user_story_description=story_description,
                              priority='High',
-                             responsible_systems='CAPS, CMS',
+                             responsible_systems='Customer acquisition platform',
                              acceptance_criteria=story_details.get('acceptance_criteria', []),
                              tagged_requirements=story_details.get('tagged_requirements', []),
                              traceability_matrix=story_details.get('traceability_matrix', ''))
@@ -1118,7 +1121,7 @@ def three_section_submit_jira():
         user_story_name = request.form.get('user_story_name', '')
         user_story_description = request.form.get('user_story_description', '')
         priority = request.form.get('priority', 'High')
-        responsible_systems = request.form.get('responsible_systems', 'CAPS, CMS')
+        responsible_systems = request.form.get('responsible_systems', 'Customer acquisition platform')
         acceptance_criteria = request.form.get('acceptance_criteria', '').split('|||')
         tagged_requirements = request.form.get('tagged_requirements', '').split('|||')
         traceability_matrix = request.form.get('traceability_matrix', '')
@@ -1221,7 +1224,7 @@ def submit_jira_ticket():
         user_story_name = request.form.get('user_story_name', '')
         user_story_description = request.form.get('user_story_description', '')
         priority = request.form.get('priority', 'High')
-        responsible_systems = request.form.get('responsible_systems', 'CAPS, CMS')
+        responsible_systems = request.form.get('responsible_systems', 'Customer acquisition platform')
         acceptance_criteria = request.form.get('acceptance_criteria', '').split('|||')
         tagged_requirements = request.form.get('tagged_requirements', '').split('|||')
         traceability_matrix = request.form.get('traceability_matrix', '')
@@ -2124,6 +2127,19 @@ def format_epics_for_display(epics):
         html_parts.append(epic_html)
     
     return "\n".join(html_parts)
+
+@app.route("/system-mapping", methods=["GET"])
+def system_mapping():
+    """Serve the system mapping page."""
+    try:
+        logger.info("Serving system mapping page")
+        return render_template('system_mapping.html')
+    except Exception as e:
+        logger.error(f"Error serving system mapping page: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'Failed to load system mapping: {str(e)}'
+        }), 500
 
 if __name__ == "__main__":
     logger.info("Starting Three Section Flask server...")
