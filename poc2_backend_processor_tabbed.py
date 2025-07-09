@@ -12,6 +12,7 @@ import json
 import tempfile
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask_session import Session
 from openai import OpenAI
 from werkzeug.utils import secure_filename
 import docx
@@ -32,9 +33,19 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key-change-in-production-very-long-secret")
 
-# Use default Flask session for now to avoid cache issues
+# Configure Flask-Session for persistent sessions
+app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_KEY_PREFIX'] = 'tabbed_workbench:'
+app.config['SESSION_FILE_DIR'] = os.path.join(tempfile.gettempdir(), 'tabbed_workbench_sessions')
+
+# Ensure session directory exists
+os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+
+# Initialize Flask-Session
+Session(app)
 
 # Constants
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx', 'md', 'csv'}
@@ -85,13 +96,20 @@ def tabbed_layout():
     """Main tabbed layout page."""
     try:
         logger.info("GET request to /tabbed-layout")
+        logger.info(f"Current session keys: {list(session.keys())}")
+        logger.info(f"Has epics in session: {'generated_epics' in session}")
+        logger.info(f"Epics count: {len(session.get('generated_epics', []))}")
         
-        # Clear any existing session data for fresh start
-        session.pop('generated_epics', None)
-        session.pop('current_epic', None)
-        session.pop('generated_user_stories', None)
-        session.pop('current_user_story', None)
-        session.pop('story_details', None)
+        # Don't clear session data - preserve user's work
+        # Only clear session if explicitly requested via query parameter
+        if request.args.get('clear_session') == 'true':
+            logger.info("Clearing session data due to clear_session parameter")
+            session.pop('generated_epics', None)
+            session.pop('current_epic', None)
+            session.pop('generated_user_stories', None)
+            session.pop('current_user_story', None)
+            session.pop('story_details', None)
+            session.modified = True
         
         return render_template("poc2_tabbed_workbench.html")
     except Exception as e:
@@ -110,9 +128,17 @@ def health_check():
 @app.route("/debug-info", methods=["GET"])
 def debug_info():
     """Debug information endpoint."""
+    session_dir = app.config.get('SESSION_FILE_DIR', 'Not configured')
+    session_files = []
+    if os.path.exists(session_dir):
+        session_files = os.listdir(session_dir)
+    
     return jsonify({
         "environment": os.environ.get('FLASK_ENV', 'development'),
         "openai_key_set": bool(os.getenv('OPENAI_API_KEY')),
+        "session_type": app.config.get('SESSION_TYPE', 'default'),
+        "session_directory": session_dir,
+        "session_files_count": len(session_files),
         "session_data": {
             "has_epics": 'generated_epics' in session,
             "has_user_stories": 'generated_user_stories' in session,
@@ -418,7 +444,17 @@ def tabbed_select_epic():
         logger.info(f"All epics data: {epics}")
         
         if not epics:
-            return jsonify({"success": False, "error": "No epics found in session. Please generate epics first."})
+            logger.error(f"No epics in session. Session keys: {list(session.keys())}")
+            return jsonify({
+                "success": False, 
+                "error": "No epics found in session. Please generate epics first.",
+                "debug_info": {
+                    "session_keys": list(session.keys()),
+                    "session_id": request.cookies.get('session', 'None'),
+                    "has_prd_content": 'prd_content' in session,
+                    "has_combined_content": 'combined_content' in session
+                }
+            })
         
         selected_epic = None
         
@@ -914,6 +950,18 @@ def tabbed_upload_prd():
             
     except Exception as e:
         logger.error(f"Error in PRD upload: {str(e)}")
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route("/clear-session", methods=["POST"])
+def clear_session():
+    """Clear all session data."""
+    try:
+        logger.info("POST request to /clear-session")
+        session.clear()
+        session.modified = True
+        return jsonify({"success": True, "message": "Session cleared successfully"})
+    except Exception as e:
+        logger.error(f"Error clearing session: {str(e)}")
         return jsonify({"success": False, "error": str(e)})
 
 if __name__ == "__main__":
