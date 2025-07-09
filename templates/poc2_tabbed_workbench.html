@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Management - Tabbed Workbench</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* Modern CSS Variables for Design System */
+    :root {
+      --primary-red: #dc3545;
+      --primary-red-dark: #b71c1c;
+      --primary-grey: #343a40;
+      --secondary-grey: #6c757d;
+      --light-grey: #f8f9fa;
+      --surface-primary: #ffffff;
+      --surface-secondary: #f8f9fa;
+      --surface-tertiary: #e9ecef;
+      --text-primary: #343a40;
+      --text-secondary: #6c757d;
+      --text-light: #ffffff;
+      --text-muted: #94a3b8;
+      --border-light: #e9ecef;
+      --border-medium: #dee2e6;
+      --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      --border-radius: 1rem;
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --spacing-xs: 0.5rem;
+      --spacing-sm: 0.75rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      --spacing-2xl: 3rem;
+    }
+
+    /* Reset and Base Styling */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Modern Body Styling */
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      color: var(--text-primary);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    /* Enhanced Main Container */
+    .main-container {
+      width: 100%;
+      margin: 0;
+      background: var(--surface-primary);
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+      animation: pageSlideIn 0.6s ease-out;
+      min-height: 100vh;
+    }
+
+    @keyframes pageSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Enhanced Top Bar */
+    .header-bar {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
+      padding: var(--spacing-xl) var(--spacing-2xl);
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      overflow: hidden;
+      min-height: 85px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .header-bar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+      animation: shimmer 4s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .header-title {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: white;
+      margin: 0;
+      letter-spacing: -0.025em;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .back-button {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      backdrop-filter: blur(10px);
+      text-decoration: none;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      text-decoration: none;
+    }
+
+    /* Enhanced Tab Navigation */
+    .nav-tabs {
+      border-bottom: 3px solid var(--border-light);
+      background: var(--surface-secondary);
+      padding: 0 var(--spacing-2xl);
+      margin: 0;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-tabs .nav-link {
+      border: none;
+      border-radius: 0;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 1.1rem;
+      padding: var(--spacing-lg) var(--spacing-xl);
+      background: transparent;
+      transition: all 0.3s ease;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      opacity: 0.6;
+      margin-right: var(--spacing-md);
+    }
+
+    .nav-tabs .nav-link.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .nav-tabs .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .nav-tabs .nav-link:hover:not(.disabled) {
+      color: var(--primary-red);
+      background: rgba(220, 53, 69, 0.05);
+      opacity: 1;
+    }
+
+    .nav-tabs .nav-link.active {
+      color: var(--primary-red);
+      background: var(--surface-primary);
+      border-bottom: 3px solid var(--primary-red);
+      opacity: 1;
+    }
+
+    .nav-tabs .nav-link.active::after {
+      transform: scaleX(1);
+    }
+
+    /* Tab Content */
+    .tab-content {
+      padding: 0;
+      min-height: calc(100vh - 200px);
+    }
+
+    .tab-pane {
+      animation: fadeInUp 0.4s ease-out;
+      min-height: calc(100vh - 200px);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Tab Content Container */
+    .tab-content-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 200px);
+      background: var(--surface-primary);
+    }
+
+    /* Tab Header */
+    .tab-header {
+      background: linear-gradient(135deg, var(--primary-grey) 0%, var(--secondary-grey) 100%);
+      color: white;
+      padding: var(--spacing-lg) var(--spacing-xl);
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid var(--primary-red);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab-header span {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      font-size: 1.25rem;
+      letter-spacing: -0.025em;
+      font-weight: 600;
+      color: white !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Tab Body */
+    .tab-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Content Area */
+    .content-area {
+      flex: 1;
+      padding: var(--spacing-xl);
+      overflow-y: auto;
+      background: var(--surface-primary);
+    }
+
+    /* Chat Area */
+    .chat-area {
+      width: 350px;
+      background: var(--surface-secondary);
+      border-left: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .chat-header {
+      background: var(--primary-red);
+      color: white;
+      padding: var(--spacing-md) var(--spacing-lg);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: var(--spacing-md);
+      overflow-y: auto;
+      max-height: calc(100vh - 400px);
+    }
+
+    .chat-message {
+      margin-bottom: var(--spacing-md);
+      animation: messageSlideIn 0.3s ease-out;
+    }
+
+    @keyframes messageSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .chat-message.user {
+      text-align: right;
+    }
+
+    .chat-message.ai {
+      text-align: left;
+    }
+
+    .message-bubble {
+      display: inline-block;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-lg);
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .chat-message.user .message-bubble {
+      background: var(--primary-red);
+      color: white;
+    }
+
+    .chat-message.ai .message-bubble {
+      background: var(--surface-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-light);
+    }
+
+    .chat-input-area {
+      padding: var(--spacing-md);
+      border-top: 1px solid var(--border-light);
+      background: var(--surface-primary);
+    }
+
+    .chat-input-container {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .chat-input {
+      flex: 1;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-sm) var(--spacing-md);
+      font-size: 0.875rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: var(--primary-red);
+      box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+    }
+
+    .chat-send-btn {
+      background: var(--primary-red);
+      border: none;
+      color: white;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    .chat-send-btn:hover {
+      background: var(--primary-red-dark);
+      transform: translateY(-1px);
+    }
+
+    .chat-send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Epic Items */
+    .epic-item {
+      background: var(--surface-primary);
+      border: 2px solid var(--border-light);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-md);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .epic-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .epic-item:hover {
+      border-color: var(--primary-red);
+      box-shadow: 0 8px 25px rgba(220, 53, 69, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .epic-item:hover::before {
+      opacity: 1;
+    }
+
+    .epic-item.selected {
+      border-color: var(--primary-red);
+      background: linear-gradient(135deg, rgba(220, 53, 69, 0.05) 0%, rgba(220, 53, 69, 0.02) 100%);
+      box-shadow: 0 8px 25px rgba(220, 53, 69, 0.2);
+    }
+
+    .epic-item.selected::before {
+      opacity: 1;
+    }
+
+    .epic-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary-red) !important;
+      margin-bottom: var(--spacing-sm);
+      line-height: 1.3;
+    }
+
+    .epic-description {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .epic-metadata {
+      display: flex;
+      gap: var(--spacing-md);
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    /* User Story Items */
+    .user-story-item {
+      background: var(--surface-primary);
+      border: 2px solid var(--border-light);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-md);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .user-story-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .user-story-item:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .user-story-item:hover::before {
+      opacity: 1;
+    }
+
+    .user-story-item.selected {
+      border-color: #3b82f6;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+    }
+
+    .user-story-item.selected::before {
+      opacity: 1;
+    }
+
+    .user-story-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+      line-height: 1.3;
+    }
+
+    .user-story-description {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .user-story-metadata {
+      display: flex;
+      gap: var(--spacing-md);
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    /* Story Details */
+    .story-details-section {
+      background: var(--surface-primary);
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-light);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .story-details-header {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      color: white;
+      padding: var(--spacing-md) var(--spacing-lg);
+      font-weight: 600;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .story-details-content {
+      padding: var(--spacing-lg);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: var(--spacing-2xl);
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: var(--spacing-lg);
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .empty-state-subtext {
+      font-size: 1rem;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    /* Loading State */
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-2xl);
+      color: var(--text-muted);
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border-light);
+      border-top: 4px solid var(--primary-red);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: var(--spacing-sm) var(--spacing-lg);
+      border-radius: var(--radius-md);
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--primary-red-dark) 0%, #8e0000 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+      color: white;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: var(--spacing-sm) var(--spacing-lg);
+      border-radius: var(--radius-md);
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .btn-success:hover {
+      background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
+      color: white;
+    }
+
+    /* Priority Badges */
+    .priority-high {
+      background: #ef4444;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .priority-medium {
+      background: #f59e0b;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .priority-low {
+      background: #10b981;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* File Upload Styles */
+    .upload-area {
+      background: var(--surface-secondary);
+      border: 2px dashed var(--border-medium);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-2xl);
+      text-align: center;
+      margin-bottom: var(--spacing-lg);
+      transition: all 0.3s ease;
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary-red);
+      background: rgba(220, 53, 69, 0.05);
+    }
+
+    .upload-area.dragover {
+      border-color: var(--primary-red);
+      background: rgba(220, 53, 69, 0.1);
+    }
+
+    .upload-form-container {
+      background: var(--surface-primary);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-2xl);
+      box-shadow: var(--card-shadow);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .form-text {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: var(--spacing-xs);
+    }
+
+    /* Epic Selection Styles */
+    .epics-selection-container {
+      padding: var(--spacing-lg);
+    }
+
+    .epic-radio-item {
+      margin-bottom: var(--spacing-md);
+    }
+
+    .epic-check {
+      margin: 0;
+    }
+
+    .epic-check .form-check-input {
+      margin-right: var(--spacing-md);
+      margin-top: 0.5rem;
+    }
+
+    .epic-label {
+      display: block;
+      padding: var(--spacing-lg);
+      background: var(--surface-secondary);
+      border: 2px solid var(--border-light);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-left: 0;
+      width: 100%;
+    }
+
+    .epic-label:hover {
+      border-color: var(--primary-red);
+      background: var(--surface-primary);
+    }
+
+    .epic-check .form-check-input:checked + .epic-label {
+      border-color: var(--primary-red);
+      background: rgba(220, 53, 69, 0.1);
+    }
+
+    .epic-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .epic-description {
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-sm);
+      line-height: 1.5;
+    }
+
+    .epic-metadata {
+      display: flex;
+      gap: var(--spacing-lg);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* Form Controls */
+    .form-control {
+      border: 2px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-sm) var(--spacing-md);
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary-red);
+      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+      outline: none;
+    }
+
+    /* Alert Styles */
+    .alert {
+      border-radius: var(--border-radius);
+      border: none;
+      padding: var(--spacing-md) var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .alert-info {
+      background: rgba(59, 130, 246, 0.1);
+      color: #1e40af;
+      border-left: 4px solid #3b82f6;
+    }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.1);
+      color: #065f46;
+      border-left: 4px solid #10b981;
+    }
+
+    .alert-warning {
+      background: rgba(245, 158, 11, 0.1);
+      color: #92400e;
+      border-left: 4px solid #f59e0b;
+    }
+
+    .alert-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: #991b1b;
+      border-left: 4px solid #ef4444;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .tab-body {
+        flex-direction: column;
+      }
+
+      .chat-area {
+        width: 100%;
+        max-height: 300px;
+        order: 2;
+      }
+
+      .content-area {
+        order: 1;
+      }
+
+      .header-bar {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        text-align: center;
+      }
+
+      .nav-tabs {
+        padding: 0 var(--spacing-md);
+        flex-wrap: wrap;
+      }
+
+      .nav-tabs .nav-link {
+        font-size: 0.9rem;
+        padding: var(--spacing-sm) var(--spacing-md);
+      }
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--surface-tertiary);
+      border-radius: var(--radius-sm);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-medium);
+      border-radius: var(--radius-sm);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--secondary-grey);
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Enhanced Header -->
+    <div class="header-bar">
+      <div class="header-title">📋 Product Management Workbench</div>
+      <a href="/" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Back to Home
+      </a>
+    </div>
+
+    <!-- Enhanced Tab Navigation -->
+    <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="epics-tab" data-bs-toggle="tab" data-bs-target="#epics-pane" type="button" role="tab">
+          <i class="fas fa-flag"></i>
+          Epics
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link disabled" id="stories-tab" data-bs-toggle="tab" data-bs-target="#stories-pane" type="button" role="tab">
+          <i class="fas fa-tasks"></i>
+          User Stories
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link disabled" id="details-tab" data-bs-toggle="tab" data-bs-target="#details-pane" type="button" role="tab">
+          <i class="fas fa-info-circle"></i>
+          Story Details
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="mainTabContent">
+      <!-- Epics Tab -->
+      <div class="tab-pane fade show active" id="epics-pane" role="tabpanel">
+        <div class="tab-content-container">
+          <div class="tab-header">
+            <span><i class="fas fa-flag"></i> Product Epics</span>
+          </div>
+          <div class="tab-body">
+            <div class="content-area">
+              <!-- Upload Section -->
+              <div id="upload-section">
+                <div class="upload-form-container">
+                  <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="font-size: 2rem; margin-bottom: 1rem; color: var(--text-muted);">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h4>Upload Documents to Generate Epics</h4>
+                    <p class="text-muted">Upload your Product Requirements Document and System Mapping file</p>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="mb-3">
+                        <label for="prd-file" class="form-label">
+                          <strong><i class="fas fa-file-alt"></i> Product Requirements Document (Required)</strong>
+                        </label>
+                        <input type="file" class="form-control" id="prd-file" accept=".txt,.docx,.pdf,.md">
+                        <div class="form-text">Upload your PRD file (.txt, .docx, .pdf, .md)</div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="mb-3">
+                        <label for="system-mapping-file" class="form-label">
+                          <strong><i class="fas fa-sitemap"></i> System Mapping Document (Optional)</strong>
+                        </label>
+                        <input type="file" class="form-control" id="system-mapping-file" accept=".txt,.docx,.pdf,.md,.csv">
+                        <div class="form-text">Upload your system mapping file (.txt, .docx, .pdf, .md, .csv)</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="context-notes" class="form-label">
+                      <i class="fas fa-sticky-note"></i> Context & Instructions (Optional)
+                    </label>
+                    <textarea class="form-control" id="context-notes" rows="3" placeholder="Provide any additional context or specific instructions for epic generation..."></textarea>
+                  </div>
+                  
+                  <div class="text-center">
+                    <button class="btn btn-primary btn-lg" id="submit-files-btn" type="button">
+                      <i class="fas fa-magic"></i> Submit Files & Generate Epics
+                    </button>
+                    <br><br>
+                    <button class="btn btn-secondary" onclick="console.log('Test button clicked!'); alert('JavaScript is working!');" type="button">
+                      Test Button (Debug)
+                    </button>
+                    <button class="btn btn-info" onclick="debugSession()" type="button">
+                      Debug Session
+                    </button>
+                    <button class="btn btn-info" onclick="debugSession()" type="button">
+                      Debug Session
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Loading State -->
+              <div id="epics-loading" class="loading-state" style="display: none;">
+                <div class="loading-spinner"></div>
+                <span>Generating epics from your PRD...</span>
+              </div>
+
+              <!-- Epics List -->
+              <div id="epics-list" style="display: none;">
+                <!-- Epics will be populated here -->
+              </div>
+
+              <!-- Empty State -->
+              <div id="epics-empty" class="empty-state" style="display: none;">
+                <div class="empty-state-icon"><i class="fas fa-flag"></i></div>
+                <div class="empty-state-text">No epics generated yet</div>
+                <div class="empty-state-subtext">Upload both PRD and System Mapping files to get started</div>
+              </div>
+            </div>
+
+            <!-- Epic Chat Area -->
+            <div class="chat-area">
+              <div class="chat-header">
+                <i class="fas fa-comments"></i>
+                Refine Epics
+              </div>
+              <div class="chat-messages" id="epic-chat-messages">
+                <div class="chat-message ai">
+                  <div class="message-bubble">
+                    👋 Hi! I'm here to help you refine your epics. Once you generate some epics, you can ask me questions or request improvements.
+                  </div>
+                </div>
+              </div>
+              <div class="chat-input-area">
+                <div class="chat-input-container">
+                  <input type="text" class="chat-input" id="epic-chat-input" placeholder="Ask about epics or suggest improvements..." onkeypress="handleEpicChatEnter(event)">
+                  <button class="chat-send-btn" id="epic-chat-send" onclick="sendEpicMessage()" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Stories Tab -->
+      <div class="tab-pane fade" id="stories-pane" role="tabpanel">
+        <div class="tab-content-container">
+          <div class="tab-header">
+            <span><i class="fas fa-tasks"></i> User Stories</span>
+          </div>
+          <div class="tab-body">
+            <div class="content-area">
+              <!-- Selected Epic Info -->
+              <div id="selected-epic-info" style="display: none;" class="alert alert-info">
+                <h5><i class="fas fa-flag"></i> Selected Epic:</h5>
+                <div id="selected-epic-display"></div>
+              </div>
+
+              <!-- Loading State -->
+              <div id="stories-loading" class="loading-state" style="display: none;">
+                <div class="loading-spinner"></div>
+                <span>Generating user stories for selected epic...</span>
+              </div>
+
+              <!-- User Stories List -->
+              <div id="stories-list">
+                <!-- User stories will be populated here -->
+              </div>
+
+              <!-- Empty State -->
+              <div id="stories-empty" class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-tasks"></i></div>
+                <div class="empty-state-text">Select an epic first</div>
+                <div class="empty-state-subtext">Choose an epic from the previous tab to generate user stories</div>
+              </div>
+            </div>
+
+            <!-- Story Chat Area -->
+            <div class="chat-area">
+              <div class="chat-header">
+                <i class="fas fa-comments"></i>
+                Refine Stories
+              </div>
+              <div class="chat-messages" id="story-chat-messages">
+                <div class="chat-message ai">
+                  <div class="message-bubble">
+                    💡 I'll help you refine user stories once they're generated. You can ask me to improve clarity, add details, or adjust priorities.
+                  </div>
+                </div>
+              </div>
+              <div class="chat-input-area">
+                <div class="chat-input-container">
+                  <input type="text" class="chat-input" id="story-chat-input" placeholder="Ask about user stories or suggest improvements..." onkeypress="handleStoryChatEnter(event)">
+                  <button class="chat-send-btn" id="story-chat-send" onclick="sendStoryMessage()" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Story Details Tab -->
+      <div class="tab-pane fade" id="details-pane" role="tabpanel">
+        <div class="tab-content-container">
+          <div class="tab-header">
+            <span><i class="fas fa-info-circle"></i> Story Details</span>
+            <button class="btn btn-success" id="submit-jira-btn" onclick="submitToJira()" style="display: none;">
+              <i class="fas fa-rocket"></i>
+              Submit to Jira
+            </button>
+          </div>
+          <div class="tab-body">
+            <div class="content-area">
+              <!-- Story Details Content -->
+              <div id="story-details-content">
+                <!-- Empty State -->
+                <div id="details-empty" class="empty-state">
+                  <div class="empty-state-icon"><i class="fas fa-info-circle"></i></div>
+                  <div class="empty-state-text">Select a user story</div>
+                  <div class="empty-state-subtext">Choose a user story to view detailed information</div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="details-loading" class="loading-state" style="display: none;">
+                  <div class="loading-spinner"></div>
+                  <span>Loading story details...</span>
+                </div>
+
+                <!-- Details Sections -->
+                <div id="details-sections" style="display: none;">
+                  <!-- Story Info Section -->
+                  <div class="story-details-section">
+                    <div class="story-details-header">
+                      <i class="fas fa-user"></i>
+                      User Story
+                    </div>
+                    <div class="story-details-content" id="story-info">
+                      <!-- Story information will be populated here -->
+                    </div>
+                  </div>
+
+                  <!-- Acceptance Criteria Section -->
+                  <div class="story-details-section">
+                    <div class="story-details-header">
+                      <i class="fas fa-check-square"></i>
+                      Acceptance Criteria
+                    </div>
+                    <div class="story-details-content" id="acceptance-criteria">
+                      <!-- Acceptance criteria will be populated here -->
+                    </div>
+                  </div>
+
+                  <!-- Additional Details Section -->
+                  <div class="story-details-section">
+                    <div class="story-details-header">
+                      <i class="fas fa-info"></i>
+                      Additional Details
+                    </div>
+                    <div class="story-details-content" id="additional-details">
+                      <!-- Additional details will be populated here -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Details Chat Area -->
+            <div class="chat-area">
+              <div class="chat-header">
+                <i class="fas fa-comments"></i>
+                Refine Details
+              </div>
+              <div class="chat-messages" id="details-chat-messages">
+                <div class="chat-message ai">
+                  <div class="message-bubble">
+                    📝 I'm here to help you polish the story details. You can ask me to refine acceptance criteria, add more context, or prepare for Jira submission.
+                  </div>
+                </div>
+              </div>
+              <div class="chat-input-area">
+                <div class="chat-input-container">
+                  <input type="text" class="chat-input" id="details-chat-input" placeholder="Ask about story details or request improvements..." onkeypress="handleDetailsChatEnter(event)">
+                  <button class="chat-send-btn" id="details-chat-send" onclick="sendDetailsMessage()" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Global state
+    let currentEpics = [];
+    let currentUserStories = [];
+    let selectedEpic = null;
+    let selectedUserStory = null;
+    let currentStoryDetails = null;
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Tabbed Layout initialized');
+      
+      // Setup submit button event listener
+      const submitBtn = document.getElementById('submit-files-btn');
+      if (submitBtn) {
+        console.log('Submit button found, adding event listener');
+        submitBtn.addEventListener('click', function(event) {
+          event.preventDefault();
+          console.log('Submit button clicked!');
+          submitFilesAndGenerateEpics();
+        });
+      } else {
+        console.error('Submit button not found!');
+      }
+      
+      // Enable/disable chat send buttons based on input
+      setupChatInputs();
+      
+      // Setup file upload drag and drop
+      setupDragAndDrop();
+    });
+
+    // Setup chat inputs
+    function setupChatInputs() {
+      const epicChatInput = document.getElementById('epic-chat-input');
+      const epicChatSend = document.getElementById('epic-chat-send');
+      
+      const storyChatInput = document.getElementById('story-chat-input');
+      const storyChatSend = document.getElementById('story-chat-send');
+      
+      const detailsChatInput = document.getElementById('details-chat-input');
+      const detailsChatSend = document.getElementById('details-chat-send');
+
+      epicChatInput.addEventListener('input', function() {
+        epicChatSend.disabled = !this.value.trim();
+      });
+
+      storyChatInput.addEventListener('input', function() {
+        storyChatSend.disabled = !this.value.trim();
+      });
+
+      detailsChatInput.addEventListener('input', function() {
+        detailsChatSend.disabled = !this.value.trim();
+      });
+    }
+
+    // Setup drag and drop (optional enhancement)
+    function setupDragAndDrop() {
+      // For future enhancement - currently using form-based upload
+    }
+
+    // Update submit button state (button is always enabled)
+    function updateSubmitButton() {
+      console.log('updateSubmitButton called');
+      const prdFile = document.getElementById('prd-file').files[0];
+      const systemMappingFile = document.getElementById('system-mapping-file').files[0];
+      const submitBtn = document.getElementById('submit-files-btn');
+      
+      console.log('PRD file:', prdFile ? prdFile.name : 'none');
+      console.log('System mapping file:', systemMappingFile ? systemMappingFile.name : 'none');
+      console.log('Submit button found:', !!submitBtn);
+      
+      if (!submitBtn) {
+        console.error('Submit button not found!');
+        return;
+      }
+      
+      // Keep button always enabled
+      submitBtn.disabled = false;
+      
+      // Update button text based on files selected
+      if (prdFile && systemMappingFile) {
+        submitBtn.innerHTML = '<i class="fas fa-magic"></i> Submit Files & Generate Epics';
+      } else if (prdFile) {
+        submitBtn.innerHTML = '<i class="fas fa-magic"></i> Submit PRD & Generate Epics';
+      } else {
+        submitBtn.innerHTML = '<i class="fas fa-magic"></i> Submit Files & Generate Epics';
+      }
+    }
+
+    // Submit files and generate epics
+    async function submitFilesAndGenerateEpics() {
+      console.log('=== submitFilesAndGenerateEpics START ===');
+      
+      try {
+        console.log('Step 1: Getting file inputs...');
+        const prdFile = document.getElementById('prd-file');
+        const systemMappingFile = document.getElementById('system-mapping-file');
+        const contextNotes = document.getElementById('context-notes');
+        
+        console.log('File elements found:', {
+          prdFile: !!prdFile,
+          systemMappingFile: !!systemMappingFile,
+          contextNotes: !!contextNotes
+        });
+        
+        if (!prdFile || !systemMappingFile || !contextNotes) {
+          console.error('Missing form elements!');
+          alert('Error: Form elements not found. Please refresh the page.');
+          return;
+        }
+        
+        const prdFileSelected = prdFile.files[0];
+        const systemMappingFileSelected = systemMappingFile.files[0];
+        const contextNotesValue = contextNotes.value;
+
+        console.log('Step 2: Files selected:', {
+          prd: prdFileSelected ? prdFileSelected.name : 'none',
+          system: systemMappingFileSelected ? systemMappingFileSelected.name : 'none',
+          context: contextNotesValue ? 'provided' : 'empty'
+        });
+
+        console.log('Step 3: Validating files...');
+        if (!prdFileSelected && !systemMappingFileSelected) {
+          alert('Please select at least a PRD file or System Mapping file to generate epics');
+          return;
+        }
+
+        if (!prdFileSelected) {
+          alert('PRD file is required. Please select a PRD file.');
+          return;
+        }
+
+        console.log('Step 4: Showing loading state...');
+        // Show loading state
+        const uploadSection = document.getElementById('upload-section');
+        const epicsLoading = document.getElementById('epics-loading');
+        const epicsEmpty = document.getElementById('epics-empty');
+        
+        if (uploadSection) uploadSection.style.display = 'none';
+        if (epicsLoading) epicsLoading.style.display = 'flex';
+        if (epicsEmpty) epicsEmpty.style.display = 'none';
+
+        console.log('Step 5: Preparing form data...');
+        const formData = new FormData();
+        formData.append('prd_file', prdFileSelected);
+        
+        // Only append system mapping if it exists
+        if (systemMappingFileSelected) {
+          formData.append('system_mapping_file', systemMappingFileSelected);
+          console.log('Including system mapping file:', systemMappingFileSelected.name);
+        } else {
+          console.log('No system mapping file selected');
+        }
+        
+        if (contextNotesValue) {
+          formData.append('context_notes', contextNotesValue);
+        }
+
+        // Use different endpoint based on files uploaded
+        const endpoint = systemMappingFileSelected ? '/tabbed-upload-files' : '/tabbed-upload-prd';
+        console.log('Step 6: Using endpoint:', endpoint);
+
+        console.log('Step 7: Making API call...');
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: formData
+        });
+
+        console.log('Step 8: Response received, status:', response.status);
+        const data = await response.json();
+        console.log('Step 9: Response data:', data);
+
+        if (data.success) {
+          console.log('Step 10: Success! Processing epics...');
+          console.log('Raw epics data:', data.epics);
+          console.log('Number of epics:', data.epics ? data.epics.length : 0);
+          
+          // Store epics globally
+          currentEpics = data.epics || [];
+          window.currentEpics = data.epics || [];
+          console.log('Epics stored globally:', currentEpics);
+          
+          if (data.epics && data.epics.length > 0) {
+            console.log('Calling displayEpics with', data.epics.length, 'epics');
+            displayEpics(data.epics);
+          } else {
+            console.error('No epics in response data!');
+            alert('No epics were generated. Please try again.');
+            return;
+          }
+          
+          // Enable epic chat
+          const epicChatSend = document.getElementById('epic-chat-send');
+          if (epicChatSend) epicChatSend.disabled = false;
+          
+          // Add success message to epic chat
+          const fileText = systemMappingFileSelected ? 'PRD and System Mapping' : 'PRD';
+          if (typeof addChatMessage === 'function') {
+            addChatMessage('epic-chat-messages', `✅ Generated ${data.epics.length} epics successfully from your ${fileText}! You can now ask me questions or request refinements.`, 'ai');
+          }
+          console.log('=== submitFilesAndGenerateEpics SUCCESS ===');
+        } else {
+          throw new Error(data.error || 'Failed to generate epics');
+        }
+      } catch (error) {
+        console.error('=== submitFilesAndGenerateEpics ERROR ===');
+        console.error('Error generating epics:', error);
+        alert('Error generating epics: ' + error.message);
+        
+        // Reset to upload state
+        const epicsLoading = document.getElementById('epics-loading');
+        const uploadSection = document.getElementById('upload-section');
+        
+        if (epicsLoading) epicsLoading.style.display = 'none';
+        if (uploadSection) uploadSection.style.display = 'block';
+      }
+    }
+
+    // Display epics
+    function displayEpics(epics) {
+      console.log('displayEpics called with:', epics);
+      const epicsLoading = document.getElementById('epics-loading');
+      const epicsList = document.getElementById('epics-list');
+
+      epicsLoading.style.display = 'none';
+      epicsList.style.display = 'block';
+
+      // Store epics globally for access in other functions
+      currentEpics = epics;
+      console.log('currentEpics updated:', currentEpics);
+
+      let html = '<div class="epics-selection-container">';
+      html += '<h5 class="mb-3"><i class="fas fa-flag"></i> Select an Epic to Generate User Stories</h5>';
+      
+      epics.forEach((epic, index) => {
+        console.log(`Epic ${index}:`, epic);
+        const priorityClass = epic.priority.toLowerCase() === 'high' ? 'priority-high' : 
+                             epic.priority.toLowerCase() === 'low' ? 'priority-low' : 'priority-medium';
+        
+        html += `
+          <div class="epic-radio-item">
+            <div class="form-check epic-check">
+              <input class="form-check-input" type="radio" name="selectedEpic" id="epic_${index}" value="${index}" onchange="updateGenerateButton()">
+              <label class="form-check-label epic-label" for="epic_${index}">
+                <div class="epic-title">${epic.title}</div>
+                <div class="epic-description">${epic.description}</div>
+                <div class="epic-metadata">
+                  <span><i class="fas fa-flag"></i> <span class="${priorityClass}">${epic.priority}</span></span>
+                  <span><i class="fas fa-tasks"></i> ${epic.estimated_stories || 'TBD'} stories</span>
+                  <span><i class="fas fa-clock"></i> ${epic.estimated_effort || 'TBD'}</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        `;
+      });
+      
+      html += `
+        <div class="text-center mt-4">
+          <button class="btn btn-primary btn-lg" id="generate-stories-btn" onclick="generateUserStories()" disabled>
+            <i class="fas fa-magic"></i> Generate User Stories
+          </button>
+        </div>
+      </div>`;
+
+      epicsList.innerHTML = html;
+      console.log('Epic list HTML generated and inserted');
+    }
+
+    // Update generate button state
+    function updateGenerateButton() {
+      const selectedRadio = document.querySelector('input[name="selectedEpic"]:checked');
+      const generateBtn = document.getElementById('generate-stories-btn');
+      generateBtn.disabled = !selectedRadio;
+    }
+
+    // Generate user stories for selected epic
+    async function generateUserStories() {
+      const selectedRadio = document.querySelector('input[name="selectedEpic"]:checked');
+      
+      if (!selectedRadio) {
+        alert('Please select an epic first');
+        return;
+      }
+
+      const epicIndex = parseInt(selectedRadio.value);
+      console.log('Selected epic index:', epicIndex);
+      console.log('Available epics:', currentEpics);
+      
+      if (epicIndex >= currentEpics.length) {
+        alert('Invalid epic selection');
+        return;
+      }
+      
+      const epic = currentEpics[epicIndex];
+      console.log('Selected epic:', epic);
+      selectedEpic = epic;
+
+      // Enable stories tab
+      const storiesTab = document.getElementById('stories-tab');
+      storiesTab.classList.remove('disabled');
+
+      // Show loading in stories tab
+      document.getElementById('stories-loading').style.display = 'flex';
+      document.getElementById('stories-empty').style.display = 'none';
+
+      // Switch to stories tab
+      const tab = new bootstrap.Tab(storiesTab);
+      tab.show();
+
+      try {
+        console.log('Sending epic ID to backend:', epic.id);
+        const response = await fetch('/tabbed-select-epic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            epic_id: epic.id
+          })
+        });
+
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Response data:', data);
+
+        if (data.success) {
+          currentUserStories = data.user_stories;
+          displaySelectedEpic(data.epic);
+          displayUserStories(data.user_stories);
+          
+          // Enable story chat
+          document.getElementById('story-chat-send').disabled = false;
+          
+          // Add success message to story chat
+          addChatMessage('story-chat-messages', `🎯 Generated ${data.user_stories.length} user stories for "${data.epic.title}". Ask me anything about these stories!`, 'ai');
+        } else {
+          throw new Error(data.error || 'Failed to generate user stories');
+        }
+      } catch (error) {
+        console.error('Error selecting epic:', error);
+        alert('Error generating user stories: ' + error.message);
+        
+        // Reset stories tab
+        document.getElementById('stories-loading').style.display = 'none';
+        document.getElementById('stories-empty').style.display = 'block';
+      }
+    }
+
+    // Display selected epic info
+    function displaySelectedEpic(epic) {
+      const selectedEpicInfo = document.getElementById('selected-epic-info');
+      const selectedEpicDisplay = document.getElementById('selected-epic-display');
+      
+      selectedEpicDisplay.innerHTML = `
+        <h6>${epic.title}</h6>
+        <p>${epic.description}</p>
+      `;
+      
+      selectedEpicInfo.style.display = 'block';
+    }
+
+    // Display user stories
+    function displayUserStories(userStories) {
+      const storiesLoading = document.getElementById('stories-loading');
+      const storiesList = document.getElementById('stories-list');
+
+      storiesLoading.style.display = 'none';
+      storiesList.style.display = 'block';
+
+      let html = '';
+      userStories.forEach((story, index) => {
+        const priorityClass = story.priority.toLowerCase() === 'high' ? 'priority-high' : 
+                             story.priority.toLowerCase() === 'low' ? 'priority-low' : 'priority-medium';
+        
+        html += `
+          <div class="user-story-item" onclick="selectUserStory(${index})" data-story-id="${story.id}">
+            <div class="user-story-title">${story.title}</div>
+            <div class="user-story-description">${story.description}</div>
+            <div class="user-story-metadata">
+              <span><i class="fas fa-flag"></i> <span class="${priorityClass}">${story.priority}</span></span>
+              <span><i class="fas fa-weight-hanging"></i> ${story.estimated_effort}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      storiesList.innerHTML = html;
+    }
+
+    // Select a user story
+    async function selectUserStory(storyIndex) {
+      const story = currentUserStories[storyIndex];
+      selectedUserStory = story;
+
+      // Update visual selection
+      document.querySelectorAll('.user-story-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      document.querySelectorAll('.user-story-item')[storyIndex].classList.add('selected');
+
+      // Enable details tab
+      const detailsTab = document.getElementById('details-tab');
+      detailsTab.classList.remove('disabled');
+
+      // Show loading in details tab
+      document.getElementById('details-loading').style.display = 'flex';
+      document.getElementById('details-empty').style.display = 'none';
+
+      // Switch to details tab
+      const tab = new bootstrap.Tab(detailsTab);
+      tab.show();
+
+      try {
+        const response = await fetch('/tabbed-select-story', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            story_id: story.id
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          currentStoryDetails = data.story_details;
+          displayStoryDetails(data.story_details);
+          
+          // Enable details chat and submit button
+          document.getElementById('details-chat-send').disabled = false;
+          document.getElementById('submit-jira-btn').style.display = 'inline-flex';
+          
+          // Add success message to details chat
+          addChatMessage('details-chat-messages', `📋 Loaded details for "${data.story.title}". I can help you refine the acceptance criteria or prepare for Jira submission.`, 'ai');
+        } else {
+          throw new Error(data.error || 'Failed to load story details');
+        }
+      } catch (error) {
+        console.error('Error selecting story:', error);
+        alert('Error loading story details: ' + error.message);
+        
+        // Reset details tab
+        document.getElementById('details-loading').style.display = 'none';
+        document.getElementById('details-empty').style.display = 'block';
+      }
+    }
+
+    // Display story details
+    function displayStoryDetails(details) {
+      const detailsLoading = document.getElementById('details-loading');
+      const detailsSections = document.getElementById('details-sections');
+      
+      detailsLoading.style.display = 'none';
+      detailsSections.style.display = 'block';
+
+      // Story Info
+      document.getElementById('story-info').innerHTML = `
+        <h5>${details.title}</h5>
+        <p><strong>Description:</strong> ${details.description}</p>
+        <p><strong>Epic:</strong> ${details.epic_title}</p>
+      `;
+
+      // Acceptance Criteria
+      document.getElementById('acceptance-criteria').innerHTML = `
+        <div style="white-space: pre-line;">${details.acceptance_criteria}</div>
+      `;
+
+      // Additional Details
+      document.getElementById('additional-details').innerHTML = `
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Priority:</strong> <span class="priority-${details.priority.toLowerCase()}">${details.priority}</span></p>
+            <p><strong>Estimated Effort:</strong> ${details.estimated_effort}</p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>Responsible Systems:</strong> ${details.responsible_systems}</p>
+            <p><strong>Requirements Traceability:</strong> ${details.tagged_requirements}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Chat functions
+    function handleEpicChatEnter(event) {
+      if (event.key === 'Enter') {
+        sendEpicMessage();
+      }
+    }
+
+    function handleStoryChatEnter(event) {
+      if (event.key === 'Enter') {
+        sendStoryMessage();
+      }
+    }
+
+    function handleDetailsChatEnter(event) {
+      if (event.key === 'Enter') {
+        sendDetailsMessage();
+      }
+    }
+
+    async function sendEpicMessage() {
+      const input = document.getElementById('epic-chat-input');
+      const message = input.value.trim();
+      
+      if (!message) return;
+
+      // Add user message
+      addChatMessage('epic-chat-messages', message, 'user');
+      input.value = '';
+
+      // Add loading message
+      const loadingId = addChatMessage('epic-chat-messages', 'Thinking...', 'ai', true);
+
+      try {
+        const response = await fetch('/tabbed-epic-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: message
+          })
+        });
+
+        const data = await response.json();
+
+        // Remove loading message
+        removeChatMessage(loadingId);
+
+        if (data.success) {
+          addChatMessage('epic-chat-messages', data.response, 'ai');
+        } else {
+          addChatMessage('epic-chat-messages', 'Sorry, I encountered an error. Please try again.', 'ai');
+        }
+      } catch (error) {
+        console.error('Error in epic chat:', error);
+        removeChatMessage(loadingId);
+        addChatMessage('epic-chat-messages', 'Sorry, I encountered an error. Please try again.', 'ai');
+      }
+    }
+
+    async function sendStoryMessage() {
+      const input = document.getElementById('story-chat-input');
+      const message = input.value.trim();
+      
+      if (!message) return;
+
+      // Add user message
+      addChatMessage('story-chat-messages', message, 'user');
+      input.value = '';
+
+      // Add loading message
+      const loadingId = addChatMessage('story-chat-messages', 'Thinking...', 'ai', true);
+
+      try {
+        const response = await fetch('/tabbed-story-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: message
+          })
+        });
+
+        const data = await response.json();
+
+        // Remove loading message
+        removeChatMessage(loadingId);
+
+        if (data.success) {
+          addChatMessage('story-chat-messages', data.response, 'ai');
+        } else {
+          addChatMessage('story-chat-messages', 'Sorry, I encountered an error. Please try again.', 'ai');
+        }
+      } catch (error) {
+        console.error('Error in story chat:', error);
+        removeChatMessage(loadingId);
+        addChatMessage('story-chat-messages', 'Sorry, I encountered an error. Please try again.', 'ai');
+      }
+    }
+
+    async function sendDetailsMessage() {
+      const input = document.getElementById('details-chat-input');
+      const message = input.value.trim();
+      
+      if (!message) return;
+
+      // Add user message
+      addChatMessage('details-chat-messages', message, 'user');
+      input.value = '';
+
+      // Add loading message
+      const loadingId = addChatMessage('details-chat-messages', 'Thinking...', 'ai', true);
+
+      try {
+        const response = await fetch('/tabbed-details-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: message
+          })
+        });
+
+        const data = await response.json();
+
+        // Remove loading message
+        removeChatMessage(loadingId);
+
+        if (data.success) {
+          addChatMessage('details-chat-messages', data.response, 'ai');
+        } else {
+          addChatMessage('details-chat-messages', 'Sorry, I encountered an error. Please try again.', 'ai');
+        }
+      } catch (error) {
+        console.error('Error in details chat:', error);
+        removeChatMessage(loadingId);
+        addChatMessage('details-chat-messages', 'Sorry, I encountered an error. Please try again.', 'ai');
+      }
+    }
+
+    // Add chat message
+    function addChatMessage(containerId, message, sender, isLoading = false) {
+      const container = document.getElementById(containerId);
+      const messageId = 'msg-' + Date.now() + '-' + Math.random();
+      
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `chat-message ${sender}`;
+      messageDiv.id = messageId;
+      
+      if (isLoading) {
+        messageDiv.innerHTML = `
+          <div class="message-bubble">
+            <div class="loading-spinner" style="width: 20px; height: 20px; margin: 0;"></div>
+            ${message}
+          </div>
+        `;
+      } else {
+        messageDiv.innerHTML = `
+          <div class="message-bubble">${message}</div>
+        `;
+      }
+      
+      container.appendChild(messageDiv);
+      container.scrollTop = container.scrollHeight;
+      
+      return messageId;
+    }
+
+    // Remove chat message
+    function removeChatMessage(messageId) {
+      const message = document.getElementById(messageId);
+      if (message) {
+        message.remove();
+      }
+    }
+
+    // Submit to Jira
+    async function submitToJira() {
+      if (!selectedUserStory || !currentStoryDetails) {
+        alert('Please select a user story first');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submit-jira-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+      try {
+        const response = await fetch('/tabbed-submit-jira', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert('Successfully submitted to Jira!\nTicket: ' + data.jira_ticket);
+          addChatMessage('details-chat-messages', `🚀 Successfully submitted "${selectedUserStory.title}" to Jira! Ticket: ${data.jira_ticket}`, 'ai');
+        } else {
+          throw new Error(data.error || 'Failed to submit to Jira');
+        }
+      } catch (error) {
+        console.error('Error submitting to Jira:', error);
+        alert('Error submitting to Jira: ' + error.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-rocket"></i> Submit to Jira';
+      }
+    }
+
+    // Debug function to check session state
+    async function debugSession() {
+      try {
+        console.log('=== DEBUG SESSION START ===');
+        const response = await fetch('/debug-session');
+        const data = await response.json();
+        console.log('Session debug data:', data);
+        
+        alert(`Session Debug Info:
+Session ID: ${data.session_id}
+Has Epics: ${data.has_epics}
+Epics Count: ${data.epics_count}
+Current Epic: ${data.current_epic}
+Session Keys: ${data.session_keys.join(', ')}
+Epic IDs: ${data.epic_ids ? data.epic_ids.join(', ') : 'None'}`);
+        
+        console.log('=== DEBUG SESSION END ===');
+      } catch (error) {
+        console.error('Debug session error:', error);
+        alert('Error fetching session debug info: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

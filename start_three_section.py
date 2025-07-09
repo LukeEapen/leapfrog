@@ -140,6 +140,9 @@ def main():
     print("      - Story details appear (right section) with acceptance criteria")
     print("   4. Use chat features for refinement at any level")
     print("   5. Submit polished stories to Jira when ready")
+    print("\n💡 Alternative: For a tabbed interface experience:")
+    print("   - Run: python launch_tabbed_workbench.py")
+    print("   - Access: http://localhost:5002/tabbed-layout")
     
     start_now = input("\n🚀 Start the server now? (Y/n): ").strip().lower()
     if start_now not in ('n', 'no'):

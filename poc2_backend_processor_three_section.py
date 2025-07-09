@@ -400,6 +400,17 @@ def tabbed_layout():
         logger.error(f"Traceback: {traceback.format_exc()}")
         return f"Error loading tabbed layout page: {str(e)}", 500
 
+@app.route("/epic-first-tabbed", methods=["GET"])
+def epic_first_tabbed_layout():
+    """Render the epic-first tabbed layout page."""
+    try:
+        logger.info("Rendering epic-first tabbed layout")
+        return render_template('poc2_tabbed_layout_epic_first.html')
+    except Exception as e:
+        logger.error(f"Error rendering epic-first tabbed layout: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return f"Error loading epic-first tabbed layout page: {str(e)}", 500
+
 @app.route("/three-section-get-epics", methods=["GET"])
 def three_section_get_epics():
     """Get epics from session for three section layout."""
@@ -1350,8 +1361,11 @@ def three_section_upload_prd():
 Project Requirements Document Analysis:
 {prd_content}
 
-Additional Context:
+Additional Documentation:
 {docs_content}
+
+User Context:
+{requirements_text}
 
 Instructions: Generate comprehensive epics from the above requirements. Focus on:
 1. Breaking down large features into manageable epics
@@ -1579,7 +1593,7 @@ def create_epic_generation_context(prd_content, additional_content, context):
         enhanced_context += f"Additional Documentation:\n{additional_content}\n\n"
     
     if context:
-        enhanced_context += f"Additional Context:\n{context}\n\n"
+        enhanced_context += f"User Context:\n{context}\n\n"
     
     enhanced_context += """Instructions: Generate 3-5 comprehensive epics from the above requirements. It is CRITICAL that you create multiple epics (between 3-5) to break down the requirements into manageable chunks. Focus on:
 
@@ -2145,17 +2159,315 @@ def format_epics_for_display(epics):
     
     return "\n".join(html_parts)
 
-if __name__ == "__main__":
-    logger.info("Starting Three Section Flask application...")
-    logger.info("Available routes:")
-    logger.info("  - http://localhost:5001/ (landing page)")
-    logger.info("  - http://localhost:5001/three-section (three section layout)")
-    logger.info("  - http://localhost:5001/tabbed-layout (tabbed layout)")
-    
-    # Run the Flask app
-    app.run(
-        host='0.0.0.0',
-        port=5001,
-        debug=True,
-        threaded=True
-    )
+@app.route("/tabbed-generate-epics", methods=["POST"])
+def tabbed_generate_epics():
+    """Generate epics from uploaded PRD for epic-first tabbed layout."""
+    try:
+        logger.info("POST request to /tabbed-generate-epics")
+        
+        # Handle file uploads
+        prd_file = request.files.get('prd_file')
+        additional_file = request.files.get('additional_file')
+        context_notes = request.form.get('context_notes', '')
+        
+        if not prd_file:
+            return jsonify({"success": False, "error": "PRD file is required"})
+        
+        # Process PRD content using existing function
+        prd_content = ""
+        additional_content = ""
+        
+        # Process main PRD file
+        if prd_file and prd_file.filename:
+            prd_content = safe_read(prd_file)
+            logger.info(f"Extracted PRD content: {len(prd_content)} characters")
+        
+        # Process additional file if provided
+        if additional_file and additional_file.filename:
+            additional_content = safe_read(additional_file)
+            logger.info(f"Extracted additional content: {len(additional_content)} characters")
+        
+        # Store in session for later use
+        session['prd_content'] = prd_content
+        session['additional_content'] = additional_content
+        session['context_notes'] = context_notes
+        
+        # Create combined content
+        combined_content = prd_content
+        if additional_content:
+            combined_content += f"\n\n--- Additional Documentation ---\n{additional_content}"
+        if context_notes:
+            combined_content += f"\n\n--- User Context ---\n{context_notes}"
+        
+        session['combined_content'] = combined_content
+        
+        # Generate epics using existing logic
+        enhanced_context = create_epic_generation_context(prd_content, additional_content, context_notes)
+        
+        try:
+            client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an expert product manager and business analyst. Generate multiple comprehensive epics (3-5) that break down the requirements into manageable chunks."},
+                    {"role": "user", "content": enhanced_context}
+                ],
+                max_tokens=2000,
+                temperature=0.7
+            )
+            
+            epics_text = response.choices[0].message.content
+            
+            # Parse epics from the response
+            epics = parse_epics_from_response(epics_text)
+            
+            if epics:
+                # Store epics in session
+                session['generated_epics'] = epics
+                session['epic_first_mode'] = True
+                
+                logger.info(f"Generated {len(epics)} epics successfully")
+                return jsonify({
+                    "success": True,
+                    "epics": epics,
+                    "message": f"Successfully generated {len(epics)} epics"
+                })
+            else:
+                return jsonify({
+                    "success": False,
+                    "error": "Failed to parse epics from OpenAI response"
+                })
+                
+        except Exception as e:
+            logger.error(f"Error calling OpenAI API: {str(e)}")
+            return jsonify({
+                "success": False,
+                "error": "Failed to generate epics. Please check your OpenAI API key."
+            })
+            
+    except Exception as e:
+        logger.error(f"Error in tabbed epic generation: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route("/tabbed-generate-user-stories", methods=["POST"])
+def tabbed_generate_user_stories():
+    """Generate user stories for a selected epic in epic-first tabbed layout."""
+    try:
+        logger.info("POST request to /tabbed-generate-user-stories")
+        
+        data = request.get_json()
+        selected_epic = data.get('epic')
+        
+        if not selected_epic:
+            return jsonify({"success": False, "error": "Selected epic is required"})
+        
+        # Get PRD content from session for context
+        prd_content = session.get('combined_content', '')
+        
+        # Generate user stories using OpenAI
+        user_stories = generate_user_stories_for_selected_epic(selected_epic, prd_content)
+        
+        if user_stories:
+            # Store in session
+            session['current_epic'] = selected_epic
+            session['generated_user_stories'] = user_stories
+            
+            logger.info(f"Generated {len(user_stories)} user stories for epic: {selected_epic.get('title', 'Unknown')}")
+            return jsonify({
+                "success": True,
+                "user_stories": user_stories,
+                "epic": selected_epic,
+                "message": f"Successfully generated {len(user_stories)} user stories"
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Failed to generate user stories for the selected epic"
+            })
+            
+    except Exception as e:
+        logger.error(f"Error generating user stories: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": str(e)})
+
+def parse_epics_from_response(epics_text):
+    """Parse epics from OpenAI response text."""
+    try:
+        epics = []
+        epic_sections = epics_text.split('Epic ')
+        
+        for i, section in enumerate(epic_sections):
+            if i == 0:  # Skip the first split part which is usually empty or intro text
+                continue
+                
+            lines = section.strip().split('\n')
+            if not lines:
+                continue
+                
+            # Extract epic number and title from first line
+            first_line = lines[0]
+            if ':' in first_line:
+                title_part = first_line.split(':', 1)[1].strip()
+            else:
+                title_part = first_line.strip()
+            
+            # Find description
+            description = ""
+            priority = "Medium"  # Default priority
+            
+            for line in lines[1:]:
+                line = line.strip()
+                if line.startswith('Description:'):
+                    description = line.replace('Description:', '').strip()
+                elif line.startswith('Priority:'):
+                    priority = line.replace('Priority:', '').strip()
+                elif not line.startswith('Epic') and not line.startswith('Priority:') and description == "":
+                    # If no explicit "Description:" label, use the content as description
+                    if line and not line.lower().startswith('priority'):
+                        description = line
+            
+            if title_part and description:
+                epic = {
+                    'id': f'epic_{i}',
+                    'title': title_part,
+                    'description': description,
+                    'priority': priority,
+                    'estimated_stories': 'TBD',
+                    'estimated_effort': 'TBD'
+                }
+                epics.append(epic)
+        
+        logger.info(f"Parsed {len(epics)} epics from response")
+        return epics
+        
+    except Exception as e:
+        logger.error(f"Error parsing epics: {str(e)}")
+        return []
+
+def generate_user_stories_for_selected_epic(epic, prd_content):
+    """Generate user stories specifically for a given epic."""
+    try:
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        
+        prompt = f"""
+        Based on the following PRD content and the specific epic, generate detailed user stories.
+
+        PRD Content:
+        {prd_content[:3000] if prd_content else "No additional PRD content available"}
+
+        Epic Details:
+        Title: {epic.get('title', '')}
+        Description: {epic.get('description', '')}
+
+        Please generate 5-8 user stories that specifically support this epic. For each user story, provide:
+
+        User Story 1: [Story Title]
+        Description: As a [user type], I want [goal] so that [benefit]
+        Acceptance Criteria:
+        - [Specific, testable criterion 1]
+        - [Specific, testable criterion 2]
+        - [Specific, testable criterion 3]
+        Priority: High/Medium/Low
+        Effort: Small/Medium/Large
+
+        User Story 2: [Story Title]
+        Description: As a [user type], I want [goal] so that [benefit]
+        Acceptance Criteria:
+        - [Specific, testable criterion 1]
+        - [Specific, testable criterion 2]
+        - [Specific, testable criterion 3]
+        Priority: High/Medium/Low
+        Effort: Small/Medium/Large
+
+        Continue this format for all user stories (aim for 5-8 stories).
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are an expert product manager and business analyst. Generate detailed, actionable user stories that align with the given epic and PRD requirements."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=3000,
+            temperature=0.7
+        )
+        
+        # Parse the response
+        content = response.choices[0].message.content
+        user_stories = parse_user_stories_from_response(content, epic)
+        
+        return user_stories
+        
+    except Exception as e:
+        logger.error(f"Error generating user stories for epic: {str(e)}")
+        return []
+
+def parse_user_stories_from_response(content, epic):
+    """Parse user stories from OpenAI response."""
+    try:
+        user_stories = []
+        story_sections = content.split('User Story ')
+        
+        for i, section in enumerate(story_sections):
+            if i == 0:  # Skip the first split part
+                continue
+                
+            lines = section.strip().split('\n')
+            if not lines:
+                continue
+            
+            # Extract story number and title from first line
+            first_line = lines[0]
+            if ':' in first_line:
+                title_part = first_line.split(':', 1)[1].strip()
+            else:
+                title_part = first_line.strip()
+            
+            # Parse story details
+            description = ""
+            acceptance_criteria = []
+            priority = "Medium"
+            effort = "Medium"
+            
+            current_section = None
+            for line in lines[1:]:
+                line = line.strip()
+                if line.startswith('Description:'):
+                    description = line.replace('Description:', '').strip()
+                    current_section = 'description'
+                elif line.startswith('Acceptance Criteria:'):
+                    current_section = 'criteria'
+                elif line.startswith('Priority:'):
+                    priority = line.replace('Priority:', '').strip()
+                    current_section = None
+                elif line.startswith('Effort:'):
+                    effort = line.replace('Effort:', '').strip()
+                    current_section = None
+                elif line.startswith('- ') and current_section == 'criteria':
+                    acceptance_criteria.append(line[2:])
+                elif current_section == 'description' and line and not line.startswith('Acceptance') and not line.startswith('Priority') and not line.startswith('Effort'):
+                    if description:
+                        description += " " + line
+                    else:
+                        description = line
+            
+            if title_part and description:
+                story = {
+                    'id': f'story_{i}',
+                    'title': title_part,
+                    'description': description,
+                    'acceptance_criteria': '\n'.join([f"• {criteria}" for criteria in acceptance_criteria]) if acceptance_criteria else "Acceptance criteria to be defined",
+                    'priority': priority,
+                    'estimated_effort': effort,
+                    'epic_id': epic.get('id', 'epic_1'),
+                    'epic_title': epic.get('title', '')
+                }
+                user_stories.append(story)
+        
+        logger.info(f"Parsed {len(user_stories)} user stories from response")
+        return user_stories
+        
+    except Exception as e:
+        logger.error(f"Error parsing user stories: {str(e)}")
+        return []
