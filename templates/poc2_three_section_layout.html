@@ -4,30 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product Management - Workbench</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    /* Modern CSS Variables for Design System */
+    /* Modern CSS Variables for Design System - Unified with Landing Page */
     :root {
-      --primary-red: #d0021b;
-      --primary-red-dark: #a0011a;
-      --primary-red-light: #ff1744;
-      --primary-red-lighter: #fff5f5;
-      --background-dark: #1a1d23;
-      --background-darker: #121419;
-      --background-light: #2a2d35;
+      --primary-red: #dc3545;
+      --primary-red-dark: #b71c1c;
+      --primary-grey: #343a40;
+      --secondary-grey: #6c757d;
+      --light-grey: #f8f9fa;
       --surface-primary: #ffffff;
-      --surface-secondary: #f8fafc;
-      --surface-tertiary: #f1f5f9;
-      --text-primary: #1e293b;
-      --text-secondary: #64748b;
+      --surface-secondary: #f8f9fa;
+      --surface-tertiary: #e9ecef;
+      --text-primary: #343a40;
+      --text-secondary: #6c757d;
       --text-light: #ffffff;
       --text-muted: #94a3b8;
-      --border-light: #e2e8f0;
-      --border-medium: #cbd5e1;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --border-light: #e9ecef;
+      --border-medium: #dee2e6;
+      --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      --border-radius: 1rem;
       --radius-sm: 0.375rem;
       --radius-md: 0.5rem;
       --radius-lg: 0.75rem;
@@ -40,11 +38,18 @@
       --spacing-2xl: 3rem;
     }
 
-    /* Modern Body Styling with Dark Gradient */
+    /* Reset and Base Styling */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Modern Body Styling - Light Background to Match Landing Page */
     body {
-      background: linear-gradient(135deg, var(--background-darker) 0%, var(--background-dark) 100%);
-      color: var(--text-light);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      color: var(--text-primary);
       line-height: 1.6;
       margin: 0;
       padding: 0;
@@ -52,20 +57,7 @@
       position: relative;
     }
 
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: radial-gradient(circle at 20% 80%, rgba(208, 2, 27, 0.1) 0%, transparent 50%),
-                  radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    /* Enhanced Main Container - Full Width */
+    /* Enhanced Main Container - Full Width with Landing Page Style */
     .main-container {
       width: 100%;
       margin: 0;
@@ -91,7 +83,7 @@
       }
     }
 
-    /* Enhanced Top Bar */
+    /* Enhanced Top Bar - Matching Landing Page Hero */
     .header-bar {
       background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
       color: white;
@@ -105,7 +97,7 @@
       align-items: center;
       overflow: hidden;
       min-height: 85px;
-      box-shadow: 0 4px 20px rgba(208, 2, 27, 0.3);
+      box-shadow: var(--card-shadow);
     }
 
     .header-bar::before {
@@ -126,7 +118,7 @@
 
     .header-title {
       font-size: 1.875rem;
-      font-weight: 800;
+      font-weight: 700;
       color: white;
       margin: 0;
       letter-spacing: -0.025em;
@@ -142,7 +134,7 @@
       cursor: pointer;
       padding: var(--spacing-sm) var(--spacing-md);
       border-radius: var(--radius-md);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s ease;
       display: flex;
       align-items: center;
       gap: var(--spacing-xs);
@@ -153,8 +145,8 @@
     .back-button:hover {
       background: rgba(255, 255, 255, 0.25);
       color: white;
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
       text-decoration: none;
     }
 
@@ -162,7 +154,7 @@
       transform: translateY(0);
     }
 
-    /* Enhanced Three Section Layout - Full Width */
+    /* Enhanced Three Section Layout - Matching Landing Page Cards */
     .three-section-container {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -173,23 +165,27 @@
       width: 100%;
       max-width: 100%;
       align-items: stretch;
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     }
 
-    /* Enhanced Section Styling */
+    /* Enhanced Section Styling - Landing Page Card Style */
     .section {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
-      border-radius: var(--radius-xl);
-      border: 1px solid rgba(226, 232, 240, 0.8);
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+      background: var(--surface-primary);
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--card-shadow);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s ease;
       position: relative;
       height: fit-content;
       min-height: 650px;
-      backdrop-filter: blur(10px);
+    }
+
+    .section:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
     }
 
     .section::before {
@@ -199,28 +195,22 @@
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, var(--primary-red) 0%, var(--primary-red-light) 100%);
-      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    }
-
-    .section:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-xl);
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
     }
 
     .section-header {
-      background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+      background: linear-gradient(135deg, var(--primary-grey) 0%, var(--secondary-grey) 100%);
       color: white;
       padding: var(--spacing-lg) var(--spacing-xl);
       font-size: 1.25rem;
-      font-weight: 700;
+      font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--border-light);
       position: relative;
       min-height: 75px;
-      backdrop-filter: blur(10px);
     }
 
     .section-header span {
@@ -229,8 +219,7 @@
       gap: var(--spacing-sm);
       font-size: 1.25rem;
       letter-spacing: -0.025em;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-      font-weight: 800;
+      font-weight: 600;
       color: white !important;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
@@ -239,20 +228,19 @@
       flex: 1;
       overflow-y: auto;
       padding: 0;
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--surface-primary);
       min-height: 550px;
-      backdrop-filter: blur(5px);
     }
 
-    /* Enhanced Epic Section */
+    /* Enhanced Epic Section - Landing Page Card Style */
     .epic-item {
       background: var(--surface-primary);
       border: 1px solid var(--border-light);
-      border-radius: var(--radius-lg);
+      border-radius: var(--border-radius);
       padding: var(--spacing-lg);
       margin-bottom: var(--spacing-md);
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
     }
@@ -264,14 +252,14 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-light));
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
       opacity: 0;
       transition: opacity 0.3s ease;
     }
 
     .epic-item:hover {
       transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
+      box-shadow: var(--card-shadow);
       border-color: var(--primary-red);
     }
 
@@ -280,9 +268,9 @@
     }
 
     .epic-item.selected {
-      background: linear-gradient(135deg, var(--primary-red-lighter) 0%, rgba(208, 2, 27, 0.05) 100%);
+      background: linear-gradient(135deg, rgba(220, 53, 69, 0.05) 0%, var(--surface-primary) 100%);
       border-color: var(--primary-red);
-      box-shadow: var(--shadow-md);
+      box-shadow: var(--card-shadow);
     }
 
     .epic-item.selected::before {
@@ -1072,26 +1060,30 @@
     .btn-primary {
       background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
       color: white;
-      box-shadow: 0 4px 12px rgba(208, 2, 27, 0.25);
+      box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+      border: none;
+      font-weight: 500;
     }
 
     .btn-primary:hover {
       transform: translateY(-3px);
-      box-shadow: 0 6px 20px rgba(208, 2, 27, 0.4);
+      box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
       color: white;
       background: linear-gradient(135deg, var(--primary-red-dark) 0%, var(--primary-red) 100%);
     }
 
     .btn-secondary {
-      background: linear-gradient(135deg, var(--text-muted) 0%, var(--text-secondary) 100%);
+      background: linear-gradient(135deg, var(--secondary-grey) 0%, var(--primary-grey) 100%);
       color: white;
-      box-shadow: var(--shadow-sm);
+      box-shadow: var(--card-shadow);
+      border: none;
+      font-weight: 500;
     }
 
     .btn-secondary:hover {
-      background: linear-gradient(135deg, var(--text-secondary) 0%, var(--text-primary) 100%);
+      background: linear-gradient(135deg, var(--primary-grey) 0%, var(--secondary-grey) 100%);
       transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
       color: white;
     }
 
@@ -1107,7 +1099,7 @@
       color: white;
     }
 
-    /* Enhanced Responsive Design */
+    /* Enhanced Responsive Design - Landing Page Style */
     @media (max-width: 1200px) {
       .three-section-container {
         grid-template-columns: 1fr 1fr;
@@ -1159,6 +1151,24 @@
       .header-title {
         font-size: 1.5rem;
       }
+
+      .chat-modal {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        border-left: none;
+      }
+
+      .header-title {
+        font-size: 1.5rem;
+      }
+
+      .chat-modal {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        border-left: none;
+      }
     }
 
     /* Modern Scrollbar Styling */
@@ -1195,7 +1205,7 @@
       border-radius: var(--radius-sm);
     }
 
-    /* Enhanced Chat Modal Styles */
+    /* Enhanced Chat Modal Styles - Landing Page Theme */
     .chat-modal {
       display: none;
       position: fixed;
@@ -1207,8 +1217,8 @@
       background: var(--surface-primary);
       backdrop-filter: blur(20px);
       border-left: 1px solid var(--border-light);
-      box-shadow: var(--shadow-xl);
-      border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+      box-shadow: var(--card-shadow);
+      border-radius: var(--border-radius) 0 0 var(--border-radius);
       overflow: hidden;
       box-sizing: border-box;
     }
@@ -1234,15 +1244,15 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      color: #8B4513;
+      color: var(--text-primary);
       width: 100%;
       box-sizing: border-box;
       overflow: hidden;
     }
 
     .chat-header {
-      background: linear-gradient(135deg, var(--background-light) 0%, #3a3d47 100%);
-      color: #8B4513;
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      color: white;
       padding: var(--spacing-lg);
       display: flex;
       align-items: center;
@@ -2245,31 +2255,54 @@
       color: var(--primary-red) !important;
     }
 
-    /* Navigation Row Styles */
+    /* Navigation Row Styles - Landing Page Theme */
     .navigation-row {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      border-bottom: 1px solid #dee2e6;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      border-bottom: 3px solid rgba(183, 28, 28, 0.3);
+      box-shadow: var(--card-shadow);
+      color: white;
     }
 
     .navigation-info {
       display: flex;
       align-items: center;
+      color: white;
+    }
+
+    .navigation-info h4 {
+      color: white !important;
+      font-weight: 600;
+      margin: 0;
     }
 
     .navigation-actions {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: var(--spacing-sm);
     }
 
     .navigation-actions .btn {
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      border-radius: var(--radius-md);
     }
 
     .navigation-actions .btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .navigation-actions .btn-outline-light {
+      border-color: rgba(255, 255, 255, 0.3);
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .navigation-actions .btn-outline-light:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.5);
+      color: white;
     }
 
     /* PRD Upload Button Centering */
@@ -2352,21 +2385,24 @@
         </span>
       </div>
       <div class="navigation-actions" style="display: flex; gap: 0.75rem;">
-        <button class="btn btn-light" onclick="showPRDUpload()" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
-          <i class="fas fa-download" style="margin-right: 0.5rem;"></i>
-          Import PRD from PRD Drafting Solution
+        <button class="btn btn-light" onclick="window.open('/page1_input','_blank')" title="Reverse engineer legacy code and mine internal docs and research to identify high-level requirements
+" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+          <i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>
+          Requirements insights
         </button>
-        <button class="btn btn-light" onclick="openSystemMapping()" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+   
+        <button class="btn btn-light" onclick="showPRDUpload()" title="Translate research & human input into structured requirements (data, functional, non-functional, legal, etc.) " style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+          <i class="fas fa-download" style="margin-right: 0.5rem;"></i>
+          Requirements definition
+        </button>
+        <button class="btn btn-light" onclick="window.open('/architecture-generator','_blank')" title="Convert business objectives and detailed requirements into user stories with clear acceptance criteria
+" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+          <i class="fas fa-cogs" style="margin-right: 0.5rem;"></i>
+          Backlog management
+        </button>
+             <button class="btn btn-light" onclick="openSystemMapping()" style="background: #ffffff; color: #dc3545; border: 2px solid #8d8989; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
           <i class="fas fa-sitemap" style="margin-right: 0.5rem;"></i>
           System Mapping
-        </button>
-        <button class="btn btn-light" onclick="window.open('/page1_input','_blank')" title="Go to PRD Generator" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
-          <i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>
-          PRD Generator
-        </button>
-        <button class="btn btn-light" onclick="window.open('/architecture-generator','_blank')" title="Go to Architecture Generator" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
-          <i class="fas fa-cogs" style="margin-right: 0.5rem;"></i>
-          Architecture Generator
         </button>
       </div>
     </div>
@@ -2407,6 +2443,9 @@
       <div class="section" id="user-stories-section">
         <div class="section-header">
           <span>📝 User Stories</span>
+          <button class="chat-btn" onclick="openUserStoriesChat()" style="display: none;" id="user-stories-chat-btn">
+            💬 Chat
+          </button>
         </div>
         <div class="section-content" id="user-stories-content">
           <div class="empty-state" id="user-stories-empty">
@@ -2473,6 +2512,37 @@
         <div class="chat-input-area">
           <input type="text" class="chat-input" id="epic-chat-input" placeholder="Ask about epics... (Enter to send, Shift+Enter for new line, Esc to close)" onkeypress="handleEpicChatEnter(event)">
           <button class="chat-send-btn" onclick="sendEpicMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Stories Chat Modal -->
+  <div id="user-stories-chat-modal" class="chat-modal">
+    <div class="chat-modal-content">
+      <div class="chat-header">
+        <h4 style="margin: 0; color: white !important;">User Stories Chat</h4>
+        <button class="chat-close" onclick="closeUserStoriesChat()">&times;</button>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="user-stories-chat-messages">
+          <div class="chat-message">
+            <div class="chat-bubble">
+              Hello! I can help you refine your user stories. Ask me to make changes, add details, adjust priorities, or reorganize them.
+            </div>
+          </div>
+        </div>
+        <div class="chat-apply-container" id="user-stories-chat-apply-container">
+          <div class="chat-apply-info">
+            <span id="user-stories-apply-info">Ask me to modify your user stories and I'll suggest changes for you to apply</span>
+          </div>
+          <button class="chat-apply-btn" id="user-stories-apply-btn" onclick="applyUserStoriesChanges()" disabled style="opacity: 0.6;">
+            ✅ Apply Changes
+          </button>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" class="chat-input" id="user-stories-chat-input" placeholder="Ask about user stories... (Enter to send, Shift+Enter for new line, Esc to close)" onkeypress="handleUserStoriesChatEnter(event)">
+          <button class="chat-send-btn" onclick="sendUserStoriesMessage()">Send</button>
         </div>
       </div>
     </div>
@@ -2649,6 +2719,7 @@
   
   // Pending changes from chat interactions
   let pendingEpicChanges = null;
+  let pendingUserStoriesChanges = null;
   let pendingStoryDetailsChanges = null;
   
   // Track if we're in selection mode (showing radio buttons)
@@ -3038,6 +3109,12 @@
     document.getElementById('user-stories-empty').style.display = 'flex';
     document.getElementById('user-stories-list').innerHTML = '';
     hideUserStorySubmitButton();
+    
+    // Hide the User Stories chat button when empty
+    const userStoriesChatBtn = document.getElementById('user-stories-chat-btn');
+    if (userStoriesChatBtn) {
+      userStoriesChatBtn.style.display = 'none';
+    }
   }
 
   // Show error state for user stories
@@ -3126,6 +3203,12 @@
     });
 
     userStoriesList.innerHTML = html;
+    
+    // Show the User Stories chat button when user stories are loaded
+    const userStoriesChatBtn = document.getElementById('user-stories-chat-btn');
+    if (userStoriesChatBtn) {
+      userStoriesChatBtn.style.display = 'block';
+    }
     
     // If story details are currently showing, mark the selected story as completed
     const storyDetailsDiv = document.getElementById('story-details');
@@ -3649,6 +3732,172 @@
     if (messageDiv) {
       messageDiv.remove();
     }
+  }
+
+  // User Stories Chat Functions
+  function openUserStoriesChat() {
+    // Clear previous chat history when opening
+    clearUserStoriesChatHistory();
+    
+    // Initialize Apply button state
+    hideUserStoriesApplyButton();
+    
+    // Update chat button states
+    updateChatButtonStates();
+    
+    document.getElementById('user-stories-chat-modal').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('user-stories-chat-input').focus();
+    }, 100);
+  }
+
+  function closeUserStoriesChat() {
+    document.getElementById('user-stories-chat-modal').style.display = 'none';
+  }
+
+  function sendUserStoriesMessage() {
+    const input = document.getElementById('user-stories-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addUserStoriesChatMessage(message, 'user');
+    input.value = '';
+    
+    // Show loading state
+    addUserStoriesChatMessage('', 'assistant', true);
+    
+    // Send to backend
+    fetch('/user-stories-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message,
+        current_user_stories: currentUserStories,
+        selected_epic: selectedEpic
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Remove loading message
+      removeLastUserStoriesChatMessage();
+      
+      if (data.success) {
+        // Add assistant response
+        addUserStoriesChatMessage(data.response, 'assistant');
+        
+        // Store pending changes if provided
+        if (data.suggested_changes) {
+          pendingUserStoriesChanges = data.suggested_changes;
+          showUserStoriesApplyButton();
+        }
+      } else {
+        addUserStoriesChatMessage('Sorry, there was an error processing your request.', 'assistant');
+      }
+    })
+    .catch(error => {
+      // Remove loading message
+      removeLastUserStoriesChatMessage();
+      addUserStoriesChatMessage('Sorry, there was an error connecting to the server.', 'assistant');
+    });
+  }
+
+  function handleUserStoriesChatEnter(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendUserStoriesMessage();
+    } else if (event.key === 'Escape') {
+      closeUserStoriesChat();
+    }
+  }
+
+  function addUserStoriesChatMessage(message, sender, isLoading = false) {
+    const messagesContainer = document.getElementById('user-stories-chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}`;
+    
+    if (isLoading) {
+      messageDiv.innerHTML = `
+        <div class="chat-bubble">
+          <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      `;
+      messageDiv.id = 'loading-message';
+    } else {
+      messageDiv.innerHTML = `<div class="chat-bubble">${message}</div>`;
+    }
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  function removeLastUserStoriesChatMessage() {
+    const loadingMessage = document.getElementById('loading-message');
+    if (loadingMessage) {
+      loadingMessage.remove();
+    }
+  }
+
+  function clearUserStoriesChatHistory() {
+    const messagesContainer = document.getElementById('user-stories-chat-messages');
+    messagesContainer.innerHTML = `
+      <div class="chat-message">
+        <div class="chat-bubble">
+          Hello! I can help you refine your user stories. Ask me to make changes, add details, adjust priorities, or reorganize them.
+        </div>
+      </div>
+    `;
+  }
+
+  function showUserStoriesApplyButton() {
+    const applyBtn = document.getElementById('user-stories-apply-btn');
+    const applyContainer = document.getElementById('user-stories-chat-apply-container');
+    
+    applyBtn.disabled = false;
+    applyBtn.style.opacity = '1';
+    applyContainer.classList.add('show');
+    
+    document.getElementById('user-stories-apply-info').textContent = 'Changes suggested! Click "Apply Changes" to update your user stories';
+  }
+
+  function hideUserStoriesApplyButton() {
+    const applyBtn = document.getElementById('user-stories-apply-btn');
+    const applyContainer = document.getElementById('user-stories-chat-apply-container');
+    
+    applyBtn.disabled = true;
+    applyBtn.style.opacity = '0.6';
+    applyContainer.classList.remove('show');
+    
+    document.getElementById('user-stories-apply-info').textContent = 'Ask me to modify your user stories and I\'ll suggest changes for you to apply';
+  }
+
+  function applyUserStoriesChanges() {
+    if (!pendingUserStoriesChanges) return;
+    
+    // Apply the changes to current user stories
+    currentUserStories = pendingUserStoriesChanges;
+    
+    // Update the display
+    displayUserStories(currentUserStories);
+    
+    // Hide apply button and clear pending changes
+    hideUserStoriesApplyButton();
+    pendingUserStoriesChanges = null;
+    
+    // Add confirmation message
+    addUserStoriesChatMessage('✅ Changes applied successfully!', 'assistant');
+    
+    // Close the chat modal
+    setTimeout(() => {
+      closeUserStoriesChat();
+    }, 1000);
   }
 
   // Story Details Chat Functions
@@ -4712,5 +4961,8 @@
     });
   }
 </script>
+
+<!-- Bootstrap 5 JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

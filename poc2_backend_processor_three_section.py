@@ -14,14 +14,9 @@ import time
 import hashlib
 import traceback
 import string
-import os
-import time
-import json
-import hashlib
-import traceback
-import logging
 import csv
 import io
+import re
 
 # Load environment variables
 load_dotenv()
@@ -178,7 +173,7 @@ def create_jira_story(summary, description, priority='High', epic_link=None, acc
     if responsible_systems:
         formatted_description += f"\n\n*Responsible Systems:* {responsible_systems}\n"
     
-    # Add acceptance criteria if provided
+    # Add acceptance criteria if provided (this might need adjustment based on your JIRA setup)
     if acceptance_criteria and isinstance(acceptance_criteria, list) and acceptance_criteria:
         formatted_description += "\n*Acceptance Criteria:*\n"
         for i, criteria in enumerate(acceptance_criteria, 1):
@@ -372,6 +367,17 @@ def ask_assistant_from_file_optimized(code_filepath, user_prompt):
 
 # Three Section Layout Routes
 
+@app.route("/", methods=["GET"])
+def landing_page():
+    """Render the landing page."""
+    try:
+        logger.info("Rendering landing page")
+        return render_template('landing_page.html')
+    except Exception as e:
+        logger.error(f"Error rendering landing page: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return f"Error loading landing page: {str(e)}", 500
+
 @app.route("/three-section", methods=["GET"])
 def three_section_layout():
     """Render the three section layout page."""
@@ -382,6 +388,17 @@ def three_section_layout():
         logger.error(f"Error rendering three section layout: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         return f"Error loading page: {str(e)}", 500
+
+@app.route("/tabbed-layout", methods=["GET"])
+def tabbed_layout():
+    """Render the tabbed layout page."""
+    try:
+        logger.info("Rendering tabbed layout")
+        return render_template('poc2_tabbed_layout.html')
+    except Exception as e:
+        logger.error(f"Error rendering tabbed layout: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return f"Error loading tabbed layout page: {str(e)}", 500
 
 @app.route("/three-section-get-epics", methods=["GET"])
 def three_section_get_epics():
@@ -931,7 +948,7 @@ Instructions:
 
 When making changes, respond in this EXACT format:
 
-RESPONSE: [Your explanation in natural language - be conversational and helpful. Explain what changes you're making and why they're beneficial. Do not include any JSON or technical formatting here.]
+RESPONSE: [Your explanation in natural language - be conversational and helpful. Explain what you're doing and why it's beneficial.]
 
 UPDATED_USER_STORIES: [JSON array of the modified user stories with the same structure as the input, including id, title/name, description, priority, and systems fields]
 
@@ -1047,7 +1064,7 @@ Instructions:
 
 When making changes, respond in this EXACT format:
 
-RESPONSE: [Your explanation in natural language - be conversational and helpful. Explain what changes you're making and why they're beneficial. Do not include any JSON or technical formatting here.]
+RESPONSE: [Your explanation in natural language - be conversational and helpful. Explain what changes you're making and why they're beneficial.]
 
 UPDATED_STORY_DETAILS: [JSON object with the modified story details, maintaining the same structure as the input: {{"acceptance_criteria": [...], "tagged_requirements": [...], "traceability_matrix": "..."}}]
 
@@ -2128,23 +2145,17 @@ def format_epics_for_display(epics):
     
     return "\n".join(html_parts)
 
-@app.route("/system-mapping", methods=["GET"])
-def system_mapping():
-    """Serve the system mapping page."""
-    try:
-        logger.info("Serving system mapping page")
-        return render_template('system_mapping.html')
-    except Exception as e:
-        logger.error(f"Error serving system mapping page: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': f'Failed to load system mapping: {str(e)}'
-        }), 500
-
 if __name__ == "__main__":
-    logger.info("Starting Three Section Flask server...")
-    try:
-        app.run(host="127.0.0.1", port=5002, debug=True, threaded=True)
-    except Exception as e:
-        logger.error(f"Failed to start server: {str(e)}")
-        print(f"Error starting server: {str(e)}")
+    logger.info("Starting Three Section Flask application...")
+    logger.info("Available routes:")
+    logger.info("  - http://localhost:5001/ (landing page)")
+    logger.info("  - http://localhost:5001/three-section (three section layout)")
+    logger.info("  - http://localhost:5001/tabbed-layout (tabbed layout)")
+    
+    # Run the Flask app
+    app.run(
+        host='0.0.0.0',
+        port=5001,
+        debug=True,
+        threaded=True
+    )
