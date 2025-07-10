@@ -10,6 +10,9 @@ import logging
 import traceback
 import json
 import tempfile
+import csv  # Add CSV support for system mapping
+import io  # Add io for StringIO support
+import time  # Add time module for performance tracking
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_session import Session
@@ -18,6 +21,14 @@ from werkzeug.utils import secure_filename
 import docx
 import PyPDF2
 import io
+
+# Additional imports for token counting
+try:
+    import tiktoken
+    TIKTOKEN_AVAILABLE = True
+except ImportError:
+    logging.warning("tiktoken not available - using fallback token counting")
+    TIKTOKEN_AVAILABLE = False
 
 # Set up logging
 logging.basicConfig(
@@ -29,6 +40,68 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Token counting function
+def count_tokens(text, model="gpt-4"):
+    """Count tokens in text using tiktoken (with fallback)."""
+    if not TIKTOKEN_AVAILABLE:
+        # Fallback estimation: roughly 4 characters per token
+        return len(text) // 4
+    
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+        return len(encoding.encode(text))
+    except Exception:
+        # Fallback estimation
+        return len(text) // 4
+
+def ask_assistant_from_file_optimized(code_filepath, user_prompt):
+    """Optimized assistant interaction using direct chat completion."""
+    start_time = time.time()
+    logger.info(f"Starting optimized assistant interaction: {code_filepath}")
+    
+    try:
+        # Read agent instructions from file
+        agent_file_path = os.path.join("agents", code_filepath)
+        
+        with open(agent_file_path, 'r', encoding='utf-8') as file:
+            system_instructions = file.read()
+        
+        logger.info(f"Loaded system instructions from {agent_file_path}")
+        
+        # Initialize OpenAI client
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        
+        # Create chat completion
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_tokens=4000,
+            temperature=0.7
+        )
+        
+        response_text = response.choices[0].message.content.strip()
+        
+        elapsed_time = time.time() - start_time
+        logger.info(f"Assistant response completed in {elapsed_time:.2f} seconds")
+        
+        # Log token usage
+        prompt_tokens = count_tokens(system_instructions + user_prompt, "gpt-4o")
+        response_tokens = count_tokens(response_text, "gpt-4o")
+        logger.info(f"Token usage - Prompt: {prompt_tokens:,}, Response: {response_tokens:,}, Total: {prompt_tokens + response_tokens:,}")
+        
+        return response_text
+        
+    except FileNotFoundError:
+        logger.error(f"Agent file not found: {agent_file_path}")
+        return f"Error: Agent configuration file '{code_filepath}' not found."
+    except Exception as e:
+        logger.error(f"Error in assistant interaction: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return f"Error: {str(e)}"
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key-change-in-production-very-long-secret")
@@ -287,6 +360,14 @@ def tabbed_upload_files():
         session['prd_content'] = prd_content
         session['system_mapping_content'] = system_mapping_content
         session['context_notes'] = context_notes
+        
+        # Store system mapping in the session for system mapping functionality
+        if system_mapping_content:
+            session['system_info'] = system_mapping_content
+            session['system_info_filename'] = system_mapping_file.filename
+            session['system_info_uploaded'] = datetime.now().isoformat()
+            logger.info(f"System mapping stored in session: {system_mapping_file.filename}")
+        
         session.modified = True  # Ensure session is saved
         
         logger.info(f"Session updated - Keys: {list(session.keys())}")
@@ -499,6 +580,9 @@ def generate_user_stories_for_epic(epic, prd_content):
     try:
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         
+        # Get system information from session (CSV mapping data)
+        system_info = session.get('system_info', '')
+        
         prompt = f"""
         Based on the following PRD content and the specific epic, generate detailed user stories.
 
@@ -508,6 +592,9 @@ def generate_user_stories_for_epic(epic, prd_content):
         Epic Details:
         Title: {epic.get('title', '')}
         Description: {epic.get('description', '')}
+
+        SYSTEM MAPPING INFORMATION:
+        {system_info if system_info else 'No system mapping information provided. User stories will not include specific system mapping.'}
 
         Please generate 5-8 user stories that specifically support this epic. For each user story, provide:
 
@@ -519,6 +606,7 @@ def generate_user_stories_for_epic(epic, prd_content):
         - [Specific, testable criterion 3]
         Priority: High/Medium/Low
         Effort: Small/Medium/Large
+        Responsible Systems: [Based on the system mapping information provided above, map this user story to the appropriate systems. If system mapping is available, reference specific systems from the CSV data. If no mapping is available, provide logical system names.]
 
         User Story 2: [Story Title]
         Description: As a [user type], I want [goal] so that [benefit]
@@ -528,14 +616,17 @@ def generate_user_stories_for_epic(epic, prd_content):
         - [Specific, testable criterion 3]
         Priority: High/Medium/Low
         Effort: Small/Medium/Large
+        Responsible Systems: [Based on the system mapping information provided above, map this user story to the appropriate systems. If system mapping is available, reference specific systems from the CSV data. If no mapping is available, provide logical system names.]
 
         Continue this format for all user stories (aim for 5-8 stories).
+        
+        IMPORTANT: If system mapping information is provided above, use it to map each user story to the most appropriate systems based on the functionality described in the user story. Reference the actual system names from the CSV data when possible.
         """
         
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are an expert product manager and business analyst. Generate detailed, actionable user stories that align with the given epic and PRD requirements."},
+                {"role": "system", "content": "You are an expert product manager and business analyst. Generate detailed, actionable user stories that align with the given epic and PRD requirements. When system mapping information is provided, ensure each user story is mapped to the most appropriate systems based on the functionality described. Use the CSV system mapping data to reference actual system names."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=3000,
@@ -577,6 +668,7 @@ def parse_user_stories_from_response(content, epic):
             acceptance_criteria = []
             priority = "Medium"
             effort = "Medium"
+            responsible_systems = "TBD"
             
             current_section = None
             for line in lines[1:]:
@@ -592,15 +684,22 @@ def parse_user_stories_from_response(content, epic):
                 elif line.startswith('Effort:'):
                     effort = line.replace('Effort:', '').strip()
                     current_section = None
+                elif line.startswith('Responsible Systems:'):
+                    responsible_systems = line.replace('Responsible Systems:', '').strip()
+                    current_section = None
                 elif line.startswith('- ') and current_section == 'criteria':
                     acceptance_criteria.append(line[2:])
-                elif current_section == 'description' and line and not line.startswith('Acceptance') and not line.startswith('Priority') and not line.startswith('Effort'):
+                elif current_section == 'description' and line and not line.startswith('Acceptance') and not line.startswith('Priority') and not line.startswith('Effort') and not line.startswith('Responsible'):
                     if description:
                         description += " " + line
                     else:
                         description = line
             
             if title_part and description:
+                # Map responsible systems from CSV if available, otherwise use LLM output
+                csv_mapped_systems = map_responsible_systems_from_csv(description, title_part)
+                final_responsible_systems = csv_mapped_systems if csv_mapped_systems != "TBD" else responsible_systems
+                
                 story = {
                     'id': f'story_{i}',
                     'title': title_part,
@@ -608,6 +707,7 @@ def parse_user_stories_from_response(content, epic):
                     'acceptance_criteria': '\n'.join([f"• {criteria}" for criteria in acceptance_criteria]) if acceptance_criteria else "Acceptance criteria to be defined",
                     'priority': priority,
                     'estimated_effort': effort,
+                    'responsible_systems': final_responsible_systems,
                     'epic_id': epic.get('id', 'epic_1'),
                     'epic_title': epic.get('title', '')
                 }
@@ -667,29 +767,214 @@ def tabbed_select_story():
 def generate_story_details(user_story):
     """Generate enhanced details for a user story."""
     try:
-        # For now, return the basic story information
-        # This can be enhanced with additional OpenAI calls for more detailed analysis
-        
         current_epic = session.get('current_epic', {})
         
+        # Extract story information
+        story_name = user_story.get('title', '')
+        story_description = user_story.get('description', '')
+        
+        # Generate acceptance criteria if not already present
+        acceptance_criteria_text = user_story.get('acceptance_criteria', '')
+        if not acceptance_criteria_text or acceptance_criteria_text == "Acceptance criteria to be defined":
+            # Generate acceptance criteria using the same logic as three-section
+            criteria_prompt = f"""Generate detailed acceptance criteria for this user story:
+
+Story: {story_name}
+Description: {story_description}
+
+Return 3-5 specific, testable acceptance criteria in this format:
+Given [context], when [action], then [expected result]
+
+Focus on the core functionality and edge cases."""
+            
+            criteria_response = ask_assistant_from_file_optimized("poc2_agent4_acceptanceCriteria_gen", criteria_prompt)
+            
+            # Parse response into individual criteria
+            criteria_lines = criteria_response.strip().split('\n')
+            acceptance_criteria = []
+            for line in criteria_lines:
+                line = line.strip()
+                if line and (line.startswith('Given') or line.startswith('•') or line.startswith('-')):
+                    # Clean up formatting
+                    if line.startswith('•') or line.startswith('-'):
+                        line = line[1:].strip()
+                    acceptance_criteria.append(line)
+            
+            if not acceptance_criteria:
+                # Fallback criteria
+                acceptance_criteria = [
+                    f"Given a user accesses {story_name.lower()}, when they perform the required actions, then the system should respond appropriately",
+                    f"Given invalid input is provided, when {story_name.lower()} is attempted, then appropriate error messages should be displayed",
+                    f"Given a user completes {story_name.lower()}, when the operation is successful, then the system should provide confirmation"
+                ]
+            
+            acceptance_criteria_text = '\n'.join([f"• {criteria}" for criteria in acceptance_criteria])
+        
+        # Generate tagged requirements
+        requirements_prompt = f"""For the following user story, identify and tag relevant requirements:
+
+Story: {story_name}
+Description: {story_description}
+
+Generate 3-5 tagged requirements that this story addresses.
+Return as a JSON array of strings."""
+        
+        requirements_response = ask_assistant_from_file_optimized("poc2_traceability_agent", requirements_prompt)
+        
+        try:
+            tagged_requirements = json.loads(requirements_response)
+            if not isinstance(tagged_requirements, list):
+                tagged_requirements = [requirements_response]
+        except json.JSONDecodeError:
+            tagged_requirements = [
+                "REQ-001: User authentication and authorization",
+                "REQ-002: Data security and privacy",
+                "REQ-003: User interface and experience"
+            ]
+        
+        # Generate traceability matrix
+        traceability_prompt = f"""Create a traceability matrix for the following user story:
+
+Story: {story_name}
+Description: {story_description}
+Acceptance Criteria: {acceptance_criteria_text}
+
+Create a formatted traceability matrix showing relationships between requirements, story, and test cases."""
+        
+        traceability_response = ask_assistant_from_file_optimized("poc2_traceability_agent", traceability_prompt)
+        
         story_details = {
-            'title': user_story.get('title', ''),
-            'description': user_story.get('description', ''),
-            'acceptance_criteria': user_story.get('acceptance_criteria', ''),
+            'title': story_name,
+            'description': story_description,
+            'acceptance_criteria': acceptance_criteria_text,
             'priority': user_story.get('priority', 'Medium'),
             'estimated_effort': user_story.get('estimated_effort', 'Medium'),
             'epic_title': current_epic.get('title', 'Unknown Epic'),
             'epic_description': current_epic.get('description', ''),
-            'responsible_systems': 'To be determined',
-            'tagged_requirements': 'To be determined',
-            'traceability_matrix': 'To be generated'
+            'responsible_systems': user_story.get('responsible_systems', 'To be determined'),
+            'tagged_requirements': tagged_requirements,
+            'traceability_matrix': traceability_response
         }
         
         return story_details
         
     except Exception as e:
         logger.error(f"Error generating story details: {str(e)}")
-        return {}
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        # Return fallback story details
+        return {
+            'title': user_story.get('title', ''),
+            'description': user_story.get('description', ''),
+            'acceptance_criteria': user_story.get('acceptance_criteria', 'Acceptance criteria to be defined'),
+            'priority': user_story.get('priority', 'Medium'),
+            'estimated_effort': user_story.get('estimated_effort', 'Medium'),
+            'epic_title': session.get('current_epic', {}).get('title', 'Unknown Epic'),
+            'epic_description': session.get('current_epic', {}).get('description', ''),
+            'responsible_systems': user_story.get('responsible_systems', 'To be determined'),
+            'tagged_requirements': ['REQ-001: Basic functionality requirement'],
+            'traceability_matrix': 'Traceability matrix generation failed. Please try again.'
+        }
+
+@app.route("/tabbed-user-story-details-page", methods=["GET", "POST"])
+def tabbed_user_story_details_page():
+    """Render the user story details page for Jira submission from tabbed layout."""
+    logger.info("Rendering user story details page for tabbed layout")
+    
+    try:
+        # Get story details from session or form
+        if request.method == "POST":
+            story_id = request.form.get('selected_story_id')
+            story_name = request.form.get('selected_story_name')
+            story_description = request.form.get('selected_story_description')
+            
+            logger.info(f"POST data - ID: {story_id}, Name: {story_name}, Description: [{story_description}]")
+        else:
+            # GET request - use session data
+            current_story = session.get('current_user_story', {})
+            story_details = session.get('story_details', {})
+            
+            if not current_story:
+                logger.warning("No current story in session for tabbed details page")
+                return redirect(url_for('tabbed_layout'))
+            
+            story_id = current_story.get('id', '')
+            story_name = current_story.get('title', '')
+            story_description = current_story.get('description', '')
+        
+        if not story_name:
+            logger.error("No story name provided for tabbed details page")
+            return redirect(url_for('tabbed_layout'))
+        
+        # Get current epic context
+        current_epic = session.get('current_epic', {})
+        
+        # Generate story details if needed
+        if request.method == "POST" or not session.get('story_details'):
+            # Find the story in our user stories
+            user_stories = session.get('generated_user_stories', [])
+            selected_story = None
+            
+            for story in user_stories:
+                if story.get('id') == story_id or story.get('title') == story_name:
+                    selected_story = story
+                    break
+            
+            if not selected_story:
+                # Create a basic story object
+                selected_story = {
+                    'id': story_id,
+                    'title': story_name,
+                    'description': story_description,
+                    'priority': 'High',
+                    'estimated_effort': 'Medium'
+                }
+            
+            # Generate enhanced story details
+            story_details = generate_story_details(selected_story)
+            
+            # Store in session
+            session['current_user_story'] = selected_story
+            session['story_details'] = story_details
+        else:
+            # Use existing story details from session
+            story_details = session.get('story_details', {})
+        
+        # Extract data for template
+        acceptance_criteria = story_details.get('acceptance_criteria', '')
+        if isinstance(acceptance_criteria, list):
+            acceptance_criteria = acceptance_criteria
+        elif isinstance(acceptance_criteria, str):
+            # Convert string to list if needed
+            acceptance_criteria = [criteria.strip() for criteria in acceptance_criteria.split('\n') if criteria.strip()]
+        
+        tagged_requirements = story_details.get('tagged_requirements', [])
+        if isinstance(tagged_requirements, str):
+            tagged_requirements = [tagged_requirements]
+        
+        traceability_matrix = story_details.get('traceability_matrix', 'Not available')
+        
+        # Prepare template context
+        template_context = {
+            'epic_title': current_epic.get('title', ''),
+            'epic_description': current_epic.get('description', ''),
+            'user_story_name': story_name,
+            'user_story_description': story_description,
+            'acceptance_criteria': acceptance_criteria,
+            'priority': story_details.get('priority', 'High'),
+            'responsible_systems': story_details.get('responsible_systems', 'CAPS, CMS'),
+            'tagged_requirements': tagged_requirements,
+            'traceability_matrix': traceability_matrix
+        }
+        
+        logger.info(f"Rendering user story details template with context: {template_context}")
+        
+        # Render the user story details template
+        return render_template('poc2_user_story_details.html', **template_context)
+        
+    except Exception as e:
+        logger.error(f"Error rendering user story details page: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return f"Error loading user story details: {str(e)}", 500
 
 # Chat functionality endpoints
 @app.route("/tabbed-epic-chat", methods=["POST"])
@@ -831,6 +1116,285 @@ def tabbed_details_chat():
         logger.error(f"Error in details chat: {str(e)}")
         return jsonify({"success": False, "error": str(e)})
 
+@app.route("/chat_traceability", methods=["POST"])
+def chat_traceability():
+    """Handle chat requests for traceability matrix refinement and enhancement."""
+    logger.info("Request received for traceability matrix chat")
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No JSON data provided"}), 400
+            
+        user_message = data.get("userMessage", "").strip()
+        context = data.get("sessionContext", "{}")
+        
+        if not user_message:
+            return jsonify({"success": False, "error": "Message is required"}), 400
+        
+        # Extract context information
+        user_story_title = data.get("userStory", {}).get("title", "")
+        user_story_description = data.get("userStory", {}).get("description", "")
+        acceptance_criteria = data.get("userStory", {}).get("acceptanceCriteria", "")
+        current_traceability = data.get("currentTraceability", "")
+        
+        logger.info(f"Traceability chat message: {user_message}")
+        logger.info(f"Context - Story: {user_story_title}")
+        
+        # Build context string for AI
+        context_text = f"""
+Current User Story Context:
+- Story Title: {user_story_title or 'Not specified'}
+- Description: {user_story_description or 'Not specified'}
+- Acceptance Criteria: {acceptance_criteria or 'Not specified'}
+- Current Traceability Matrix: {current_traceability or 'Not available'}
+"""
+        
+        # System prompt for traceability matrix chat
+        system_prompt = f"""You are an expert systems analyst and requirements traceability specialist. You help create, analyze, and improve traceability matrices that map user stories to PRD requirements, design documents, and testing artifacts.
+
+{context_text}
+
+Your role is to:
+1. Analyze and improve traceability matrices between user stories and PRD requirements
+2. Identify missing traceability links and suggest improvements
+3. Help create bidirectional traceability relationships
+4. Ensure comprehensive coverage of requirements traceability
+5. Suggest impact analysis approaches for requirement changes
+6. Help with compliance and audit traceability documentation
+7. Create structured, readable traceability matrices in table format
+
+When enhancing traceability matrices, you should:
+- Create clear mappings between user stories and specific PRD requirements
+- Include requirement IDs, descriptions, and traceability relationships
+- Suggest forward and backward traceability links
+- Include test case traceability where relevant
+- Format output as readable tables or structured text
+- Identify gaps in requirement coverage
+- Suggest additional traceability dimensions (design documents, test cases, compliance standards)
+
+For traceability matrix outputs, use this format:
+| User Story | PRD Requirement ID | Requirement Description | Traceability Type | Test Coverage |
+|------------|-------------------|------------------------|-------------------|---------------|
+| [Story ID] | [REQ-ID] | [Description] | [Forward/Backward/Bidirectional] | [Test Case IDs] |
+
+Always provide structured, professional traceability information that would be suitable for project documentation and compliance audits."""
+
+        user_prompt = f"User Request: {user_message}\n\nContext: Please analyze and enhance the traceability matrix for the current user story."
+
+        # Use OpenAI to generate traceability guidance
+        try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=2000,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content.strip()
+            
+            logger.info("Traceability chat response generated successfully")
+            return jsonify({
+                "success": True,
+                "message": ai_response,
+                "userMessage": user_message
+            })
+            
+        except Exception as openai_error:
+            logger.error(f"OpenAI API error in traceability chat: {str(openai_error)}")
+            # Return fallback response
+            fallback_response = generate_traceability_fallback_response(user_message, user_story_title, current_traceability)
+            return jsonify({
+                "success": True,
+                "message": fallback_response,
+                "userMessage": user_message,
+                "note": "AI service unavailable - using fallback response"
+            })
+        
+    except Exception as e:
+        logger.error(f"Error in traceability chat: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+def generate_traceability_fallback_response(user_message, user_story_title, current_traceability):
+    """Generate a fallback response for traceability chat when OpenAI is unavailable."""
+    lower_message = user_message.lower()
+    
+    if any(word in lower_message for word in ['improve', 'enhance', 'update', 'add']):
+        return f"""📊 **Traceability Matrix Enhancement Suggestions**
+
+For the user story "{user_story_title or 'Current Story'}", consider these improvements:
+
+**📋 Requirement Mapping:**
+• Map to specific PRD sections (e.g., REQ-AUTH-001, REQ-DATA-002)
+• Include functional and non-functional requirements
+• Add compliance requirements if applicable
+
+**🔄 Bidirectional Traceability:**
+• Forward: Requirements → User Stories → Test Cases
+• Backward: Test Cases → User Stories → Requirements
+• Impact analysis for requirement changes
+
+**✅ Coverage Analysis:**
+• Ensure no orphaned requirements exist
+• Validate test coverage completeness
+
+Would you like me to help create a specific traceability matrix table for this user story?"""
+    
+    elif any(word in lower_message for word in ['table', 'format', 'matrix']):
+        return f"""📊 **Traceability Matrix Table Format**
+
+Here's a recommended structure for your traceability matrix:
+
+| User Story | PRD Requirement | Requirement Description | Traceability Type | Test Case |
+|------------|----------------|------------------------|-------------------|-----------|
+| {user_story_title or 'US-001'} | REQ-001 | User authentication and authorization | Forward | TC-001 |
+| {user_story_title or 'US-001'} | REQ-002 | Data validation and input sanitization | Forward | TC-002 |
+| {user_story_title or 'US-001'} | REQ-003 | Error handling and user feedback | Forward | TC-003 |
+
+**Legend:**
+- **Forward**: Requirement leads to User Story
+- **Backward**: User Story validates Requirement  
+- **Bidirectional**: Two-way relationship"""
+    
+    else:
+        return f"""🔗 **Traceability Matrix Guidance**
+
+I can help you improve the traceability matrix for "{user_story_title or 'your user story'}". Here are some common tasks:
+
+**📝 Available Actions:**
+• Create a new traceability matrix table
+• Map requirements to specific PRD sections
+• Add test case traceability links
+• Enhance requirement descriptions
+• Add compliance traceability
+• Perform coverage gap analysis
+
+**💡 Quick Tips:**
+• Use clear requirement IDs (e.g., REQ-AUTH-001)
+• Include both functional and non-functional requirements
+• Document the traceability relationship type
+• Link to specific test cases where possible
+
+What specific aspect of the traceability matrix would you like to work on?"""
+
+@app.route("/chat_requirements", methods=["POST"])
+def chat_requirements():
+    """Handle chat requests for tagged requirements refinement."""
+    logger.info("Request received for requirements chat")
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No JSON data provided"}), 400
+            
+        user_message = data.get("userMessage", "").strip()
+        
+        if not user_message:
+            return jsonify({"success": False, "error": "Message is required"}), 400
+        
+        # Extract context information
+        user_story_title = data.get("userStory", {}).get("title", "")
+        user_story_description = data.get("userStory", {}).get("description", "")
+        current_requirements = data.get("currentRequirements", [])
+        
+        logger.info(f"Requirements chat message: {user_message}")
+        
+        # Build context for AI
+        context_text = f"""
+Current User Story:
+- Title: {user_story_title or 'Not specified'}
+- Description: {user_story_description or 'Not specified'}
+- Current Tagged Requirements: {current_requirements if current_requirements else 'None specified'}
+"""
+        
+        system_prompt = f"""You are an expert business analyst specializing in requirements engineering. You help identify, refine, and tag requirements for user stories.
+
+{context_text}
+
+Your role is to:
+1. Analyze user stories and identify relevant functional and non-functional requirements
+2. Tag requirements with clear, traceable identifiers
+3. Ensure requirements are specific, measurable, and testable
+4. Help categorize requirements (functional, security, performance, usability, etc.)
+5. Suggest additional requirements that might be missing
+6. Help improve requirement clarity and completeness
+
+When providing requirements, format them as:
+- REQ-[CATEGORY]-[NUMBER]: [Clear requirement description]
+
+Categories can include: FUNC (Functional), SEC (Security), PERF (Performance), UI (User Interface), DATA (Data), etc.
+
+Always provide actionable, specific requirements that directly relate to the user story."""
+
+        user_prompt = f"User Request: {user_message}\n\nPlease help improve the tagged requirements for this user story."
+
+        try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=1500,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content.strip()
+            
+            logger.info("Requirements chat response generated successfully")
+            return jsonify({
+                "success": True,
+                "message": ai_response,
+                "userMessage": user_message
+            })
+            
+        except Exception as openai_error:
+            logger.error(f"OpenAI API error in requirements chat: {str(openai_error)}")
+            # Return fallback response
+            fallback_response = f"""📋 **Requirements Analysis Guidance**
+
+For the user story "{user_story_title or 'Current Story'}", consider these requirement categories:
+
+**🔧 Functional Requirements:**
+• REQ-FUNC-001: Core functionality specification
+• REQ-FUNC-002: Business rule implementation
+• REQ-FUNC-003: Data processing requirements
+
+**🔒 Security Requirements:**
+• REQ-SEC-001: Authentication and authorization
+• REQ-SEC-002: Data protection and privacy
+• REQ-SEC-003: Input validation and sanitization
+
+**⚡ Performance Requirements:**
+• REQ-PERF-001: Response time specifications
+• REQ-PERF-002: Scalability requirements
+• REQ-PERF-003: Resource utilization limits
+
+**🎨 User Interface Requirements:**
+• REQ-UI-001: User experience design
+• REQ-UI-002: Accessibility compliance
+• REQ-UI-003: Mobile responsiveness
+
+Would you like me to help develop specific requirements for any of these categories?"""
+            
+            return jsonify({
+                "success": True,
+                "message": fallback_response,
+                "userMessage": user_message,
+                "note": "AI service unavailable - using fallback response"
+            })
+        
+    except Exception as e:
+        logger.error(f"Error in requirements chat: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
 @app.route("/tabbed-submit-jira", methods=["POST"])
 def tabbed_submit_jira():
     """Submit the selected story to Jira."""
@@ -844,32 +1408,147 @@ def tabbed_submit_jira():
         if not current_story:
             return jsonify({"success": False, "error": "No story selected for submission"})
         
-        # Prepare submission data
-        submission_data = {
-            'epic_title': current_epic.get('title', ''),
-            'epic_description': current_epic.get('description', ''),
-            'story_title': current_story.get('title', ''),
-            'story_description': current_story.get('description', ''),
-            'acceptance_criteria': current_story.get('acceptance_criteria', ''),
-            'priority': current_story.get('priority', 'Medium'),
-            'estimated_effort': current_story.get('estimated_effort', 'Medium'),
-            'responsible_systems': story_details.get('responsible_systems', 'TBD'),
-            'tagged_requirements': story_details.get('tagged_requirements', 'TBD')
-        }
+        # Check if this is an AJAX request
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         
-        # For demo purposes, just return success
-        # In a real implementation, this would integrate with Jira API
-        logger.info(f"Mock Jira submission: {submission_data}")
+        # Get story data
+        epic_title = current_epic.get('title', '')
+        user_story_name = current_story.get('title', current_story.get('name', ''))
+        user_story_description = current_story.get('description', current_story.get('summary', ''))
+        priority = current_epic.get('priority', current_story.get('priority', 'High'))
+        responsible_systems = story_details.get('responsible_systems', 'CAPS, CMS')
         
-        return jsonify({
-            "success": True,
-            "message": "Story submitted to Jira successfully!",
-            "jira_ticket": "DEMO-123"  # Mock ticket number
-        })
+        # Extract acceptance criteria and tagged requirements
+        acceptance_criteria = []
+        tagged_requirements = []
+        traceability_matrix = ''
         
+        if story_details:
+            # Get acceptance criteria
+            if 'acceptance_criteria' in story_details and isinstance(story_details['acceptance_criteria'], list):
+                acceptance_criteria = story_details['acceptance_criteria']
+            elif 'acceptance_criteria' in current_story:
+                if isinstance(current_story['acceptance_criteria'], list):
+                    acceptance_criteria = current_story['acceptance_criteria']
+                elif isinstance(current_story['acceptance_criteria'], str):
+                    acceptance_criteria = [current_story['acceptance_criteria']]
+            
+            # Get tagged requirements
+            if 'tagged_requirements' in story_details and isinstance(story_details['tagged_requirements'], list):
+                tagged_requirements = story_details['tagged_requirements']
+            
+            # Get traceability matrix
+            traceability_matrix = story_details.get('traceability_matrix', '')
+        
+        logger.info(f"Submitting Jira ticket for story: {user_story_name}")
+        logger.info(f"Epic: {epic_title}")
+        logger.info(f"Priority: {priority}")
+        logger.info(f"Systems: {responsible_systems}")
+        
+        # Format the description for Jira
+        jira_description = user_story_description
+        
+        # Add acceptance criteria to description
+        if acceptance_criteria:
+            jira_description += "\n\n*Acceptance Criteria:*\n"
+            for i, criterion in enumerate(acceptance_criteria, 1):
+                jira_description += f"• {criterion}\n"
+        
+        # Add tagged requirements to description
+        if tagged_requirements:
+            jira_description += "\n\n*Tagged Requirements:*\n"
+            for i, requirement in enumerate(tagged_requirements, 1):
+                jira_description += f"• {requirement}\n"
+        
+        # Add traceability matrix to description
+        if traceability_matrix and traceability_matrix.strip() != 'Traceability mapping not available.':
+            jira_description += "\n\n*Traceability Matrix (User Story → PRD Requirements):*\n"
+            jira_description += f"{traceability_matrix}\n"
+        
+        # Add system information
+        if responsible_systems:
+            jira_description += f"\n\n*Responsible Systems:* {responsible_systems}"
+        
+        # Try to create Jira ticket using the Jira connector
+        try:
+            # Import and use Jira connector
+            from jira import JIRA
+            import os
+            from dotenv import load_dotenv
+            
+            load_dotenv()
+            
+            # Jira configuration
+            JIRA_SERVER = 'https://lalluluke.atlassian.net/'
+            EMAIL = 'lalluluke@gmail.com'
+            API_TOKEN = os.getenv("JIRA_API_TOKEN")
+            
+            if not API_TOKEN:
+                logger.error("JIRA_API_TOKEN not found in environment variables")
+                if is_ajax:
+                    return jsonify({
+                        "success": False,
+                        "error": "Jira API token not configured. Please contact administrator."
+                    })
+                else:
+                    return render_template('poc2_user_story_details.html', 
+                                         error_message="Jira API token not configured. Please contact administrator.")
+            
+            # Connect to Jira
+            jira = JIRA(server=JIRA_SERVER, basic_auth=(EMAIL, API_TOKEN))
+            
+            # Create issue dictionary (removed priority field due to Jira screen configuration)
+            issue_dict = {
+                'project': {'key': 'SCRUM'},  # Default project key
+                'summary': user_story_name,
+                'description': jira_description,
+                'issuetype': {'name': 'Story'}
+            }
+            
+            # Create the Jira issue
+            new_issue = jira.create_issue(fields=issue_dict)
+            
+            logger.info(f"Successfully created Jira ticket: {new_issue.key}")
+            
+            # Store the ticket information for display
+            success_data = {
+                'success': True,
+                'ticket_id': new_issue.key,
+                'jira_url': f"{JIRA_SERVER}browse/{new_issue.key}",
+                'message': f"Jira ticket {new_issue.key} created successfully!",
+                'epic_title': epic_title,
+                'user_story_name': user_story_name
+            }
+            
+            if is_ajax:
+                return jsonify(success_data)
+            else:
+                # Return success page with ticket details
+                return render_template('jira_success.html', **success_data)
+            
+        except ImportError as e:
+            logger.error(f"Jira library not available: {e}")
+            error_msg = "Jira integration not available. Please install the required dependencies."
+            if is_ajax:
+                return jsonify({"success": False, "error": error_msg})
+            else:
+                return render_template('poc2_user_story_details.html', error_message=error_msg)
+            
+        except Exception as e:
+            logger.error(f"Error creating Jira ticket: {e}")
+            error_msg = f"Failed to create Jira ticket: {str(e)}"
+            if is_ajax:
+                return jsonify({"success": False, "error": error_msg})
+            else:
+                return render_template('poc2_user_story_details.html', error_message=error_msg)
+    
     except Exception as e:
-        logger.error(f"Error submitting to Jira: {str(e)}")
-        return jsonify({"success": False, "error": str(e)})
+        logger.error(f"Error in Jira ticket submission: {str(e)}")
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({"success": False, "error": f"Error submitting to Jira: {str(e)}"})
+        else:
+            return render_template('poc2_user_story_details.html', 
+                                 error_message=f"Error submitting to Jira: {str(e)}")
 
 @app.route("/tabbed-upload-prd", methods=["POST"])
 def tabbed_upload_prd():
@@ -963,6 +1642,175 @@ def clear_session():
     except Exception as e:
         logger.error(f"Error clearing session: {str(e)}")
         return jsonify({"success": False, "error": str(e)})
+
+# System Mapping Upload and Retrieval
+@app.route("/upload-system-info", methods=["POST"])
+def upload_system_info():
+    """Upload and process system information file for user story mapping."""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"success": False, "error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"success": False, "error": "No file selected"}), 400
+        
+        # Check file size (limit to 10MB)
+        file.seek(0, 2)  # Seek to end
+        file_size = file.tell()
+        file.seek(0)  # Reset to beginning
+        
+        if file_size > 10 * 1024 * 1024:  # 10MB limit
+            return jsonify({"success": False, "error": "File size too large (max 10MB)"}), 400
+        
+        # Read and process file content
+        content = ""
+        filename = file.filename.lower()
+        
+        try:
+            if filename.endswith('.txt'):
+                content = file.read().decode('utf-8')
+            elif filename.endswith('.json'):
+                json_data = json.load(file)
+                content = json.dumps(json_data, indent=2)
+            elif filename.endswith('.csv'):
+                content = file.read().decode('utf-8')
+            else:
+                # Try to read as text for other formats
+                content = file.read().decode('utf-8')
+        except UnicodeDecodeError:
+            return jsonify({"success": False, "error": "File encoding not supported. Please use UTF-8 encoded files."}), 400
+        except json.JSONDecodeError:
+            return jsonify({"success": False, "error": "Invalid JSON file format"}), 400
+        
+        if not content.strip():
+            return jsonify({"success": False, "error": "File appears to be empty"}), 400
+        
+        # Store system information in session
+        session['system_info'] = content
+        session['system_info_filename'] = file.filename
+        session['system_info_uploaded'] = datetime.now().isoformat()
+        session.modified = True
+        
+        # Parse basic system information for preview
+        lines = content.split('\n')[:10]  # First 10 lines for preview
+        preview = '\n'.join(lines)
+        if len(content.split('\n')) > 10:
+            preview += "\n... (file continues)"
+        
+        logger.info(f"System information uploaded: {file.filename} ({file_size} bytes)")
+        
+        return jsonify({
+            "success": True,
+            "message": f"System information uploaded successfully: {file.filename}",
+            "filename": file.filename,
+            "size": file_size,
+            "preview": preview[:500]  # Limit preview to 500 chars
+        })
+        
+    except Exception as e:
+        logger.error(f"Error uploading system info: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": "Failed to upload system information"}), 500
+
+@app.route("/get-system-info", methods=["GET"])
+def get_system_info():
+    """Get current system information status."""
+    try:
+        system_info = session.get('system_info', '')
+        filename = session.get('system_info_filename', '')
+        uploaded_time = session.get('system_info_uploaded', '')
+        
+        return jsonify({
+            "success": True,
+            "has_system_info": bool(system_info),
+            "filename": filename,
+            "uploaded_time": uploaded_time,
+            "preview": system_info[:500] if system_info else ""
+        })
+    except Exception as e:
+        logger.error(f"Error getting system info: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.route("/clear-system-info", methods=["POST"])
+def clear_system_info():
+    """Clear uploaded system information."""
+    try:
+        if 'system_info' in session:
+            del session['system_info']
+        if 'system_info_filename' in session:
+            del session['system_info_filename']
+        if 'system_info_uploaded' in session:
+            del session['system_info_uploaded']
+        session.modified = True
+        
+        logger.info("System information cleared from session")
+        return jsonify({"success": True, "message": "System information cleared"})
+    except Exception as e:
+        logger.error(f"Error clearing system info: {str(e)}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+def map_responsible_systems_from_csv(user_story_description, user_story_title):
+    """Map responsible systems from uploaded CSV based on user story content."""
+    try:
+        system_info = session.get('system_info', '')
+        if not system_info:
+            return "TBD"
+        
+        # Parse CSV content
+        csv_reader = csv.DictReader(io.StringIO(system_info))
+        rows = list(csv_reader)
+        
+        if not rows:
+            return "TBD"
+        
+        # Get column names (case-insensitive)
+        columns = {col.lower().strip(): col for col in rows[0].keys()}
+        
+        # Look for system/component columns
+        system_col = None
+        description_col = None
+        
+        for col_lower, col_original in columns.items():
+            if 'system' in col_lower or 'component' in col_lower or 'service' in col_lower:
+                system_col = col_original
+            if 'description' in col_lower or 'function' in col_lower or 'purpose' in col_lower:
+                description_col = col_original
+        
+        if not system_col:
+            # If no specific system column, use first column as system names
+            system_col = list(rows[0].keys())[0]
+        
+        # Search for matching systems based on content
+        matched_systems = []
+        search_text = f"{user_story_title} {user_story_description}".lower()
+        
+        for row in rows:
+            system_name = row.get(system_col, '').strip()
+            if not system_name:
+                continue
+                
+            # Check if system name appears in user story
+            if system_name.lower() in search_text:
+                matched_systems.append(system_name)
+                continue
+            
+            # Check if description/function matches
+            if description_col:
+                system_desc = row.get(description_col, '').lower()
+                if system_desc and any(keyword in search_text for keyword in system_desc.split() if len(keyword) > 3):
+                    matched_systems.append(system_name)
+        
+        if matched_systems:
+            return ', '.join(matched_systems)
+        else:
+            # If no matches found, return first few systems as fallback
+            fallback_systems = [row.get(system_col, '').strip() for row in rows[:3] if row.get(system_col, '').strip()]
+            return ', '.join(fallback_systems) if fallback_systems else "TBD"
+            
+    except Exception as e:
+        logger.error(f"Error mapping systems from CSV: {str(e)}")
+        return "TBD"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5002))  # Different port to avoid conflicts

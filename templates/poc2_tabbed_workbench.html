@@ -646,6 +646,203 @@
       100% { transform: rotate(360deg); }
     }
 
+    /* Enhanced Loading States with Timer */
+    .modern-loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-2xl);
+      color: var(--text-primary);
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: var(--border-radius);
+      margin: var(--spacing-lg);
+      min-height: 300px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .modern-loading-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      animation: progressPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes progressPulse {
+      0%, 100% { opacity: 0.6; transform: scaleX(0.8); }
+      50% { opacity: 1; transform: scaleX(1); }
+    }
+
+    .modern-spinner {
+      width: 60px;
+      height: 60px;
+      margin-bottom: var(--spacing-xl);
+      position: relative;
+    }
+
+    .modern-spinner::before,
+    .modern-spinner::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+    }
+
+    .modern-spinner::before {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      animation: modernSpin 1.5s linear infinite;
+      opacity: 0.8;
+    }
+
+    .modern-spinner::after {
+      width: 40px;
+      height: 40px;
+      background: white;
+      top: 10px;
+      left: 10px;
+      box-shadow: inset 0 0 0 3px var(--primary-red);
+      animation: modernSpinReverse 1s linear infinite;
+    }
+
+    @keyframes modernSpin {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    @keyframes modernSpinReverse {
+      0% { transform: rotate(360deg) scale(1); }
+      50% { transform: rotate(180deg) scale(0.9); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+    .loading-timer {
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid var(--primary-red);
+      border-radius: 25px;
+      padding: var(--spacing-sm) var(--spacing-lg);
+      margin: var(--spacing-lg) 0;
+      font-family: 'Inter', monospace;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--primary-red);
+      min-width: 120px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+      animation: timerPulse 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes timerPulse {
+      0% { box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2); }
+      100% { box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4); }
+    }
+
+    .loading-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+      text-align: center;
+    }
+
+    .loading-subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-lg);
+      text-align: center;
+      max-width: 400px;
+      line-height: 1.5;
+    }
+
+    .loading-progress-bar {
+      width: 100%;
+      max-width: 400px;
+      height: 8px;
+      background: var(--border-light);
+      border-radius: 4px;
+      margin: var(--spacing-lg) 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loading-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+      border-radius: 4px;
+      animation: progressFill 3s ease-in-out infinite;
+      position: relative;
+    }
+
+    .loading-progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+      animation: progressShine 2s ease-in-out infinite;
+    }
+
+    @keyframes progressFill {
+      0% { width: 10%; }
+      25% { width: 30%; }
+      50% { width: 60%; }
+      75% { width: 85%; }
+      100% { width: 95%; }
+    }
+
+    @keyframes progressShine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(400%); }
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 6px;
+      margin-top: var(--spacing-lg);
+    }
+
+    .loading-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--primary-red);
+      border-radius: 50%;
+      animation: dotBounce 1.4s ease-in-out infinite;
+    }
+
+    .loading-dot:nth-child(1) { animation-delay: 0s; }
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes dotBounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-15px); }
+    }
+
+    /* Chat Loading Spinner */
+    .chat-loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-light);
+      border-top: 2px solid var(--primary-red);
+      border-radius: 50%;
+      animation: chatSpin 0.8s linear infinite;
+      display: inline-block;
+      margin-right: var(--spacing-xs);
+    }
+
+    @keyframes chatSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     /* Buttons */
     .btn-primary {
       background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
@@ -814,6 +1011,41 @@
     ::-webkit-scrollbar-thumb:hover {
       background: var(--secondary-grey);
     }
+
+    /* Success and Error Containers for Jira Submission */
+    .success-container {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      border: 1px solid #c3e6cb;
+      border-radius: var(--border-radius);
+      padding: var(--spacing-xl);
+      margin: var(--spacing-lg);
+    }
+
+    .error-container {
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      border: 1px solid #f5c6cb;
+      border-radius: var(--border-radius);
+      padding: var(--spacing-xl);
+      margin: var(--spacing-lg);
+    }
+
+    .success-container h4 {
+      color: #155724;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .error-container h4 {
+      color: #721c24;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .success-container .fas {
+      color: #28a745;
+    }
+
+    .error-container .fas {
+      color: #dc3545;
+    }
   </style>
 </head>
 <body>
@@ -916,10 +1148,20 @@
                 </div>
               </div>
 
-              <!-- Loading State -->
-              <div id="epics-loading" class="loading-state" style="display: none;">
-                <div class="loading-spinner"></div>
-                <span>Generating epics from your PRD...</span>
+              <!-- Modern Loading State with Timer -->
+              <div id="epics-loading" class="modern-loading-container" style="display: none;">
+                <div class="modern-spinner"></div>
+                <div class="loading-title">🚀 Generating Epics</div>
+                <div class="loading-subtitle">Analyzing your PRD content and creating comprehensive epics that break down requirements into manageable chunks...</div>
+                <div class="loading-timer" id="epics-timer">00:00</div>
+                <div class="loading-progress-bar">
+                  <div class="loading-progress-fill"></div>
+                </div>
+                <div class="loading-dots">
+                  <div class="loading-dot"></div>
+                  <div class="loading-dot"></div>
+                  <div class="loading-dot"></div>
+                </div>
               </div>
 
               <!-- Epics List -->
@@ -975,10 +1217,20 @@
                 <div id="selected-epic-display"></div>
               </div>
 
-              <!-- Loading State -->
-              <div id="stories-loading" class="loading-state" style="display: none;">
-                <div class="loading-spinner"></div>
-                <span>Generating user stories for selected epic...</span>
+              <!-- Modern Loading State with Timer -->
+              <div id="stories-loading" class="modern-loading-container" style="display: none;">
+                <div class="modern-spinner"></div>
+                <div class="loading-title">📝 Generating User Stories</div>
+                <div class="loading-subtitle">Creating detailed user stories for your selected epic with acceptance criteria and system mappings...</div>
+                <div class="loading-timer" id="stories-timer">00:00</div>
+                <div class="loading-progress-bar">
+                  <div class="loading-progress-fill"></div>
+                </div>
+                <div class="loading-dots">
+                  <div class="loading-dot"></div>
+                  <div class="loading-dot"></div>
+                  <div class="loading-dot"></div>
+                </div>
               </div>
 
               <!-- User Stories List -->
@@ -1041,10 +1293,20 @@
                   <div class="empty-state-subtext">Choose a user story to view detailed information</div>
                 </div>
 
-                <!-- Loading State -->
-                <div id="details-loading" class="loading-state" style="display: none;">
-                  <div class="loading-spinner"></div>
-                  <span>Loading story details...</span>
+                <!-- Modern Loading State with Timer -->
+                <div id="details-loading" class="modern-loading-container" style="display: none;">
+                  <div class="modern-spinner"></div>
+                  <div class="loading-title">📋 Generating Story Details</div>
+                  <div class="loading-subtitle">Creating detailed acceptance criteria, tagged requirements, and traceability matrix for your user story...</div>
+                  <div class="loading-timer" id="details-timer">00:00</div>
+                  <div class="loading-progress-bar">
+                    <div class="loading-progress-fill"></div>
+                  </div>
+                  <div class="loading-dots">
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                  </div>
                 </div>
 
                 <!-- Details Sections -->
@@ -1123,10 +1385,77 @@
     let selectedEpic = null;
     let selectedUserStory = null;
     let currentStoryDetails = null;
+    
+    // Timer variables
+    let loadingTimers = {};
+
+    // Timer functions
+    function startLoadingTimer(timerId) {
+      if (loadingTimers[timerId]) {
+        clearInterval(loadingTimers[timerId].interval);
+      }
+      
+      const startTime = Date.now();
+      const timerElement = document.getElementById(timerId);
+      
+      if (!timerElement) return;
+      
+      loadingTimers[timerId] = {
+        startTime: startTime,
+        interval: setInterval(() => {
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          const minutes = Math.floor(elapsed / 60);
+          const seconds = elapsed % 60;
+          
+          const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          timerElement.textContent = timeString;
+          
+          // Add visual feedback for longer processes
+          if (elapsed > 10) {
+            timerElement.style.background = 'rgba(255, 193, 7, 0.9)';
+            timerElement.style.borderColor = '#ffc107';
+            timerElement.style.color = '#212529';
+          }
+          if (elapsed > 30) {
+            timerElement.style.background = 'rgba(220, 53, 69, 0.9)';
+            timerElement.style.borderColor = '#dc3545';
+            timerElement.style.color = 'white';
+          }
+        }, 1000)
+      };
+    }
+
+    function stopLoadingTimer(timerId) {
+      if (loadingTimers[timerId]) {
+        clearInterval(loadingTimers[timerId].interval);
+        delete loadingTimers[timerId];
+        
+        const timerElement = document.getElementById(timerId);
+        if (timerElement) {
+          // Reset timer appearance
+          timerElement.style.background = 'rgba(255, 255, 255, 0.9)';
+          timerElement.style.borderColor = 'var(--primary-red)';
+          timerElement.style.color = 'var(--primary-red)';
+        }
+      }
+    }
+
+    function resetLoadingTimer(timerId) {
+      stopLoadingTimer(timerId);
+      const timerElement = document.getElementById(timerId);
+      if (timerElement) {
+        timerElement.textContent = '00:00';
+      }
+    }
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', function() {
       console.log('Tabbed Layout initialized');
+      
+      // Reset all timers on page load
+      resetLoadingTimer('epics-timer');
+      resetLoadingTimer('stories-timer');
+      resetLoadingTimer('details-timer');
       
       // Setup submit button event listener
       const submitBtn = document.getElementById('submit-files-btn');
@@ -1250,13 +1579,16 @@
         }
 
         console.log('Step 4: Showing loading state...');
-        // Show loading state
+        // Show loading state with timer
         const uploadSection = document.getElementById('upload-section');
         const epicsLoading = document.getElementById('epics-loading');
         const epicsEmpty = document.getElementById('epics-empty');
         
         if (uploadSection) uploadSection.style.display = 'none';
-        if (epicsLoading) epicsLoading.style.display = 'flex';
+        if (epicsLoading) {
+          epicsLoading.style.display = 'flex';
+          startLoadingTimer('epics-timer');
+        }
         if (epicsEmpty) epicsEmpty.style.display = 'none';
 
         console.log('Step 5: Preparing form data...');
@@ -1294,6 +1626,9 @@
           console.log('Raw epics data:', data.epics);
           console.log('Number of epics:', data.epics ? data.epics.length : 0);
           
+          // Stop loading timer
+          stopLoadingTimer('epics-timer');
+          
           // Store epics globally
           currentEpics = data.epics || [];
           window.currentEpics = data.epics || [];
@@ -1304,6 +1639,7 @@
             displayEpics(data.epics);
           } else {
             console.error('No epics in response data!');
+            stopLoadingTimer('epics-timer');
             alert('No epics were generated. Please try again.');
             return;
           }
@@ -1422,6 +1758,9 @@
       // Show loading in stories tab
       document.getElementById('stories-loading').style.display = 'flex';
       document.getElementById('stories-empty').style.display = 'none';
+      
+      // Start stories timer
+      startLoadingTimer('stories-timer');
 
       // Switch to stories tab
       const tab = new bootstrap.Tab(storiesTab);
@@ -1460,7 +1799,8 @@
         console.error('Error selecting epic:', error);
         alert('Error generating user stories: ' + error.message);
         
-        // Reset stories tab
+        // Stop stories timer and reset stories tab
+        stopLoadingTimer('stories-timer');
         document.getElementById('stories-loading').style.display = 'none';
         document.getElementById('stories-empty').style.display = 'block';
       }
@@ -1484,6 +1824,9 @@
       const storiesLoading = document.getElementById('stories-loading');
       const storiesList = document.getElementById('stories-list');
 
+      // Stop stories timer
+      stopLoadingTimer('stories-timer');
+
       storiesLoading.style.display = 'none';
       storiesList.style.display = 'block';
 
@@ -1504,6 +1847,7 @@
                 <div class="user-story-metadata">
                   <span><i class="fas fa-flag"></i> <span class="${priorityClass}">${story.priority}</span></span>
                   <span><i class="fas fa-weight-hanging"></i> ${story.estimated_effort || 'TBD'}</span>
+                  <span><i class="fas fa-cogs"></i> ${story.responsible_systems || 'TBD'}</span>
                 </div>
               </label>
             </div>
@@ -1560,6 +1904,9 @@
       // Show loading in details tab
       document.getElementById('details-loading').style.display = 'flex';
       document.getElementById('details-empty').style.display = 'none';
+      
+      // Start details timer
+      startLoadingTimer('details-timer');
 
       // Switch to details tab
       const tab = new bootstrap.Tab(detailsTab);
@@ -1596,7 +1943,8 @@
         console.error('Error generating story details:', error);
         alert('Error generating story details: ' + error.message);
         
-        // Reset details tab
+        // Stop details timer and reset details tab
+        stopLoadingTimer('details-timer');
         document.getElementById('details-loading').style.display = 'none';
         document.getElementById('details-empty').style.display = 'block';
       }
@@ -1607,8 +1955,18 @@
       const detailsLoading = document.getElementById('details-loading');
       const detailsSections = document.getElementById('details-sections');
       
+      // Stop details timer
+      stopLoadingTimer('details-timer');
+      
       detailsLoading.style.display = 'none';
       detailsSections.style.display = 'block';
+      
+      // Store the current story details for Jira submission
+      currentStoryDetails = details;
+
+      // Show Submit to Jira button
+      const submitBtn = document.getElementById('submit-jira-btn');
+      submitBtn.style.display = 'inline-block';
 
       // Story Info
       document.getElementById('story-info').innerHTML = `
@@ -1818,36 +2176,136 @@
     // Submit to Jira
     async function submitToJira() {
       if (!selectedUserStory || !currentStoryDetails) {
-        alert('Please select a user story first');
+        console.log('Submit to Jira: No user story selected or story details missing');
+        addChatMessage('details-chat-messages', '⚠️ Please select a user story and generate its details first before submitting to Jira.', 'ai');
         return;
       }
 
+      // Log submission details for debugging
+      console.log('Submitting to Jira:', {
+        epic: selectedEpic?.title || 'Unknown',
+        story: selectedUserStory?.title || selectedUserStory?.name || 'Unknown',
+        priority: selectedEpic?.priority || 'High'
+      });
+
+      // Get submit button reference outside try block
       const submitBtn = document.getElementById('submit-jira-btn');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+      const originalText = submitBtn.innerHTML;
 
       try {
+        // Show loading state on submit button
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        submitBtn.disabled = true;
+
+        // Submit to Jira via AJAX
         const response = await fetch('/tabbed-submit-jira', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
           }
         });
 
-        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
+        // Parse JSON response
+        const data = await response.json();
+        
         if (data.success) {
-          alert('Successfully submitted to Jira!\nTicket: ' + data.jira_ticket);
-          addChatMessage('details-chat-messages', `🚀 Successfully submitted "${selectedUserStory.title}" to Jira! Ticket: ${data.jira_ticket}`, 'ai');
+          // Success - show success message in the story details content
+          const storyDetailsDiv = document.getElementById('story-details-content');
+          const jiraLinkHtml = data.jira_url ? 
+            `<p class="mb-3"><a href="${data.jira_url}" target="_blank" class="btn btn-outline-primary">
+              <i class="fas fa-external-link-alt"></i> View in Jira
+            </a></p>` : '';
+          
+          // Show warning if there was one (e.g., priority field not available)
+          const warningHtml = data.warning ? 
+            `<div class="alert alert-warning mt-3" style="font-size: 0.9em;">
+              <i class="fas fa-exclamation-triangle"></i> ${data.warning}
+            </div>` : '';
+          
+          storyDetailsDiv.innerHTML = `
+            <div class="success-container text-center py-5">
+              <div class="text-success mb-3">
+                <i class="fas fa-check-circle fa-3x"></i>
+              </div>
+              <h4 class="text-success">Successfully Submitted to Jira!</h4>
+              <p class="mb-3">
+                <strong>Epic:</strong> ${data.epic_title || selectedEpic?.title || 'Unknown'}<br>
+                <strong>Story:</strong> ${data.user_story_name || selectedUserStory?.title || selectedUserStory?.name || 'Unknown'}<br>
+                <strong>Ticket ID:</strong> ${data.ticket_id || 'TST-' + Math.floor(Date.now() / 1000)}
+              </p>
+              ${jiraLinkHtml}
+              ${warningHtml}
+              <button class="btn btn-primary" onclick="location.reload()">
+                <i class="fas fa-plus"></i> Create Another Story
+              </button>
+            </div>
+          `;
+          
+          // Hide submit button and reset its state for next use
+          submitBtn.style.display = 'none';
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+          
+          // Also show message in chat
+          addChatMessage('details-chat-messages', `🚀 Successfully submitted "${selectedUserStory.title || selectedUserStory.name}" to Jira! Ticket: ${data.ticket_id}`, 'ai');
+          
+          console.log('Successfully submitted to Jira:', data);
         } else {
+          // Show error message
+          const storyDetailsDiv = document.getElementById('story-details-content');
+          storyDetailsDiv.innerHTML = `
+            <div class="error-container text-center py-5">
+              <div class="text-danger mb-3">
+                <i class="fas fa-exclamation-triangle fa-3x"></i>
+              </div>
+              <h4 class="text-danger">Failed to Submit to Jira</h4>
+              <p class="mb-3 text-danger">${data.error || data.message || 'Unknown error occurred'}</p>
+              <p class="text-muted">Please check your JIRA configuration and try again.</p>
+              <button class="btn btn-secondary" onclick="location.reload()">
+                <i class="fas fa-refresh"></i> Try Again
+              </button>
+            </div>
+          `;
+          
+          // Reset submit button
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+          
+          // Also show error in chat
+          addChatMessage('details-chat-messages', `❌ Failed to submit to Jira: ${data.error || 'Unknown error'}`, 'ai');
+          
           throw new Error(data.error || 'Failed to submit to Jira');
         }
+        
       } catch (error) {
         console.error('Error submitting to Jira:', error);
-        alert('Error submitting to Jira: ' + error.message);
-      } finally {
+        
+        // Show error message in the story details section instead of alert
+        const storyDetailsDiv = document.getElementById('story-details-content');
+        storyDetailsDiv.innerHTML = `
+          <div class="error-container text-center py-5">
+            <div class="text-danger mb-3">
+              <i class="fas fa-exclamation-triangle fa-3x"></i>
+            </div>
+            <h4 class="text-danger">Error Submitting to Jira</h4>
+            <p class="mb-3 text-danger">${error.message}</p>
+            <p class="text-muted">Please check your JIRA configuration and try again.</p>
+            <button class="btn btn-secondary" onclick="location.reload()">
+              <i class="fas fa-refresh"></i> Try Again
+            </button>
+          </div>
+        `;
+        
+        // Reset submit button
+        submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-rocket"></i> Submit to Jira';
+        
+        // Also show error in chat
+        addChatMessage('details-chat-messages', `❌ Error submitting to Jira: ${error.message}`, 'ai');
       }
     }
 

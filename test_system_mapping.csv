@@ -1,0 +1,9 @@
+System Name,Description,Function,Technology
+CAPS,Core Application Processing System,Handles main business logic and user transactions,Java/Spring
+CMS,Content Management System,Manages documents and content workflows,React/Node.js
+API Gateway,API Management Layer,Routes and manages API calls between systems,Kong/Nginx
+Database System,Primary Data Storage,Stores user data and transaction records,PostgreSQL
+Authentication Service,User Authentication,Handles login and authorization,OAuth2/JWT
+Notification Service,Message Delivery,Sends emails and notifications to users,RabbitMQ/SMTP
+Reporting Engine,Analytics and Reports,Generates business reports and analytics,Python/Pandas
+File Storage,Document Storage,Stores uploaded files and documents,AWS S3/MinIO
