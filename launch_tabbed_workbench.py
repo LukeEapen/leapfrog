@@ -109,15 +109,17 @@ def main():
     print(f"   Debug: {debug}")
     print(f"   Host: {host}")
     print(f"   Environment: {os.environ.get('FLASK_ENV', 'development')}")
-    print(f"   URL: http://{host}:{port}/tabbed-layout")
+    print(f"   Landing Page: http://{host}:{port}/")
+    print(f"   Tabbed Workbench: http://{host}:{port}/tabbed-layout")
     
     # Start server with enhanced error handling
     try:
         logger.info(f"Starting Flask server on port {port}")
         print(f"\n🌐 Server starting on http://localhost:{port}")
-        print("   Main UI: http://localhost:{port}/tabbed-layout")
-        print("   Health check: http://localhost:{port}/health")
-        print("   Debug info: http://localhost:{port}/debug-info")
+        print("   🏠 Landing Page: http://localhost:{port}/")
+        print("   📋 Tabbed Workbench: http://localhost:{port}/tabbed-layout")
+        print("   ❤️  Health check: http://localhost:{port}/health")
+        print("   🐛 Debug info: http://localhost:{port}/debug-info")
         print("\n📝 Logs are saved to: tabbed_backend.log")
         print("⏹️  Press Ctrl+C to stop the server")
         print("=" * 40)

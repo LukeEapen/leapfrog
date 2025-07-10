@@ -685,7 +685,8 @@ def parse_user_stories_from_response(content, epic):
                     effort = line.replace('Effort:', '').strip()
                     current_section = None
                 elif line.startswith('Responsible Systems:'):
-                    responsible_systems = line.replace('Responsible Systems:', '').strip()
+                    responsible_systems_raw = line.replace('Responsible Systems:', '').strip()
+                    responsible_systems = extract_primary_system(responsible_systems_raw)
                     current_section = None
                 elif line.startswith('- ') and current_section == 'criteria':
                     acceptance_criteria.append(line[2:])
@@ -700,6 +701,9 @@ def parse_user_stories_from_response(content, epic):
                 csv_mapped_systems = map_responsible_systems_from_csv(description, title_part)
                 final_responsible_systems = csv_mapped_systems if csv_mapped_systems != "TBD" else responsible_systems
                 
+                # Ensure only one primary system is used
+                primary_system = extract_primary_system(final_responsible_systems)
+                
                 story = {
                     'id': f'story_{i}',
                     'title': title_part,
@@ -707,7 +711,7 @@ def parse_user_stories_from_response(content, epic):
                     'acceptance_criteria': '\n'.join([f"• {criteria}" for criteria in acceptance_criteria]) if acceptance_criteria else "Acceptance criteria to be defined",
                     'priority': priority,
                     'estimated_effort': effort,
-                    'responsible_systems': final_responsible_systems,
+                    'responsible_systems': primary_system,
                     'epic_id': epic.get('id', 'epic_1'),
                     'epic_title': epic.get('title', '')
                 }
@@ -851,7 +855,7 @@ Create a formatted traceability matrix showing relationships between requirement
             'estimated_effort': user_story.get('estimated_effort', 'Medium'),
             'epic_title': current_epic.get('title', 'Unknown Epic'),
             'epic_description': current_epic.get('description', ''),
-            'responsible_systems': user_story.get('responsible_systems', 'To be determined'),
+            'responsible_systems': extract_primary_system(user_story.get('responsible_systems', 'To be determined')),
             'tagged_requirements': tagged_requirements,
             'traceability_matrix': traceability_response
         }
@@ -870,7 +874,7 @@ Create a formatted traceability matrix showing relationships between requirement
             'estimated_effort': user_story.get('estimated_effort', 'Medium'),
             'epic_title': session.get('current_epic', {}).get('title', 'Unknown Epic'),
             'epic_description': session.get('current_epic', {}).get('description', ''),
-            'responsible_systems': user_story.get('responsible_systems', 'To be determined'),
+            'responsible_systems': extract_primary_system(user_story.get('responsible_systems', 'To be determined')),
             'tagged_requirements': ['REQ-001: Basic functionality requirement'],
             'traceability_matrix': 'Traceability matrix generation failed. Please try again.'
         }
@@ -961,7 +965,7 @@ def tabbed_user_story_details_page():
             'user_story_description': story_description,
             'acceptance_criteria': acceptance_criteria,
             'priority': story_details.get('priority', 'High'),
-            'responsible_systems': story_details.get('responsible_systems', 'CAPS, CMS'),
+            'responsible_systems': extract_primary_system(story_details.get('responsible_systems', 'CAPS')),
             'tagged_requirements': tagged_requirements,
             'traceability_matrix': traceability_matrix
         }
@@ -1416,7 +1420,7 @@ def tabbed_submit_jira():
         user_story_name = current_story.get('title', current_story.get('name', ''))
         user_story_description = current_story.get('description', current_story.get('summary', ''))
         priority = current_epic.get('priority', current_story.get('priority', 'High'))
-        responsible_systems = story_details.get('responsible_systems', 'CAPS, CMS')
+        responsible_systems = extract_primary_system(story_details.get('responsible_systems', 'CAPS'))
         
         # Extract acceptance criteria and tagged requirements
         acceptance_criteria = []
@@ -1751,7 +1755,7 @@ def clear_system_info():
         return jsonify({"success": False, "error": "Internal server error"}), 500
 
 def map_responsible_systems_from_csv(user_story_description, user_story_title):
-    """Map responsible systems from uploaded CSV based on user story content."""
+    """Map responsible systems from uploaded CSV based on user story content. Returns only the most important single system."""
     try:
         system_info = session.get('system_info', '')
         if not system_info:
@@ -1781,36 +1785,74 @@ def map_responsible_systems_from_csv(user_story_description, user_story_title):
             # If no specific system column, use first column as system names
             system_col = list(rows[0].keys())[0]
         
-        # Search for matching systems based on content
-        matched_systems = []
+        # Search for matching systems based on content with scoring
+        system_matches = []
         search_text = f"{user_story_title} {user_story_description}".lower()
         
         for row in rows:
             system_name = row.get(system_col, '').strip()
             if not system_name:
                 continue
-                
-            # Check if system name appears in user story
+            
+            match_score = 0
+            
+            # Check if system name appears in user story (highest score)
             if system_name.lower() in search_text:
-                matched_systems.append(system_name)
-                continue
+                match_score += 10
+            
+            # Check for partial matches with system name
+            system_words = system_name.lower().split()
+            for word in system_words:
+                if len(word) > 2 and word in search_text:
+                    match_score += 5
             
             # Check if description/function matches
             if description_col:
                 system_desc = row.get(description_col, '').lower()
-                if system_desc and any(keyword in search_text for keyword in system_desc.split() if len(keyword) > 3):
-                    matched_systems.append(system_name)
+                if system_desc:
+                    desc_words = [word for word in system_desc.split() if len(word) > 3]
+                    for keyword in desc_words:
+                        if keyword in search_text:
+                            match_score += 2
+            
+            if match_score > 0:
+                system_matches.append((system_name, match_score))
         
-        if matched_systems:
-            return ', '.join(matched_systems)
+        if system_matches:
+            # Sort by score (descending) and return the highest scoring system
+            system_matches.sort(key=lambda x: x[1], reverse=True)
+            return system_matches[0][0]  # Return only the best match
         else:
-            # If no matches found, return first few systems as fallback
-            fallback_systems = [row.get(system_col, '').strip() for row in rows[:3] if row.get(system_col, '').strip()]
-            return ', '.join(fallback_systems) if fallback_systems else "TBD"
+            # If no matches found, return the first system as fallback
+            first_system = rows[0].get(system_col, '').strip()
+            return first_system if first_system else "TBD"
             
     except Exception as e:
         logger.error(f"Error mapping systems from CSV: {str(e)}")
         return "TBD"
+            
+    except Exception as e:
+        logger.error(f"Error mapping systems from CSV: {str(e)}")
+        return "TBD"
+
+def extract_primary_system(responsible_systems_str):
+    """Extract the primary/most important system from a comma-separated list of systems."""
+    if not responsible_systems_str or responsible_systems_str.strip() in ['TBD', 'To be determined']:
+        return 'CAPS'  # Default to CAPS as primary system
+    
+    # Split by comma and get the first (most important) system
+    systems = [s.strip() for s in responsible_systems_str.split(',') if s.strip()]
+    
+    if not systems:
+        return 'CAPS'
+    
+    # Return the first system as it's typically the most important
+    primary_system = systems[0]
+    
+    # Clean up any formatting issues
+    primary_system = primary_system.replace('System:', '').replace('Component:', '').strip()
+    
+    return primary_system
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5002))  # Different port to avoid conflicts
