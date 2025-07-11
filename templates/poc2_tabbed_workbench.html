@@ -2083,11 +2083,11 @@
         console.log(`Epic ${index}:`, epic);
         const priorityClass = epic.priority.toLowerCase() === 'high' ? 'priority-high' : 
                              epic.priority.toLowerCase() === 'low' ? 'priority-low' : 'priority-medium';
-        
+        // Add onchange to set selectedEpic
         html += `
           <div class="epic-radio-item">
             <div class="form-check epic-check">
-              <input class="form-check-input" type="radio" name="selectedEpic" id="epic_${index}" value="${index}" onchange="updateGenerateButton()">
+              <input class="form-check-input" type="radio" name="selectedEpic" id="epic_${index}" value="${index}" onchange="updateGenerateButton(); setSelectedEpic(${index});">
               <label class="form-check-label epic-label" for="epic_${index}">
                 <div class="epic-title">${epic.title}</div>
                 <div class="epic-description">${epic.description}</div>
@@ -2119,6 +2119,13 @@
       const selectedRadio = document.querySelector('input[name="selectedEpic"]:checked');
       const generateBtn = document.getElementById('generate-stories-btn');
       generateBtn.disabled = !selectedRadio;
+    }
+
+    // Set selectedEpic when an epic is selected
+    function setSelectedEpic(index) {
+      if (currentEpics && currentEpics[index]) {
+        selectedEpic = currentEpics[index];
+      }
     }
 
     // Generate user stories for selected epic
@@ -2548,7 +2555,8 @@
         removeChatMessage(loadingId);
 
         if (data.success) {
-          addChatMessage('epic-chat-messages', data.response, 'ai');
+          // Add AI message with Apply Changes button
+          addChatMessage('epic-chat-messages', data.response, 'ai', false, true);
         } else {
           addChatMessage('epic-chat-messages', 'Sorry, I encountered an error. Please try again.', 'ai');
         }
@@ -2642,32 +2650,70 @@
     }
 
     // Add chat message
-    function addChatMessage(containerId, message, sender, isLoading = false) {
-      const container = document.getElementById(containerId);
-      const messageId = 'msg-' + Date.now() + '-' + Math.random();
-      
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `chat-message ${sender}`;
-      messageDiv.id = messageId;
-      
-      if (isLoading) {
-        messageDiv.innerHTML = `
-          <div class="message-bubble">
-            <div class="loading-spinner" style="width: 20px; height: 20px; margin: 0;"></div>
-            ${message}
-          </div>
-        `;
-      } else {
-        messageDiv.innerHTML = `
-          <div class="message-bubble">${message}</div>
-        `;
-      }
-      
-      container.appendChild(messageDiv);
-      container.scrollTop = container.scrollHeight;
-      
-      return messageId;
+function addChatMessage(containerId, message, sender, isLoading = false, showApply = false) {
+  const container = document.getElementById(containerId);
+  const messageId = 'msg-' + Date.now() + '-' + Math.random();
+
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chat-message ${sender}`;
+  messageDiv.id = messageId;
+
+  if (isLoading) {
+    messageDiv.innerHTML = `
+      <div class="message-bubble">
+        <div class="loading-spinner" style="width: 20px; height: 20px; margin: 0;"></div>
+        ${message}
+      </div>
+    `;
+  } else {
+    messageDiv.innerHTML = `
+      <div class="message-bubble">${message}</div>
+    `;
+    // If showApply is true, add Apply Changes button
+    if (showApply && containerId === 'epic-chat-messages') {
+      const applyBtn = document.createElement('button');
+      applyBtn.className = 'btn btn-success btn-sm mt-2';
+      applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply Changes';
+      applyBtn.onclick = function() {
+        applyEpicChatChanges(message);
+        applyBtn.disabled = true;
+        applyBtn.innerHTML = '<i class="fas fa-check"></i> Applied';
+      };
+      messageDiv.appendChild(applyBtn);
     }
+  }
+
+  container.appendChild(messageDiv);
+  container.scrollTop = container.scrollHeight;
+
+  return messageId;
+}
+
+// Apply Epic Chat changes to the Epics Tab
+function applyEpicChatChanges(newContent) {
+  // Find the currently selected epic and update its content
+  if (!selectedEpic) {
+    alert('No epic selected to apply changes.');
+    return;
+  }
+  // Update the epic description in the epics list
+  const epicsList = document.getElementById('epics-list');
+  if (epicsList) {
+    // Find the epic label for the selected epic
+    const epicRadios = epicsList.querySelectorAll('input[name="selectedEpic"]');
+    epicRadios.forEach((radio, idx) => {
+      if (selectedEpic && selectedEpic.id && currentEpics[idx] && currentEpics[idx].id === selectedEpic.id) {
+        // Update the description in the label
+        const label = epicsList.querySelector(`label[for="epic_${idx}"] .epic-description`);
+        if (label) {
+          label.innerHTML = newContent;
+        }
+        // Also update the global epic object
+        currentEpics[idx].description = newContent;
+      }
+    });
+  }
+}
 
     // Remove chat message
     function removeChatMessage(messageId) {
