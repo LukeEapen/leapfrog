@@ -2597,7 +2597,8 @@
         removeChatMessage(loadingId);
 
         if (data.success) {
-          addChatMessage('story-chat-messages', data.response, 'ai');
+          // Add AI message with Apply Changes button (like Epic Chat)
+          addChatMessage('story-chat-messages', data.response, 'ai', false, true);
         } else {
           addChatMessage('story-chat-messages', 'Sorry, I encountered an error. Please try again.', 'ai');
         }
@@ -2669,19 +2670,48 @@ function addChatMessage(containerId, message, sender, isLoading = false, showApp
     messageDiv.innerHTML = `
       <div class="message-bubble">${message}</div>
     `;
-    // If showApply is true, add Apply Changes button
-    if (showApply && containerId === 'epic-chat-messages') {
+    // If showApply is true, add Apply Changes button for epic or story chat
+    if (showApply && (containerId === 'epic-chat-messages' || containerId === 'story-chat-messages')) {
       const applyBtn = document.createElement('button');
       applyBtn.className = 'btn btn-success btn-sm mt-2';
       applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply Changes';
       applyBtn.onclick = function() {
-        applyEpicChatChanges(message);
+        if (containerId === 'epic-chat-messages') {
+          applyEpicChatChanges(message);
+        } else if (containerId === 'story-chat-messages') {
+          applyStoryChatChanges(message);
+        }
         applyBtn.disabled = true;
         applyBtn.innerHTML = '<i class="fas fa-check"></i> Applied';
       };
       messageDiv.appendChild(applyBtn);
     }
   }
+// Apply Story Chat changes to the User Stories Tab
+function applyStoryChatChanges(newContent) {
+  // Always set selectedUserStory from the selected radio button
+  const storiesList = document.getElementById('stories-list');
+  if (storiesList) {
+    const selectedRadio = storiesList.querySelector('input[name="selectedStory"]:checked');
+    if (!selectedRadio) {
+      alert('No user story selected to apply changes.');
+      return;
+    }
+    const idx = parseInt(selectedRadio.value);
+    if (!currentUserStories[idx]) {
+      alert('No user story selected to apply changes.');
+      return;
+    }
+    selectedUserStory = currentUserStories[idx];
+    // Update the description in the label
+    const label = storiesList.querySelector(`label[for="story_${idx}"] .user-story-description`);
+    if (label) {
+      label.innerHTML = newContent;
+    }
+    // Also update the global user story object
+    currentUserStories[idx].description = newContent;
+  }
+}
 
   container.appendChild(messageDiv);
   container.scrollTop = container.scrollHeight;
