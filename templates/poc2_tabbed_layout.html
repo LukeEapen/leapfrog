@@ -1,4 +1,6 @@
-// Add chat message to a chat panel
+<!DOCTYPE html>
+<!-- Add chat message to a chat panel -->
+<script>
 function addChatMessage(containerId, message, sender, isLoading = false, showApply = false) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -46,7 +48,7 @@ function applyStoryDetailsChatChanges(newContent) {
     selectedUserStory.description = newContent;
   }
 }
-<!DOCTYPE html>
+</script>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -921,32 +923,40 @@ function applyStoryDetailsChatChanges(newContent) {
   </style>
 </head>
 <body>
-  <div class="main-container">
-    <!-- Header Bar -->
-    <div class="header-bar">
-      <a href="/" class="back-button">
-        <i class="fas fa-arrow-left"></i>
-        Back to Landing Page
-      </a>
-      <h1 class="header-title">Product Management Workbench</h1>
-      <div></div> <!-- Spacer for flex layout -->
+            <div class="form-group mb-4">
+              <label for="prd-file" class="form-label">
+                <strong>📄 Primary Requirements Document (PRD)</strong>
+              </label>
+              <input type="file" class="form-control" id="prd-file" name="prd_file" accept=".txt,.docx,.pdf,.md" required>
+              <div class="form-text" style="color: #6c757d; font-size: 0.875rem;">
+                Supported formats: TXT, DOCX, PDF, MD. This will be the main source for epic generation.
+            </div>
+
+            <div class="form-group mb-4">
+              <label for="additional-file" class="form-label">
+                <strong>📋 Additional Documentation (Optional)</strong>
+              </label>
+              <input type="file" class="form-control" id="additional-file" name="additional_file" accept=".txt,.docx,.pdf,.md,.csv">
+              <div class="form-text" style="color: #6c757d; font-size: 0.875rem;">
+                Optional: Additional context, technical specs, or system mapping (CSV format supported).
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label for="context-notes" class="form-label">
+                <strong>💡 Context & Special Instructions (Optional)</strong>
+              </label>
+              <textarea class="form-control" id="context-notes" name="context_notes" rows="4" placeholder="Example: Integration points, business rules, dependencies with existing systems"></textarea>
+              <div class="form-text" style="color: #6c757d; font-size: 0.875rem;">
+                Optional: Provide any additional context to guide epic generation.
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg mb-4" id="prd-upload-btn" style="width: auto; min-width: 300px;">Upload & Generate Epics</button>
+      <!-- Spacer for flex layout -->
     </div>
 
-    <!-- Action Buttons -->
-    <div class="action-buttons">
-      <button class="btn" onclick="showPRDUpload()">
-        <i class="fas fa-download"></i>
-        Import PRD from PRD Drafting Solution
-      </button>
-      <button class="btn" onclick="openBacklogManagement()">
-        <i class="fas fa-cogs"></i>
-        Backlog Management
-      </button>
-      <button class="btn" onclick="openSystemMapping()">
-        <i class="fas fa-sitemap"></i>
-        System Mapping
-      </button>
-    </div>
+  
 
     <!-- Tabbed Interface -->
     <div class="tab-container">
@@ -1115,8 +1125,22 @@ function applyStoryDetailsChatChanges(newContent) {
 
             <div class="form-group mb-4">
               <label for="context-notes" class="form-label">
-                <strong>💡 Context & Special Instructions (Optional)</strong>
+            </div>trong>💡 Context & Special Instructions (Optional)</strong>
               </label>
+            <div class="form-group mb-4">ol" id="context-notes" name="context_notes" rows="4" placeholder="Example:
+              <label for="additional-file" class="form-label">
+                <strong>📋 Additional Documentation (Optional)</strong>
+              </label>ents with existing systems
+              <input type="file" class="form-control" id="additional-file" name="additional_file" accept=".txt,.docx,.pdf,.md,.csv">
+              <div class="form-text" style="color: #6c757d; font-size: 0.875rem;">
+                Optional: Additional context, technical specs, or system mapping (CSV format supported).
+              </div>ide any additional context to guide epic generation.
+            </div>v>
+            </div>
+            <div class="form-group mb-4">
+              <label for="context-notes" class="form-label">
+                <strong>💡 Context & Special Instructions (Optional)</strong>
+              </label>type="submit" class="btn btn-primary btn-lg mb-4" id="prd-upload-btn" style="width: auto; min-width: 300px;">
               <textarea class="form-control" id="context-notes" name="context_notes" rows="4" placeholder="Example:
 • Business constraints or timeline requirements
 • Technical architecture preferences  
@@ -1124,165 +1148,165 @@ function applyStoryDetailsChatChanges(newContent) {
 • Specific user personas or use cases
 • Compliance or security considerations"></textarea>
               <div class="form-text" style="color: #6c757d; font-size: 0.875rem;">
-                Provide any additional context to guide epic generation.
-              </div>
-            </div>
-
+                Provide any additional context to guide epic generation.play: none;">
+              </div>="text-align: center; padding: 2rem;">
+            </div>lass="loading-spinner"></div>
+            <p style="margin-top: 1rem; color: #6c757d; font-weight: 500;">Processing documents...</p>
             <!-- Upload & Preview Button -->
             <div style="text-align: center;">
               <button type="submit" class="btn btn-primary btn-lg mb-4" id="prd-upload-btn" style="width: auto; min-width: 300px;">
                 <span class="btn-text">📄 Import & Preview Documents</span>
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Loading Spinner for Upload -->
-        <div class="loading-spinner" id="prd-loading-spinner" style="display: none;">
+              </button>oad-step" id="upload-step-2" style="display: none;">
+            </div>ss="document-preview" id="document-preview">
+          </form>PRD Summary Section -->
+        </div>iv id="prd-summary-section" style="display: none; margin-bottom: 1.5rem;">
+              <h5><strong>📄 PRD Summary</strong></h5>
+        <!-- Loading Spinner for Upload -->" class="mb-2" style="font-size: 0.9rem; color: #6c757d;"></div>
+        <div class="loading-spinner" id="prd-loading-spinner" style="display: none;">der-radius: 0.375rem; border: 1px solid #dee2e6; max-height: 200px; overflow-y: auto;">
           <div style="text-align: center; padding: 2rem;">
             <div class="loading-spinner"></div>
             <p style="margin-top: 1rem; color: #6c757d; font-weight: 500;">Processing documents...</p>
           </div>
-        </div>
-
-        <!-- Step 2: Preview and Generate Epics -->
-        <div class="upload-step" id="upload-step-2" style="display: none;">
-          <div class="document-preview" id="document-preview">
-            <!-- PRD Summary Section -->
+        </div>-- Additional Documents Section -->
+            <div id="additional-docs-section" style="display: none; margin-bottom: 1.5rem;">
+        <!-- Step 2: Preview and Generate Epics -->on</strong></h5>
+        <div class="upload-step" id="upload-step-2" style="display: none;">ize: 0.9rem; color: #6c757d;"></div>
+          <div class="document-preview" id="document-preview">9fa; padding: 1rem; border-radius: 0.375rem; border: 1px solid #dee2e6; max-height: 200px; overflow-y: auto;">
+            <!-- PRD Summary Section -->-summary"></div>
             <div id="prd-summary-section" style="display: none; margin-bottom: 1.5rem;">
               <h5><strong>📄 PRD Summary</strong></h5>
               <div id="prd-filename-display" class="mb-2" style="font-size: 0.9rem; color: #6c757d;"></div>
               <div class="summary-box" style="background: #f8f9fa; padding: 1rem; border-radius: 0.375rem; border: 1px solid #dee2e6; max-height: 200px; overflow-y: auto;">
-                <div id="prd-summary-content"></div>
-              </div>
-            </div>
-            
+                <div id="prd-summary-content"></div>splay: none; margin-bottom: 1.5rem;">
+              </div>trong>💡 Your Additional Context</strong></h5>
+            </div> class="summary-box" style="background: #f0f7ff; padding: 1rem; border-radius: 0.375rem; border: 1px solid #bee5eb;">
+                <div id="user-context-display"></div>
             <!-- Additional Documents Section -->
             <div id="additional-docs-section" style="display: none; margin-bottom: 1.5rem;">
               <h5><strong>📋 Additional Documentation</strong></h5>
               <div id="additional-docs-filename" class="mb-2" style="font-size: 0.9rem; color: #6c757d;"></div>
               <div class="summary-box" style="background: #f8f9fa; padding: 1rem; border-radius: 0.375rem; border: 1px solid #dee2e6; max-height: 200px; overflow-y: auto;">
                 <div id="additional-docs-summary"></div>
-              </div>
+              </div>>
             </div>
             
-            <!-- User Context Section -->
-            <div id="user-context-section" style="display: none; margin-bottom: 1.5rem;">
-              <h5><strong>💡 Your Additional Context</strong></h5>
+            <!-- User Context Section -->">
+            <div id="user-context-section" style="display: none; margin-bottom: 1.5rem;">onclick="generateEpicsFromPRDData()" style="width: auto; min-width: 300px;">
+              <h5><strong>💡 Your Additional Context</strong></h5>es</span>
               <div class="summary-box" style="background: #f0f7ff; padding: 1rem; border-radius: 0.375rem; border: 1px solid #bee5eb;">
                 <div id="user-context-display"></div>
               </div>
-            </div>
-            
-            <!-- Reset Button -->
+            </div>ding state for epic generation -->
+            iv class="loading-spinner" id="prd-epic-spinner" style="display: none;">
+            <!-- Reset Button -->n: center; padding: 2rem;">
             <button type="button" class="btn btn-outline-secondary mb-3" id="reset-prd-btn" onclick="resetPRDUpload()" style="display: none;">
-              🔄 Start Over
+              🔄 Start Overgin-top: 1rem; color: #6c757d; font-weight: 500;">Generating epics...</p>
             </button>
           </div>
-          
+          div>
           <div style="text-align: center;">
             <button type="button" class="btn btn-primary btn-lg" id="generate-epics-btn" onclick="generateEpicsFromPRDData()" style="width: auto; min-width: 300px;">
               <span class="btn-text">⚡ Generate Epics & User Stories</span>
             </button>
-          </div>
-          
+          </div> JS -->
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
           <!-- Loading state for epic generation -->
           <div class="loading-spinner" id="prd-epic-spinner" style="display: none;">
             <div style="text-align: center; padding: 2rem;">
               <div class="loading-spinner"></div>
               <p style="margin-top: 1rem; color: #6c757d; font-weight: 500;">Generating epics...</p>
-            </div>
-          </div>
+            </div>ic = null;
+          </div>UserStory = null;
         </div>
-      </div>
-    </div>
-  </div>
-
+      </div>witching with auto-navigation
+    </div>on switchToTab(tabId) {
+  </div>nst tab = new bootstrap.Tab(document.getElementById(tabId));
+      tab.show();
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-    // Global state
-    let currentEpics = [];
-    let currentUserStories = [];
+    // Enhanced epic selection with tab navigation
+  <script>on selectEpic(epicId) {
+    // Global state epic
+    let currentEpics = [];orAll('.epic-item').forEach(item => {
+    let currentUserStories = [];elected');
     let selectedEpic = null;
     let selectedUserStory = null;
-
+      const epicElement = document.querySelector(`[data-epic-id="${epicId}"]`);
     // Tab switching with auto-navigation
-    function switchToTab(tabId) {
-      const tab = new bootstrap.Tab(document.getElementById(tabId));
+    function switchToTab(tabId) {('selected');
+      const tab = new bootstrap.Tab(document.getElementById(tabId));;
       tab.show();
-    }
-
+    }   // Auto-switch to user stories tab
+        setTimeout(() => {
     // Enhanced epic selection with tab navigation
-    function selectEpic(epicId) {
+    function selectEpic(epicId) {;
       // Select the epic
       document.querySelectorAll('.epic-item').forEach(item => {
         item.classList.remove('selected');
       });
-      
+       Enhanced user story selection with tab navigation
       const epicElement = document.querySelector(`[data-epic-id="${epicId}"]`);
-      if (epicElement) {
-        epicElement.classList.add('selected');
+      if (epicElement) { story
+        epicElement.classList.add('selected');tem').forEach(item => {
         selectedEpic = currentEpics.find(epic => epic.id === epicId);
-        
+        ;
         // Auto-switch to user stories tab
-        setTimeout(() => {
+        setTimeout(() => { document.querySelector(`[data-story-id="${storyId}"]`);
           switchToTab('user-stories-tab');
-          loadUserStories(epicId);
-        }, 500);
-      }
-    }
-
+          loadUserStories(epicId);('selected');
+        }, 500);UserStory = currentUserStories.find(story => story.id === storyId);
+      } 
+    }   // Auto-switch to story details tab
+        setTimeout(() => {
     // Enhanced user story selection with tab navigation
     function selectUserStory(storyId) {
       // Select the user story
       document.querySelectorAll('.user-story-item').forEach(item => {
         item.classList.remove('selected');
       });
-      
+       Initialize the page
       const storyElement = document.querySelector(`[data-story-id="${storyId}"]`);
-      if (storyElement) {
+      if (storyElement) {cs
         storyElement.classList.add('selected');
         selectedUserStory = currentUserStories.find(story => story.id === storyId);
-        
-        // Auto-switch to story details tab
-        setTimeout(() => {
+         Add tab event listeners for progress tracking
+        // Auto-switch to story details taboggle="tab"]').forEach(tab => {
+        setTimeout(() => {er('shown.bs.tab', function(e) {
           switchToTab('story-details-tab');
           loadStoryDetails(storyId);
         }, 500);
       }
     }
-
-    // Initialize the page
-    document.addEventListener('DOMContentLoaded', function() {
-      // Load initial epics
+    function updateTabProgress(activeTabId) {
+    // Initialize the pageicators based on current tab
+    document.addEventListener('DOMContentLoaded', function() {tails-tab'];
+      // Load initial epicstabs.indexOf(activeTabId);
       loadEpics();
-      
-      // Add tab event listeners for progress tracking
+      // You can add visual progress indicators here
+      // Add tab event listeners for progress trackings: ${currentIndex + 1}/3`);
       document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
         tab.addEventListener('shown.bs.tab', function(e) {
           updateTabProgress(e.target.id);
-        });
-      });
-    });
-
+        });unction loadEpics() {
+      }); {
+    }); document.getElementById('epics-loading').style.display = 'flex';
+        document.getElementById('epics-empty').style.display = 'none';
     function updateTabProgress(activeTabId) {
-      // Update visual indicators based on current tab
+      // Update visual indicators based on current tabet-epics');
       const tabs = ['epics-tab', 'user-stories-tab', 'story-details-tab'];
       const currentIndex = tabs.indexOf(activeTabId);
-      
+        if (data.success && data.epics && data.epics.length > 0) {
       // You can add visual progress indicators here
       console.log(`Active tab: ${activeTabId}, Progress: ${currentIndex + 1}/3`);
-    }
-
-    // Load epics function
-    async function loadEpics() {
+    }     document.getElementById('epic-chat-btn').style.display = 'block';
+        } else {
+    // Load epics functionentById('epics-loading').style.display = 'none';
+    async function loadEpics() {d('epics-empty').style.display = 'flex';
       try {
         document.getElementById('epics-loading').style.display = 'flex';
         document.getElementById('epics-empty').style.display = 'none';
-        
-        const response = await fetch('/three-section-get-epics');
+        document.getElementById('epics-loading').style.display = 'none';
+        const response = await fetch('/three-section-get-epics');lex';
         const data = await response.json();
         
         if (data.success && data.epics && data.epics.length > 0) {
@@ -1293,46 +1317,46 @@ function applyStoryDetailsChatChanges(newContent) {
           document.getElementById('epics-loading').style.display = 'none';
           document.getElementById('epics-empty').style.display = 'flex';
         }
-      } catch (error) {
-        console.error('Error loading epics:', error);
+      } catch (error) {c => {
+        console.error('Error loading epics:', error);iv');
         document.getElementById('epics-loading').style.display = 'none';
         document.getElementById('epics-empty').style.display = 'flex';
-      }
-    }
-
-    // Display epics function
-    function displayEpics(epics) {
+      } epicElement.onclick = () => selectEpic(epic.id);
+    }   
+        epicElement.innerHTML = `
+    // Display epics functiontle">${epic.title}</div>
+    function displayEpics(epics) {tion">${epic.description}</div>
       document.getElementById('epics-loading').style.display = 'none';
-      
+            <span class="epic-priority priority-${epic.priority.toLowerCase()}">${epic.priority}</span>
       const epicsList = document.getElementById('epics-list');
       epicsList.innerHTML = '';
-      
+        `;
       epics.forEach(epic => {
         const epicElement = document.createElement('div');
         epicElement.className = 'epic-item';
         epicElement.setAttribute('data-epic-id', epic.id);
         epicElement.onclick = () => selectEpic(epic.id);
-        
-        epicElement.innerHTML = `
+        oad user stories function
+        epicElement.innerHTML = `s(epicId) {
           <div class="epic-title">${epic.title}</div>
-          <div class="epic-description">${epic.description}</div>
-          <div class="epic-meta">
+          <div class="epic-description">${epic.description}</div>play = 'flex';
+          <div class="epic-meta">user-stories-empty').style.display = 'none';
             <span class="epic-priority priority-${epic.priority.toLowerCase()}">${epic.priority}</span>
-            <span>Epic ID: ${epic.id}</span>
-          </div>
-        `;
+            <span>Epic ID: ${epic.id}</span>ctual endpoint)
+          </div>sponse = await fetch(`/three-section-get-user-stories?epic_id=${epicId}`);
+        `;nst data = await response.json();
         
-        epicsList.appendChild(epicElement);
-      });
-    }
-
+        epicsList.appendChild(epicElement);es && data.user_stories.length > 0) {
+      }); currentUserStories = data.user_stories;
+    }     displayUserStories(data.user_stories);
+          document.getElementById('user-stories-chat-btn').style.display = 'block';
     // Load user stories function
-    async function loadUserStories(epicId) {
-      try {
+    async function loadUserStories(epicId) {ies-loading').style.display = 'none';
+      try {ocument.getElementById('user-stories-empty').style.display = 'flex';
         document.getElementById('user-stories-loading').style.display = 'flex';
         document.getElementById('user-stories-empty').style.display = 'none';
-        
-        // Simulate API call (replace with actual endpoint)
+        console.error('Error loading user stories:', error);
+        // Simulate API call (replace with actual endpoint)le.display = 'none';
         const response = await fetch(`/three-section-get-user-stories?epic_id=${epicId}`);
         const data = await response.json();
         
@@ -1344,17 +1368,17 @@ function applyStoryDetailsChatChanges(newContent) {
           document.getElementById('user-stories-loading').style.display = 'none';
           document.getElementById('user-stories-empty').style.display = 'flex';
         }
-      } catch (error) {
+      } catch (error) {ch(story => {
         console.error('Error loading user stories:', error);
         document.getElementById('user-stories-loading').style.display = 'none';
         document.getElementById('user-stories-empty').style.display = 'flex';
-      }
-    }
-
-    // Display user stories function
-    function displayUserStories(userStories) {
+      } storyElement.onclick = () => selectUserStory(story.id);
+    }   
+        storyElement.innerHTML = `
+    // Display user stories functionle">${story.title}</div>
+    function displayUserStories(userStories) {ory.summary}</div>
       document.getElementById('user-stories-loading').style.display = 'none';
-      
+        
       const userStoriesList = document.getElementById('user-stories-list');
       userStoriesList.innerHTML = '';
       
@@ -1362,250 +1386,245 @@ function applyStoryDetailsChatChanges(newContent) {
         const storyElement = document.createElement('div');
         storyElement.className = 'user-story-item';
         storyElement.setAttribute('data-story-id', story.id);
-        storyElement.onclick = () => selectUserStory(story.id);
-        
+        storyElement.onclick = () => selectUserStory(story.id);ory-details');
+        storyDetailsContent.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><span>Loading story details...</span></div>';
         storyElement.innerHTML = `
           <div class="user-story-title">${story.title}</div>
-          <div class="user-story-summary">${story.summary}</div>
-        `;
+          <div class="user-story-summary">${story.summary}</div>etails?story_id=${storyId}`);
+        `;nst data = await response.json();
         
         userStoriesList.appendChild(storyElement);
-      });
-    }
-
-    // Load story details function
+      }); displayStoryDetails(data.story_details);
+    }     document.getElementById('submit-jira-btn').style.display = 'block';
+        } else {
+    // Load story details functionrHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Failed to load story details</div></div>';
     async function loadStoryDetails(storyId) {
-      try {
+      try {ch (error) {
         const storyDetailsContent = document.getElementById('story-details');
-        storyDetailsContent.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><span>Loading story details...</span></div>';
+        storyDetailsContent.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><span>Loading story details...</span></div>';text">Error loading story details</div></div>';
         
         // Simulate API call (replace with actual endpoint)
         const response = await fetch(`/three-section-get-story-details?story_id=${storyId}`);
         const data = await response.json();
-        
-        if (data.success && data.story_details) {
+        tion displayStoryDetails(details) {
+        if (data.success && data.story_details) {mentById('story-details');
           displayStoryDetails(data.story_details);
           document.getElementById('submit-jira-btn').style.display = 'block';
-        } else {
+        } else {details.title}</h4>
           storyDetailsContent.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Failed to load story details</div></div>';
-        }
-      } catch (error) {
+        }   <h5>Description</h5>
+      } catch (error) {s.description}</p>
         console.error('Error loading story details:', error);
         document.getElementById('story-details').innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Error loading story details</div></div>';
-      }
-    }
-
-    // Display story details function
-    function displayStoryDetails(details) {
-      const storyDetailsContent = document.getElementById('story-details');
-      storyDetailsContent.innerHTML = `
-        <div class="story-details-container">
-          <h4>${details.title}</h4>
-          <div class="story-detail-section">
-            <h5>Description</h5>
-            <p>${details.description}</p>
-          </div>
-          <div class="story-detail-section">
-            <h5>Acceptance Criteria</h5>
-            <ul>
+      }     <h5>Acceptance Criteria</h5>
+    }       <ul>
               ${details.acceptance_criteria.map(criteria => `<li>${criteria}</li>`).join('')}
-            </ul>
+    // Display story details function
+    function displayStoryDetails(details, jiraInfo) {
+      const storyDetailsContent = document.getElementById('story-details');
+      let jiraSection = '';
+      if (jiraInfo && jiraInfo.success) {ty-${details.priority.toLowerCase()}">${details.priority}</span>
+        jiraSection = `
+          <div class="jira-success-container" style="background: #f6faf7; border-radius: 1rem; border: 1px solid #d1e7dd; margin-bottom: 2rem; padding: 2rem; text-align: center;">
+            <div style="font-size: 2.5rem; color: #28a745; margin-bottom: 1rem;"><i class="fas fa-check-circle"></i></div>
+            <div style="font-size: 1.35rem; font-weight: 700; color: #198754; margin-bottom: 1rem;">Successfully Submitted to Jira!</div>
+            <div style="font-size: 1rem; color: #333; margin-bottom: 0.5rem;"><b>Epic:</b> ${jiraInfo.epic_title || ''}</div>
+            <div style="font-size: 1rem; color: #333; margin-bottom: 0.5rem;"><b>Story:</b> ${jiraInfo.story_title || ''}</div>
+            <div style="font-size: 1rem; color: #333; margin-bottom: 1rem;"><b>Ticket ID:</b> ${jiraInfo.ticket_id || ''}</div>
+            <a href="${jiraInfo.jira_url || '#'}" target="_blank" class="btn btn-outline-primary btn-sm mb-2">View in Jira</a>etElementById('prd-upload-modal').style.display = 'block';
+            <br>
+            <button class="btn btn-danger btn-sm mt-2" onclick="createAnotherStory()">+ Create Another Story</button>epIndicator(1);
           </div>
-          <div class="story-detail-section">
-            <h5>Priority</h5>
-            <span class="epic-priority priority-${details.priority.toLowerCase()}">${details.priority}</span>
+        `;
+      } {
+      let storySection = '';
+      if (details) {
+        storySection = `
+          <div class="story-details-container" style="background: #fff; border-radius: 1rem; border: 1px solid #e9ecef; padding: 2rem;">tion resetPRDUpload() {
+            <h5 style="font-weight: 700; color: #b71c1c; margin-bottom: 1rem;">Story Details</h5> // Reset form
+            <div>${details}</div>      document.getElementById('prd-upload-form').reset();
           </div>
-        </div>
-      `;
+        `;
+      }
+      storyDetailsContent.innerHTML = jiraSection + storySection;ntById('upload-step-1').style.display = 'block';
+      // Show chat area only after story details are displayed
+      const detailsChatArea = document.getElementById('story-details-chat-messages'); // Reset step indicators
+      if (detailsChatArea) detailsChatArea.style.display = 'block';      updatePRDStepIndicator(1);
     }
 
-    // PRD Upload Modal Functions
-    function showPRDUpload() {
-      document.getElementById('prd-upload-modal').style.display = 'block';
-      resetPRDUpload();
+    // PRD Upload Modal Functions document.getElementById('prd-summary-section').style.display = 'none';
+    function showPRDUpload() {      document.getElementById('additional-docs-section').style.display = 'none';
+      document.getElementById('prd-upload-modal').style.display = 'block';user-context-section').style.display = 'none';
+      resetPRDUpload();lementById('reset-prd-btn').style.display = 'none';
       updatePRDStepIndicator(1);
     }
-
-    function closePRDUpload() {
+RDStepIndicator(step) {
+    function closePRDUpload() {move('active'));
       document.getElementById('prd-upload-modal').style.display = 'none';
     }
 
-    function resetPRDUpload() {
-      // Reset form
-      document.getElementById('prd-upload-form').reset();
+    function resetPRDUpload() {m
+      // Reset formcument.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('prd-upload-form').reset();.getElementById('prd-upload-form');
       
       // Hide step 2
       document.getElementById('upload-step-2').style.display = 'none';
       document.getElementById('upload-step-1').style.display = 'block';
-      
-      // Reset step indicators
+         });
+      // Reset step indicators      }
       updatePRDStepIndicator(1);
       
       // Hide preview sections
-      document.getElementById('prd-summary-section').style.display = 'none';
-      document.getElementById('additional-docs-section').style.display = 'none';
-      document.getElementById('user-context-section').style.display = 'none';
+      document.getElementById('prd-summary-section').style.display = 'none'; const form = document.getElementById('prd-upload-form');
+      document.getElementById('additional-docs-section').style.display = 'none';      const formData = new FormData(form);
+      document.getElementById('user-context-section').style.display = 'none';getElementById('prd-upload-btn');
       document.getElementById('reset-prd-btn').style.display = 'none';
     }
-
+ing state
     function updatePRDStepIndicator(step) {
-      document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));Id('prd-loading-spinner').style.display = 'block';
       document.getElementById(`step-${step}`).classList.add('active');
-    }
-
-    // Initialize PRD upload form
-    document.addEventListener('DOMContentLoaded', function() {
+    }st response = await fetch('/three-section-document-upload', {
+   method: 'POST',
+    // Initialize PRD upload form   body: formData
+    document.addEventListener('DOMContentLoaded', function() {        });
       const prdForm = document.getElementById('prd-upload-form');
       if (prdForm) {
         prdForm.addEventListener('submit', async function(e) {
           e.preventDefault();
-          await uploadAndPreviewPRD();
-        });
+          await uploadAndPreviewPRD();    // Show preview data
+        });isplayPRDPreview(data);
       }
     });
 
-    async function uploadAndPreviewPRD() {
+    async function uploadAndPreviewPRD() {  document.getElementById('upload-step-2').style.display = 'block';
       const form = document.getElementById('prd-upload-form');
       const formData = new FormData(form);
-      const uploadBtn = document.getElementById('prd-upload-btn');
+      const uploadBtn = document.getElementById('prd-upload-btn');ploading PRD: ' + (data.error || 'Unknown error'));
       
-      try {
-        // Show loading state
-        uploadBtn.disabled = true;
+      try {catch (error) {
+        // Show loading stater);
+        uploadBtn.disabled = true;alert('Error uploading PRD. Please try again.');
         document.getElementById('prd-loading-spinner').style.display = 'block';
-        
-        const response = await fetch('/three-section-document-upload', {
+        alse;
+        const response = await fetch('/three-section-document-upload', {rd-loading-spinner').style.display = 'none';
           method: 'POST',
           body: formData
         });
         
         const data = await response.json();
-        
-        if (data.success) {
-          // Show preview data
-          displayPRDPreview(data);
-          
+        rd_summary) {
+        if (data.success) {ck';
+          // Show preview dataocument.getElementById('prd-summary-content').textContent = data.prd_summary;
+          displayPRDPreview(data);lename) {
+          e-display').textContent = `File: ${data.prd_filename}`;
           // Move to step 2
           document.getElementById('upload-step-1').style.display = 'none';
           document.getElementById('upload-step-2').style.display = 'block';
           updatePRDStepIndicator(2);
-        } else {
-          alert('Error uploading PRD: ' + (data.error || 'Unknown error'));
-        }
-      } catch (error) {
-        console.error('Upload error:', error);
+        } else {f (data.additional_summary) {
+          alert('Error uploading PRD: ' + (data.error || 'Unknown error'));   document.getElementById('additional-docs-section').style.display = 'block';
+        }        document.getElementById('additional-docs-summary').textContent = data.additional_summary;
+      } catch (error) {&& data.additional_filenames.length > 0) {
+        console.error('Upload error:', error);mentById('additional-docs-filename').textContent = `Files: ${data.additional_filenames.join(', ')}`;
         alert('Error uploading PRD. Please try again.');
       } finally {
         uploadBtn.disabled = false;
         document.getElementById('prd-loading-spinner').style.display = 'none';
       }
-    }
-
-    function displayPRDPreview(data) {
+    }ocument.getElementById('user-context-section').style.display = 'block';
+ document.getElementById('user-context-display').textContent = data.context;
+    function displayPRDPreview(data) {}
       // Show PRD summary
-      if (data.prd_summary) {
+      if (data.prd_summary) {-prd-btn').style.display = 'inline-block';
         document.getElementById('prd-summary-section').style.display = 'block';
         document.getElementById('prd-summary-content').textContent = data.prd_summary;
         if (data.prd_filename) {
           document.getElementById('prd-filename-display').textContent = `File: ${data.prd_filename}`;
         }
-      }
-      
-      // Show additional docs
+      }ry {
+        generateBtn.disabled = true;
+      // Show additional docstById('prd-epic-spinner').style.display = 'block';
       if (data.additional_summary) {
         document.getElementById('additional-docs-section').style.display = 'block';
         document.getElementById('additional-docs-summary').textContent = data.additional_summary;
-        if (data.additional_filenames && data.additional_filenames.length > 0) {
-          document.getElementById('additional-docs-filename').textContent = `Files: ${data.additional_filenames.join(', ')}`;
+        if (data.additional_filenames && data.additional_filenames.length > 0) {   headers: {
+          document.getElementById('additional-docs-filename').textContent = `Files: ${data.additional_filenames.join(', ')}`;      'Content-Type': 'application/json'
         }
-      }
-      
+      }     body: JSON.stringify({})
+              });
       // Show user context
       if (data.context) {
-        document.getElementById('user-context-section').style.display = 'block';
-        document.getElementById('user-context-display').textContent = data.context;
-      }
+        document.getElementById('user-context-section').style.display = 'block';  
+        document.getElementById('user-context-display').textContent = data.context;(data.success) {
+      } epics
       
-      document.getElementById('reset-prd-btn').style.display = 'inline-block';
+      document.getElementById('reset-prd-btn').style.display = 'inline-block';  await loadEpics();
     }
 
-    async function generateEpicsFromPRDData() {
+    async function generateEpicsFromPRDData() {or generating epics: ' + (data.error || 'Unknown error'));
       const generateBtn = document.getElementById('generate-epics-btn');
-      
-      try {
-        generateBtn.disabled = true;
-        document.getElementById('prd-epic-spinner').style.display = 'block';
+      h (error) {
+      try {error:', error);
+        generateBtn.disabled = true;rt('Error generating epics. Please try again.');
+        document.getElementById('prd-epic-spinner').style.display = 'block';finally {
         
-        const response = await fetch('/three-section-generate-epics', {
+        const response = await fetch('/three-section-generate-epics', {document.getElementById('prd-epic-spinner').style.display = 'none';
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({})
+          },gement() {
+          body: JSON.stringify({})ld be implemented here');
         });
         
-        const data = await response.json();
-        
+        const data = await response.json();ion openSystemMapping() {
+        m mapping page from the three-section backend
         if (data.success) {
           // Close modal and refresh epics
-          closePRDUpload();
-          await loadEpics();
+          closePRDUpload();pen in a new tab/window
+          await loadEpics();ystemMappingUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
           alert('Epics generated successfully!');
-        } else {
-          alert('Error generating epics: ' + (data.error || 'Unknown error'));
-        }
-      } catch (error) {
+        } else {/ If popup is blocked, show an alternative
+          alert('Error generating epics: ' + (data.error || 'Unknown error')); if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+        }        // Fallback: redirect to system mapping page
+      } catch (error) {functionality...\n\nPopup blocked. Redirecting to System Mapping page.');
         console.error('Generation error:', error);
-        alert('Error generating epics. Please try again.');
-      } finally {
+        alert('Error generating epics. Please try again.'); }
+      } finally {    }
         generateBtn.disabled = false;
         document.getElementById('prd-epic-spinner').style.display = 'none';
-      }
+      }lemented here');
     }
 
     function openBacklogManagement() {
-      alert('Backlog Management functionality would be implemented here');
+      alert('Backlog Management functionality would be implemented here');alert('User Stories Chat functionality would be implemented here');
     }
 
     function openSystemMapping() {
       // Open the system mapping page from the three-section backend
-      const systemMappingUrl = '/system-mapping';
-      
-      // Try to open in a new tab/window
-      const newWindow = window.open(systemMappingUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+      const systemMappingUrl = '/system-mapping';ctedEpic.title}\nUser Story: ${selectedUserStory.title}`);
+       else {
+      // Try to open in a new tab/window   alert('Please select both an epic and user story before submitting to Jira');
+      const newWindow = window.open(systemMappingUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');      }
       
       // If popup is blocked, show an alternative
-      if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-        // Fallback: redirect to system mapping page
-        alert('Opening System Mapping functionality...\n\nPopup blocked. Redirecting to System Mapping page.');
+      if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {unction submitSelectedEpic() {
+        // Fallback: redirect to system mapping page      if (selectedEpic) {
+        alert('Opening System Mapping functionality...\n\nPopup blocked. Redirecting to System Mapping page.');b');
         window.location.href = systemMappingUrl;
-      }
-    }
+      } }
+    }    }
 
     function openEpicChat() {
       alert('Epic Chat functionality would be implemented here');
-    }
+    }ToTab('story-details-tab');
 
     function openUserStoriesChat() {
       alert('User Stories Chat functionality would be implemented here');
-    }
+    }  </script>
 
     function submitToJira() {
-      if (selectedUserStory && selectedEpic) {
-        alert(`Submitting to Jira:\nEpic: ${selectedEpic.title}\nUser Story: ${selectedUserStory.title}`);
-      } else {
-        alert('Please select both an epic and user story before submitting to Jira');
-      }
-    }
-
-    function submitSelectedEpic() {
-      if (selectedEpic) {
-        switchToTab('user-stories-tab');
-        loadUserStories(selectedEpic.id);
-      }
-    }
-
-    function submitSelectedUserStory() {
+      if (selectedUserStory && selectedEpic) {        alert(`Submitting to Jira:\nEpic: ${selectedEpic.title}\nUser Story: ${selectedUserStory.title}`);      } else {        alert('Please select both an epic and user story before submitting to Jira');      }    }    function submitSelectedEpic() {      if (selectedEpic) {        switchToTab('user-stories-tab');        loadUserStories(selectedEpic.id);      }    }    function submitSelectedUserStory() {
       if (selectedUserStory) {
         switchToTab('story-details-tab');
         loadStoryDetails(selectedUserStory.id);

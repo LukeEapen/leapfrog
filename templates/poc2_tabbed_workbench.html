@@ -1470,7 +1470,36 @@
         Back to Home
       </a>
     </div>
-
+<!-- Navigation Row for POC Integration -->
+    <div class="navigation-row" style="background: linear-gradient(135deg, #b71c1c 0%, #8e0000 100%); border-bottom: 3px solid #6d0000; padding: 2rem 2.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(183, 28, 28, 0.4);">
+      <div class="navigation-info">
+        <span style="color: #ffffff; font-size: 1.1rem; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+          <i class="fas fa-puzzle-piece" style="color: #ffffff; margin-right: 0.75rem; font-size: 1.2rem;"></i>
+          This workbench integrates with other POCs for a complete workflow
+        </span>
+      </div>
+      <div class="navigation-actions" style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-light" onclick="window.open('/page1_input','_blank')" title="Reverse engineer legacy code and mine internal docs and research to identify high-level requirements
+" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+          <i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>
+          Requirements insights
+        </button>
+   
+        <button class="btn btn-light" onclick="showPRDUpload()" title="Translate research & human input into structured requirements (data, functional, non-functional, legal, etc.) " style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+          <i class="fas fa-download" style="margin-right: 0.5rem;"></i>
+          Requirements definition
+        </button>
+        <button class="btn btn-light" onclick="window.open('/architecture-generator','_blank')" title="Convert business objectives and detailed requirements into user stories with clear acceptance criteria
+" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+          <i class="fas fa-cogs" style="margin-right: 0.5rem;"></i>
+          Backlog management
+        </button>
+             <button class="btn btn-light" onclick="openSystemMapping()" style="background: #ffffff; color: #dc3545; border: 2px solid #8d8989; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+          <i class="fas fa-sitemap" style="margin-right: 0.5rem;"></i>
+          System Mapping
+        </button>
+      </div>
+    </div>
     <!-- Enhanced Tab Navigation -->
     <ul class="nav nav-tabs" id="mainTabs" role="tablist">
       <li class="nav-item" role="presentation">
@@ -2869,7 +2898,7 @@ function applyEpicChatChanges(newContent) {
         }
 
         if (data.success) {
-          // Success - show success message in the story details content
+          // Success - prepend success message above the details sections
           if (storyDetailsDiv) {
             const jiraLinkHtml = data.jira_url ? 
               `<p class="mb-3"><a href="${data.jira_url}" target="_blank" class="btn btn-outline-primary">
@@ -2879,6 +2908,12 @@ function applyEpicChatChanges(newContent) {
               `<div class="alert alert-warning mt-3" style="font-size: 0.9em;">
                 <i class="fas fa-exclamation-triangle"></i> ${data.warning}
               </div>` : '';
+            // Save the current details HTML
+            const detailsSections = document.getElementById('details-sections');
+            let detailsHtml = '';
+            if (detailsSections) {
+              detailsHtml = detailsSections.outerHTML;
+            }
             storyDetailsDiv.innerHTML = `
               <div class="success-container text-center py-5">
                 <div class="text-success mb-3">
@@ -2896,6 +2931,7 @@ function applyEpicChatChanges(newContent) {
                   <i class="fas fa-plus"></i> Create Another Story
                 </button>
               </div>
+              ${detailsHtml}
             `;
           }
           // Hide submit button and reset its state for next use

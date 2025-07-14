@@ -732,3 +732,342 @@ Description: This epic focuses on the functionality to initiate the creation of 
 2025-07-14 12:17:45,774 - poc2_backend_processor_tabbed - INFO - Systems: Account creation engine
 2025-07-14 12:17:47,199 - poc2_backend_processor_tabbed - INFO - Successfully created Jira ticket: SCRUM-57
 2025-07-14 12:17:47,218 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 12:17:47] "POST /tabbed-submit-jira HTTP/1.1" 200 -
+2025-07-14 13:28:19,003 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:28:19,003 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:28:20,132 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:28:20,132 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:28:20,170 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 13:28:20,170 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 13:28:20,170 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 13:28:20,296 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:28:20,296 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:28:21,494 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:28:21,494 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:28:21,518 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 13:28:21,524 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 13:28:25,418 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:28:25] "GET / HTTP/1.1" 200 -
+2025-07-14 13:28:26,474 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 13:28:26,474 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:28:26,475 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 13:28:26,475 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 13:28:26,491 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:28:26] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 13:28:46,528 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-upload-files
+2025-07-14 13:28:46,544 - poc2_backend_processor_tabbed - INFO - System mapping file provided: SystemMapping.csv
+2025-07-14 13:28:46,544 - poc2_backend_processor_tabbed - INFO - System mapping stored in session: SystemMapping.csv
+2025-07-14 13:28:46,544 - poc2_backend_processor_tabbed - INFO - Session updated - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:29:17,414 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:29:17,414 - poc2_backend_processor_tabbed - INFO - Raw OpenAI response for epics: Epic 1: Charged-Off Account Creation and Core Data Capture
+Description: This epic focuses on the initiation of the charged-off account creation process based on the charge-off events triggered by factors such as prolonged delinquency, customer death, or bankruptcy. It encompasses capturing and storing the outstanding balance at the time of charge-off, recording the effective charge-off date and reason, generating a unique 11-digit identifier for each charged-off account, and enforcing immutabili...
+2025-07-14 13:29:17,414 - poc2_backend_processor_tabbed - INFO - Split into 6 sections
+2025-07-14 13:29:17,414 - poc2_backend_processor_tabbed - INFO - Created epic epic_1: Charged-Off Account Creation and Core Data Capture
+2025-07-14 13:29:17,428 - poc2_backend_processor_tabbed - INFO - Created epic epic_2: Charged-Off Account Data Processing and Integration
+2025-07-14 13:29:17,428 - poc2_backend_processor_tabbed - INFO - Created epic epic_3: PCI DSS Compliance and Security Management
+2025-07-14 13:29:17,429 - poc2_backend_processor_tabbed - INFO - Created epic epic_4: Eligibility Validation and Error Handling
+2025-07-14 13:29:17,429 - poc2_backend_processor_tabbed - INFO - Created epic epic_5: User Interactions and Servicing
+2025-07-14 13:29:17,430 - poc2_backend_processor_tabbed - INFO - Parsed 5 epics from response
+2025-07-14 13:29:17,431 - poc2_backend_processor_tabbed - INFO - Generated 5 epics successfully from PRD and System Mapping
+2025-07-14 13:29:17,431 - poc2_backend_processor_tabbed - INFO - Session after storing epics - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:29:17,432 - poc2_backend_processor_tabbed - INFO - Stored epics count: 5
+2025-07-14 13:29:17,433 - poc2_backend_processor_tabbed - INFO - Session ID: pO5OtE1QW-vpwgikN74k7eArIwVmy0Q6Dn-HmUi6Ecc.YV0Ug0I8yerbriam9L2wjmDslQI
+2025-07-14 13:29:17,433 - poc2_backend_processor_tabbed - INFO - Epics data being returned: [{'id': 'epic_1', 'title': 'Charged-Off Account Creation and Core Data Capture', 'description': 'This epic focuses on the initiation of the charged-off account creation process based on the charge-off events triggered by factors such as prolonged delinquency, customer death, or bankruptcy. It encompasses capturing and storing the outstanding balance at the time of charge-off, recording the effective charge-off date and reason, generating a unique 11-digit identifier for each charged-off account, and enforcing immutability of these core data post-creation. The system must integrate with the credit behavior monitor, credit decision engine, and fraud detection platform for capturing charge-off triggers and providing this data for further analysis and action.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'Charged-Off Account Data Processing and Integration', 'description': 'This epic concerns the processing of charged-off account data, including end-of-day batch updates and integration with internal credit, risk, and fraud systems. It also involves the segmentation of charged-off accounts into appropriate buckets and states based on predefined criteria. The system must work in conjunction with the account creation engine, product configuration database, and customer data repository to ensure accurate, timely, and secure data processing and sharing.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'PCI DSS Compliance and Security Management', 'description': 'This epic involves ensuring compliance with PCI DSS security standards throughout the lifecycle of charged-off accounts. It covers data access controls, encryption, and audit logging to protect cardholder data and maintain regulatory compliance. The system must cooperate with the customer data repository, document management platform, and the notification delivery engine to enforce these security measures.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'Eligibility Validation and Error Handling', 'description': "This epic focuses on the system's ability to prevent the creation of charged-off accounts for non-eligible accounts. It includes validating the charge-off eligibility criteria before creating a charged-off account and handling any errors or validation failures appropriately. The system must coordinate with the customer acquisition platform, application review system, and the agent support tool to validate eligibility and handle errors.", 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'User Interactions and Servicing', 'description': 'This epic involves the management of user interactions and servicing related to charged-off accounts. This includes providing information to customers about their account status, handling customer-initiated servicing requests, and providing support for agents to access account data, update records, handle escalations, and complete actions not handled automatically. The system must integrate with the customer servicing portal, notification delivery engine, and agent support tool for this epic.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 13:29:17,433 - poc2_backend_processor_tabbed - INFO - Epic 0: ID=epic_1, Title=Charged-Off Account Creation and Core Data Capture, Desc length=668
+2025-07-14 13:29:17,433 - poc2_backend_processor_tabbed - INFO - Epic 1: ID=epic_2, Title=Charged-Off Account Data Processing and Integration, Desc length=483
+2025-07-14 13:29:17,433 - poc2_backend_processor_tabbed - INFO - Epic 2: ID=epic_3, Title=PCI DSS Compliance and Security Management, Desc length=409
+2025-07-14 13:29:17,433 - poc2_backend_processor_tabbed - INFO - Epic 3: ID=epic_4, Title=Eligibility Validation and Error Handling, Desc length=439
+2025-07-14 13:29:17,433 - poc2_backend_processor_tabbed - INFO - Epic 4: ID=epic_5, Title=User Interactions and Servicing, Desc length=497
+2025-07-14 13:29:17,444 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:29:17] "POST /tabbed-upload-files HTTP/1.1" 200 -
+2025-07-14 13:29:33,058 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-select-epic
+2025-07-14 13:29:33,058 - poc2_backend_processor_tabbed - INFO - Received epic_id: epic_1
+2025-07-14 13:29:33,058 - poc2_backend_processor_tabbed - INFO - Session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:29:33,058 - poc2_backend_processor_tabbed - INFO - Session epics count: 5
+2025-07-14 13:29:33,058 - poc2_backend_processor_tabbed - INFO - Available epic IDs: ['epic_1', 'epic_2', 'epic_3', 'epic_4', 'epic_5']
+2025-07-14 13:29:33,058 - poc2_backend_processor_tabbed - INFO - All epics data: [{'id': 'epic_1', 'title': 'Charged-Off Account Creation and Core Data Capture', 'description': 'This epic focuses on the initiation of the charged-off account creation process based on the charge-off events triggered by factors such as prolonged delinquency, customer death, or bankruptcy. It encompasses capturing and storing the outstanding balance at the time of charge-off, recording the effective charge-off date and reason, generating a unique 11-digit identifier for each charged-off account, and enforcing immutability of these core data post-creation. The system must integrate with the credit behavior monitor, credit decision engine, and fraud detection platform for capturing charge-off triggers and providing this data for further analysis and action.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'Charged-Off Account Data Processing and Integration', 'description': 'This epic concerns the processing of charged-off account data, including end-of-day batch updates and integration with internal credit, risk, and fraud systems. It also involves the segmentation of charged-off accounts into appropriate buckets and states based on predefined criteria. The system must work in conjunction with the account creation engine, product configuration database, and customer data repository to ensure accurate, timely, and secure data processing and sharing.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'PCI DSS Compliance and Security Management', 'description': 'This epic involves ensuring compliance with PCI DSS security standards throughout the lifecycle of charged-off accounts. It covers data access controls, encryption, and audit logging to protect cardholder data and maintain regulatory compliance. The system must cooperate with the customer data repository, document management platform, and the notification delivery engine to enforce these security measures.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'Eligibility Validation and Error Handling', 'description': "This epic focuses on the system's ability to prevent the creation of charged-off accounts for non-eligible accounts. It includes validating the charge-off eligibility criteria before creating a charged-off account and handling any errors or validation failures appropriately. The system must coordinate with the customer acquisition platform, application review system, and the agent support tool to validate eligibility and handle errors.", 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'User Interactions and Servicing', 'description': 'This epic involves the management of user interactions and servicing related to charged-off accounts. This includes providing information to customers about their account status, handling customer-initiated servicing requests, and providing support for agents to access account data, update records, handle escalations, and complete actions not handled automatically. The system must integrate with the customer servicing portal, notification delivery engine, and agent support tool for this epic.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 13:30:25,004 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:30:25,004 - poc2_backend_processor_tabbed - INFO - Parsed 8 user stories from response
+2025-07-14 13:30:25,004 - poc2_backend_processor_tabbed - INFO - Generated 8 user stories for epic: Charged-Off Account Creation and Core Data Capture
+2025-07-14 13:30:25,011 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:30:25] "POST /tabbed-select-epic HTTP/1.1" 200 -
+2025-07-14 13:30:30,615 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-select-story
+2025-07-14 13:30:30,615 - poc2_backend_processor_tabbed - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-14 13:30:30,615 - poc2_backend_processor_tabbed - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-14 13:30:42,760 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:30:42,760 - poc2_backend_processor_tabbed - INFO - Assistant response completed in 12.15 seconds
+2025-07-14 13:30:43,012 - poc2_backend_processor_tabbed - INFO - Token usage - Prompt: 220, Response: 506, Total: 726
+2025-07-14 13:30:43,012 - poc2_backend_processor_tabbed - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-14 13:30:43,012 - poc2_backend_processor_tabbed - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-14 13:30:57,063 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:30:57,065 - poc2_backend_processor_tabbed - INFO - Assistant response completed in 14.05 seconds
+2025-07-14 13:30:57,065 - poc2_backend_processor_tabbed - INFO - Token usage - Prompt: 264, Response: 245, Total: 509
+2025-07-14 13:30:57,067 - poc2_backend_processor_tabbed - INFO - Generated details for story: Detect Charge-Off Triggers
+2025-07-14 13:30:57,076 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:30:57] "POST /tabbed-select-story HTTP/1.1" 200 -
+2025-07-14 13:31:20,512 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-submit-jira
+2025-07-14 13:31:20,513 - poc2_backend_processor_tabbed - INFO - Submitting Jira ticket for story: Detect Charge-Off Triggers
+2025-07-14 13:31:20,513 - poc2_backend_processor_tabbed - INFO - Epic: Charged-Off Account Creation and Core Data Capture
+2025-07-14 13:31:20,514 - poc2_backend_processor_tabbed - INFO - Priority: High
+2025-07-14 13:31:20,514 - poc2_backend_processor_tabbed - INFO - Systems: Credit behavior monitor
+2025-07-14 13:31:21,878 - poc2_backend_processor_tabbed - INFO - Successfully created Jira ticket: SCRUM-60
+2025-07-14 13:31:21,878 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:31:21] "POST /tabbed-submit-jira HTTP/1.1" 200 -
+2025-07-14 13:34:05,207 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:34:05,207 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:34:06,294 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:34:06,295 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:34:06,332 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 13:34:06,332 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 13:34:06,342 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 13:34:06,451 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:34:06,452 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:34:07,475 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:34:07,476 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:34:07,496 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 13:34:07,502 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 13:34:13,725 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:34:13] "GET / HTTP/1.1" 200 -
+2025-07-14 13:34:15,730 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:34:15] "GET / HTTP/1.1" 200 -
+2025-07-14 13:34:16,575 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:34:16] "GET / HTTP/1.1" 200 -
+2025-07-14 13:34:17,715 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 13:34:17,716 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:34:17,716 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 13:34:17,716 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 13:34:17,733 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:34:17] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 13:34:44,425 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:34:44] "[33mGET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1[0m" 404 -
+2025-07-14 13:35:40,094 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:35:40,094 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:35:41,115 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:35:41,115 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:35:41,154 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 13:35:41,154 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 13:35:41,174 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 13:35:41,301 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:35:41,301 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:35:42,482 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:35:42,483 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:35:42,508 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 13:35:42,511 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 13:35:44,364 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:35:44] "GET / HTTP/1.1" 200 -
+2025-07-14 13:35:44,459 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:35:44] "[33mGET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1[0m" 404 -
+2025-07-14 13:35:45,787 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:35:45] "GET / HTTP/1.1" 200 -
+2025-07-14 13:35:45,914 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:35:45] "[33mGET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1[0m" 404 -
+2025-07-14 13:35:46,801 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 13:35:46,802 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:35:46,802 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 13:35:46,802 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 13:35:46,823 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:35:46] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 13:35:46,986 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:35:46] "[33mGET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1[0m" 404 -
+2025-07-14 13:38:44,308 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:38:44,308 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:38:45,453 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:38:45,455 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:38:45,493 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 13:38:45,493 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 13:38:45,515 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 13:38:45,641 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:38:45,643 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:38:46,759 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:38:46,761 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:38:46,780 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 13:38:46,782 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 13:38:49,141 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:38:49] "GET / HTTP/1.1" 200 -
+2025-07-14 13:38:50,385 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:38:50] "GET / HTTP/1.1" 200 -
+2025-07-14 13:38:52,152 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 13:38:52,154 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:38:52,156 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 13:38:52,157 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 13:38:52,243 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:38:52] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 13:39:48,088 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:39:48,097 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:39:49,129 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:39:49,131 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:39:49,165 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 13:39:49,165 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 13:39:49,182 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 13:39:49,299 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:39:49,299 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:39:50,365 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:39:50,366 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:39:50,391 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 13:39:50,393 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 13:39:58,062 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 13:39:58,063 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:39:58,063 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 13:39:58,064 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 13:39:58,088 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:39:58] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 13:40:00,030 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:40:00] "GET / HTTP/1.1" 200 -
+2025-07-14 13:40:01,255 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 13:40:01,255 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:40:01,256 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 13:40:01,256 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 13:40:01,264 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:40:01] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 13:40:47,423 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:40:47,423 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:40:48,648 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:40:48,649 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:40:48,699 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 13:40:48,699 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 13:40:48,713 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 13:40:48,840 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:40:48,840 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:40:49,952 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:40:49,953 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:40:49,975 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 13:40:49,981 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 13:40:57,611 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:40:57] "GET / HTTP/1.1" 200 -
+2025-07-14 13:40:58,525 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 13:40:58,525 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:40:58,525 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 13:40:58,525 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 13:40:58,552 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:40:58] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 13:42:30,247 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:42:30,247 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:42:31,246 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:42:31,247 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:42:31,297 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 13:42:31,297 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 13:42:31,298 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 13:42:31,414 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:42:31,414 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:42:32,529 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:42:32,531 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:42:32,556 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 13:42:32,559 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 13:42:35,239 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:42:35] "GET / HTTP/1.1" 200 -
+2025-07-14 13:42:36,712 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 13:42:36,712 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:42:36,712 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 13:42:36,712 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 13:42:36,741 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:42:36] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 13:42:52,358 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-upload-files
+2025-07-14 13:42:52,377 - poc2_backend_processor_tabbed - INFO - System mapping file provided: SystemMapping.csv
+2025-07-14 13:42:52,377 - poc2_backend_processor_tabbed - INFO - System mapping stored in session: SystemMapping.csv
+2025-07-14 13:42:52,377 - poc2_backend_processor_tabbed - INFO - Session updated - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:43:12,281 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:43:12,281 - poc2_backend_processor_tabbed - INFO - Raw OpenAI response for epics: Epic 1: Charged-Off Account Creation Initiation and Validation
+Description: This epic covers the initiation of the charged-off account creation process, which includes validating charge-off eligibility, capturing triggering event details, and preparing the account data for charge-off processing. The system will integrate with internal credit, risk, and fraud systems for receiving charge-off triggers. The system's functionality will be built in line with the Credit Behavior Monitor and Fraud Dete...
+2025-07-14 13:43:12,281 - poc2_backend_processor_tabbed - INFO - Split into 6 sections
+2025-07-14 13:43:12,281 - poc2_backend_processor_tabbed - INFO - Created epic epic_1: Charged-Off Account Creation Initiation and Validation
+2025-07-14 13:43:12,281 - poc2_backend_processor_tabbed - INFO - Created epic epic_2: Charged-Off Account Data Capture and Storage
+2025-07-14 13:43:12,281 - poc2_backend_processor_tabbed - INFO - Created epic epic_3: Charged-Off Account Identifier Generation and Segmentation
+2025-07-14 13:43:12,281 - poc2_backend_processor_tabbed - INFO - Created epic epic_4: Charged-Off Account Data Processing
+2025-07-14 13:43:12,281 - poc2_backend_processor_tabbed - INFO - Created epic epic_5: Charged-Off Account Data Integration
+2025-07-14 13:43:12,281 - poc2_backend_processor_tabbed - INFO - Parsed 5 epics from response
+2025-07-14 13:43:12,281 - poc2_backend_processor_tabbed - INFO - Generated 5 epics successfully from PRD and System Mapping
+2025-07-14 13:43:12,287 - poc2_backend_processor_tabbed - INFO - Session after storing epics - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:43:12,287 - poc2_backend_processor_tabbed - INFO - Stored epics count: 5
+2025-07-14 13:43:12,288 - poc2_backend_processor_tabbed - INFO - Session ID: pO5OtE1QW-vpwgikN74k7eArIwVmy0Q6Dn-HmUi6Ecc.YV0Ug0I8yerbriam9L2wjmDslQI
+2025-07-14 13:43:12,288 - poc2_backend_processor_tabbed - INFO - Epics data being returned: [{'id': 'epic_1', 'title': 'Charged-Off Account Creation Initiation and Validation', 'description': "This epic covers the initiation of the charged-off account creation process, which includes validating charge-off eligibility, capturing triggering event details, and preparing the account data for charge-off processing. The system will integrate with internal credit, risk, and fraud systems for receiving charge-off triggers. The system's functionality will be built in line with the Credit Behavior Monitor and Fraud Detection Platform, with the Customer Data Repository serving as the primary data source.", 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'Charged-Off Account Data Capture and Storage', 'description': 'This epic involves capturing and storing the critical data related to the charged-off account, such as the outstanding balance at the time of charge-off, the effective charge-off date, and the reason for the charge-off. The system will leverage the Financial Ledger Initializer to capture account balances and the Application Review System to validate the charge-off reasons. The data will be stored securely in the Customer Data Repository, ensuring PCI DSS compliance.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'Charged-Off Account Identifier Generation and Segmentation', 'description': 'This epic focuses on generating a unique identifier for each charged-off account and segmenting the accounts into appropriate buckets and states. The identifier will be generated by the Account Creation Engine. The system will categorize accounts based on predefined criteria, which will be stored in the Product Configuration Database and will be updated to reflect account status and risk profiles.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'Charged-Off Account Data Processing', 'description': 'This epic covers the end-of-day batch processing of charged-off account data to finalize account records and trigger downstream workflows. The system will collect all charged-off account events and changes during the day, integrate with the Notification Delivery Engine to update operational dashboards and send notifications to internal credit, risk, and fraud systems. It will also ensure PCI DSS compliance during data handling.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'Charged-Off Account Data Integration', 'description': "This epic involves integrating charged-off account data with internal credit, risk, and fraud systems to support analysis and action. The system will identify required data fields for each internal system and transmit the data securely and reliably. The system will also handle transmission failures with retry logic and confirm receipt of data. This epic will leverage the system's existing interfaces with the Credit Decision Engine, Fraud Detection Platform, and Credit Behavior Monitor.", 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 13:43:12,289 - poc2_backend_processor_tabbed - INFO - Epic 0: ID=epic_1, Title=Charged-Off Account Creation Initiation and Validation, Desc length=509
+2025-07-14 13:43:12,289 - poc2_backend_processor_tabbed - INFO - Epic 1: ID=epic_2, Title=Charged-Off Account Data Capture and Storage, Desc length=470
+2025-07-14 13:43:12,289 - poc2_backend_processor_tabbed - INFO - Epic 2: ID=epic_3, Title=Charged-Off Account Identifier Generation and Segmentation, Desc length=400
+2025-07-14 13:43:12,289 - poc2_backend_processor_tabbed - INFO - Epic 3: ID=epic_4, Title=Charged-Off Account Data Processing, Desc length=431
+2025-07-14 13:43:12,290 - poc2_backend_processor_tabbed - INFO - Epic 4: ID=epic_5, Title=Charged-Off Account Data Integration, Desc length=490
+2025-07-14 13:43:12,302 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:43:12] "POST /tabbed-upload-files HTTP/1.1" 200 -
+2025-07-14 13:43:15,436 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-select-epic
+2025-07-14 13:43:15,436 - poc2_backend_processor_tabbed - INFO - Received epic_id: epic_1
+2025-07-14 13:43:15,436 - poc2_backend_processor_tabbed - INFO - Session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:43:15,436 - poc2_backend_processor_tabbed - INFO - Session epics count: 5
+2025-07-14 13:43:15,437 - poc2_backend_processor_tabbed - INFO - Available epic IDs: ['epic_1', 'epic_2', 'epic_3', 'epic_4', 'epic_5']
+2025-07-14 13:43:15,437 - poc2_backend_processor_tabbed - INFO - All epics data: [{'id': 'epic_1', 'title': 'Charged-Off Account Creation Initiation and Validation', 'description': "This epic covers the initiation of the charged-off account creation process, which includes validating charge-off eligibility, capturing triggering event details, and preparing the account data for charge-off processing. The system will integrate with internal credit, risk, and fraud systems for receiving charge-off triggers. The system's functionality will be built in line with the Credit Behavior Monitor and Fraud Detection Platform, with the Customer Data Repository serving as the primary data source.", 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'Charged-Off Account Data Capture and Storage', 'description': 'This epic involves capturing and storing the critical data related to the charged-off account, such as the outstanding balance at the time of charge-off, the effective charge-off date, and the reason for the charge-off. The system will leverage the Financial Ledger Initializer to capture account balances and the Application Review System to validate the charge-off reasons. The data will be stored securely in the Customer Data Repository, ensuring PCI DSS compliance.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'Charged-Off Account Identifier Generation and Segmentation', 'description': 'This epic focuses on generating a unique identifier for each charged-off account and segmenting the accounts into appropriate buckets and states. The identifier will be generated by the Account Creation Engine. The system will categorize accounts based on predefined criteria, which will be stored in the Product Configuration Database and will be updated to reflect account status and risk profiles.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'Charged-Off Account Data Processing', 'description': 'This epic covers the end-of-day batch processing of charged-off account data to finalize account records and trigger downstream workflows. The system will collect all charged-off account events and changes during the day, integrate with the Notification Delivery Engine to update operational dashboards and send notifications to internal credit, risk, and fraud systems. It will also ensure PCI DSS compliance during data handling.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'Charged-Off Account Data Integration', 'description': "This epic involves integrating charged-off account data with internal credit, risk, and fraud systems to support analysis and action. The system will identify required data fields for each internal system and transmit the data securely and reliably. The system will also handle transmission failures with retry logic and confirm receipt of data. This epic will leverage the system's existing interfaces with the Credit Decision Engine, Fraud Detection Platform, and Credit Behavior Monitor.", 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 13:44:08,317 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:44:08,327 - poc2_backend_processor_tabbed - INFO - Parsed 8 user stories from response
+2025-07-14 13:44:08,328 - poc2_backend_processor_tabbed - INFO - Generated 8 user stories for epic: Charged-Off Account Creation Initiation and Validation
+2025-07-14 13:44:08,340 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:44:08] "POST /tabbed-select-epic HTTP/1.1" 200 -
+2025-07-14 13:45:04,617 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-select-story
+2025-07-14 13:45:04,617 - poc2_backend_processor_tabbed - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-14 13:45:04,617 - poc2_backend_processor_tabbed - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-14 13:45:08,702 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:45:08,714 - poc2_backend_processor_tabbed - INFO - Assistant response completed in 4.10 seconds
+2025-07-14 13:45:08,932 - poc2_backend_processor_tabbed - INFO - Token usage - Prompt: 218, Response: 132, Total: 350
+2025-07-14 13:45:08,932 - poc2_backend_processor_tabbed - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-14 13:45:08,932 - poc2_backend_processor_tabbed - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-14 13:45:16,496 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:45:16,496 - poc2_backend_processor_tabbed - INFO - Assistant response completed in 7.56 seconds
+2025-07-14 13:45:16,496 - poc2_backend_processor_tabbed - INFO - Token usage - Prompt: 264, Response: 319, Total: 583
+2025-07-14 13:45:16,496 - poc2_backend_processor_tabbed - INFO - Generated details for story: Trigger Charged-Off Account Creation
+2025-07-14 13:45:16,513 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:45:16] "POST /tabbed-select-story HTTP/1.1" 200 -
+2025-07-14 13:45:19,051 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-submit-jira
+2025-07-14 13:45:19,051 - poc2_backend_processor_tabbed - INFO - Submitting Jira ticket for story: Trigger Charged-Off Account Creation
+2025-07-14 13:45:19,052 - poc2_backend_processor_tabbed - INFO - Epic: Charged-Off Account Creation Initiation and Validation
+2025-07-14 13:45:19,052 - poc2_backend_processor_tabbed - INFO - Priority: High
+2025-07-14 13:45:19,052 - poc2_backend_processor_tabbed - INFO - Systems: Credit behavior monitor
+2025-07-14 13:45:20,675 - poc2_backend_processor_tabbed - INFO - Successfully created Jira ticket: SCRUM-61
+2025-07-14 13:45:20,692 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:45:20] "POST /tabbed-submit-jira HTTP/1.1" 200 -
+2025-07-14 13:47:22,817 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:47:22] "[33mGET /page1_input HTTP/1.1[0m" 404 -
+2025-07-14 13:48:05,256 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:48:05,256 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:48:06,323 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:48:06,323 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:48:06,374 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 13:48:06,374 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 13:48:06,377 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 13:48:06,492 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:48:06,492 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:48:07,599 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:48:07,600 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:48:07,625 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 13:48:07,628 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 13:48:10,490 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:48:10] "GET / HTTP/1.1" 200 -
+2025-07-14 13:48:11,600 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 13:48:11,601 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:48:11,601 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 13:48:11,602 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 13:48:11,622 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:48:11] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 13:48:25,951 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-upload-files
+2025-07-14 13:48:25,969 - poc2_backend_processor_tabbed - INFO - System mapping file provided: SystemMapping.csv
+2025-07-14 13:48:25,969 - poc2_backend_processor_tabbed - INFO - System mapping stored in session: SystemMapping.csv
+2025-07-14 13:48:25,969 - poc2_backend_processor_tabbed - INFO - Session updated - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:48:47,489 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:48:47,491 - poc2_backend_processor_tabbed - INFO - Raw OpenAI response for epics: Epic 1: Charged-Off Account Creation and Management
+Description: This epic focuses on the establishment and management of charged-off accounts in the credit card core platform. It encompasses initiating account creation upon a charge-off event, capturing and storing outstanding balance at charge-off, recording effective charge-off date and reason, and generating a unique account identifier. It also includes segmentation of accounts into appropriate buckets and states to facilitate servicing, ana...
+2025-07-14 13:48:47,491 - poc2_backend_processor_tabbed - INFO - Split into 6 sections
+2025-07-14 13:48:47,491 - poc2_backend_processor_tabbed - INFO - Created epic epic_1: Charged-Off Account Creation and Management
+2025-07-14 13:48:47,491 - poc2_backend_processor_tabbed - INFO - Created epic epic_2: End-of-Day Charged-Off Account Data Batch Processing
+2025-07-14 13:48:47,496 - poc2_backend_processor_tabbed - INFO - Created epic epic_3: Integration of Charged-Off Account Data with Internal Systems
+2025-07-14 13:48:47,497 - poc2_backend_processor_tabbed - INFO - Created epic epic_4: Compliance and Security of Charged-Off Account Data Handling
+2025-07-14 13:48:47,497 - poc2_backend_processor_tabbed - INFO - Created epic epic_5: Validation and Immutability of Charged-Off Account Core Data
+2025-07-14 13:48:47,497 - poc2_backend_processor_tabbed - INFO - Parsed 5 epics from response
+2025-07-14 13:48:47,497 - poc2_backend_processor_tabbed - INFO - Generated 5 epics successfully from PRD and System Mapping
+2025-07-14 13:48:47,498 - poc2_backend_processor_tabbed - INFO - Session after storing epics - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:48:47,498 - poc2_backend_processor_tabbed - INFO - Stored epics count: 5
+2025-07-14 13:48:47,498 - poc2_backend_processor_tabbed - INFO - Session ID: pO5OtE1QW-vpwgikN74k7eArIwVmy0Q6Dn-HmUi6Ecc.YV0Ug0I8yerbriam9L2wjmDslQI
+2025-07-14 13:48:47,499 - poc2_backend_processor_tabbed - INFO - Epics data being returned: [{'id': 'epic_1', 'title': 'Charged-Off Account Creation and Management', 'description': 'This epic focuses on the establishment and management of charged-off accounts in the credit card core platform. It encompasses initiating account creation upon a charge-off event, capturing and storing outstanding balance at charge-off, recording effective charge-off date and reason, and generating a unique account identifier. It also includes segmentation of accounts into appropriate buckets and states to facilitate servicing, analytics, and operational workflows. Dependencies include the credit decision engine, application review system, fraud detection platform, account creation engine, and customer data repository.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'End-of-Day Charged-Off Account Data Batch Processing', 'description': 'This epic deals with the processing of charged-off account data in an end-of-day batch to update records and trigger downstream workflows. It includes collecting all charged-off account events and changes during the day, executing batch processing to finalize account records, and triggering downstream system integrations and update operational dashboards. Dependencies include the credit behavior monitor, statement preference manager, and account creation engine.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'Integration of Charged-Off Account Data with Internal Systems', 'description': 'This epic focuses on integrating charged-off account data with internal credit, risk, and fraud systems for further analysis and action. It requires identifying required data fields for each internal system and transmitting this data securely and reliably upon charged-off account creation or update. Dependencies include the fraud detection platform, application review system, and credit decision engine.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'Compliance and Security of Charged-Off Account Data Handling', 'description': 'This epic covers the enforcement of PCI DSS security standards when handling charged-off account data. It includes restricting access to charged-off account data to authorized roles only, encrypting sensitive data fields during storage and transmission, and maintaining audit logs of all charged-off account creation and modification events. Dependencies include all systems that access, store, or transmit charged-off account data.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'Validation and Immutability of Charged-Off Account Core Data', 'description': 'This epic deals with the validation of charge-off eligibility criteria and maintaining immutability of core charged-off account data post-creation. It includes preventing the creation of charged-off accounts for non-eligible accounts and ensuring that core data fields such as outstanding balance, charge-off date, and unique identifier are not modified after account creation. Dependencies include the account creation engine, application review system, and customer data repository.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 13:48:47,499 - poc2_backend_processor_tabbed - INFO - Epic 0: ID=epic_1, Title=Charged-Off Account Creation and Management, Desc length=626
+2025-07-14 13:48:47,500 - poc2_backend_processor_tabbed - INFO - Epic 1: ID=epic_2, Title=End-of-Day Charged-Off Account Data Batch Processing, Desc length=466
+2025-07-14 13:48:47,500 - poc2_backend_processor_tabbed - INFO - Epic 2: ID=epic_3, Title=Integration of Charged-Off Account Data with Internal Systems, Desc length=406
+2025-07-14 13:48:47,500 - poc2_backend_processor_tabbed - INFO - Epic 3: ID=epic_4, Title=Compliance and Security of Charged-Off Account Data Handling, Desc length=432
+2025-07-14 13:48:47,501 - poc2_backend_processor_tabbed - INFO - Epic 4: ID=epic_5, Title=Validation and Immutability of Charged-Off Account Core Data, Desc length=484
+2025-07-14 13:48:47,509 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:48:47] "POST /tabbed-upload-files HTTP/1.1" 200 -
+2025-07-14 13:51:23,478 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-select-epic
+2025-07-14 13:51:23,479 - poc2_backend_processor_tabbed - INFO - Received epic_id: epic_1
+2025-07-14 13:51:23,480 - poc2_backend_processor_tabbed - INFO - Session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:51:23,480 - poc2_backend_processor_tabbed - INFO - Session epics count: 5
+2025-07-14 13:51:23,480 - poc2_backend_processor_tabbed - INFO - Available epic IDs: ['epic_1', 'epic_2', 'epic_3', 'epic_4', 'epic_5']
+2025-07-14 13:51:23,480 - poc2_backend_processor_tabbed - INFO - All epics data: [{'id': 'epic_1', 'title': 'Charged-Off Account Creation and Management', 'description': 'This epic focuses on the establishment and management of charged-off accounts in the credit card core platform. It encompasses initiating account creation upon a charge-off event, capturing and storing outstanding balance at charge-off, recording effective charge-off date and reason, and generating a unique account identifier. It also includes segmentation of accounts into appropriate buckets and states to facilitate servicing, analytics, and operational workflows. Dependencies include the credit decision engine, application review system, fraud detection platform, account creation engine, and customer data repository.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'End-of-Day Charged-Off Account Data Batch Processing', 'description': 'This epic deals with the processing of charged-off account data in an end-of-day batch to update records and trigger downstream workflows. It includes collecting all charged-off account events and changes during the day, executing batch processing to finalize account records, and triggering downstream system integrations and update operational dashboards. Dependencies include the credit behavior monitor, statement preference manager, and account creation engine.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'Integration of Charged-Off Account Data with Internal Systems', 'description': 'This epic focuses on integrating charged-off account data with internal credit, risk, and fraud systems for further analysis and action. It requires identifying required data fields for each internal system and transmitting this data securely and reliably upon charged-off account creation or update. Dependencies include the fraud detection platform, application review system, and credit decision engine.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'Compliance and Security of Charged-Off Account Data Handling', 'description': 'This epic covers the enforcement of PCI DSS security standards when handling charged-off account data. It includes restricting access to charged-off account data to authorized roles only, encrypting sensitive data fields during storage and transmission, and maintaining audit logs of all charged-off account creation and modification events. Dependencies include all systems that access, store, or transmit charged-off account data.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'Validation and Immutability of Charged-Off Account Core Data', 'description': 'This epic deals with the validation of charge-off eligibility criteria and maintaining immutability of core charged-off account data post-creation. It includes preventing the creation of charged-off accounts for non-eligible accounts and ensuring that core data fields such as outstanding balance, charge-off date, and unique identifier are not modified after account creation. Dependencies include the account creation engine, application review system, and customer data repository.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 13:51:54,714 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:51:54,726 - poc2_backend_processor_tabbed - INFO - Parsed 6 user stories from response
+2025-07-14 13:51:54,728 - poc2_backend_processor_tabbed - INFO - Generated 6 user stories for epic: Charged-Off Account Creation and Management
+2025-07-14 13:51:54,732 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:51:54] "POST /tabbed-select-epic HTTP/1.1" 200 -
+2025-07-14 13:51:58,361 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-select-story
+2025-07-14 13:51:58,361 - poc2_backend_processor_tabbed - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-14 13:51:58,361 - poc2_backend_processor_tabbed - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-14 13:52:20,541 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:52:20,543 - poc2_backend_processor_tabbed - INFO - Assistant response completed in 22.18 seconds
+2025-07-14 13:52:20,734 - poc2_backend_processor_tabbed - INFO - Token usage - Prompt: 209, Response: 306, Total: 515
+2025-07-14 13:52:20,734 - poc2_backend_processor_tabbed - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-14 13:52:20,734 - poc2_backend_processor_tabbed - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-14 13:52:31,697 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:52:31,709 - poc2_backend_processor_tabbed - INFO - Assistant response completed in 10.98 seconds
+2025-07-14 13:52:31,713 - poc2_backend_processor_tabbed - INFO - Token usage - Prompt: 259, Response: 281, Total: 540
+2025-07-14 13:52:31,714 - poc2_backend_processor_tabbed - INFO - Generated details for story: Segment Charged-Off Accounts
+2025-07-14 13:52:31,722 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:52:31] "POST /tabbed-select-story HTTP/1.1" 200 -
+2025-07-14 13:52:34,047 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-submit-jira
+2025-07-14 13:52:34,047 - poc2_backend_processor_tabbed - INFO - Submitting Jira ticket for story: Segment Charged-Off Accounts
+2025-07-14 13:52:34,047 - poc2_backend_processor_tabbed - INFO - Epic: Charged-Off Account Creation and Management
+2025-07-14 13:52:34,047 - poc2_backend_processor_tabbed - INFO - Priority: High
+2025-07-14 13:52:34,047 - poc2_backend_processor_tabbed - INFO - Systems: Account creation engine
+2025-07-14 13:52:35,360 - poc2_backend_processor_tabbed - INFO - Successfully created Jira ticket: SCRUM-62
+2025-07-14 13:52:35,360 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:52:35] "POST /tabbed-submit-jira HTTP/1.1" 200 -
