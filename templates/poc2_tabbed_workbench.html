@@ -1569,8 +1569,8 @@
               </div>
             </div>
 
-            <!-- Epic Chat Area -->
-            <div class="chat-area">
+            <!-- Epic Chat Area (initially hidden, shown after epics are displayed) -->
+            <div class="chat-area" id="epic-chat-area" style="display: none;">
               <div class="chat-header">
                 <i class="fas fa-comments"></i>
                 Refine Epics
@@ -1638,8 +1638,8 @@
               </div>
             </div>
 
-            <!-- Story Chat Area -->
-            <div class="chat-area">
+            <!-- Story Chat Area (initially hidden, shown after user stories are displayed) -->
+            <div class="chat-area" id="story-chat-area" style="display: none;">
               <div class="chat-header">
                 <i class="fas fa-comments"></i>
                 Refine Stories
@@ -2071,6 +2071,9 @@
 
       epicsLoading.style.display = 'none';
       epicsList.style.display = 'block';
+      // Show Epic Chat Area when epics are displayed
+      const epicChatArea = document.getElementById('epic-chat-area');
+      if (epicChatArea) epicChatArea.style.display = 'block';
 
       // Store epics globally for access in other functions
       currentEpics = epics;
@@ -2094,7 +2097,7 @@
                 <div class="epic-metadata">
                   <span><i class="fas fa-flag"></i> <span class="${priorityClass}">${epic.priority}</span></span>
                   <span><i class="fas fa-tasks"></i> ${epic.estimated_stories || 'TBD'} stories</span>
-                  <span><i class="fas fa-clock"></i> ${epic.estimated_effort || 'TBD'}</span>
+                  <span><i class="fas fa-clock"></i> ${epic.estimated_effort || 'TBD'} estimate</span>
                 </div>
               </label>
             </div>
@@ -2166,14 +2169,16 @@
       tab.show();
 
       try {
-        console.log('Sending epic ID to backend:', epic.id);
+        // Use the updated epic object from global state
+        console.log('Sending updated epic to backend:', epic);
         const response = await fetch('/tabbed-select-epic', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            epic_id: epic.id
+            epic_id: epic.id,
+            epic: epic // send both for compatibility
           })
         });
 
@@ -2228,6 +2233,9 @@
 
       storiesLoading.style.display = 'none';
       storiesList.style.display = 'block';
+      // Show Story Chat Area when user stories are displayed
+      const storyChatArea = document.getElementById('story-chat-area');
+      if (storyChatArea) storyChatArea.style.display = 'block';
 
       let html = '<div class="stories-selection-container">';
       html += '<h5 class="mb-3"><i class="fas fa-tasks"></i> Select a User Story to Generate Details</h5>';
@@ -2312,14 +2320,15 @@
       tab.show();
 
       try {
-        console.log('Sending story ID to backend:', story.id);
+        // Use the updated user story object from global state
+        console.log('Sending updated user story to backend:', story);
         const response = await fetch('/tabbed-select-story', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            story_id: story.id
+            story: story // send the full updated user story object
           })
         });
 
@@ -2670,16 +2679,29 @@ function addChatMessage(containerId, message, sender, isLoading = false, showApp
     messageDiv.innerHTML = `
       <div class="message-bubble">${message}</div>
     `;
-    // If showApply is true, add Apply Changes button for epic or story chat
-    if (showApply && (containerId === 'epic-chat-messages' || containerId === 'story-chat-messages')) {
+    // If showApply is true, add Apply Changes button for epic, story, or details chat
+    if (showApply && (containerId === 'epic-chat-messages' || containerId === 'story-chat-messages' || containerId === 'details-chat-messages')) {
       const applyBtn = document.createElement('button');
       applyBtn.className = 'btn btn-success btn-sm mt-2';
       applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply Changes';
+      // Store only the AI response (strip prompt if present)
+      let responseOnly = message;
+      // If message contains a separator (e.g., "\nAI:" or "\nResponse:"), try to split
+      const splitters = ['\nAI:', '\nResponse:', '\n---', '\n>'];
+      for (const splitter of splitters) {
+        if (responseOnly.includes(splitter)) {
+          responseOnly = responseOnly.split(splitter).pop().trim();
+        }
+      }
+      applyBtn.dataset.response = responseOnly;
       applyBtn.onclick = function() {
+        const response = applyBtn.dataset.response;
         if (containerId === 'epic-chat-messages') {
-          applyEpicChatChanges(message);
+          applyEpicChatChanges(response);
         } else if (containerId === 'story-chat-messages') {
-          applyStoryChatChanges(message);
+          applyStoryChatChanges(response);
+        } else if (containerId === 'details-chat-messages') {
+          applyStoryDetailsChatChanges(response);
         }
         applyBtn.disabled = true;
         applyBtn.innerHTML = '<i class="fas fa-check"></i> Applied';
@@ -2687,6 +2709,29 @@ function addChatMessage(containerId, message, sender, isLoading = false, showApp
       messageDiv.appendChild(applyBtn);
     }
   }
+// Apply Story Details Chat changes to the Story Details panel
+function applyStoryDetailsChatChanges(newContent) {
+  // Only update the story details description in the details section with the AI response
+  if (!selectedUserStory) {
+    alert('No user story selected to apply changes.');
+    return;
+  }
+  const storyInfo = document.getElementById('story-info');
+  if (storyInfo) {
+    // Update only the description field
+    const descP = Array.from(storyInfo.querySelectorAll('p')).find(p => p.textContent.includes('Description:'));
+    if (descP) {
+      descP.innerHTML = `<strong>Description:</strong> ${newContent}`;
+    }
+    // Also update the global story details object
+    if (currentStoryDetails) {
+      currentStoryDetails.description = newContent;
+    }
+    if (selectedUserStory) {
+      selectedUserStory.description = newContent;
+    }
+  }
+}
 // Apply Story Chat changes to the User Stories Tab
 function applyStoryChatChanges(newContent) {
   // Always set selectedUserStory from the selected radio button

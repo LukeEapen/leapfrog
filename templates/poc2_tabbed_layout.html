@@ -1,3 +1,51 @@
+// Add chat message to a chat panel
+function addChatMessage(containerId, message, sender, isLoading = false, showApply = false) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const messageId = 'msg-' + Date.now() + '-' + Math.random();
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chat-message ${sender}`;
+  messageDiv.id = messageId;
+  if (isLoading) {
+    messageDiv.innerHTML = `<div class="message-bubble"><div class="loading-spinner" style="width: 20px; height: 20px; margin: 0;"></div>${message}</div>`;
+  } else {
+    messageDiv.innerHTML = `<div class="message-bubble">${message}</div>`;
+    // If showApply is true, add Apply Changes button for story details chat
+    if (showApply && containerId === 'story-details-chat-messages') {
+      const applyBtn = document.createElement('button');
+      applyBtn.className = 'btn btn-success btn-sm mt-2';
+      applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply Changes';
+      applyBtn.onclick = function() {
+        applyStoryDetailsChatChanges(message);
+        applyBtn.disabled = true;
+        applyBtn.innerHTML = '<i class="fas fa-check"></i> Applied';
+      };
+      messageDiv.appendChild(applyBtn);
+    }
+  }
+  container.appendChild(messageDiv);
+  container.scrollTop = container.scrollHeight;
+  return messageId;
+}
+
+// Apply Story Details Chat changes to the Story Details panel
+function applyStoryDetailsChatChanges(newContent) {
+  // Update the story details description in the details section
+  if (!selectedUserStory) {
+    alert('No user story selected to apply changes.');
+    return;
+  }
+  const storyDetailsContent = document.getElementById('story-details');
+  if (storyDetailsContent) {
+    // Replace only the description section for simplicity
+    const container = storyDetailsContent.querySelector('.story-detail-section p');
+    if (container) {
+      container.innerHTML = newContent;
+    }
+    // Also update the global user story object
+    selectedUserStory.description = newContent;
+  }
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
