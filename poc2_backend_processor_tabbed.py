@@ -732,31 +732,40 @@ def tabbed_select_story():
         
         data = request.get_json()
         story_id = data.get('story_id')
-        
-        if not story_id:
-            return jsonify({"success": False, "error": "Story ID is required"})
-        
-        # Get the selected story from session
+        story_obj = data.get('story')
+
         user_stories = session.get('generated_user_stories', [])
         selected_story = None
-        
-        for story in user_stories:
-            if story.get('id') == story_id:
-                selected_story = story
-                break
-        
+
+        # Accept either story object or story_id
+        if story_obj:
+            selected_story = story_obj
+            # If no id, try to find by title
+            if not selected_story.get('id') and selected_story.get('title'):
+                for story in user_stories:
+                    if story.get('title') == selected_story.get('title'):
+                        selected_story = story
+                        break
+        elif story_id:
+            for story in user_stories:
+                if story.get('id') == story_id:
+                    selected_story = story
+                    break
+        else:
+            return jsonify({"success": False, "error": "Story ID or story object is required"})
+
         if not selected_story:
             return jsonify({"success": False, "error": "Selected story not found"})
-        
+
         # Store selected story in session
         session['current_user_story'] = selected_story
-        
+
         # Generate enhanced story details
         story_details = generate_story_details(selected_story)
         session['story_details'] = story_details
-        
+
         logger.info(f"Generated details for story: {selected_story.get('title')}")
-        
+
         return jsonify({
             "success": True,
             "story": selected_story,

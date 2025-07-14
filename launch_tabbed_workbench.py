@@ -61,7 +61,54 @@ def safe_import_backend():
         
         # Import the backend module
         import poc2_backend_processor_tabbed as backend
-        
+
+        # --- PATCH: Speed up OpenAI API calls in backend ---
+        # If backend exposes a config or settings object, set fast model and low temperature
+        if hasattr(backend, 'set_ai_config'):
+            backend.set_ai_config(model="gpt-3.5-turbo", temperature=0.3, max_tokens=1024, parallel=True)
+            logger.info("Set backend AI config: gpt-3.5-turbo, temp=0.3, parallel=True")
+        elif hasattr(backend, 'ai_config'):
+            backend.ai_config['model'] = "gpt-3.5-turbo"
+            backend.ai_config['temperature'] = 0.3
+            backend.ai_config['max_tokens'] = 1024
+            backend.ai_config['parallel'] = True
+            logger.info("Updated backend.ai_config for speed")
+        # If backend has a function to optimize story generation, call it
+        if hasattr(backend, 'optimize_story_generation'):
+            backend.optimize_story_generation()
+            logger.info("Called backend.optimize_story_generation() for parallelism")
+
+        # --- PATCH: Use best available OpenAI model and further optimize speed ---
+        # Try Gemini 1.5 Pro, Claude 3 Sonnet, or GPT-4o if available, else fallback to gpt-3.5-turbo
+        best_model = None
+        for candidate in ["gemini-1.5-pro", "claude-3-sonnet", "gpt-4o", "gpt-3.5-turbo"]:
+            if hasattr(backend, 'is_model_available') and backend.is_model_available(candidate):
+                best_model = candidate
+                break
+        if not best_model:
+            best_model = "gpt-3.5-turbo"
+        # Set lower temperature and max_tokens for speed
+        ai_config = {
+            "model": best_model,
+            "temperature": 0.2,
+            "max_tokens": 512,
+            "parallel": True,
+            "stream": True
+        }
+        if hasattr(backend, 'set_ai_config'):
+            backend.set_ai_config(**ai_config)
+            logger.info(f"Set backend AI config: {ai_config}")
+        elif hasattr(backend, 'ai_config'):
+            backend.ai_config.update(ai_config)
+            logger.info(f"Updated backend.ai_config: {ai_config}")
+        # If backend has a function to optimize story/epic generation, call it
+        if hasattr(backend, 'optimize_story_generation'):
+            backend.optimize_story_generation()
+            logger.info("Called backend.optimize_story_generation() for parallelism")
+        if hasattr(backend, 'optimize_epic_generation'):
+            backend.optimize_epic_generation()
+            logger.info("Called backend.optimize_epic_generation() for parallelism")
+
         logger.info("Tabbed backend module imported successfully")
         return backend
         

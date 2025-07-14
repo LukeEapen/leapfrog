@@ -474,6 +474,18 @@
       opacity: 1;
     }
 
+    .user-story-item.created {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      border-color: #22c55e;
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
+    .user-story-item.created .user-story-title,
+    .user-story-item.created .user-story-description {
+      color: #22c55e;
+    }
+
     .user-story-title {
       font-size: 1.125rem;
       font-weight: 600;
@@ -2815,14 +2827,21 @@ function applyEpicChatChanges(newContent) {
 
       // Get submit button reference outside try block
       const submitBtn = document.getElementById('submit-jira-btn');
+      if (!submitBtn) {
+        console.error('submit-jira-btn not found in DOM!');
+        addChatMessage('details-chat-messages', '❌ Error: Submit to Jira button not found in DOM.', 'ai');
+        return;
+      }
       const originalText = submitBtn.innerHTML;
 
       try {
         // Show loading state on submit button
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
         submitBtn.disabled = true;
+        console.log('Submit button set to loading state.');
 
         // Submit to Jira via AJAX
+        console.log('Attempting Jira connection via /tabbed-submit-jira endpoint...');
         const response = await fetch('/tabbed-submit-jira', {
           method: 'POST',
           headers: {
@@ -2830,105 +2849,153 @@ function applyEpicChatChanges(newContent) {
           }
         });
 
+        console.log('Jira response status:', response.status);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         // Parse JSON response
         const data = await response.json();
-        
+        console.log('Jira response data:', data);
+
+        // Defensive DOM lookups and logging
+        const storyDetailsDiv = document.getElementById('story-details-content');
+        if (!storyDetailsDiv) {
+          console.error('story-details-content not found in DOM during Jira response handling.');
+        }
+        const detailsSections = document.getElementById('details-sections');
+        if (!detailsSections) {
+          console.error('details-sections not found in DOM during Jira response handling.');
+        }
+
         if (data.success) {
           // Success - show success message in the story details content
-          const storyDetailsDiv = document.getElementById('story-details-content');
-          const jiraLinkHtml = data.jira_url ? 
-            `<p class="mb-3"><a href="${data.jira_url}" target="_blank" class="btn btn-outline-primary">
-              <i class="fas fa-external-link-alt"></i> View in Jira
-            </a></p>` : '';
-          
-          // Show warning if there was one (e.g., priority field not available)
-          const warningHtml = data.warning ? 
-            `<div class="alert alert-warning mt-3" style="font-size: 0.9em;">
-              <i class="fas fa-exclamation-triangle"></i> ${data.warning}
-            </div>` : '';
-          
-          storyDetailsDiv.innerHTML = `
-            <div class="success-container text-center py-5">
-              <div class="text-success mb-3">
-                <i class="fas fa-check-circle fa-3x"></i>
+          if (storyDetailsDiv) {
+            const jiraLinkHtml = data.jira_url ? 
+              `<p class="mb-3"><a href="${data.jira_url}" target="_blank" class="btn btn-outline-primary">
+                <i class="fas fa-external-link-alt"></i> View in Jira
+              </a></p>` : '';
+            const warningHtml = data.warning ? 
+              `<div class="alert alert-warning mt-3" style="font-size: 0.9em;">
+                <i class="fas fa-exclamation-triangle"></i> ${data.warning}
+              </div>` : '';
+            storyDetailsDiv.innerHTML = `
+              <div class="success-container text-center py-5">
+                <div class="text-success mb-3">
+                  <i class="fas fa-check-circle fa-3x"></i>
+                </div>
+                <h4 class="text-success">Successfully Submitted to Jira!</h4>
+                <p class="mb-3">
+                  <strong>Epic:</strong> ${data.epic_title || selectedEpic?.title || 'Unknown'}<br>
+                  <strong>Story:</strong> ${data.user_story_name || selectedUserStory?.title || selectedUserStory?.name || 'Unknown'}<br>
+                  <strong>Ticket ID:</strong> ${data.ticket_id || 'TST-' + Math.floor(Date.now() / 1000)}
+                </p>
+                ${jiraLinkHtml}
+                ${warningHtml}
+                <button class="btn btn-primary" onclick="location.reload()">
+                  <i class="fas fa-plus"></i> Create Another Story
+                </button>
               </div>
-              <h4 class="text-success">Successfully Submitted to Jira!</h4>
-              <p class="mb-3">
-                <strong>Epic:</strong> ${data.epic_title || selectedEpic?.title || 'Unknown'}<br>
-                <strong>Story:</strong> ${data.user_story_name || selectedUserStory?.title || selectedUserStory?.name || 'Unknown'}<br>
-                <strong>Ticket ID:</strong> ${data.ticket_id || 'TST-' + Math.floor(Date.now() / 1000)}
-              </p>
-              ${jiraLinkHtml}
-              ${warningHtml}
-              <button class="btn btn-primary" onclick="location.reload()">
-                <i class="fas fa-plus"></i> Create Another Story
-              </button>
-            </div>
-          `;
-          
+            `;
+          }
           // Hide submit button and reset its state for next use
-          submitBtn.style.display = 'none';
-          submitBtn.innerHTML = originalText;
-          submitBtn.disabled = false;
-          
+          if (submitBtn) {
+            console.log('Hiding submit-jira-btn after successful Jira submission.');
+            submitBtn.style.display = 'none';
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+          } else {
+            console.warn('submit-jira-btn not found in DOM when trying to hide/reset after Jira submission.');
+          }
           // Also show message in chat
           addChatMessage('details-chat-messages', `🚀 Successfully submitted "${selectedUserStory.title || selectedUserStory.name}" to Jira! Ticket: ${data.ticket_id}`, 'ai');
-          
-          console.log('Successfully submitted to Jira:', data);
+          // Mark the story as created
+          if (selectedUserStory && selectedUserStory.id) {
+            const storyElem = document.querySelector(`.user-story-item[data-story-id='${selectedUserStory.id}']`);
+            if (storyElem) {
+              storyElem.classList.add('created');
+              storyElem.setAttribute('data-editable', 'false');
+            }
+          }
+          // Keep Story Details visible
+          if (detailsSections) {
+            detailsSections.style.display = '';
+          } else {
+            console.warn('details-sections not found in DOM when trying to keep Story Details visible.');
+          }
+          // Show Jira info to the right of content
+          const jiraInfoDiv = document.createElement('div');
+          jiraInfoDiv.className = 'jira-info-panel';
+          jiraInfoDiv.innerHTML = `
+            <div class="card border-success mb-3">
+              <div class="card-header bg-success text-white"><i class="fab fa-jira"></i> Jira Ticket</div>
+              <div class="card-body">
+                <h5 class="card-title">${data.ticket_id || 'TST-' + Math.floor(Date.now() / 1000)}</h5>
+                <p class="card-text">${data.jira_url ? `<a href='${data.jira_url}' target='_blank'>View in Jira</a>` : 'No link available'}</p>
+              </div>
+            </div>
+          `;
+          const contentArea = document.querySelector('.content-area');
+          if (contentArea && !document.querySelector('.jira-info-panel')) {
+            contentArea.appendChild(jiraInfoDiv);
+          }
         } else {
           // Show error message
-          const storyDetailsDiv = document.getElementById('story-details-content');
+          if (storyDetailsDiv) {
+            storyDetailsDiv.innerHTML = `
+              <div class="error-container text-center py-5">
+                <div class="text-danger mb-3">
+                  <i class="fas fa-exclamation-triangle fa-3x"></i>
+                </div>
+                <h4 class="text-danger">Failed to Submit to Jira</h4>
+                <p class="mb-3 text-danger">${data.error || data.message || 'Unknown error occurred'}</p>
+                <p class="text-muted">Please check your JIRA configuration and try again.</p>
+                <button class="btn btn-secondary" onclick="location.reload()">
+                  <i class="fas fa-refresh"></i> Try Again
+                </button>
+              </div>
+            `;
+          } else {
+            console.error('story-details-content not found in DOM when trying to show Jira error.');
+          }
+          // Reset submit button
+          if (submitBtn) {
+            console.log('Resetting submit-jira-btn after Jira error.');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+          }
+          // Also show error in chat
+          addChatMessage('details-chat-messages', `❌ Failed to submit to Jira: ${data.error || 'Unknown error'}`, 'ai');
+          throw new Error(data.error || 'Failed to submit to Jira');
+        }
+      } catch (error) {
+        console.error('Error submitting to Jira:', error);
+        // Defensive DOM lookup and logging
+        const storyDetailsDiv = document.getElementById('story-details-content');
+        const detailsSections = document.getElementById('details-sections');
+        if (storyDetailsDiv) {
           storyDetailsDiv.innerHTML = `
             <div class="error-container text-center py-5">
               <div class="text-danger mb-3">
                 <i class="fas fa-exclamation-triangle fa-3x"></i>
               </div>
-              <h4 class="text-danger">Failed to Submit to Jira</h4>
-              <p class="mb-3 text-danger">${data.error || data.message || 'Unknown error occurred'}</p>
+              <h4 class="text-danger">Error Submitting to Jira</h4>
+              <p class="mb-3 text-danger">${error.message}</p>
               <p class="text-muted">Please check your JIRA configuration and try again.</p>
               <button class="btn btn-secondary" onclick="location.reload()">
                 <i class="fas fa-refresh"></i> Try Again
               </button>
             </div>
           `;
-          
-          // Reset submit button
+        } else {
+          console.error('story-details-content not found in DOM when trying to show Jira error.');
+        }
+        // Reset submit button
+        if (submitBtn) {
+          console.log('Resetting submit-jira-btn after Jira exception.');
           submitBtn.innerHTML = originalText;
           submitBtn.disabled = false;
-          
-          // Also show error in chat
-          addChatMessage('details-chat-messages', `❌ Failed to submit to Jira: ${data.error || 'Unknown error'}`, 'ai');
-          
-          throw new Error(data.error || 'Failed to submit to Jira');
         }
-        
-      } catch (error) {
-        console.error('Error submitting to Jira:', error);
-        
-        // Show error message in the story details section instead of alert
-        const storyDetailsDiv = document.getElementById('story-details-content');
-        storyDetailsDiv.innerHTML = `
-          <div class="error-container text-center py-5">
-            <div class="text-danger mb-3">
-              <i class="fas fa-exclamation-triangle fa-3x"></i>
-            </div>
-            <h4 class="text-danger">Error Submitting to Jira</h4>
-            <p class="mb-3 text-danger">${error.message}</p>
-            <p class="text-muted">Please check your JIRA configuration and try again.</p>
-            <button class="btn btn-secondary" onclick="location.reload()">
-              <i class="fas fa-refresh"></i> Try Again
-            </button>
-          </div>
-        `;
-        
-        // Reset submit button
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-        
         // Also show error in chat
         addChatMessage('details-chat-messages', `❌ Error submitting to Jira: ${error.message}`, 'ai');
       }
