@@ -1461,6 +1461,51 @@
   </style>
 </head>
 <body>
+  <!-- Vector DB Link Display Section -->
+  <div id="vectorDbLinkDisplay" style="display:none; background: #e9f7ef; color: #155724; border: 1px solid #b7ebc6; border-radius: 8px; padding: 1rem 2rem; margin: 1.5rem 2rem 0.5rem 2rem; font-size: 1.1rem; font-weight: 500;">
+    <span class="fw-bold">Vector DB Link:</span>
+    <a id="vectorDbLinkValue" href="#" target="_blank" style="color: #007bff; word-break: break-all;"></a>
+  </div>
+  <script>
+    // If a vectorDbLink is present, fetch the file and set it as the file input value
+    document.addEventListener('DOMContentLoaded', async function() {
+      const params = new URLSearchParams(window.location.search);
+      const link = params.get('vectorDbLink');
+      if (link) {
+        try {
+          const response = await fetch(link);
+          if (!response.ok) throw new Error('Failed to fetch file from Vector DB Link');
+          const blob = await response.blob();
+          // Create a File object from the blob
+          const filename = link.split('/').pop() || 'vector_db_file';
+          const file = new File([blob], filename, { type: blob.type });
+          // Set the file input value using DataTransfer
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          const fileInput = document.getElementById('prd-file');
+          if (fileInput) {
+            fileInput.files = dataTransfer.files;
+            // Optionally, trigger change event if needed
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        } catch (err) {
+          console.error('Error auto-filling PRD file from Vector DB Link:', err);
+        }
+      }
+    });
+    // On page load, check for vectorDbLink in query params and display if present
+    document.addEventListener('DOMContentLoaded', function() {
+      const params = new URLSearchParams(window.location.search);
+      const link = params.get('vectorDbLink');
+      if (link) {
+        const displayDiv = document.getElementById('vectorDbLinkDisplay');
+        const linkEl = document.getElementById('vectorDbLinkValue');
+        linkEl.href = link;
+        linkEl.textContent = link;
+        displayDiv.style.display = 'block';
+      }
+    });
+  </script>
   <div class="main-container">
     <!-- Enhanced Header -->
     <div class="header-bar">
@@ -1548,8 +1593,63 @@
                         </label>
                         <input type="file" class="form-control" id="prd-file" accept=".txt,.docx,.pdf,.md">
                         <div class="form-text">Upload your PRD file (.txt, .docx, .pdf, .md)</div>
-                        <!-- Vector DB PRD Selection Button and Modal -->
-                        <button type="button" class="btn btn-outline-info mt-2" onclick="showVectorDbPrdModal()">Select from Vector DB</button>
+                        <!-- Vector DB PRD Selection Button and Modal (single instance) -->
+
+<script>
+// Show Vector DB PRD Modal and fetch files
+async function showVectorDbPrdModal() {
+  const modalElem = document.getElementById('vectorDbPrdModal');
+  if (!modalElem) {
+    alert('Vector DB Modal element not found in DOM.');
+    return;
+  }
+  // Ensure Bootstrap Modal is available
+  if (typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+    alert('Bootstrap Modal JS is not loaded.');
+    return;
+  }
+  const modal = bootstrap.Modal.getOrCreateInstance(modalElem);
+  document.getElementById('vector-db-files-list').innerHTML = '<div class="text-center text-muted">Loading files...</div>';
+  modal.show();
+  try {
+    const response = await fetch('/vector-db/files/', { method: 'GET' });
+    if (!response.ok) throw new Error('Failed to fetch files');
+    const data = await response.json();
+    if (Array.isArray(data.files) && data.files.length > 0) {
+      let html = '<ul class="list-group">';
+      data.files.forEach(function(filename) {
+        var encodedFilename = encodeURIComponent(filename);
+        html += '<li class="list-group-item d-flex justify-content-between align-items-center">';
+        html += '<span>' + filename + '</span>';
+        html += '<div>';
+        html += '<button type="button" class="btn btn-sm btn-primary me-2 vector-db-select-btn" data-filename="' + filename.replace(/"/g, '&quot;') + '">Select</button>';
+        html += '<a href="http://localhost:5001/vector-db/files/' + encodedFilename + '" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>';
+        html += '</div>';
+        html += '</li>';
+      });
+      html += '</ul>';
+      document.getElementById('vector-db-files-list').innerHTML = html;
+      // Add event listeners for select buttons
+      document.querySelectorAll('.vector-db-select-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          selectVectorDbPrd(this.getAttribute('data-filename'));
+        });
+      });
+    } else {
+      document.getElementById('vector-db-files-list').innerHTML = '<div class="text-center text-muted">No files found in Vector DB.</div>';
+    }
+  } catch (err) {
+    document.getElementById('vector-db-files-list').innerHTML = '<div class="text-danger">Error loading files: ' + err.message + '</div>';
+  }
+}
+// Select a file from Vector DB
+function selectVectorDbPrd(filename) {
+  document.getElementById('selected-vector-db-prd').value = filename;
+  // Close modal
+  const modal = bootstrap.Modal.getInstance(document.getElementById('vectorDbPrdModal'));
+  if (modal) modal.hide();
+}
+</script>
                         <input type="hidden" id="selected-vector-db-prd" name="selected_vector_db_prd">
                         {% include 'vector_db_prd_modal.html' %}
                       </div>

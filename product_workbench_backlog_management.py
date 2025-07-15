@@ -159,8 +159,9 @@ def main():
     print(f"   Landing Page: http://{host}:{port}/")
     print(f"   Tabbed Workbench: http://{host}:{port}/tabbed-layout")
     
-    # Add API endpoint for Vector DB PRDs
-    from flask import Flask, jsonify
+    # Add API endpoint for Vector DB PRDs and proxy for file listing
+    from flask import Flask, jsonify, Response, request
+    import requests as pyrequests
     app = backend.app
     @app.route('/api/vector-db-prds')
     def vector_db_prds():
@@ -170,6 +171,22 @@ def main():
             {"name": "PRD v2", "url": "https://vectordb.example.com/prd/v2"}
         ]
         return jsonify({"prds": prds})
+
+    # Proxy endpoint to fetch file list from Vector DB backend
+    @app.route('/vector-db/files/', methods=['GET'])
+    def proxy_vector_db_files():
+        logger = logging.getLogger(__name__)
+        try:
+            logger.info('Proxying request to http://localhost:5001/vector-db/files/')
+            resp = pyrequests.get('http://localhost:5001/vector-db/files/', timeout=5)
+            logger.info(f'Response from vector DB: {resp.status_code} {resp.text[:200]}')
+            return Response(resp.content, status=resp.status_code, content_type=resp.headers.get('Content-Type', 'application/json'))
+        except pyrequests.ConnectionError as ce:
+            logger.error(f'Connection error to vector DB: {ce}')
+            return jsonify({'files': [], 'error': 'Could not connect to Vector DB backend at http://localhost:5001/vector-db/files/'}), 502
+        except Exception as e:
+            logger.error(f'Error proxying vector DB files: {e}')
+            return jsonify({'files': [], 'error': str(e)}), 500
 
     # Start server with enhanced error handling
     try:

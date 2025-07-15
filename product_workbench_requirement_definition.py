@@ -1,6 +1,9 @@
-from flask import Flask, jsonify, request
-# Add API endpoint for PRD upload to Vector DB
+
+
+from flask import Flask, jsonify, request, session
 app = Flask(__name__)
+
+# Ensure route is registered at top level
 @app.route('/api/upload-prd-to-vector-db', methods=['POST'])
 def upload_prd_to_vector_db():
     """
@@ -8,7 +11,6 @@ def upload_prd_to_vector_db():
     Expects a POST request with PRD data in JSON format.
     """
     try:
-        # Get session data
         session_id = session.get('data_key', None)
         if not session_id:
             return jsonify({'success': False, 'error': 'No session key found'}), 400
@@ -17,28 +19,27 @@ def upload_prd_to_vector_db():
         if not prd_data:
             return jsonify({'success': False, 'error': 'No PRD data found'}), 404
 
-        # Generate PRD document in memory
         from docx import Document
         from io import BytesIO
         doc = Document()
         doc.add_heading("Product Requirements Document", level=1)
         doc.add_paragraph(f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}")
         doc.add_paragraph()
-        # Add basic sections
         doc.add_heading("Product Overview", level=2)
         doc.add_paragraph(prd_data.get("product_overview", ""))
         doc.add_heading("Feature Overview", level=2)
         doc.add_paragraph(prd_data.get("feature_overview", ""))
-        # Add more sections as needed
         buffer = BytesIO()
         doc.save(buffer)
         buffer.seek(0)
 
-        # Upload to Vector DB using the real endpoint
         import requests
         files = {'prd_file': ('PRD_Draft.docx', buffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')}
+        logger.info("Uploading PRD to Vector DB at /api/upload-to-vector-db...")
         try:
-            response = requests.post('http://localhost:5000/api/upload-to-vector-db', files=files)
+            response = requests.post('http://localhost:5001/api/upload-to-vector-db', files=files)
+            logger.info(f"Upload response status: {response.status_code}")
+            logger.info(f"Upload response text: {response.text}")
             result = response.json()
             if result.get('success'):
                 prd_link = result.get('url')
@@ -82,7 +83,7 @@ from flask_limiter.util import get_remote_address
 import openai
 import redis
 from flask import (
-    Flask, render_template, request, redirect, 
+    render_template, request, redirect, 
     url_for, session, send_file, jsonify
 )
 from dotenv import load_dotenv
@@ -122,15 +123,9 @@ except redis.ConnectionError as e:
     USING_REDIS = False
 
 ########################
-# FLASK APP CONFIGURATION
-########################
-
-# Initialize Flask and load environment variables
-
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
 # Configure secure session settings
