@@ -8,26 +8,35 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
+    :root {
+      --primary-red: #dc3545;
+      --primary-grey: #343a40;
+      --secondary-grey: #6c757d;
+      --light-grey: #f8f9fa;
+      --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      --border-radius: 1rem;
+    }
     body {
       font-family: 'Inter', sans-serif;
-      background: #f8f9fa;
-      color: #343a40;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      color: var(--primary-grey);
       min-height: 100vh;
     }
     .main-container {
-      max-width: 900px;
-      margin: 3rem auto;
-      padding: 2rem;
+      max-width: 1200px;
+      margin: 4rem auto;
+      padding: 2.5rem 2rem;
       background: #fff;
-      border-radius: 1rem;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      border-radius: var(--border-radius);
+      box-shadow: var(--card-shadow);
     }
     .header-title {
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-weight: 700;
-      color: #dc3545;
-      margin-bottom: 2rem;
+      color: var(--primary-red);
+      margin-bottom: 2.5rem;
       text-align: center;
+      letter-spacing: -1px;
     }
     .card-deck {
       display: flex;
@@ -36,56 +45,64 @@
       flex-wrap: wrap;
     }
     .pm-card {
-      flex: 1 1 250px;
-      min-width: 250px;
-      max-width: 320px;
-      background: #f8f9fa;
+      flex: 1 1 320px;
+      min-width: 320px;
+      max-width: 370px;
+      background: var(--light-grey);
       border: 1px solid #e9ecef;
-      border-radius: 1rem;
+      border-radius: var(--border-radius);
       box-shadow: 0 4px 16px rgba(220,53,69,0.07);
       padding: 2rem 1.5rem 1.5rem 1.5rem;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       transition: box-shadow 0.2s, transform 0.2s;
-    }
-    .pm-card:hover {
-      box-shadow: 0 8px 32px rgba(220,53,69,0.13);
-      transform: translateY(-4px) scale(1.02);
-      border-color: #dc3545;
+      min-height: 420px;
     }
     .pm-card .icon {
       font-size: 2.5rem;
-      color: #dc3545;
+      color: var(--primary-red);
       margin-bottom: 1rem;
     }
     .pm-card .card-title {
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       font-weight: 600;
       margin-bottom: 0.5rem;
-      color: #343a40;
+      color: var(--primary-grey);
     }
     .pm-card .card-text {
       font-size: 1rem;
-      color: #6c757d;
+      color: var(--secondary-grey);
       margin-bottom: 1.5rem;
+      flex: 1 1 auto;
     }
     .pm-card .btn {
-      margin-top: auto;
-      background: #dc3545;
+      margin-top: 0.5rem;
+      background: var(--primary-red);
       color: #fff;
       font-weight: 600;
       border-radius: 0.5rem;
       padding: 0.5rem 1.25rem;
       transition: background 0.2s;
+      align-self: flex-end;
     }
     .pm-card .btn:hover {
       background: #b71c1c;
       color: #fff;
     }
+    .pm-card:hover {
+      box-shadow: 0 8px 32px rgba(220,53,69,0.13);
+      transform: translateY(-4px) scale(1.02);
+      border-color: var(--primary-red);
+    }
+    @media (max-width: 1200px) {
+      .main-container { max-width: 98vw; }
+      .card-deck { gap: 1.5rem; }
+      .pm-card { min-width: 260px; max-width: 100%; }
+    }
     @media (max-width: 900px) {
       .card-deck { flex-direction: column; gap: 1.5rem; }
-      .pm-card { max-width: 100%; }
+      .pm-card { max-width: 100%; min-width: 0; }
     }
   </style>
 </head>
@@ -98,21 +115,21 @@
         <div class="icon"><i class="fas fa-search"></i></div>
         <div class="card-title">Requirements insights</div>
         <div class="card-text">Reverse engineer legacy code and mine internal docs and research to identify high-level requirements.<br><br><strong>Strategic insights:</strong> Scan market data, propose future-state system ecosystem, and assess multi-system business impact.<br><strong>Knowledge management:</strong> Use semantic search to surface relevant knowledge and auto-draft briefs, FAQs, and templates.<br><strong>Performance monitoring:</strong> Identify and track relevant KPIs, monitor program velocity, and plan and manage capacity.</div>
-        <button class="btn btn-outline-secondary" disabled>Coming Soon</button>
+        <button class="btn btn-outline-secondary" disabled style="width:100%">Coming Soon</button>
       </div>
       <!-- Card 2: Requirements definition -->
       <div class="pm-card">
         <div class="icon"><i class="fas fa-file-alt"></i></div>
         <div class="card-title">Requirements definition</div>
         <div class="card-text">Translate research & human input into structured requirements (data, functional, non-functional, legal, etc.).<br><br><strong>Requirements definition:</strong> Translate research & human input into structured requirements (data, functional, non-functional, legal, etc.).</div>
-        <a href="http://127.0.0.1:5001/page1" class="btn">Go</a>
+        <a href="http://127.0.0.1:5001/page1" class="btn" style="width:100%">Go</a>
       </div>
       <!-- Card 3: Backlog management -->
       <div class="pm-card">
         <div class="icon"><i class="fas fa-tasks"></i></div>
         <div class="card-title">Backlog management</div>
         <div class="card-text">Convert business objectives and detailed requirements into user stories with clear acceptance criteria.<br><br><strong>Backlog management:</strong> Convert business objectives and detailed requirements into user stories with clear acceptance criteria.</div>
-        <a href="http://127.0.0.1:5002/tabbed-layout" class="btn">Go</a>
+        <a href="http://127.0.0.1:5002/tabbed-layout" class="btn" style="width:100%">Go</a>
       </div>
     </div>
   </div>

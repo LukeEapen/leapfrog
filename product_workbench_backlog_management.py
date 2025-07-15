@@ -63,30 +63,30 @@ def safe_import_backend():
         import poc2_backend_processor_tabbed as backend
 
         # --- PATCH: Speed up OpenAI API calls in backend ---
-        # If backend exposes a config or settings object, set fast model and low temperature
+        # If backend exposes a config or settings object, set fastest model (gpt-4o) and low temperature
         if hasattr(backend, 'set_ai_config'):
-            backend.set_ai_config(model="gpt-3.5-turbo", temperature=0.3, max_tokens=1024, parallel=True)
-            logger.info("Set backend AI config: gpt-3.5-turbo, temp=0.3, parallel=True")
+            backend.set_ai_config(model="gpt-4o", temperature=0.3, max_tokens=1024, parallel=True)
+            logger.info("Set backend AI config: gpt-4o, temp=0.3, parallel=True")
         elif hasattr(backend, 'ai_config'):
-            backend.ai_config['model'] = "gpt-3.5-turbo"
+            backend.ai_config['model'] = "gpt-4o"
             backend.ai_config['temperature'] = 0.3
             backend.ai_config['max_tokens'] = 1024
             backend.ai_config['parallel'] = True
-            logger.info("Updated backend.ai_config for speed")
+            logger.info("Updated backend.ai_config for speed (gpt-4o)")
         # If backend has a function to optimize story generation, call it
         if hasattr(backend, 'optimize_story_generation'):
             backend.optimize_story_generation()
             logger.info("Called backend.optimize_story_generation() for parallelism")
 
         # --- PATCH: Use best available OpenAI model and further optimize speed ---
-        # Try Gemini 1.5 Pro, Claude 3 Sonnet, or GPT-4o if available, else fallback to gpt-3.5-turbo
+        # Try GPT-4o first, then Gemini 1.5 Pro, Claude 3 Sonnet, else fallback to gpt-3.5-turbo
         best_model = None
-        for candidate in ["gemini-1.5-pro", "claude-3-sonnet", "gpt-4o", "gpt-3.5-turbo"]:
+        for candidate in ["gpt-4o", "gemini-1.5-pro", "claude-3-sonnet", "gpt-3.5-turbo"]:
             if hasattr(backend, 'is_model_available') and backend.is_model_available(candidate):
                 best_model = candidate
                 break
         if not best_model:
-            best_model = "gpt-3.5-turbo"
+            best_model = "gpt-4o"
         # Set lower temperature and max_tokens for speed
         ai_config = {
             "model": best_model,

@@ -671,7 +671,9 @@
         .then(res => res.json())
         .then(data => {
           document.getElementById("sendingIndicator")?.remove();
-          chatbox.innerHTML += `<div class="chat-message agent"><strong>Assistant:</strong> ${data.response}</div>`;
+          // Use data.reply if present, else fallback to data.response
+          const reply = data.reply !== undefined ? data.reply : data.response;
+          chatbox.innerHTML += `<div class="chat-message agent"><strong>Assistant:</strong> ${reply}</div>`;
 
           // ✅ Add success confirmation
           const confirmation = document.createElement('div');
@@ -686,9 +688,9 @@
           const renderDiv = document.getElementById(renderId);
           const hiddenInput = document.getElementById(inputId);
 
-          hiddenInput.setAttribute('data-raw', data.response);
-          hiddenInput.value = JSON.stringify(data.response);
-          renderDiv.innerHTML = marked.parse(data.response);
+          hiddenInput.setAttribute('data-raw', reply);
+          hiddenInput.value = JSON.stringify(reply);
+          renderDiv.innerHTML = marked.parse(reply);
         })
         .finally(() => {
           input.value = '';
