@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management - AI Assistant Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2d5436;
+            --primary-grey: #343a40;
+            --secondary-grey: #6c757d;
+            --light-grey: #f8f9fa;
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            --border-radius: 1rem;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #1b3a2b 100%);
+            color: white;
+            padding: 3rem 0 2rem 0;
+            text-align: center;
+        }
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .hero-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        .section-cards {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin: 3rem auto 0 auto;
+            max-width: 1100px;
+        }
+        .pm-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 2.5rem 2rem 2rem 2rem;
+            flex: 1 1 0;
+            min-width: 300px;
+            max-width: 350px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .pm-card:hover {
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border: 2px solid var(--primary-blue);
+            transform: translateY(-5px);
+        }
+        .pm-icon {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 1.2rem;
+        }
+        .pm-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-grey);
+            margin-bottom: 0.5rem;
+        }
+        .pm-description {
+            color: var(--secondary-grey);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            min-height: 70px;
+        }
+        @media (max-width: 900px) {
+            .section-cards {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero-section">
+        <div class="container">
+            <h1 class="hero-title">Product Management</h1>
+            <p class="hero-subtitle">Accelerate your product journey with AI-powered insights, structured requirements, and agile backlog management.</p>
+        </div>
+    </section>
+    <section class="section-cards">
+        <div class="pm-card" onclick="window.location.href='#'">
+            <div class="pm-icon"><i class="fas fa-lightbulb"></i></div>
+            <div class="pm-title">Requirements Insights</div>
+            <div class="pm-description">Reverse engineer legacy code and mine internal docs and research to identify high-level requirements, providing a foundation for product planning.</div>
+        </div>
+        <div class="pm-card" onclick="window.location.href='http://127.0.0.1:5001/page1'">
+            <div class="pm-icon"><i class="fas fa-file-alt"></i></div>
+            <div class="pm-title">Requirements Definition</div>
+            <div class="pm-description">Translate research and human input into structured requirements (data, functional, non-functional, legal, etc.) for clear, actionable product direction.</div>
+        </div>
+        <div class="pm-card" onclick="window.location.href='http://127.0.0.1:5002/tabbed-layout'">
+            <div class="pm-icon"><i class="fas fa-tasks"></i></div>
+            <div class="pm-title">Backlog Management</div>
+            <div class="pm-description">Convert business objectives and detailed requirements into user stories with clear acceptance criteria, ready for agile development and tracking.</div>
+        </div>
+    </section>
+</body>
+</html>

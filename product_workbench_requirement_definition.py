@@ -17,56 +17,43 @@ def upload_prd_to_vector_db():
         if not prd_data:
             return jsonify({'success': False, 'error': 'No PRD data found'}), 404
 
-        # Simulate upload to Vector DB (replace with actual logic)
-        # You can use prd_data here for real upload
-        # For now, return a dummy link
-        prd_link = f"https://vectordb.example.com/prd/{session_id}"
-        logger.info(f"PRD uploaded to Vector DB: {prd_link}")
-        return jsonify({'success': True, 'link': prd_link})
+        # Generate PRD document in memory
+        from docx import Document
+        from io import BytesIO
+        doc = Document()
+        doc.add_heading("Product Requirements Document", level=1)
+        doc.add_paragraph(f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        doc.add_paragraph()
+        # Add basic sections
+        doc.add_heading("Product Overview", level=2)
+        doc.add_paragraph(prd_data.get("product_overview", ""))
+        doc.add_heading("Feature Overview", level=2)
+        doc.add_paragraph(prd_data.get("feature_overview", ""))
+        # Add more sections as needed
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+
+        # Upload to Vector DB using the real endpoint
+        import requests
+        files = {'prd_file': ('PRD_Draft.docx', buffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')}
+        try:
+            response = requests.post('http://localhost:5000/api/upload-to-vector-db', files=files)
+            result = response.json()
+            if result.get('success'):
+                prd_link = result.get('url')
+                logger.info(f"PRD uploaded to Vector DB: {prd_link}")
+                return jsonify({'success': True, 'link': prd_link})
+            else:
+                logger.error(f"Vector DB upload failed: {result.get('error')}")
+                return jsonify({'success': False, 'error': result.get('error')}), 500
+        except Exception as e:
+            logger.error(f"Vector DB upload failed: {str(e)}")
+            return jsonify({'success': False, 'error': str(e)}), 500
     except Exception as e:
-        logger.error(f"Vector DB upload failed: {str(e)}")
+        logger.error(f"PRD upload failed: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
-########################
-"""
-new-prd-workflow.py
-A Flask-based web application for generating Product Requirements Documents (PRDs) using OpenAI assistants. 
-The workflow guides users through a multi-step process, leveraging multiple AI agents to synthesize product overviews, 
-feature analyses, and detailed requirements, and compiles the results into a downloadable Word document.
 
-Key Features:
--------------
-- User authentication and secure session management.
-- Multi-step input workflow for capturing industry, sector, geography, intent, and features.
-- Asynchronous and parallel invocation of multiple OpenAI assistant agents for content generation.
-- Caching and retry logic for robust agent interactions.
-- Data storage abstraction supporting both Redis and file-based backends.
-- Extraction and validation of references from AI-generated outputs.
-- Automated cleanup of expired session data.
-- Dynamic generation of a styled Word document (docx) with all PRD sections and references.
-- Rate limiting and error handling for API endpoints.
-
-Main Components:
-----------------
-- Flask routes for login, multi-step PRD creation, and document download.
-- Agent orchestration functions for calling OpenAI assistants (sync and async).
-- Data storage and retrieval utilities with session key management.
-- Markdown-to-Word conversion utilities with custom styling and hyperlink support.
-- Reference extraction and validation from AI outputs.
-- Input validation using Marshmallow schemas.
-- Logging configuration for monitoring and debugging.
-
-Environment Variables:
-----------------------
-- OPENAI_API_KEY: API key for OpenAI.
-- REDIS_HOST, REDIS_PORT, REDIS_DB, REDIS_PASSWORD: Redis configuration.
-- FLASK_SECRET_KEY: Flask session secret.
-- ADMIN_USERNAME, ADMIN_PASSWORD: Admin credentials.
-
-Usage:
-------
-Run the application and navigate to the root URL to begin the PRD creation workflow. 
-Follow the steps to input product context, review and edit AI-generated content, and download the final PRD document.
-"""
 
 # IMPORTS AND SETUP
 ########################
@@ -167,7 +154,7 @@ ASSISTANTS = {
     'agent_1_1': 'asst_sW7IMhE5tQ78Ylx0zQkh6YnZ', # Agent 1.1 - Product Overview Synthesizer – System Instructions
     'agent_2'  : 'asst_t5hnaKy1wPvD48jTbn8Mx45z',   # Agent 2: Feature Overview Generator – System Instructions
     'agent_3'  : 'asst_EqkbMBdfOpUoEUaBPxCChVLR',   # Agent 3: Highest-Order Requirements Agent
-    'agent_4_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator - System Instructions
+    'agent_24_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator - System Instructions
     'agent_4_2': 'asst_CLBdcKGduMvSBM06MC1OJ7bF', # Agent 4.2: Operational Business Requirements Generator – System Instructions
     'agent_4_3': 'asst_61ITzgJTPqkQf4OFnnMnndNb', # Agent 4.3: Capability-Scoped Non-Functional Requirements Generator – System Instructions
     'agent_4_4': 'asst_pPFGsMMqWg04OSHNmyQ5oaAy', # Agent 4.4: Data Attribute Requirement Generator – System Instructions
@@ -893,7 +880,7 @@ def page4():
         outputs = {
             'product_overview': data.get('product_overview', ''),
             'feature_overview': data.get('feature_overview', ''),
-            'agent_4_1': data.get('combined_outputs', {}).get('agent_4_1', ''),
+           # 'agent_4_1': data.get('combined_outputs', {}).get('agent_4_1', ''),
             'agent_4_2': data.get('combined_outputs', {}).get('agent_4_2', ''),
             'agent_4_3': data.get('combined_outputs', {}).get('agent_4_3', ''),
             'agent_4_4': data.get('combined_outputs', {}).get('agent_4_4', ''),
@@ -1081,7 +1068,7 @@ def generate_word_doc():
         sections = {
             "Product Overview": data.get("product_overview", ""),
             "Feature Overview": data.get("feature_overview", ""),
-            "Product Requirements": data.get("combined_outputs", {}).get("agent_4_1", ""),
+         #   "Product Requirements": data.get("combined_outputs", {}).get("agent_4_1", ""),
             "Functional Requirements": data.get("combined_outputs", {}).get("agent_4_2", ""),
             "Non-Functional Requirements": data.get("combined_outputs", {}).get("agent_4_3", ""),
             "Data Requirements": data.get("combined_outputs", {}).get("agent_4_4", ""),
@@ -1334,6 +1321,7 @@ def cleanup_expired_sessions():
     """Clean up expired session data with better error handling."""
     if USING_REDIS:
         return  # Redis handles expiration
+    # TODO: Implement file cleanup logic here
         
     try:
         current_time = time.time()
