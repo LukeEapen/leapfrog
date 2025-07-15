@@ -1479,7 +1479,7 @@
         </span>
       </div>
       <div class="navigation-actions" style="display: flex; gap: 0.75rem;">
-        <button class="btn btn-light" onclick="window.open('/page1_input','_blank')" title="Reverse engineer legacy code and mine internal docs and research to identify high-level requirements
+        <button class="btn btn-light" onclick="window.open('http://127.0.0.1:5001/page1','_blank')" title="Reverse engineer legacy code and mine internal docs and research to identify high-level requirements
 " style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
           <i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>
           Requirements insights
@@ -1494,10 +1494,7 @@
           <i class="fas fa-cogs" style="margin-right: 0.5rem;"></i>
           Backlog management
         </button>
-             <button class="btn btn-light" onclick="openSystemMapping()" style="background: #ffffff; color: #dc3545; border: 2px solid #8d8989; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
-          <i class="fas fa-sitemap" style="margin-right: 0.5rem;"></i>
-          System Mapping
-        </button>
+   
       </div>
     </div>
     <!-- Enhanced Tab Navigation -->
@@ -1551,6 +1548,10 @@
                         </label>
                         <input type="file" class="form-control" id="prd-file" accept=".txt,.docx,.pdf,.md">
                         <div class="form-text">Upload your PRD file (.txt, .docx, .pdf, .md)</div>
+                        <!-- Vector DB PRD Selection Button and Modal -->
+                        <button type="button" class="btn btn-outline-info mt-2" onclick="showVectorDbPrdModal()">Select from Vector DB</button>
+                        <input type="hidden" id="selected-vector-db-prd" name="selected_vector_db_prd">
+                        {% include 'vector_db_prd_modal.html' %}
                       </div>
                     </div>
                     <div class="col-md-6">
@@ -2469,7 +2470,11 @@
       
       detailsLoading.style.display = 'none';
       detailsSections.style.display = 'block';
-      
+
+      // Show Refine Details chat area only after Story Details are displayed
+      const detailsChatArea = document.getElementById('details-chat-area');
+      if (detailsChatArea) detailsChatArea.style.display = 'block';
+
       // Store the current story details for Jira submission
       currentStoryDetails = details;
 

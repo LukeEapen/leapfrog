@@ -573,9 +573,46 @@
           {% endfor %}
         </div>
       </div>
+    <!-- Vector DB Upload Section -->
+    <div class="card mt-4">
+      <div class="card-body">
+        <h5 class="card-title">Upload PRD to Vector DB</h5>
+        <button class="btn btn-success" id="uploadToVectorDbBtn">Upload PRD to Vector DB</button>
+        <div id="vectorDbLinkContainer" class="mt-3" style="display:none;">
+          <span class="fw-bold">Vector DB Link:</span>
+          <a id="vectorDbPrdLink" href="#" target="_blank"></a>
+        </div>
+      </div>
+    </div>
     </div>
   </div>
   <script>
+    // Upload PRD to Vector DB and show link
+    document.addEventListener('DOMContentLoaded', function () {
+      const uploadBtn = document.getElementById('uploadToVectorDbBtn');
+      if (uploadBtn) {
+        uploadBtn.addEventListener('click', function () {
+          uploadBtn.disabled = true;
+          uploadBtn.textContent = 'Uploading...';
+          fetch('/api/upload-prd-to-vector-db', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success && data.link) {
+                document.getElementById('vectorDbLinkContainer').style.display = 'block';
+                const linkEl = document.getElementById('vectorDbPrdLink');
+                linkEl.href = data.link;
+                linkEl.textContent = data.link;
+                uploadBtn.textContent = 'Uploaded!';
+              } else {
+                uploadBtn.textContent = 'Upload Failed';
+              }
+            })
+            .catch(() => {
+              uploadBtn.textContent = 'Upload Failed';
+            });
+        });
+      }
+    });
     function toggleReviewOverlay(show) {
       const overlay = document.getElementById("reviewLoadingOverlay");
       if (overlay) {

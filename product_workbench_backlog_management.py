@@ -159,6 +159,18 @@ def main():
     print(f"   Landing Page: http://{host}:{port}/")
     print(f"   Tabbed Workbench: http://{host}:{port}/tabbed-layout")
     
+    # Add API endpoint for Vector DB PRDs
+    from flask import Flask, jsonify
+    app = backend.app
+    @app.route('/api/vector-db-prds')
+    def vector_db_prds():
+        # Example: Replace with actual Vector DB query
+        prds = [
+            {"name": "PRD v1", "url": "https://vectordb.example.com/prd/v1"},
+            {"name": "PRD v2", "url": "https://vectordb.example.com/prd/v2"}
+        ]
+        return jsonify({"prds": prds})
+
     # Start server with enhanced error handling
     try:
         logger.info(f"Starting Flask server on port {port}")
@@ -170,14 +182,11 @@ def main():
         print("\n📝 Logs are saved to: tabbed_backend.log")
         print("⏹️  Press Ctrl+C to stop the server")
         print("=" * 40)
-        
         backend.app.run(host=host, port=port, debug=debug)
-        
     except KeyboardInterrupt:
         logger.info("Server stopped by user (Ctrl+C)")
         print("\n⏹️  Server stopped by user")
         return True
-        
     except Exception as e:
         logger.error(f"Server error: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")

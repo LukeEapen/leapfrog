@@ -1,3 +1,31 @@
+from flask import Flask, jsonify, request
+# Add API endpoint for PRD upload to Vector DB
+app = Flask(__name__)
+@app.route('/api/upload-prd-to-vector-db', methods=['POST'])
+def upload_prd_to_vector_db():
+    """
+    API endpoint to upload the PRD to the Vector DB and return a link.
+    Expects a POST request with PRD data in JSON format.
+    """
+    try:
+        # Get session data
+        session_id = session.get('data_key', None)
+        if not session_id:
+            return jsonify({'success': False, 'error': 'No session key found'}), 400
+
+        prd_data = get_data(session_id)
+        if not prd_data:
+            return jsonify({'success': False, 'error': 'No PRD data found'}), 404
+
+        # Simulate upload to Vector DB (replace with actual logic)
+        # You can use prd_data here for real upload
+        # For now, return a dummy link
+        prd_link = f"https://vectordb.example.com/prd/{session_id}"
+        logger.info(f"PRD uploaded to Vector DB: {prd_link}")
+        return jsonify({'success': True, 'link': prd_link})
+    except Exception as e:
+        logger.error(f"Vector DB upload failed: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 ########################
 """
 new-prd-workflow.py
@@ -83,6 +111,7 @@ from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from vector_db_api import vector_db_api
 
 ########################
 # REDIS CONFIGURATION
@@ -931,7 +960,7 @@ def validate_reference(ref: str) -> bool:
     invalid_patterns = [
         r'^[\W_]+$',                    # Only special characters
         r'^(?:http)?[:/]+$',            # Incomplete URLs
-        r'^Reference:\s*$',             # Empty reference labels
+        r'^[Rr]eference:\s*$',             # Empty reference labels
         r'^\d+$'                        # Just numbers
     ]
     
@@ -1655,6 +1684,7 @@ def review_prd():
 # Add to main
 if __name__ == '__main__':
     cleanup_expired_sessions()
-    port = int(os.environ.get("PORT", 7001))
+    app.register_blueprint(vector_db_api)
+    port = int(os.environ.get("PORT", 5001))
     app.run(host="0.0.0.0", port=port, debug=True)
 

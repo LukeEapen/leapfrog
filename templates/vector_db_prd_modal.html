@@ -1,0 +1,55 @@
+<!-- Vector DB PRD Selection Modal -->
+<div class="modal fade" id="vectorDbPrdModal" tabindex="-1" aria-labelledby="vectorDbPrdModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="vectorDbPrdModalLabel">Select PRD from Vector DB</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group" id="vector-db-prd-list">
+          <!-- PRD links will be dynamically inserted here -->
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Example: Fetch PRD links from backend and populate modal
+function showVectorDbPrdModal() {
+  fetch('/api/vector-db-prds')
+    .then(response => response.json())
+    .then(data => {
+      const list = document.getElementById('vector-db-prd-list');
+      list.innerHTML = '';
+      data.prds.forEach(prd => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.innerHTML = `
+          <span>${prd.name}</span>
+          <button class="btn btn-primary btn-sm" onclick="selectVectorDbPrd('${prd.url}')">Select</button>
+        `;
+        list.appendChild(li);
+      });
+      const modal = new bootstrap.Modal(document.getElementById('vectorDbPrdModal'));
+      modal.show();
+    });
+}
+
+function selectVectorDbPrd(url) {
+  // Set the selected PRD URL in the upload form (or handle as needed)
+  document.getElementById('prd-file').value = '';
+  document.getElementById('selected-vector-db-prd').value = url;
+  document.getElementById('vectorDbPrdModal').classList.remove('show');
+}
+</script>
+
+<!-- Add a hidden input to store selected PRD URL -->
+<input type="hidden" id="selected-vector-db-prd" name="selected_vector_db_prd">
+
+<!-- Add a button next to PRD upload to open modal -->
+<button type="button" class="btn btn-outline-info" onclick="showVectorDbPrdModal()">Select from Vector DB</button>

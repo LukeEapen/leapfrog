@@ -1071,3 +1071,906 @@ Description: This epic focuses on the establishment and management of charged-of
 2025-07-14 13:52:34,047 - poc2_backend_processor_tabbed - INFO - Systems: Account creation engine
 2025-07-14 13:52:35,360 - poc2_backend_processor_tabbed - INFO - Successfully created Jira ticket: SCRUM-62
 2025-07-14 13:52:35,360 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:52:35] "POST /tabbed-submit-jira HTTP/1.1" 200 -
+2025-07-14 13:55:24,005 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:55:24,005 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:55:25,190 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:55:25,191 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:55:25,238 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 13:55:25,238 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 13:55:25,248 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 13:55:25,354 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 13:55:25,354 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 13:55:26,546 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 13:55:26,548 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 13:55:26,552 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 13:55:26,571 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 13:55:34,734 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:55:34] "GET / HTTP/1.1" 200 -
+2025-07-14 13:55:35,983 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 13:55:35,983 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:55:35,983 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 13:55:35,983 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 13:55:36,003 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:55:36] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 13:55:47,697 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-upload-files
+2025-07-14 13:55:47,714 - poc2_backend_processor_tabbed - INFO - System mapping file provided: SystemMapping.csv
+2025-07-14 13:55:47,714 - poc2_backend_processor_tabbed - INFO - System mapping stored in session: SystemMapping.csv
+2025-07-14 13:55:47,714 - poc2_backend_processor_tabbed - INFO - Session updated - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:56:04,773 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Raw OpenAI response for epics: Epic 1: Charged-off Account Creation and Validation
+Description: This epic covers the initiation and creation of a charged-off account when a charge-off event is triggered. It includes the capture and storage of outstanding account balance at the time of charge-off, recording of the effective charge-off date, the reason for charge-off, and generation of a unique identifier for the charged-off account. It also includes the prevention of the creation of charged-off accounts for non-eligible accoun...
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Split into 6 sections
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Created epic epic_1: Charged-off Account Creation and Validation
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Created epic epic_2: Charged-off Account Segmentation and Processing
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Created epic epic_3: Charged-off Account Data Integration
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Created epic epic_4: PCI DSS Compliance Enforcement
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Created epic epic_5: Account Lifecycle Management
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Parsed 5 epics from response
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Generated 5 epics successfully from PRD and System Mapping
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Session after storing epics - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Stored epics count: 5
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Session ID: pO5OtE1QW-vpwgikN74k7eArIwVmy0Q6Dn-HmUi6Ecc.YV0Ug0I8yerbriam9L2wjmDslQI
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Epics data being returned: [{'id': 'epic_1', 'title': 'Charged-off Account Creation and Validation', 'description': 'This epic covers the initiation and creation of a charged-off account when a charge-off event is triggered. It includes the capture and storage of outstanding account balance at the time of charge-off, recording of the effective charge-off date, the reason for charge-off, and generation of a unique identifier for the charged-off account. It also includes the prevention of the creation of charged-off accounts for non-eligible accounts and maintaining the immutability of core data post-creation. This epic will rely heavily on the application review system, customer data repository, account creation engine, and product configuration database.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'Charged-off Account Segmentation and Processing', 'description': 'This epic involves the segmentation of charged-off accounts into appropriate buckets and states using predefined criteria. Also, it includes the end-of-day batch processing of charged-off account data, updating records, and triggering downstream workflows. This epic will interface with the credit behavior monitor and system components managing operational dashboards and reports.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'Charged-off Account Data Integration', 'description': 'This epic focuses on the secure and reliable provision of charged-off account data to internal credit, risk, and fraud systems for further analysis and action. This will be critical for risk assessment, fraud detection, and credit management workflows. The epic will require integration with the credit decision engine, fraud detection platform, and the customer data repository.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'PCI DSS Compliance Enforcement', 'description': "This epic covers the enforcement of PCI DSS security standards when handling charged-off account data. This includes access controls, data encryption, and audit logging to ensure protection of cardholder data and regulatory compliance. This epic will need to ensure secure handling of data across all systems and will need to integrate with the system's security and compliance modules.", 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'Account Lifecycle Management', 'description': 'This epic focuses on the management of the entire lifecycle of a charged-off account, including the handling of account updates, status changes, and servicing requests. This will involve integration with the customer servicing portal and the product configuration database, and will need to enforce the immutability of core account data.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Epic 0: ID=epic_1, Title=Charged-off Account Creation and Validation, Desc length=647
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Epic 1: ID=epic_2, Title=Charged-off Account Segmentation and Processing, Desc length=381
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Epic 2: ID=epic_3, Title=Charged-off Account Data Integration, Desc length=379
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Epic 3: ID=epic_4, Title=PCI DSS Compliance Enforcement, Desc length=386
+2025-07-14 13:56:04,773 - poc2_backend_processor_tabbed - INFO - Epic 4: ID=epic_5, Title=Account Lifecycle Management, Desc length=337
+2025-07-14 13:56:04,791 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:56:04] "POST /tabbed-upload-files HTTP/1.1" 200 -
+2025-07-14 13:56:08,043 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-select-epic
+2025-07-14 13:56:08,043 - poc2_backend_processor_tabbed - INFO - Received epic_id: epic_2
+2025-07-14 13:56:08,043 - poc2_backend_processor_tabbed - INFO - Session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 13:56:08,043 - poc2_backend_processor_tabbed - INFO - Session epics count: 5
+2025-07-14 13:56:08,043 - poc2_backend_processor_tabbed - INFO - Available epic IDs: ['epic_1', 'epic_2', 'epic_3', 'epic_4', 'epic_5']
+2025-07-14 13:56:08,043 - poc2_backend_processor_tabbed - INFO - All epics data: [{'id': 'epic_1', 'title': 'Charged-off Account Creation and Validation', 'description': 'This epic covers the initiation and creation of a charged-off account when a charge-off event is triggered. It includes the capture and storage of outstanding account balance at the time of charge-off, recording of the effective charge-off date, the reason for charge-off, and generation of a unique identifier for the charged-off account. It also includes the prevention of the creation of charged-off accounts for non-eligible accounts and maintaining the immutability of core data post-creation. This epic will rely heavily on the application review system, customer data repository, account creation engine, and product configuration database.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'Charged-off Account Segmentation and Processing', 'description': 'This epic involves the segmentation of charged-off accounts into appropriate buckets and states using predefined criteria. Also, it includes the end-of-day batch processing of charged-off account data, updating records, and triggering downstream workflows. This epic will interface with the credit behavior monitor and system components managing operational dashboards and reports.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'Charged-off Account Data Integration', 'description': 'This epic focuses on the secure and reliable provision of charged-off account data to internal credit, risk, and fraud systems for further analysis and action. This will be critical for risk assessment, fraud detection, and credit management workflows. The epic will require integration with the credit decision engine, fraud detection platform, and the customer data repository.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'PCI DSS Compliance Enforcement', 'description': "This epic covers the enforcement of PCI DSS security standards when handling charged-off account data. This includes access controls, data encryption, and audit logging to ensure protection of cardholder data and regulatory compliance. This epic will need to ensure secure handling of data across all systems and will need to integrate with the system's security and compliance modules.", 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'Account Lifecycle Management', 'description': 'This epic focuses on the management of the entire lifecycle of a charged-off account, including the handling of account updates, status changes, and servicing requests. This will involve integration with the customer servicing portal and the product configuration database, and will need to enforce the immutability of core account data.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 13:56:37,326 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:56:37,326 - poc2_backend_processor_tabbed - INFO - Parsed 7 user stories from response
+2025-07-14 13:56:37,326 - poc2_backend_processor_tabbed - INFO - Generated 7 user stories for epic: Charged-off Account Segmentation and Processing
+2025-07-14 13:56:37,341 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:56:37] "POST /tabbed-select-epic HTTP/1.1" 200 -
+2025-07-14 13:56:44,639 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-select-story
+2025-07-14 13:56:44,639 - poc2_backend_processor_tabbed - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-14 13:56:44,639 - poc2_backend_processor_tabbed - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-14 13:56:55,584 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:56:55,584 - poc2_backend_processor_tabbed - INFO - Assistant response completed in 10.95 seconds
+2025-07-14 13:56:55,966 - poc2_backend_processor_tabbed - INFO - Token usage - Prompt: 222, Response: 291, Total: 513
+2025-07-14 13:56:55,966 - poc2_backend_processor_tabbed - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-14 13:56:55,968 - poc2_backend_processor_tabbed - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-14 13:57:01,924 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 13:57:01,924 - poc2_backend_processor_tabbed - INFO - Assistant response completed in 5.96 seconds
+2025-07-14 13:57:01,924 - poc2_backend_processor_tabbed - INFO - Token usage - Prompt: 274, Response: 195, Total: 469
+2025-07-14 13:57:01,924 - poc2_backend_processor_tabbed - INFO - Generated details for story: Initiate Charged-Off Account Creation
+2025-07-14 13:57:01,933 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:57:01] "POST /tabbed-select-story HTTP/1.1" 200 -
+2025-07-14 13:57:07,604 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-submit-jira
+2025-07-14 13:57:07,605 - poc2_backend_processor_tabbed - INFO - Submitting Jira ticket for story: Initiate Charged-Off Account Creation
+2025-07-14 13:57:07,605 - poc2_backend_processor_tabbed - INFO - Epic: Charged-off Account Segmentation and Processing
+2025-07-14 13:57:07,605 - poc2_backend_processor_tabbed - INFO - Priority: High
+2025-07-14 13:57:07,605 - poc2_backend_processor_tabbed - INFO - Systems: Account creation engine
+2025-07-14 13:57:09,129 - poc2_backend_processor_tabbed - INFO - Successfully created Jira ticket: SCRUM-63
+2025-07-14 13:57:09,129 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:57:09] "POST /tabbed-submit-jira HTTP/1.1" 200 -
+2025-07-14 13:59:10,401 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 13:59:10] "GET / HTTP/1.1" 200 -
+2025-07-14 14:13:35,708 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 14:13:35,709 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 14:13:39,034 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 14:13:39,035 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 14:13:39,189 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 14:13:39,189 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 14:13:39,229 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 14:13:39,580 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 14:13:39,582 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 14:13:43,830 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 14:13:43,834 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 14:13:43,912 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 14:13:43,918 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 14:16:45,688 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 14:16:45] "GET / HTTP/1.1" 200 -
+2025-07-14 14:17:02,352 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 14:17:02,353 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 14:17:02,359 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 14:17:02,360 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 14:17:02,435 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 14:17:02] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 14:17:19,177 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 14:17:19] "GET / HTTP/1.1" 200 -
+2025-07-14 14:17:41,856 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 14:17:41,857 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 14:17:41,859 - poc2_backend_processor_tabbed - INFO - Has epics in session: True
+2025-07-14 14:17:41,860 - poc2_backend_processor_tabbed - INFO - Epics count: 5
+2025-07-14 14:17:41,882 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 14:17:41] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 14:18:32,059 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-upload-files
+2025-07-14 14:18:32,131 - poc2_backend_processor_tabbed - INFO - System mapping file provided: SystemMapping.csv
+2025-07-14 14:18:32,133 - poc2_backend_processor_tabbed - INFO - System mapping stored in session: SystemMapping.csv
+2025-07-14 14:18:32,135 - poc2_backend_processor_tabbed - INFO - Session updated - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 14:19:01,022 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 14:19:01,034 - poc2_backend_processor_tabbed - INFO - Raw OpenAI response for epics: Epic 1: Charged-Off Account Creation and Management
+Description: This epic focuses on designing and implementing the system functionality required to create and manage charged-off credit card accounts in response to triggering events such as prolonged delinquency, customer death, or bankruptcy. This epic will cover functionalities including the initiation of charged-off account creation upon charge-off events (F1), capturing and storing the outstanding balance at the time of charge-off (F2), rec...
+2025-07-14 14:19:01,034 - poc2_backend_processor_tabbed - INFO - Split into 6 sections
+2025-07-14 14:19:01,035 - poc2_backend_processor_tabbed - INFO - Created epic epic_1: Charged-Off Account Creation and Management
+2025-07-14 14:19:01,035 - poc2_backend_processor_tabbed - INFO - Created epic epic_2: Charged-Off Account Segmentation and Batch Processing
+2025-07-14 14:19:01,037 - poc2_backend_processor_tabbed - INFO - Created epic epic_3: Charged-Off Account Data Integration and Compliance
+2025-07-14 14:19:01,038 - poc2_backend_processor_tabbed - INFO - Created epic epic_4: Charged-Off Account Data Validation and Immutability
+2025-07-14 14:19:01,039 - poc2_backend_processor_tabbed - INFO - Created epic epic_5: Charged-Off Account Exception Handling and Alerting
+2025-07-14 14:19:01,039 - poc2_backend_processor_tabbed - INFO - Parsed 5 epics from response
+2025-07-14 14:19:01,040 - poc2_backend_processor_tabbed - INFO - Generated 5 epics successfully from PRD and System Mapping
+2025-07-14 14:19:01,041 - poc2_backend_processor_tabbed - INFO - Session after storing epics - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 14:19:01,041 - poc2_backend_processor_tabbed - INFO - Stored epics count: 5
+2025-07-14 14:19:01,043 - poc2_backend_processor_tabbed - INFO - Session ID: pO5OtE1QW-vpwgikN74k7eArIwVmy0Q6Dn-HmUi6Ecc.YV0Ug0I8yerbriam9L2wjmDslQI
+2025-07-14 14:19:01,043 - poc2_backend_processor_tabbed - INFO - Epics data being returned: [{'id': 'epic_1', 'title': 'Charged-Off Account Creation and Management', 'description': 'This epic focuses on designing and implementing the system functionality required to create and manage charged-off credit card accounts in response to triggering events such as prolonged delinquency, customer death, or bankruptcy. This epic will cover functionalities including the initiation of charged-off account creation upon charge-off events (F1), capturing and storing the outstanding balance at the time of charge-off (F2), recording the effective charge-off date and reason (F3), and generating a unique 11-digit charged-off account identifier (F4). This epic will involve integration with the Credit decision engine, Fraud detection platform, and Customer data repository systems.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'Charged-Off Account Segmentation and Batch Processing', 'description': 'This epic focuses on the categorization and batch processing of charged-off accounts. It includes functionalities such as segmenting charged-off accounts into appropriate buckets and states based on predefined criteria (F5), and processing charged-off account data in an end-of-day batch to update records and trigger downstream workflows (F6). This will involve the application review system and the account creation engine.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'Charged-Off Account Data Integration and Compliance', 'description': 'This epic will cover the integration of charged-off account data with internal credit, risk, and fraud systems for further analysis and action (F7), while ensuring PCI DSS compliance in handling charged-off account data (F8). This epic will require integration with the Fraud detection platform, Credit bureau interface, and the application review system.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'Charged-Off Account Data Validation and Immutability', 'description': 'This epic focuses on ensuring the integrity and accuracy of charged-off account data. It will cover functionalities like preventing the creation of charged-off accounts for non-eligible accounts (F9) and maintaining the immutability of charged-off account core data post-creation (F10). This will involve working with the Account creation engine and the Customer data repository systems.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'Charged-Off Account Exception Handling and Alerting', 'description': 'This epic will handle exceptions and alerting for charged-off accounts. It will cover error handling and alerting functionality in the scenarios of non-compliance events, system failures during account creation, and unauthorized modification attempts. We will need to integrate with the Customer acquisition platform, the Credit decision engine, and the Fraud detection platform.', 'priority': 'Low', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 14:19:01,044 - poc2_backend_processor_tabbed - INFO - Epic 0: ID=epic_1, Title=Charged-Off Account Creation and Management, Desc length=690
+2025-07-14 14:19:01,045 - poc2_backend_processor_tabbed - INFO - Epic 1: ID=epic_2, Title=Charged-Off Account Segmentation and Batch Processing, Desc length=425
+2025-07-14 14:19:01,045 - poc2_backend_processor_tabbed - INFO - Epic 2: ID=epic_3, Title=Charged-Off Account Data Integration and Compliance, Desc length=355
+2025-07-14 14:19:01,045 - poc2_backend_processor_tabbed - INFO - Epic 3: ID=epic_4, Title=Charged-Off Account Data Validation and Immutability, Desc length=387
+2025-07-14 14:19:01,046 - poc2_backend_processor_tabbed - INFO - Epic 4: ID=epic_5, Title=Charged-Off Account Exception Handling and Alerting, Desc length=379
+2025-07-14 14:19:01,061 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 14:19:01] "POST /tabbed-upload-files HTTP/1.1" 200 -
+2025-07-14 14:19:21,684 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-select-epic
+2025-07-14 14:19:21,685 - poc2_backend_processor_tabbed - INFO - Received epic_id: epic_3
+2025-07-14 14:19:21,686 - poc2_backend_processor_tabbed - INFO - Session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics', 'current_epic', 'generated_user_stories', 'current_user_story', 'story_details']
+2025-07-14 14:19:21,687 - poc2_backend_processor_tabbed - INFO - Session epics count: 5
+2025-07-14 14:19:21,688 - poc2_backend_processor_tabbed - INFO - Available epic IDs: ['epic_1', 'epic_2', 'epic_3', 'epic_4', 'epic_5']
+2025-07-14 14:19:21,689 - poc2_backend_processor_tabbed - INFO - All epics data: [{'id': 'epic_1', 'title': 'Charged-Off Account Creation and Management', 'description': 'This epic focuses on designing and implementing the system functionality required to create and manage charged-off credit card accounts in response to triggering events such as prolonged delinquency, customer death, or bankruptcy. This epic will cover functionalities including the initiation of charged-off account creation upon charge-off events (F1), capturing and storing the outstanding balance at the time of charge-off (F2), recording the effective charge-off date and reason (F3), and generating a unique 11-digit charged-off account identifier (F4). This epic will involve integration with the Credit decision engine, Fraud detection platform, and Customer data repository systems.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'Charged-Off Account Segmentation and Batch Processing', 'description': 'This epic focuses on the categorization and batch processing of charged-off accounts. It includes functionalities such as segmenting charged-off accounts into appropriate buckets and states based on predefined criteria (F5), and processing charged-off account data in an end-of-day batch to update records and trigger downstream workflows (F6). This will involve the application review system and the account creation engine.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'Charged-Off Account Data Integration and Compliance', 'description': 'This epic will cover the integration of charged-off account data with internal credit, risk, and fraud systems for further analysis and action (F7), while ensuring PCI DSS compliance in handling charged-off account data (F8). This epic will require integration with the Fraud detection platform, Credit bureau interface, and the application review system.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'Charged-Off Account Data Validation and Immutability', 'description': 'This epic focuses on ensuring the integrity and accuracy of charged-off account data. It will cover functionalities like preventing the creation of charged-off accounts for non-eligible accounts (F9) and maintaining the immutability of charged-off account core data post-creation (F10). This will involve working with the Account creation engine and the Customer data repository systems.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'Charged-Off Account Exception Handling and Alerting', 'description': 'This epic will handle exceptions and alerting for charged-off accounts. It will cover error handling and alerting functionality in the scenarios of non-compliance events, system failures during account creation, and unauthorized modification attempts. We will need to integrate with the Customer acquisition platform, the Credit decision engine, and the Fraud detection platform.', 'priority': 'Low', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 14:20:15,034 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 14:20:15,046 - poc2_backend_processor_tabbed - INFO - Parsed 8 user stories from response
+2025-07-14 14:20:15,048 - poc2_backend_processor_tabbed - INFO - Generated 8 user stories for epic: Charged-Off Account Data Integration and Compliance
+2025-07-14 14:20:15,081 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 14:20:15] "POST /tabbed-select-epic HTTP/1.1" 200 -
+2025-07-14 14:20:36,475 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-select-story
+2025-07-14 14:20:36,476 - poc2_backend_processor_tabbed - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-14 14:20:36,478 - poc2_backend_processor_tabbed - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-14 14:20:47,060 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 14:20:47,065 - poc2_backend_processor_tabbed - INFO - Assistant response completed in 10.59 seconds
+2025-07-14 14:20:48,378 - poc2_backend_processor_tabbed - INFO - Token usage - Prompt: 215, Response: 397, Total: 612
+2025-07-14 14:20:48,379 - poc2_backend_processor_tabbed - INFO - Starting optimized assistant interaction: poc2_traceability_agent
+2025-07-14 14:20:48,384 - poc2_backend_processor_tabbed - INFO - Loaded system instructions from agents\poc2_traceability_agent
+2025-07-14 14:20:53,489 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 14:20:53,495 - poc2_backend_processor_tabbed - INFO - Assistant response completed in 5.12 seconds
+2025-07-14 14:20:53,499 - poc2_backend_processor_tabbed - INFO - Token usage - Prompt: 258, Response: 225, Total: 483
+2025-07-14 14:20:53,502 - poc2_backend_processor_tabbed - INFO - Generated details for story: Generate Unique Identifiers for Charged-Off Accounts
+2025-07-14 14:20:53,560 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 14:20:53] "POST /tabbed-select-story HTTP/1.1" 200 -
+2025-07-14 14:21:16,788 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-submit-jira
+2025-07-14 14:21:16,789 - poc2_backend_processor_tabbed - INFO - Submitting Jira ticket for story: Generate Unique Identifiers for Charged-Off Accounts
+2025-07-14 14:21:16,789 - poc2_backend_processor_tabbed - INFO - Epic: Charged-Off Account Data Integration and Compliance
+2025-07-14 14:21:16,790 - poc2_backend_processor_tabbed - INFO - Priority: High
+2025-07-14 14:21:16,790 - poc2_backend_processor_tabbed - INFO - Systems: Account creation engine
+2025-07-14 14:21:18,964 - poc2_backend_processor_tabbed - INFO - Successfully created Jira ticket: SCRUM-64
+2025-07-14 14:21:18,990 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 14:21:18] "POST /tabbed-submit-jira HTTP/1.1" 200 -
+2025-07-14 16:15:23,801 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:15:23,802 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:15:24,092 - __main__ - ERROR - Import error: No module named 'flask_session'
+2025-07-14 16:15:24,092 - __main__ - ERROR - Make sure all dependencies are installed: pip install -r requirements.txt
+2025-07-14 16:16:31,957 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:16:31,957 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:16:32,226 - __main__ - ERROR - Import error: No module named 'flask_session'
+2025-07-14 16:16:32,227 - __main__ - ERROR - Make sure all dependencies are installed: pip install -r requirements.txt
+2025-07-14 16:16:48,266 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:16:48,267 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:16:48,501 - __main__ - ERROR - Import error: No module named 'flask_session'
+2025-07-14 16:16:48,501 - __main__ - ERROR - Make sure all dependencies are installed: pip install -r requirements.txt
+2025-07-14 16:18:42,172 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:18:42,187 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:18:42,420 - __main__ - ERROR - Import error: No module named 'flask_session'
+2025-07-14 16:18:42,420 - __main__ - ERROR - Make sure all dependencies are installed: pip install -r requirements.txt
+2025-07-14 16:19:13,491 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:19:13,491 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:19:13,761 - __main__ - ERROR - Import error: No module named 'flask_session'
+2025-07-14 16:19:13,761 - __main__ - ERROR - Make sure all dependencies are installed: pip install -r requirements.txt
+2025-07-14 16:19:23,689 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:19:23,689 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:19:24,752 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 16:19:24,753 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 16:19:24,792 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 16:19:24,792 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 16:19:24,805 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 16:19:24,919 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:19:24,919 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:19:25,935 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 16:19:25,936 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 16:19:25,955 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 16:19:25,956 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 16:19:55,743 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 16:19:55] "GET / HTTP/1.1" 200 -
+2025-07-14 16:19:56,345 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\launch_tabbed_workbench.py', reloading
+2025-07-14 16:19:56,346 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product-launch_tabbed_workbench.py', reloading
+2025-07-14 16:19:57,042 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 16:26:37,626 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:26:37,626 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:26:38,663 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 16:26:38,664 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 16:26:38,693 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 16:26:38,693 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 16:26:38,711 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 16:26:38,826 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:26:38,827 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:26:39,835 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 16:26:39,836 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 16:26:39,864 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 16:26:39,866 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 16:26:45,385 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 16:26:45] "GET / HTTP/1.1" 200 -
+2025-07-14 16:26:50,505 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 16:26:50,506 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 16:26:50,506 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 16:26:50,507 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 16:26:50,530 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 16:26:50] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 16:30:37,232 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 16:30:37] "GET / HTTP/1.1" 200 -
+2025-07-14 16:30:39,059 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 16:30:39,059 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 16:30:39,060 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 16:30:39,060 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 16:30:39,062 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 16:30:39] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 16:38:03,618 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\poc2_backend_processor_optimized.py', reloading
+2025-07-14 16:38:04,645 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 16:38:04,785 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:38:04,786 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:38:06,031 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 16:38:06,031 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 16:38:06,050 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 16:38:06,063 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 16:38:37,828 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:38:37,829 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:38:38,999 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 16:38:39,000 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 16:38:39,038 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 16:38:39,038 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 16:38:39,054 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 16:38:39,164 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 16:38:39,165 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 16:38:40,206 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 16:38:40,207 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 16:38:40,226 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 16:38:40,229 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:07:02,138 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:07:02] "GET / HTTP/1.1" 200 -
+2025-07-14 18:07:05,153 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 18:07:05,153 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 18:07:05,154 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 18:07:05,154 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 18:07:05,167 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:07:05] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 18:07:32,746 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:07:32] "[33mGET /page1_input HTTP/1.1[0m" 404 -
+2025-07-14 18:08:42,047 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:08:42] "GET / HTTP/1.1" 200 -
+2025-07-14 18:08:43,265 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 18:08:43,265 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 18:08:43,265 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 18:08:43,265 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 18:08:43,267 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:08:43] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 18:08:44,733 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:08:44] "[33mGET /page1_input HTTP/1.1[0m" 404 -
+2025-07-14 18:09:32,202 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:09:32,203 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:09:34,080 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:09:34,082 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:09:34,242 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 18:09:34,243 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 18:09:34,290 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:09:34,684 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:09:34,684 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:09:39,045 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:09:39,049 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:09:39,173 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:09:39,183 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:09:39,340 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:09:39] "GET / HTTP/1.1" 200 -
+2025-07-14 18:09:41,168 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 18:09:41,169 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 18:09:41,169 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 18:09:41,169 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 18:09:41,185 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:09:41] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 18:09:41,812 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\flask_limiter\\extension.py', reloading
+2025-07-14 18:09:42,799 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:09:43,006 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:09:43,007 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:09:45,214 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:09:45,214 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:09:45,253 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:09:45,258 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:09:45,341 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:09:45] "[33mGET /http://127.0.0.1:5001/page1 HTTP/1.1[0m" 404 -
+2025-07-14 18:10:06,358 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\poc2_backend_processor_optimized.py', reloading
+2025-07-14 18:10:07,361 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:10:07,605 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:10:07,605 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:10:11,493 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:10:11,493 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:10:11,587 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:10:11,599 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:10:33,821 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:10:33] "GET / HTTP/1.1" 200 -
+2025-07-14 18:12:26,829 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:12:26,830 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:12:27,927 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:12:27,928 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:12:27,965 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 18:12:27,965 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 18:12:27,981 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:12:28,097 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:12:28,097 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:12:29,177 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:12:29,178 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:12:29,199 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:12:29,202 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:12:38,729 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:12:38] "GET / HTTP/1.1" 200 -
+2025-07-14 18:12:44,285 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:12:44] "GET / HTTP/1.1" 200 -
+2025-07-14 18:12:46,212 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 18:12:46,212 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 18:12:46,212 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 18:12:46,213 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 18:12:46,230 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:12:46] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 18:15:45,116 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\werkzeug\\sansio\\response.py', reloading
+2025-07-14 18:15:45,766 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:15:45,897 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:15:45,898 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:15:47,963 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:15:47,964 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:15:48,020 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:15:48,025 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:20:30,732 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 18:20:30,732 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 18:20:30,733 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 18:20:30,733 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 18:20:30,746 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:20:30] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 18:22:56,390 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:22:56,674 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:22:56,791 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:22:56,791 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:22:58,123 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:22:58,124 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:22:58,146 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:22:58,146 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:29:41,303 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\poc2_backend_processor_tabbed.py', reloading
+2025-07-14 18:29:41,684 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:29:42,345 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:29:42,346 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:29:46,480 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:29:46,480 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:29:46,524 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:29:46,542 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:29:53,564 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\vector_db_api.py', reloading
+2025-07-14 18:29:53,754 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\vector_db_api.py', reloading
+2025-07-14 18:29:53,755 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\vector_db_api.py', reloading
+2025-07-14 18:29:53,755 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\vector_db_api.py', reloading
+2025-07-14 18:29:53,757 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\vector_db_api.py', reloading
+2025-07-14 18:29:53,759 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\vector_db_api_20250714182953.py', reloading
+2025-07-14 18:29:53,768 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\vector_db_api_20250714182953.py', reloading
+2025-07-14 18:29:54,121 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:29:54,395 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:29:54,395 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:30:00,684 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:30:00,684 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:30:00,722 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:30:00,736 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:30:45,776 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:30:45,777 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:30:45,778 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:30:45,780 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:30:45,796 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714183045.py', reloading
+2025-07-14 18:30:45,799 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714183045.py', reloading
+2025-07-14 18:30:46,781 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:30:46,997 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:30:46,997 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:30:48,699 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:30:48,700 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:30:48,718 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:30:48,728 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:30:54,159 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\vector_db_api.py', reloading
+2025-07-14 18:30:54,161 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\vector_db_api.py', reloading
+2025-07-14 18:30:54,162 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\vector_db_api.py', reloading
+2025-07-14 18:30:54,163 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:30:54,164 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:30:54,165 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:30:54,166 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\vector_db_api_20250714183054.py', reloading
+2025-07-14 18:30:54,168 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\vector_db_api_20250714183054.py', reloading
+2025-07-14 18:30:54,194 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714183054.py', reloading
+2025-07-14 18:30:54,196 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714183054.py', reloading
+2025-07-14 18:30:55,138 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:30:55,260 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:30:55,260 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:30:56,465 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:30:56,465 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:30:56,482 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:30:56,492 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:32:29,103 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:32:29,103 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:32:30,245 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:32:30,245 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:32:30,295 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 18:32:30,295 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 18:32:30,310 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:32:30,426 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:32:30,427 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:32:31,519 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:32:31,519 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:32:31,543 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:32:31,546 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:32:50,384 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:32:50] "GET / HTTP/1.1" 200 -
+2025-07-14 18:32:59,662 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:32:59] "GET / HTTP/1.1" 200 -
+2025-07-14 18:33:07,008 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 18:33:07,008 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 18:33:07,009 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 18:33:07,009 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 18:33:07,030 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:33:07] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 18:35:32,879 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:35:33,066 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:35:33,207 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:35:33,208 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:35:34,560 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:35:34,561 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:35:34,583 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:35:34,587 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:37:03,101 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:37:03,102 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:37:03,102 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:37:03,102 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:37:03,319 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714183703.py', reloading
+2025-07-14 18:37:03,323 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714183703.py', reloading
+2025-07-14 18:37:03,957 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:37:04,140 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:37:04,140 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:37:05,774 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:37:05,777 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:37:05,797 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:37:05,806 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:37:38,212 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:37:38,213 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:37:38,214 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:37:38,214 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:37:38,216 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714183738.py', reloading
+2025-07-14 18:37:38,224 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714183738.py', reloading
+2025-07-14 18:37:39,359 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:37:39,476 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:37:39,476 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:37:40,720 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:37:40,721 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:37:40,741 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:37:40,744 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:39:40,400 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:39:40,408 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:39:40,409 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:39:40,410 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:39:40,662 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:39:40,903 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:39:40,903 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:39:42,928 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:39:42,929 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:39:42,963 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:39:42,966 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 18:41:04,015 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 18:41:04,015 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 18:41:04,015 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 18:41:04,015 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 18:41:04,041 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:41:04] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 18:41:06,741 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:41:06] "GET / HTTP/1.1" 200 -
+2025-07-14 18:41:10,001 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 18:41:10,001 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 18:41:10,002 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 18:41:10,002 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 18:41:10,005 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 18:41:10] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 18:43:56,274 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:43:56,275 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:43:56,275 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:43:56,393 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714184356.py', reloading
+2025-07-14 18:43:56,396 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714184356.py', reloading
+2025-07-14 18:43:56,439 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:43:56,439 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:43:56,453 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 18:43:56,687 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 18:43:56,952 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 18:43:56,952 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 18:43:59,268 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 18:43:59,270 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 18:43:59,303 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 18:43:59,303 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:24:34,583 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:24:35,122 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:24:35,291 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:24:35,291 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:24:37,258 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:24:37,260 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:24:37,299 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:24:37,299 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:24:41,500 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:24:41,500 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:24:43,337 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:24:43,337 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:24:43,409 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 21:24:43,409 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 21:24:43,432 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:24:43,590 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:24:43,590 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:24:45,612 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:24:45,619 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:24:45,659 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:24:45,667 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:25:06,226 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 21:25:06] "GET / HTTP/1.1" 200 -
+2025-07-14 21:25:08,397 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 21:25:08,397 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 21:25:08,397 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 21:25:08,397 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 21:25:08,422 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 21:25:08] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 21:27:43,072 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\werkzeug\\sansio\\response.py', reloading
+2025-07-14 21:27:44,086 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:27:44,257 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:27:44,257 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:27:45,901 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:27:45,901 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:27:45,940 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:27:45,942 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:28:37,622 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\poc2_backend_processor_optimized.py', reloading
+2025-07-14 21:28:38,821 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:28:38,989 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:28:38,989 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:28:40,833 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:28:40,833 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:28:40,876 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:28:40,879 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:32:01,660 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:32:01,679 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:32:01,679 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:32:01,679 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:32:01,874 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:32:02,058 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:32:02,059 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:32:04,573 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:32:04,582 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:32:04,622 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:32:04,622 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:33:22,265 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:33:22,278 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:33:22,280 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:33:22,283 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:33:22,286 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714213322.py', reloading
+2025-07-14 21:33:22,290 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714213322.py', reloading
+2025-07-14 21:33:22,793 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:33:22,947 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:33:22,947 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:33:24,785 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:33:24,787 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:33:24,827 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:33:24,833 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:33:29,717 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\connection.py', reloading
+2025-07-14 21:33:29,719 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\commands\\core.py', reloading
+2025-07-14 21:33:29,723 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\client.py', reloading
+2025-07-14 21:33:29,731 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\utils.py', reloading
+2025-07-14 21:33:29,737 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\retry.py', reloading
+2025-07-14 21:33:29,751 - werkzeug - INFO -  * Detected change in 'C:\\Python311\\Lib\\socket.py', reloading
+2025-07-14 21:33:30,360 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:33:30,485 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:33:30,485 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:33:32,021 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:33:32,022 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:33:32,054 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:33:32,058 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:34:28,052 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 21:34:28] "GET / HTTP/1.1" 200 -
+2025-07-14 21:34:29,684 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 21:34:29,685 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 21:34:29,685 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 21:34:29,685 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 21:34:29,702 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 21:34:29] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 21:44:28,886 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:44:28,886 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:44:30,548 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:44:30,552 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:44:30,604 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 21:44:30,604 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 21:44:30,626 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:44:30,785 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:44:30,785 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:44:32,576 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:44:32,576 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:44:32,607 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:44:32,613 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:44:37,120 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:44:38,133 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:44:38,318 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:44:38,318 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:44:40,094 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:44:40,095 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:44:40,119 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:44:40,126 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:46:45,144 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:46:45,144 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:46:45,148 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:46:45,152 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714214645.py', reloading
+2025-07-14 21:46:45,152 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714214645.py', reloading
+2025-07-14 21:46:45,876 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:46:46,030 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:46:46,030 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:46:47,582 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:46:47,586 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:46:47,624 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:46:47,628 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:48:35,040 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:48:35,053 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:48:35,054 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:48:35,057 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:48:35,066 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714214835.py', reloading
+2025-07-14 21:48:35,068 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714214835.py', reloading
+2025-07-14 21:48:36,011 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:48:36,168 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:48:36,168 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:48:37,970 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:48:37,971 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:48:38,007 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:48:38,016 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:49:12,460 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:49:12,460 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:49:12,460 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:49:12,464 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:49:12,469 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714214912.py', reloading
+2025-07-14 21:49:12,469 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714214912.py', reloading
+2025-07-14 21:49:12,771 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:49:12,934 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:49:12,935 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:49:14,979 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:49:14,979 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:49:15,004 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:49:15,012 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:52:38,304 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:52:38,323 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:52:38,325 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:52:38,684 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714215238.py', reloading
+2025-07-14 21:52:38,691 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714215238.py', reloading
+2025-07-14 21:52:39,257 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:52:39,562 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:52:39,562 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:52:41,128 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:52:41,132 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:52:41,188 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:52:41,190 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:52:58,915 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:52:58,929 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:52:58,934 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:52:58,935 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714215258.py', reloading
+2025-07-14 21:52:58,943 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714215258.py', reloading
+2025-07-14 21:52:59,410 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:52:59,566 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:52:59,566 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:53:01,442 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:53:01,442 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:53:01,469 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:53:01,472 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:53:19,822 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:53:19,844 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:53:19,844 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:53:19,850 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:53:19,852 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714215319.py', reloading
+2025-07-14 21:53:19,863 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714215319.py', reloading
+2025-07-14 21:53:20,549 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:53:20,687 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:53:20,687 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:53:22,411 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:53:22,414 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:53:22,449 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:53:22,456 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:53:27,340 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:53:27,356 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:53:27,362 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:53:27,376 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714215327.py', reloading
+2025-07-14 21:53:27,376 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714215327.py', reloading
+2025-07-14 21:53:27,929 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:53:28,106 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:53:28,106 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:53:29,699 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:53:29,699 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:53:29,736 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:53:29,744 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:54:08,721 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:54:09,748 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:54:09,919 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:54:09,919 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:54:11,683 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:54:11,685 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:54:11,714 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:54:11,723 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:54:41,790 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:54:41,790 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:54:41,790 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:54:41,793 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:54:42,301 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:54:42,482 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:54:42,484 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:54:44,239 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:54:44,242 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:54:44,275 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:54:44,275 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:54:51,442 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:54:51,442 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:54:51,445 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:54:51,445 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:54:51,952 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:54:52,240 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:54:52,245 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:54:53,995 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:54:53,997 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:54:54,014 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:54:54,020 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:57:56,566 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:57:56,566 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:57:56,569 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:57:57,004 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:57:57,304 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:57:57,304 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:58:00,024 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:58:00,024 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:58:00,073 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:58:00,084 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:58:09,469 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:58:10,408 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:58:10,879 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:58:10,884 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:58:18,328 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:58:18,378 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:58:18,534 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:58:18,545 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:58:19,142 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\flask\\__init__.py', reloading
+2025-07-14 21:58:19,291 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\flask\\sansio\\scaffold.py', reloading
+2025-07-14 21:58:19,705 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\typing.py', reloading
+2025-07-14 21:58:19,732 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\commands\\sentinel.py', reloading
+2025-07-14 21:58:19,802 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\backoff.py', reloading
+2025-07-14 21:58:19,871 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\exceptions.py', reloading
+2025-07-14 21:58:19,988 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\credentials.py', reloading
+2025-07-14 21:58:20,013 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\cache.py', reloading
+2025-07-14 21:58:20,021 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\venv\\Lib\\site-packages\\redis\\event.py', reloading
+2025-07-14 21:58:20,395 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:58:20,879 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:58:20,887 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:58:26,001 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:58:26,001 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:58:26,140 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:58:26,147 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:58:26,350 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\test_three_section_system.py', reloading
+2025-07-14 21:58:26,365 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\troubleshoot_three_section.py', reloading
+2025-07-14 21:58:26,378 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\use_mcp_agent.py', reloading
+2025-07-14 21:58:26,440 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\older-py\\crewai_app.py', reloading
+2025-07-14 21:58:26,492 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\older-py\\langgraph_app.py', reloading
+2025-07-14 21:58:26,544 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\older-py\\openai-app-v2.py', reloading
+2025-07-14 21:58:26,566 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\older-py\\openai-app-v3.py', reloading
+2025-07-14 21:58:26,575 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\older-py\\openai-app.py', reloading
+2025-07-14 21:58:26,585 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\older-py\\prd-openai-app-v1.py', reloading
+2025-07-14 21:58:26,599 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\tests\\llm_eval_tests.py', reloading
+2025-07-14 21:58:26,681 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\utils\\text_processing.py', reloading
+2025-07-14 21:58:27,845 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:58:28,256 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:58:28,258 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:58:33,402 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:58:33,442 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:58:33,582 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:58:33,596 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:59:45,923 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:59:45,923 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:59:45,923 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 21:59:45,944 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714215945.py', reloading
+2025-07-14 21:59:45,951 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\.history\\product_workbench_requirement_definition_20250714215945.py', reloading
+2025-07-14 21:59:46,619 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:59:46,785 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:59:46,786 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:59:48,532 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:59:48,534 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:59:48,565 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:59:48,569 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 21:59:55,952 - werkzeug - INFO -  * Detected change in 'C:\\Python311\\Lib\\logging\\__init__.py', reloading
+2025-07-14 21:59:56,178 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 21:59:56,418 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 21:59:56,418 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 21:59:58,781 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 21:59:58,781 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 21:59:58,809 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 21:59:58,820 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 22:00:55,133 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 22:00:56,495 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 22:00:57,075 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 22:00:57,099 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 22:01:01,842 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 22:01:01,942 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 22:01:02,200 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 22:01:02,210 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 22:01:27,079 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 22:01:27,079 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 22:01:28,666 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 22:01:28,668 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 22:01:28,723 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 22:01:28,723 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 22:01:28,735 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 22:01:28,899 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 22:01:28,901 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 22:01:30,620 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 22:01:30,620 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 22:01:30,655 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 22:01:30,656 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 22:02:10,883 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 22:02:10,896 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 22:02:12,423 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 22:02:12,423 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 22:02:12,484 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-07-14 22:02:12,484 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-14 22:02:12,499 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 22:02:12,656 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 22:02:12,656 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 22:02:14,448 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 22:02:14,448 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 22:02:14,479 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 22:02:14,484 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 22:03:17,256 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 22:03:17,743 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 22:03:17,908 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 22:03:17,908 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 22:03:19,720 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 22:03:19,727 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 22:03:19,760 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 22:03:19,765 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 22:03:55,597 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 22:03:55,599 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 22:03:55,600 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 22:03:56,576 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 22:03:56,756 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 22:03:56,756 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 22:03:58,090 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 22:03:58,090 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 22:03:58,122 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 22:03:58,124 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 22:04:44,526 - werkzeug - INFO -  * Detected change in 'C:\\Python311\\Lib\\concurrent\\futures\\__init__.py', reloading
+2025-07-14 22:04:45,436 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 22:04:45,593 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 22:04:45,593 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 22:04:47,118 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 22:04:47,119 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 22:04:47,144 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 22:04:47,145 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 22:05:10,813 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 22:05:11,411 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 22:05:11,592 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 22:05:11,592 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 22:05:13,402 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 22:05:13,408 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 22:05:13,440 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 22:05:13,442 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 22:05:37,136 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 22:05:37,136 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 22:05:37,148 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 22:05:37,150 - werkzeug - INFO -  * Detected change in 'C:\\Users\\73042C\\luke\\openai-assistant-clean\\product_workbench_requirement_definition.py', reloading
+2025-07-14 22:05:37,769 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-14 22:05:37,941 - __main__ - INFO - Tabbed Workbench Launcher started
+2025-07-14 22:05:37,941 - __main__ - INFO - Importing tabbed backend...
+2025-07-14 22:05:39,356 - __main__ - INFO - Tabbed backend module imported successfully
+2025-07-14 22:05:39,360 - __main__ - INFO - Starting Flask server on port 5002
+2025-07-14 22:05:39,393 - werkzeug - WARNING -  * Debugger is active!
+2025-07-14 22:05:39,399 - werkzeug - INFO -  * Debugger PIN: 181-323-877
+2025-07-14 22:05:57,150 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 22:05:57] "GET / HTTP/1.1" 200 -
+2025-07-14 22:05:58,494 - poc2_backend_processor_tabbed - INFO - GET request to /tabbed-layout
+2025-07-14 22:05:58,495 - poc2_backend_processor_tabbed - INFO - Current session keys: ['_permanent']
+2025-07-14 22:05:58,496 - poc2_backend_processor_tabbed - INFO - Has epics in session: False
+2025-07-14 22:05:58,496 - poc2_backend_processor_tabbed - INFO - Epics count: 0
+2025-07-14 22:05:58,511 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 22:05:58] "GET /tabbed-layout HTTP/1.1" 200 -
+2025-07-14 22:06:03,190 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 22:06:03] "GET /api/vector-db-prds HTTP/1.1" 200 -
+2025-07-14 22:06:18,955 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 22:06:18] "GET /api/vector-db-prds HTTP/1.1" 200 -
+2025-07-14 22:06:50,786 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-upload-files
+2025-07-14 22:06:50,837 - poc2_backend_processor_tabbed - INFO - System mapping file provided: SystemMapping.csv
+2025-07-14 22:06:50,837 - poc2_backend_processor_tabbed - INFO - System mapping stored in session: SystemMapping.csv
+2025-07-14 22:06:50,844 - poc2_backend_processor_tabbed - INFO - Session updated - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded']
+2025-07-14 22:07:08,175 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 22:07:08,192 - poc2_backend_processor_tabbed - INFO - Raw OpenAI response for epics: Epic 1: Establishing Account Charge-Off Initiation Process
+Description: This epic covers the development and implementation of a process to initiate the creation of a charged-off account when a charge-off event is triggered. This will involve integrating the credit card core platform with the internal credit, risk, and fraud systems. The system will need to flag the account for charged-off account creation, extract relevant account data, and generate a charged-off account record. The account eli...
+2025-07-14 22:07:08,197 - poc2_backend_processor_tabbed - INFO - Split into 6 sections
+2025-07-14 22:07:08,198 - poc2_backend_processor_tabbed - INFO - Created epic epic_1: Establishing Account Charge-Off Initiation Process
+2025-07-14 22:07:08,198 - poc2_backend_processor_tabbed - INFO - Created epic epic_2: Charged-Off Account Data Management
+2025-07-14 22:07:08,200 - poc2_backend_processor_tabbed - INFO - Created epic epic_3: Charged-Off Account Segmentation and Processing
+2025-07-14 22:07:08,200 - poc2_backend_processor_tabbed - INFO - Created epic epic_4: Charged-Off Account Data Integration and Compliance
+2025-07-14 22:07:08,201 - poc2_backend_processor_tabbed - INFO - Created epic epic_5: Charged-Off Account Servicing and Reporting
+2025-07-14 22:07:08,201 - poc2_backend_processor_tabbed - INFO - Parsed 5 epics from response
+2025-07-14 22:07:08,201 - poc2_backend_processor_tabbed - INFO - Generated 5 epics successfully from PRD and System Mapping
+2025-07-14 22:07:08,201 - poc2_backend_processor_tabbed - INFO - Session after storing epics - Keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics']
+2025-07-14 22:07:08,201 - poc2_backend_processor_tabbed - INFO - Stored epics count: 5
+2025-07-14 22:07:08,204 - poc2_backend_processor_tabbed - INFO - Session ID: .eJx1Vk1v4zYQ_SsDX_YiFU022SbpaevFFgFaYNG06CVAQJEjaWqK1PIjrlr0v3eGkmzXcZGLLJHD9968eczfm5cRw6AcurR5SCFjtTEqqZcdTpuHzd3N_Z36YG7r23tzU9-YO1Xf3b-_q2-vsH3_4ebq6rvmflNtWlQpB4y84zl9nn88wDbwE4KCNniXGu93oHsVOjS1b1tQWvvs0nN4ds-J__L1t9fX8GtPEZZ6wI8KYm4iJvAtpB6hCV4ZDPBure7WQu9Aq1E1ZClN_NoAOtVYjGVbm60FSy3qSVsEJqw6HJi01L2AKsKeUk-ubE6BjwQd0FAC1D5OMeFQQZPJcgEHg2dIDrRnzPPHeEbrMYEaR0sMZ9-jO4Et1V2kRN5FUWqAznsDMTEFch0k_x98_D7lCCajfEmBug5DZJF0DyrCGLz1jheDQUvua0anpwp0jskPLJth0foKfIBGuV3IY9LTmw4g-OYP1IleSwv4HIMtOSyq0jDaWblZV6cFuiqqB_yaiWWSLchIG0uRYV0S-FTfU_nItUFFNqIWB1yAxgw1xsgLtc2G9WRzJBEqj6XYaf1F5hzEKT6ng6iNsspplrBXiVG3ltnORlFD2e33aC600EYvLitmL8uxbRehTDljNdNMVVoxA5G1bNjIZmmQebOO6ZuzAz7x3HEPo9fEtcxx40qJezHmoukscczj6ENiBcIraeGlBAt7CWPF3JWdEunyaMDznKu5VauGeO7S333YgQlMJ4jAEDXvAnXSB1l5qxv4iaewlF3bgXJEyypMa7fhtNuSKW-K_IgOS2uyI3YqkGFbUUtyessWRSWmPsbEIVAunXBQi20UuCesSic2jTKneoflYW67KLLsknFCTrAOfRfU2Evo_eZI5H-ST5G_cbd4fIJ8-kyOCxBL-FQ0X76nkp6bEyV_4GgoTmMHkqt7n-MhQbQKZjY793Dwr1h4CHSLndITP1Iw9agCj9QcJ2d9-kiD1BaNSrD5PQsZexqLAedTKMYsZI9cj6FXHS1TASZ9Vv5p9lUUx9o60YCHanJA41npVwopsw7FA_0USfMPYXbuqa0vblpQcSaJ_Owak0uPUh4ZYU69D_RX8WesykjPIbOYN6AtI_F_xv25ULsU9Q_AN4ItREc1LSWlYzzBrEOLAifgXpBXYCiOOcmrk_iEPY9Fa_1-ATP4N8G09c6VCCku5ATLplooLwQo7tarQXLaIZo3CfOLLJLV2nPIUtFblUxM2MmgmO8LO77eLHVujYgv20f49PQ0XxnCoxgjIufeehUeC54Dtz6b2qkSYbLy45fHuqUQ0-wui3_S6ZWqYrHAiojbdR5iGGdo7O1WzG5ROUZckBbdSwBxO7m-aCHoltupbpWerzxvS4eBp8t6vuHMC7n13xMmlnzgcdvOltoy5c0__wIEbS9z.aHWwrg.Xn_Q63ni6mwL4Dk4f1dTM_azfd0
+2025-07-14 22:07:08,204 - poc2_backend_processor_tabbed - INFO - Epics data being returned: [{'id': 'epic_1', 'title': 'Establishing Account Charge-Off Initiation Process', 'description': 'This epic covers the development and implementation of a process to initiate the creation of a charged-off account when a charge-off event is triggered. This will involve integrating the credit card core platform with the internal credit, risk, and fraud systems. The system will need to flag the account for charged-off account creation, extract relevant account data, and generate a charged-off account record. The account eligibility validation is also included in this epic to ensure that only the accounts meeting charge-off criteria get processed.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'Charged-Off Account Data Management', 'description': 'This epic focuses on accurately capturing and storing critical data points during the creation of a charged-off account, including the outstanding balance at the time of charge-off, the effective charge-off date, and the reason for charge-off. The system will also need to generate a unique 11-digit numerical identifier for each charged-off account created. The immutability of core data post-creation is maintained in this epic to ensure data integrity and compliance.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'Charged-Off Account Segmentation and Processing', 'description': 'This epic involves the segmentation of charged-off accounts into appropriate buckets and states based on predefined criteria. It also includes the development of an end-of-day batch process to aggregate all charged-off account creations and updates, finalize account records, and trigger downstream workflows. This will require integration with the application review system and account creation engine.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'Charged-Off Account Data Integration and Compliance', 'description': 'This epic entails the provision of charged-off account data to internal credit, risk, and fraud systems for further analysis and action. It also covers the enforcement of PCI DSS security standards when handling charged-off account data, which includes access controls, encryption, and audit logging. This will require integration with the fraud detection platform and customer data repository.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'Charged-Off Account Servicing and Reporting', 'description': 'This epic covers the development of servicing and reporting functionality for charged-off accounts. This includes the creation of interfaces for agents to access charged-off account data, update records, handle escalations, and complete actions not handled automatically. It also involves the generation of compliance reports and operational dashboards. This will require integration with the agent support tool and customer servicing portal.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 22:07:08,207 - poc2_backend_processor_tabbed - INFO - Epic 0: ID=epic_1, Title=Establishing Account Charge-Off Initiation Process, Desc length=553
+2025-07-14 22:07:08,207 - poc2_backend_processor_tabbed - INFO - Epic 1: ID=epic_2, Title=Charged-Off Account Data Management, Desc length=470
+2025-07-14 22:07:08,208 - poc2_backend_processor_tabbed - INFO - Epic 2: ID=epic_3, Title=Charged-Off Account Segmentation and Processing, Desc length=403
+2025-07-14 22:07:08,209 - poc2_backend_processor_tabbed - INFO - Epic 3: ID=epic_4, Title=Charged-Off Account Data Integration and Compliance, Desc length=394
+2025-07-14 22:07:08,209 - poc2_backend_processor_tabbed - INFO - Epic 4: ID=epic_5, Title=Charged-Off Account Servicing and Reporting, Desc length=442
+2025-07-14 22:07:08,248 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 22:07:08] "POST /tabbed-upload-files HTTP/1.1" 200 -
+2025-07-14 22:07:12,383 - poc2_backend_processor_tabbed - INFO - POST request to /tabbed-select-epic
+2025-07-14 22:07:12,383 - poc2_backend_processor_tabbed - INFO - Received epic_id: epic_2
+2025-07-14 22:07:12,383 - poc2_backend_processor_tabbed - INFO - Session keys: ['_permanent', 'prd_content', 'system_mapping_content', 'context_notes', 'system_info', 'system_info_filename', 'system_info_uploaded', 'combined_content', 'generated_epics']
+2025-07-14 22:07:12,383 - poc2_backend_processor_tabbed - INFO - Session epics count: 5
+2025-07-14 22:07:12,390 - poc2_backend_processor_tabbed - INFO - Available epic IDs: ['epic_1', 'epic_2', 'epic_3', 'epic_4', 'epic_5']
+2025-07-14 22:07:12,390 - poc2_backend_processor_tabbed - INFO - All epics data: [{'id': 'epic_1', 'title': 'Establishing Account Charge-Off Initiation Process', 'description': 'This epic covers the development and implementation of a process to initiate the creation of a charged-off account when a charge-off event is triggered. This will involve integrating the credit card core platform with the internal credit, risk, and fraud systems. The system will need to flag the account for charged-off account creation, extract relevant account data, and generate a charged-off account record. The account eligibility validation is also included in this epic to ensure that only the accounts meeting charge-off criteria get processed.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_2', 'title': 'Charged-Off Account Data Management', 'description': 'This epic focuses on accurately capturing and storing critical data points during the creation of a charged-off account, including the outstanding balance at the time of charge-off, the effective charge-off date, and the reason for charge-off. The system will also need to generate a unique 11-digit numerical identifier for each charged-off account created. The immutability of core data post-creation is maintained in this epic to ensure data integrity and compliance.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_3', 'title': 'Charged-Off Account Segmentation and Processing', 'description': 'This epic involves the segmentation of charged-off accounts into appropriate buckets and states based on predefined criteria. It also includes the development of an end-of-day batch process to aggregate all charged-off account creations and updates, finalize account records, and trigger downstream workflows. This will require integration with the application review system and account creation engine.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_4', 'title': 'Charged-Off Account Data Integration and Compliance', 'description': 'This epic entails the provision of charged-off account data to internal credit, risk, and fraud systems for further analysis and action. It also covers the enforcement of PCI DSS security standards when handling charged-off account data, which includes access controls, encryption, and audit logging. This will require integration with the fraud detection platform and customer data repository.', 'priority': 'High', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}, {'id': 'epic_5', 'title': 'Charged-Off Account Servicing and Reporting', 'description': 'This epic covers the development of servicing and reporting functionality for charged-off accounts. This includes the creation of interfaces for agents to access charged-off account data, update records, handle escalations, and complete actions not handled automatically. It also involves the generation of compliance reports and operational dashboards. This will require integration with the agent support tool and customer servicing portal.', 'priority': 'Medium', 'estimated_stories': 'TBD', 'estimated_effort': 'TBD'}]
+2025-07-14 22:07:36,137 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-14 22:07:36,137 - poc2_backend_processor_tabbed - INFO - Parsed 8 user stories from response
+2025-07-14 22:07:36,137 - poc2_backend_processor_tabbed - INFO - Generated 8 user stories for epic: Charged-Off Account Data Management
+2025-07-14 22:07:36,162 - werkzeug - INFO - 127.0.0.1 - - [14/Jul/2025 22:07:36] "POST /tabbed-select-epic HTTP/1.1" 200 -
