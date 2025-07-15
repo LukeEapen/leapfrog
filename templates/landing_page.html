@@ -341,7 +341,7 @@
                 </div>
 
                 <!-- Step 2: Product management -->
-                <div class="step-card" onclick="navigateToProductManagement()">
+                <a class="step-card" href="/product-management" style="text-decoration:none; color:inherit;">
                     <div class="step-number discovery">
                         <div class="number">2</div>
                         <div class="step-icon">
@@ -352,7 +352,7 @@
                     <h4 class="step-subtitle">Requirements insights</h4>
                     <p class="step-description">Reverse engineer legacy code and mine internal docs and research to identify high-level requirements</p>
                     <p class="step-details">Translate requirements into architecture diagrams across multiple design patterns</p>
-                </div>
+                </a>
 
                 <!-- Step 3: Architecture design -->
                 <div class="step-card" onclick="navigateToStep(3)">
@@ -437,6 +437,16 @@
                 <i class="fas fa-arrow-right me-2"></i>
                 Start with Product Management
             </a>
+            <script>
+                // Override the CTA button to point to the intermediate page
+                document.addEventListener('DOMContentLoaded', function() {
+                    var ctaBtn = document.querySelector('.cta-button');
+                    if (ctaBtn) {
+                        ctaBtn.setAttribute('href', '/product-management');
+                        ctaBtn.onclick = null;
+                    }
+                });
+            </script>
         </div>
     </section>
 

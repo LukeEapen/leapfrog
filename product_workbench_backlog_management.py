@@ -188,6 +188,12 @@ def main():
             logger.error(f'Error proxying vector DB files: {e}')
             return jsonify({'files': [], 'error': str(e)}), 500
 
+    # Route for Product Management Intermediate page
+    from flask import render_template
+    @app.route('/product-management')
+    def product_management_intermediate():
+        return render_template('product_management_intermediate.html')
+
     # Start server with enhanced error handling
     try:
         logger.info(f"Starting Flask server on port {port}")
