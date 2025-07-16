@@ -127,7 +127,7 @@
                 </div>
                 <div class="col-md-6 h-100 d-flex flex-column">
                   <div class="card h-100 border-0 shadow-sm d-flex flex-column">
-                    <div class="card-header bg-success text-white fw-bold">Section 2: English Output</div>
+                    <div class="card-header bg-success text-white fw-bold">Section 2: Business Breakdown</div>
                     <div class="card-body flex-grow-1 p-2" style="min-height:0;">
                       <div id="agentResponse" class="response markdown-content p-2 rounded" style="height:100%;"></div>
                       <div class="d-flex justify-content-end">
@@ -146,56 +146,73 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('fileInput');
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-
-            try {
-                // Read the file content and display it in Section 1
-                const file = fileInput.files[0];
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const fileContent = document.getElementById('fileContent');
-                    fileContent.textContent = event.target.result || 'No content in the file.';
-                };
-                reader.readAsText(file);
-
-                // Call backend to process file
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                let data;
-                try {
-                    data = await response.json();
-                } catch (jsonError) {
-                    document.getElementById('agentResponse').textContent = 'Error parsing backend response.';
-                    document.getElementById('nextStepBtn').style.display = 'none';
-                    return;
-                }
-                if (data.error) {
-                    document.getElementById('agentResponse').innerHTML = `<span class='text-danger'>${data.error}</span>`;
-                    document.getElementById('nextStepBtn').style.display = 'none';
-                    return;
-                }
-                // Render markdown output
-                document.getElementById('agentResponse').innerHTML = marked.parse(data.response_agent_1 || '');
-                // Save to localStorage for next step
-                if (data.response_agent_1) {
-                  localStorage.setItem('latestLegacyEnglish', data.response_agent_1);
-                }
-                document.getElementById('nextStepBtn').style.display = 'block';
-            } catch (err) {
-                document.getElementById('agentResponse').innerHTML = `<span class='text-danger'>${err.message || err}`;
-                document.getElementById('nextStepBtn').style.display = 'none';
+        // Beautify and bold section headers in the response
+        function beautifyLegacyResponse(text) {
+          if (!text) return '';
+          // Bold lines that look like section headers (e.g., start with 'Section', 'Step', or are all caps)
+          return text.split('\n').map(line => {
+            // Match lines like 'Section 1: ...', 'Step 2: ...', or all uppercase lines
+            if (/^(Section|Step)\s*\d*[:.\-]/i.test(line.trim())) {
+              return `**${line.trim()}**`;
             }
+            if (/^[A-Z][A-Z0-9 \-_]{4,}$/.test(line.trim())) {
+              return `**${line.trim()}**`;
+            }
+            return line;
+          }).join('\n');
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const fileInput = document.getElementById('fileInput');
+          const formData = new FormData();
+          formData.append('file', fileInput.files[0]);
+
+          try {
+            // Read the file content and display it in Section 1
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(event) {
+              const fileContent = document.getElementById('fileContent');
+              fileContent.textContent = event.target.result || 'No content in the file.';
+            };
+            reader.readAsText(file);
+
+            // Call backend to process file
+            const response = await fetch('/upload', {
+              method: 'POST',
+              body: formData
+            });
+            let data;
+            try {
+              data = await response.json();
+            } catch (jsonError) {
+              document.getElementById('agentResponse').textContent = 'Error parsing backend response.';
+              document.getElementById('nextStepBtn').style.display = 'none';
+              return;
+            }
+            if (data.error) {
+              document.getElementById('agentResponse').innerHTML = `<span class='text-danger'>${data.error}</span>`;
+              document.getElementById('nextStepBtn').style.display = 'none';
+              return;
+            }
+            // Beautify and render markdown output
+            const beautified = beautifyLegacyResponse(data.response_agent_1 || '');
+            document.getElementById('agentResponse').innerHTML = marked.parse(beautified);
+            // Save to localStorage for next step
+            if (data.response_agent_1) {
+              localStorage.setItem('latestLegacyEnglish', data.response_agent_1);
+            }
+            document.getElementById('nextStepBtn').style.display = 'block';
+          } catch (err) {
+            document.getElementById('agentResponse').innerHTML = `<span class='text-danger'>${err.message || err}`;
+            document.getElementById('nextStepBtn').style.display = 'none';
+          }
         });
 
         // Next step button click handler
         document.getElementById('nextStepBtn').addEventListener('click', function() {
-            window.location.href = '/user-story-decomposer';
+          window.location.href = '/user-story-decomposer';
         });
     </script>
 </body>
