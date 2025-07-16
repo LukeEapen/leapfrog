@@ -1,3 +1,4 @@
+# ALWAYS output your answer as clear business requirements or business process language, not code or technical jargon.
 # Legacy Code Parser Agent Instructions
 Purpose:
 

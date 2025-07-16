@@ -1,11 +1,77 @@
 
-
 import os
 import openai
 import time
 import logging
+import traceback
 from dotenv import load_dotenv
 from flask import Flask, send_from_directory, redirect, url_for, request, jsonify
+
+# Logging configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s',
+    handlers=[
+        logging.FileHandler('app.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+
+# Load environment variables
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+app = Flask(__name__, static_folder='../frontend', template_folder='../frontend')
+
+# API endpoint to run Design Decomposer Agent
+def api_design_decompose():
+    try:
+        data = request.get_json()
+        functions = data.get('functions', [])
+        if not functions or not isinstance(functions, list):
+            return jsonify({'error': 'No functions provided'}), 400
+
+        # Load system instructions for design decomposer
+        instructions_path = os.path.join(os.path.dirname(__file__), 'agents', 'design_decomposer_instructions.txt')
+        with open(instructions_path, 'r', encoding='utf-8') as f:
+            system_instructions = f.read()
+
+        # Compose prompt for GPT-3.5
+        prompt = (
+            f"{system_instructions}\n\nFunctions:\n"
+            + '\n'.join([f"- {fn.get('name', '')}: {fn.get('description', '')}" for fn in functions])
+            + "\n\nUse BIAN, ISO, and Open API standards to create a simple design. Output as a JSON array of design elements with 'element' and 'standard'."
+        )
+
+        # Call OpenAI GPT-3.5 with temperature 0.2 using new API
+        chat_response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2,
+            max_tokens=1024
+        )
+        output = chat_response.choices[0].message.content
+
+        # Try to extract JSON array from output
+        import json, re
+        design = None
+        try:
+            # Try to find a JSON array in the output
+            match = re.search(r'(\[.*?\])', output, re.DOTALL)
+            if match:
+                design = json.loads(match.group(1))
+            else:
+                design = json.loads(output)
+        except Exception:
+            design = None
+
+        return jsonify({'design': design, 'raw': output})
+    except Exception as e:
+        logging.error(f"Error in design-decompose: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 # Logging configuration
 logging.basicConfig(
@@ -41,7 +107,9 @@ def api_synthesize_functions():
             system_instructions = f.read()
 
         # Compose prompt
-        prompt = f"""{system_instructions}\n\nUser Story:\n{user_story}\n\nLegacy English Description:\n{legacy_english}\n\nSynthesize functions as instructed."""
+        prompt = (
+            f"{system_instructions}\n\nUser Story:\n{user_story}\n\nLegacy English Description:\n{legacy_english}\n\nSynthesize functions as instructed."
+        )
 
         # Call OpenAI GPT-3.5 with temperature 0.2 using new API
         chat_response = openai.chat.completions.create(
@@ -90,19 +158,6 @@ assistant_id_agent_1 = "asst_P2HdYTBuZtBZqHGZizbsii1P"
 assistant_id_agent_3 = "asst_bHzpgDT7IB6Bb80GpDmhOxcW"  # Replace with Agent 3's ID
 
 def call_agent(assistant_id, message):
-    """
-    Calls an OpenAI assistant with a given message and returns the assistant's reply.
-    This function creates a new conversation thread, sends a user message, runs the assistant,
-    polls for completion, and retrieves the assistant's response. It logs the process and
-    measures the elapsed time for the assistant to complete the task.
-    Args:
-        assistant_id (str): The unique identifier of the OpenAI assistant to call.
-        message (str): The message to send to the assistant.
-    Returns:
-        str: The assistant's reply as a string.
-    Raises:
-        Exception: If the assistant run fails, is cancelled, expires, or any other error occurs during the process.
-    """
     logging.info(f"Calling assistant with ID: {assistant_id} and message: {message}")
     start_time = time.time()
     try:
@@ -176,7 +231,7 @@ def upload_file():
             system_instructions = f.read()
 
         # Compose prompt for GPT-3.5
-        prompt = f"""{system_instructions}\n\nLegacy Code:\n{file_content}\n\nTranslate and output as instructed."""
+        prompt = f"{system_instructions}\n\nLegacy Code:\n{file_content}\n\nTranslate and output as instructed."
 
         # Call OpenAI GPT-3.5 with temperature 0.2 using new API
         chat_response = openai.chat.completions.create(
@@ -229,7 +284,7 @@ def api_decompose_user_story():
             system_instructions = f.read()
 
         # Compose prompt for GPT-3.5
-        prompt = f"""{system_instructions}\n\nUser Story:\n{user_story}\n\nDecompose and output as instructed."""
+        prompt = f"{system_instructions}\n\nUser Story:\n{user_story}\n\nDecompose and output as instructed."
 
         # Call OpenAI GPT-3.5 with temperature 0.2 using new API
         chat_response = openai.chat.completions.create(
@@ -246,5 +301,10 @@ def api_decompose_user_story():
     except Exception as e:
         logging.error(f"Error in decompose-user-story: {str(e)}")
         return jsonify({'error': str(e)}), 500
+if __name__ == '__main__':
+    app.run(debug=True, port=5050)
+# Register the design decomposer endpoint after all functions and routes are defined
+app.add_url_rule('/api/design-decompose', view_func=api_design_decompose, methods=['POST'])
+
 if __name__ == '__main__':
     app.run(debug=True, port=5050)
