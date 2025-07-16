@@ -1,0 +1,6 @@
+# Function Synthesizer Agent Instructions
+
+- Synthesize functions from parsed legacy code and decomposed user stories.
+- Ensure all synthesized functions are clearly named and described.
+- Output should be a JSON array of function objects with name and description fields.
+- Follow best practices for modularity and reusability.

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Story Decomposer Agent</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: #f4f6f8; font-family: 'Segoe UI', Arial, sans-serif; }
+    .agent-card {
+      background: #f6c23e;
+      color: #222;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(246,194,62,0.08);
+      padding: 2rem;
+      margin: 2rem auto;
+      max-width: 600px;
+    }
+    .agent-title { font-size: 2rem; font-weight: bold; }
+    .agent-desc { font-size: 1.1rem; margin-bottom: 1.5rem; }
+    .btn-next { background: #e74c3c; color: #fff; border: none; border-radius: 8px; padding: 0.75rem 2rem; font-size: 1.1rem; }
+    .btn-next:hover { background: #ff7675; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="agent-card text-center">
+      <div class="agent-title">User Story Decomposer Agent</div>
+      <div class="agent-desc">Decompose user stories into actionable requirements and functions. (GPT-3.5, instructions from file)</div>
+      <div id="loading" class="my-4 text-secondary">Connecting to JIRA and loading user stories...</div>
+      <div id="error" class="alert alert-danger d-none"></div>
+      <div id="storiesList" class="row g-3 justify-content-center"></div>
+      <form id="decomposerForm" class="d-none mt-4">
+        <input type="hidden" id="selectedStoryKey" name="selectedStoryKey">
+        <div class="mb-3">
+          <label class="form-label">Selected User Story</label>
+          <div id="selectedStorySummary" class="fw-bold"></div>
+          <div id="selectedStoryDescription" class="text-secondary small"></div>
+        </div>
+        <button type="submit" class="btn btn-next">Run Decomposer</button>
+      </form>
+      <div id="result" class="mt-4"></div>
+    </div>
+  </div>
+  <script>
+    // Fetch user stories from backend
+    async function loadUserStories() {
+      document.getElementById('loading').classList.remove('d-none');
+      document.getElementById('error').classList.add('d-none');
+      try {
+        const res = await fetch('/api/jira-user-stories');
+        const data = await res.json();
+        document.getElementById('loading').classList.add('d-none');
+        if (data.error) {
+          document.getElementById('error').textContent = data.error;
+          document.getElementById('error').classList.remove('d-none');
+          return;
+        }
+        const stories = data.stories || [];
+        const storiesList = document.getElementById('storiesList');
+        if (stories.length === 0) {
+          storiesList.innerHTML = '<div class="text-secondary">No user stories found in JIRA.</div>';
+          return;
+        }
+        storiesList.innerHTML = stories.map((story, idx) => `
+          <div class='col-12'>
+            <div class='card story-card text-start' style='cursor:pointer;' data-key='${story.key}' data-summary='${story.summary.replace(/'/g, "&#39;")}' data-description='${(story.description||'').replace(/'/g, "&#39;")}' onclick='selectStory(this)'>
+              <div class='card-body'>
+                <div class='fw-bold'>${story.key}: ${story.summary}</div>
+                <div class='text-secondary small'>${story.description ? story.description.substring(0, 120) + (story.description.length > 120 ? '...' : '') : ''}</div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('loading').classList.add('d-none');
+        document.getElementById('error').textContent = 'Failed to load user stories: ' + (err.message || err);
+        document.getElementById('error').classList.remove('d-none');
+      }
+    }
+
+    // Story selection handler
+    window.selectStory = function(card) {
+      // Remove highlight from all
+      document.querySelectorAll('.story-card').forEach(c => c.classList.remove('border-primary', 'shadow-lg'));
+      card.classList.add('border-primary', 'shadow-lg');
+      // Show decomposer form
+      document.getElementById('decomposerForm').classList.remove('d-none');
+      document.getElementById('selectedStoryKey').value = card.getAttribute('data-key');
+      document.getElementById('selectedStorySummary').textContent = card.getAttribute('data-summary');
+      document.getElementById('selectedStoryDescription').textContent = card.getAttribute('data-description');
+      document.getElementById('result').innerHTML = '';
+    };
+
+    // Decomposer form submit
+    document.getElementById('decomposerForm').onsubmit = async function(e) {
+      e.preventDefault();
+      document.getElementById('result').innerHTML = '<div class="text-secondary">Running agent...</div>';
+      const userStory = document.getElementById('selectedStorySummary').textContent + '\n' + document.getElementById('selectedStoryDescription').textContent;
+      try {
+        const res = await fetch('/api/decompose-user-story', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_story: userStory })
+        });
+        const data = await res.json();
+        if (data.error) {
+          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
+          return;
+        }
+        document.getElementById('result').innerHTML = `<div class='alert alert-success'><b>Output:</b><br><pre>${data.result}</pre></div>`;
+        setTimeout(() => {
+          window.location.href = '/function-synthesizer';
+        }, 1500);
+      } catch (err) {
+        document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
+      }
+    };
+
+    // Initial load
+    loadUserStories();
+  </script>
+</body>
+</html>

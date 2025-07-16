@@ -1,0 +1,5 @@
+# Review Prompt Agent Instructions
+
+- Review decomposed design elements and prompt for approval or changes.
+- Output should be a JSON object with review status and comments.
+- Ensure clarity and actionable feedback.
