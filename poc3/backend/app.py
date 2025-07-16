@@ -23,6 +23,42 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__, static_folder='../frontend', template_folder='../frontend')
 
+# ...existing code...
+
+# API endpoint to synthesize functions from user story and legacy English
+@app.route('/api/synthesize-functions', methods=['POST'])
+def api_synthesize_functions():
+    try:
+        data = request.get_json()
+        user_story = data.get('user_story', '')
+        legacy_english = data.get('legacy_english', '')
+        if not user_story and not legacy_english:
+            return jsonify({'error': 'No input provided'}), 400
+
+        # Load system instructions
+        instructions_path = os.path.join(os.path.dirname(__file__), 'agents', 'function_synthesizer_instructions.txt')
+        with open(instructions_path, 'r', encoding='utf-8') as f:
+            system_instructions = f.read()
+
+        # Compose prompt
+        prompt = f"""{system_instructions}\n\nUser Story:\n{user_story}\n\nLegacy English Description:\n{legacy_english}\n\nSynthesize functions as instructed."""
+
+        # Call OpenAI GPT-3.5 with temperature 0.2 using new API
+        chat_response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2,
+            max_tokens=1024
+        )
+        output = chat_response.choices[0].message.content
+        return jsonify({'result': output})
+    except Exception as e:
+        logging.error(f"Error in synthesize-functions: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 # Route map for workflow
 ROUTES = [
     ('/', 'legacy_code_parser_agent.html'),
@@ -134,17 +170,30 @@ def upload_file():
         with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
             file_content = f.read()
 
-        # Call Agent 1
-        response_agent_1 = call_agent(assistant_id_agent_1, file_content)
+        # Load system instructions for legacy code parser
+        instructions_path = os.path.join(os.path.dirname(__file__), 'agents', 'legacy_code_parser_instructions.txt')
+        with open(instructions_path, 'r', encoding='utf-8') as f:
+            system_instructions = f.read()
 
-        # Optionally, call Agent 3 with the response of Agent 1 (uncomment if needed)
-        # response_agent_3 = call_agent(assistant_id_agent_3, response_agent_1)
+        # Compose prompt for GPT-3.5
+        prompt = f"""{system_instructions}\n\nLegacy Code:\n{file_content}\n\nTranslate and output as instructed."""
+
+        # Call OpenAI GPT-3.5 with temperature 0.2 using new API
+        chat_response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": file_content}
+            ],
+            temperature=0.41,
+            max_tokens=1024
+        )
+        output = chat_response.choices[0].message.content
 
         # Log success
-        logging.info(f"Processed file: {file.filename} with Agent 1")
+        logging.info(f"Processed file: {file.filename} with Legacy Code Parser Agent")
         return jsonify({
-            'response_agent_1': response_agent_1
-            # , 'response_agent_3': response_agent_3
+            'response_agent_1': output
         })
     except Exception as e:
         logging.error(f"Error in /upload: {str(e)}\n{traceback.format_exc()}")
@@ -182,9 +231,8 @@ def api_decompose_user_story():
         # Compose prompt for GPT-3.5
         prompt = f"""{system_instructions}\n\nUser Story:\n{user_story}\n\nDecompose and output as instructed."""
 
-        # Call OpenAI GPT-3.5 with temperature 0.2
-        import openai
-        response = openai.ChatCompletion.create(
+        # Call OpenAI GPT-3.5 with temperature 0.2 using new API
+        chat_response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": system_instructions},
@@ -193,7 +241,7 @@ def api_decompose_user_story():
             temperature=0.2,
             max_tokens=512
         )
-        output = response.choices[0].message['content']
+        output = chat_response.choices[0].message.content
         return jsonify({'result': output})
     except Exception as e:
         logging.error(f"Error in decompose-user-story: {str(e)}")

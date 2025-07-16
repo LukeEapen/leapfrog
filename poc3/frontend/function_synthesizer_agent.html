@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Function Synthesizer Agent</title>
+  <title>Step 3: Function Synthesizer Agent</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background: #f4f6f8; font-family: 'Segoe UI', Arial, sans-serif; }
@@ -25,7 +25,7 @@
 <body>
   <div class="container">
     <div class="agent-card text-center">
-      <div class="agent-title">Function Synthesizer Agent</div>
+      <div class="agent-title">Step 3: Function Synthesizer Agent</div>
       <div class="agent-desc">Synthesize functions from parsed legacy code and decomposed user stories. (GPT-3.5, instructions from file)</div>
       <form id="synthForm">
         <div class="mb-3">
@@ -46,15 +46,25 @@
       e.preventDefault();
       const legacyCode = document.getElementById('legacyCode').value;
       const userStories = document.getElementById('userStories').value;
-      document.getElementById('result').innerHTML = '<div class="text-secondary">Running agent (mock)...</div>';
-      // Mock API call
-      setTimeout(() => {
-        document.getElementById('result').innerHTML = `<div class='alert alert-success'><b>Output:</b><br><pre>{\n  "functions": [\n    { "name": "calculateInterest", "description": "Calculates interest based on principal and rate." },\n    { "name": "validateAccount", "description": "Validates account number and status." }\n  ]\n}</pre></div>`;
-        // After showing result, redirect to Step 4 (backend route) after 1.5s
+      document.getElementById('result').innerHTML = '<div class="text-secondary">Running agent...</div>';
+      try {
+        const res = await fetch('/api/synthesize-functions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ legacy_english: legacyCode, user_story: userStories })
+        });
+        const data = await res.json();
+        if (data.error) {
+          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
+          return;
+        }
+        document.getElementById('result').innerHTML = `<div class='alert alert-success'><b>Output:</b><br><pre>${data.result}</pre></div>`;
         setTimeout(() => {
           window.location.href = '/design-decomposer';
         }, 1500);
-      }, 1200);
+      } catch (err) {
+        document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
+      }
     };
   </script>
 </body>

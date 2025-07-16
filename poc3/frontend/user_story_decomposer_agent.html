@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Story Decomposer Agent</title>
+  <title>Step 2: User Story Decomposer Agent</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background: #f4f6f8; font-family: 'Segoe UI', Arial, sans-serif; }
@@ -25,21 +25,27 @@
 <body>
   <div class="container">
     <div class="agent-card text-center">
-      <div class="agent-title">User Story Decomposer Agent</div>
+      <div class="agent-title">Step 2: User Story Decomposer Agent</div>
       <div class="agent-desc">Decompose user stories into actionable requirements and functions. (GPT-3.5, instructions from file)</div>
       <div id="loading" class="my-4 text-secondary">Connecting to JIRA and loading user stories...</div>
       <div id="error" class="alert alert-danger d-none"></div>
-      <div id="storiesList" class="row g-3 justify-content-center"></div>
-      <form id="decomposerForm" class="d-none mt-4">
-        <input type="hidden" id="selectedStoryKey" name="selectedStoryKey">
-        <div class="mb-3">
-          <label class="form-label">Selected User Story</label>
-          <div id="selectedStorySummary" class="fw-bold"></div>
-          <div id="selectedStoryDescription" class="text-secondary small"></div>
+      <div class="row">
+        <div class="col-md-6">
+          <div id="storiesList" class="list-group"></div>
         </div>
-        <button type="submit" class="btn btn-next">Run Decomposer</button>
-      </form>
-      <div id="result" class="mt-4"></div>
+        <div class="col-md-6">
+          <div id="storyDetails" class="d-none card p-3 mb-3">
+            <div class="fw-bold" id="selectedStorySummary"></div>
+            <div class="text-secondary small" id="selectedStoryDescription"></div>
+            <div class="mt-3">
+              <label class="form-label">Legacy English Description</label>
+              <textarea id="legacyEnglish" class="form-control mb-2" rows="4" readonly placeholder="Upload legacy code in previous step to see English output..."></textarea>
+              <button id="synthesizeBtn" class="btn btn-primary w-100">Synthesize Functions</button>
+            </div>
+            <div id="synthResult" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <script>
@@ -63,14 +69,13 @@
           return;
         }
         storiesList.innerHTML = stories.map((story, idx) => `
-          <div class='col-12'>
-            <div class='card story-card text-start' style='cursor:pointer;' data-key='${story.key}' data-summary='${story.summary.replace(/'/g, "&#39;")}' data-description='${(story.description||'').replace(/'/g, "&#39;")}' onclick='selectStory(this)'>
-              <div class='card-body'>
-                <div class='fw-bold'>${story.key}: ${story.summary}</div>
-                <div class='text-secondary small'>${story.description ? story.description.substring(0, 120) + (story.description.length > 120 ? '...' : '') : ''}</div>
-              </div>
+          <label class='list-group-item d-flex align-items-start' style='cursor:pointer;'>
+            <input class='form-check-input me-2' type='radio' name='storyRadio' value='${story.key}' data-summary='${story.summary.replace(/'/g, "&#39;")}' data-description='${(story.description||'').replace(/'/g, "&#39;")}' onchange='selectStoryRadio(this)'>
+            <div>
+              <div class='fw-bold'>${story.key}: ${story.summary}</div>
+              <div class='text-secondary small'>${story.description ? story.description.substring(0, 120) + (story.description.length > 120 ? '...' : '') : ''}</div>
             </div>
-          </div>
+          </label>
         `).join('');
       } catch (err) {
         document.getElementById('loading').classList.add('d-none');
@@ -80,42 +85,48 @@
     }
 
     // Story selection handler
-    window.selectStory = function(card) {
-      // Remove highlight from all
-      document.querySelectorAll('.story-card').forEach(c => c.classList.remove('border-primary', 'shadow-lg'));
-      card.classList.add('border-primary', 'shadow-lg');
-      // Show decomposer form
-      document.getElementById('decomposerForm').classList.remove('d-none');
-      document.getElementById('selectedStoryKey').value = card.getAttribute('data-key');
-      document.getElementById('selectedStorySummary').textContent = card.getAttribute('data-summary');
-      document.getElementById('selectedStoryDescription').textContent = card.getAttribute('data-description');
-      document.getElementById('result').innerHTML = '';
+    window.selectStoryRadio = function(radio) {
+      // Show details card
+      document.getElementById('storyDetails').classList.remove('d-none');
+      document.getElementById('selectedStorySummary').textContent = radio.getAttribute('data-summary');
+      document.getElementById('selectedStoryDescription').textContent = radio.getAttribute('data-description');
+      document.getElementById('legacyEnglish').value = window.latestLegacyEnglish || '';
+      document.getElementById('synthResult').innerHTML = '';
     };
 
-    // Decomposer form submit
-    document.getElementById('decomposerForm').onsubmit = async function(e) {
-      e.preventDefault();
-      document.getElementById('result').innerHTML = '<div class="text-secondary">Running agent...</div>';
+
+    // Fetch latest legacy English output from backend (if available)
+    async function fetchLegacyEnglish() {
+      // This should be replaced with a real API call if you want to fetch the latest output
+      // For now, try to get from localStorage or set to empty
+      window.latestLegacyEnglish = localStorage.getItem('latestLegacyEnglish') || '';
+    }
+
+    // Synthesize button click
+    document.getElementById('synthesizeBtn').onclick = async function() {
       const userStory = document.getElementById('selectedStorySummary').textContent + '\n' + document.getElementById('selectedStoryDescription').textContent;
+      const legacyEnglish = document.getElementById('legacyEnglish').value;
+      document.getElementById('synthResult').innerHTML = '<div class="text-secondary">Synthesizing functions...</div>';
       try {
-        const res = await fetch('/api/decompose-user-story', {
+        const res = await fetch('/api/synthesize-functions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_story: userStory })
+          body: JSON.stringify({ user_story: userStory, legacy_english: legacyEnglish })
         });
         const data = await res.json();
         if (data.error) {
-          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
+          document.getElementById('synthResult').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
           return;
         }
-        document.getElementById('result').innerHTML = `<div class='alert alert-success'><b>Output:</b><br><pre>${data.result}</pre></div>`;
-        setTimeout(() => {
-          window.location.href = '/function-synthesizer';
-        }, 1500);
+        document.getElementById('synthResult').innerHTML = `<div class='alert alert-success'><b>Functions:</b><br><pre>${data.result}</pre></div>`;
       } catch (err) {
-        document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
+        document.getElementById('synthResult').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
       }
     };
+
+    // Initial load
+    fetchLegacyEnglish();
+    loadUserStories();
 
     // Initial load
     loadUserStories();
