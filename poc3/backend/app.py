@@ -1,14 +1,13 @@
-
-
 import os
 import openai
 import time
 import logging
 import traceback
+import json
 from dotenv import load_dotenv
 from flask import Flask, send_from_directory, redirect, url_for, request, jsonify
 
-# Logging configuration
+from flask import Flask, request, jsonify, send_from_directory
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s %(message)s',
@@ -24,6 +23,47 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__, static_folder='../frontend', template_folder='../frontend')
 
+
+# API endpoint to generate microservice project from Swagger using MSBuilder agent
+@app.route('/api/msbuilder-generate', methods=['POST'])
+def api_msbuilder_generate():
+    try:
+        data = request.get_json()
+        swagger = data.get('swagger', None)
+        if not swagger:
+            return jsonify({'error': 'No Swagger document provided'}), 400
+
+        # Load MSBuilder instructions
+        instructions_path = os.path.join(os.path.dirname(__file__), 'agents', 'msbuilder_instructions.txt')
+        with open(instructions_path, 'r', encoding='utf-8') as f:
+            system_instructions = f.read()
+
+        # Compose prompt for MSBuilder agent
+        prompt = f"{system_instructions}\n\nSwagger Document:\n{json.dumps(swagger, indent=2)}\n\nGenerate the microservice project as instructed. Output only the JSON object."
+
+        # Call OpenAI GPT-3.5 (or MSBuilder agent if available)
+        chat_response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2,
+            max_tokens=2048
+        )
+        output = chat_response.choices[0].message.content
+
+        # Try to parse output as JSON
+        try:
+            project = json.loads(output)
+            return jsonify(project)
+        except Exception as e:
+            return jsonify({'error': f'Failed to parse project JSON: {str(e)}', 'raw': output}), 500
+
+    except Exception as e:
+        logging.error(f"Error in msbuilder-generate: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
 @app.route('/api/service-builder-swagger', methods=['POST'])
 def api_service_builder_swagger():
     try:
@@ -38,7 +78,13 @@ def api_service_builder_swagger():
             system_instructions = f.read()
 
         # Compose prompt for GPT-3.5
-        prompt = f"{system_instructions}\n\nSelected Design Element:\n{selected_design}\n\nGenerate Swagger (OpenAPI) specification for this service. Output only the Swagger JSON." 
+        prompt = (
+            f"{system_instructions}\n\nSelected Design Element:\n{selected_design}\n\n"
+            "Generate a fully exhaustive Swagger (OpenAPI 3.0.0) specification for this service, matching the standards and completeness of https://editor.swagger.io/. "
+            "Include all required fields: openapi, info, servers, tags, paths (with all methods, parameters, request/response schemas), components (schemas, security), and security. "
+            "For each endpoint, provide detailed request and response bodies, parameters, and error responses. "
+            "Output only the Swagger JSON object, no markdown or explanation."
+        )
 
         # Call OpenAI GPT-3.5 with temperature 0.2
         chat_response = openai.chat.completions.create(
@@ -145,6 +191,12 @@ def api_synthesize_functions():
     except Exception as e:
         logging.error(f"Error in synthesize-functions: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+# Route to serve microservice_project_view.html
+@app.route('/microservice-project-view')
+def microservice_project_view():
+    frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend'))
+    return send_from_directory(frontend_dir, 'microservice_project_view.html')
 
 # Route map for workflow
 ROUTES = [

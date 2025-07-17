@@ -77,10 +77,11 @@
     }
     .swagger-editor-wrapper {
       display: flex;
-      gap: 2rem;
+      gap: 2.5rem;
       width: 100%;
       margin-top: 2rem;
       min-height: 500px;
+      align-items: flex-start;
     }
     .swagger-editor-panel {
       background: #fff;
@@ -88,7 +89,7 @@
       box-shadow: 0 2px 8px rgba(44,44,44,0.10);
       border: 2px solid #d32f2f;
       color: #23272b;
-      padding: 2rem 2rem 2rem 2rem;
+      padding: 2.5rem 2.5rem 2.5rem 2.5rem;
       font-size: 1.08rem;
       width: 55%;
       min-width: 500px;
@@ -97,6 +98,7 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+      align-items: flex-start;
     }
     .swagger-preview-panel {
       background: #f5f5f5;
@@ -104,7 +106,7 @@
       box-shadow: 0 2px 8px rgba(44,44,44,0.10);
       border: 2px solid #e9ecef;
       color: #23272b;
-      padding: 2rem 2rem 2rem 2rem;
+      padding: 2.5rem 2.5rem 2.5rem 2.5rem;
       font-size: 1.08rem;
       width: 45%;
       min-width: 400px;
@@ -119,28 +121,31 @@
       font-size: 1.3rem;
       font-weight: 700;
       color: #d32f2f;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
       letter-spacing: 0.01em;
+      text-align: left;
     }
     .swagger-code {
       background: #23272b;
       color: #fff;
       border-radius: 0.5rem;
-      padding: 1rem;
-      font-size: 1.05rem;
+      padding: 1.2rem 1.5rem;
+      font-size: 1.08rem;
       font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
       margin: 0;
       width: 100%;
       min-height: 400px;
       overflow-x: auto;
       box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      text-align: left;
     }
     .swagger-preview-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #23272b;
-      margin-bottom: 1rem;
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: #d32f2f;
+      margin-bottom: 1.5rem;
       letter-spacing: 0.01em;
+      text-align: left;
     }
   </style>
 </head>
@@ -160,13 +165,17 @@
           <span style="color:#fff;">Back to Step 4</span>
         </a>
       </div>
-      <form id="builderForm">
+      <form id="synthesisForm">
         <div class="mb-3 text-start">
           <label for="scope" class="form-label" style="color:#d32f2f; font-weight:600;">Finalized Scope & Design</label>
           <textarea class="form-control" id="scope" rows="1" placeholder="Paste finalized scope and design here..." style="background:#f5f5f5; border-radius:0.75rem; font-size:1.08rem; color:#23272b; width:100%; min-width:1000px; max-width:100%; resize:none;"></textarea>
         </div>
-        <button type="submit" class="btn btn-next">Run Builder</button>
+        <button type="submit" class="btn btn-next" id="runSynthesisBtn">Run Design Synthesis</button>
       </form>
+      <div id="swaggerColumns" style="display:none; width:100%; margin-top:2rem;"></div>
+      <div class="text-center mt-3" id="runBuilderContainer" style="display:none;">
+        <button class="btn btn-next" id="runBuilderBtn">Run Builder</button>
+      </div>
       <div id="result" class="mt-4"></div>
     </div>
   </div>
@@ -182,7 +191,7 @@
       }
     });
 
-    document.getElementById('builderForm').onsubmit = async function(e) {
+    document.getElementById('synthesisForm').onsubmit = async function(e) {
       e.preventDefault();
       const scope = document.getElementById('scope').value.trim();
       if (!scope) {
@@ -203,33 +212,47 @@
         }
         let swagger = data.swagger || '';
         let swaggerObj = null;
-        let codePanel = '';
-        let previewPanel = '';
         try {
           swaggerObj = JSON.parse(swagger);
-          codePanel = `<div class='swagger-editor-panel'><div class='swagger-title'>Swagger/OpenAPI Specification (Editable View)</div><pre class='swagger-code'>${JSON.stringify(swaggerObj, null, 2)}</pre></div>`;
-          // Simple preview: list endpoints and methods
-          let paths = swaggerObj.paths || {};
-          let previewHtml = `<div class='swagger-preview-title'>Endpoints Preview</div>`;
-          if (Object.keys(paths).length === 0) {
-            previewHtml += `<div class='text-secondary'>No endpoints found in spec.</div>`;
-          } else {
-            previewHtml += `<ul style='padding-left:1.2em;'>`;
-            for (const [path, methods] of Object.entries(paths)) {
-              previewHtml += `<li style='margin-bottom:0.7em;'><b style='color:#d32f2f;'>${path}</b><ul style='padding-left:1em;'>`;
-              for (const method of Object.keys(methods)) {
-                previewHtml += `<li style='color:#23272b;'>${method.toUpperCase()} <span style='color:#6c757d;'>${methods[method].summary || ''}</span></li>`;
-              }
-              previewHtml += `</ul></li>`;
-            }
-            previewHtml += `</ul>`;
-          }
-          previewPanel = `<div class='swagger-preview-panel'>${previewHtml}</div>`;
         } catch (e) {
-          codePanel = `<div class='swagger-editor-panel'><div class='swagger-title'>Swagger/OpenAPI Specification (Editable View)</div><pre class='swagger-code'>${swagger}</pre></div>`;
-          previewPanel = `<div class='swagger-preview-panel'><div class='swagger-preview-title'>Endpoints Preview</div><div class='text-secondary'>Unable to parse Swagger JSON.</div></div>`;
+          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> Unable to parse Swagger JSON.</div>`;
+          return;
         }
-        document.getElementById('result').innerHTML = `<div class='swagger-editor-wrapper'>${codePanel}${previewPanel}</div>`;
+        // Display Swagger in left/right columns
+        document.getElementById('result').innerHTML = '';
+        let leftCol = `<div class='swagger-editor-panel'><div class='swagger-title'>Swagger JSON</div><pre class='swagger-code'>${JSON.stringify(swaggerObj, null, 2)}</pre></div>`;
+        let rightCol = `<div class='swagger-preview-panel'><div class='swagger-preview-title'>Swagger Preview</div><pre class='swagger-code'>${JSON.stringify(swaggerObj, null, 2)}</pre></div>`;
+        document.getElementById('swaggerColumns').innerHTML = `<div class='swagger-editor-wrapper'>${leftCol}${rightCol}</div>`;
+        document.getElementById('swaggerColumns').style.display = 'block';
+        document.getElementById('runBuilderContainer').style.display = 'block';
+        // Store swaggerObj for builder step
+        window._swaggerObjForBuilder = swaggerObj;
+      } catch (err) {
+        document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
+      }
+    };
+
+    document.getElementById('runBuilderBtn').onclick = async function() {
+      const swaggerObj = window._swaggerObjForBuilder;
+      if (!swaggerObj) {
+        document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> Swagger not available.`;
+        return;
+      }
+      document.getElementById('result').innerHTML = '<div class="text-secondary">Generating microservice project from Swagger...</div>';
+      try {
+        const msRes = await fetch('/api/msbuilder-generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ swagger: swaggerObj })
+        });
+        const msData = await msRes.json();
+        if (msData.error) {
+          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${msData.error}</div>`;
+          return;
+        }
+        // Save project data to localStorage and navigate to project view page
+        localStorage.setItem('generatedMicroserviceProject', JSON.stringify(msData));
+        window.location.href = '/microservice-project-view';
       } catch (err) {
         document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
       }
