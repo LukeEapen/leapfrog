@@ -6,31 +6,164 @@
   <title>Service Builder Agent</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background: #f4f6f8; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { background: #f7f8fa; font-family: 'Segoe UI', Arial, sans-serif; }
     .agent-card {
-      background: #f6c23e;
-      color: #222;
-      border-radius: 16px;
-      box-shadow: 0 2px 8px rgba(246,194,62,0.08);
-      padding: 2rem;
-      margin: 2rem auto;
-      max-width: 600px;
+      background: #f1f3f4;
+      color: #23272b;
+      border-radius: 2rem;
+      box-shadow: 0 8px 32px rgba(44,44,44,0.10);
+      padding: 2.5rem 2rem;
+      margin: 3vh auto;
+      max-width: 1600px;
+      min-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .agent-title { font-size: 2rem; font-weight: bold; }
-    .agent-desc { font-size: 1.1rem; margin-bottom: 1.5rem; }
-    .btn-next { background: #e74c3c; color: #fff; border: none; border-radius: 8px; padding: 0.75rem 2rem; font-size: 1.1rem; }
-    .btn-next:hover { background: #ff7675; }
+    .agent-title {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: #d32f2f;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.01em;
+    }
+    .agent-title-container {
+      background: #d32f2f;
+      border-radius: 1.2rem;
+      padding: 0.7rem 1.5rem;
+      display: inline-block;
+      margin-bottom: 0.5rem;
+      box-shadow: 0 2px 12px rgba(44,44,44,0.10);
+    }
+    .agent-desc {
+      font-size: 1.15rem;
+      margin-bottom: 2rem;
+      color: #23272b;
+      background: #f7f8fa;
+      border-radius: 0 0 1.25rem 1.25rem;
+      padding: 1rem 2rem;
+      display: block;
+      text-align: left;
+      width: 100%;
+      margin: 0 auto 2rem auto;
+      box-shadow: 0 2px 12px rgba(44,44,44,0.06);
+    }
+    .btn-next {
+      background: #d32f2f;
+      color: #fff;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.85rem 2.5rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(211,47,47,0.08);
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    .btn-next:hover {
+      background: #b71c1c;
+    }
+    #result {
+      background: #e9ecef;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.08);
+      color: #23272b;
+      padding: 2rem 3rem;
+      margin: 2rem 0;
+      width: 100%;
+      max-width: 100%;
+      font-size: 1.08rem;
+      box-sizing: border-box;
+    }
+    .swagger-editor-wrapper {
+      display: flex;
+      gap: 2rem;
+      width: 100%;
+      margin-top: 2rem;
+      min-height: 500px;
+    }
+    .swagger-editor-panel {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      border: 2px solid #d32f2f;
+      color: #23272b;
+      padding: 2rem 2rem 2rem 2rem;
+      font-size: 1.08rem;
+      width: 55%;
+      min-width: 500px;
+      max-width: 900px;
+      min-height: 500px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .swagger-preview-panel {
+      background: #f5f5f5;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      border: 2px solid #e9ecef;
+      color: #23272b;
+      padding: 2rem 2rem 2rem 2rem;
+      font-size: 1.08rem;
+      width: 45%;
+      min-width: 400px;
+      max-width: 700px;
+      min-height: 500px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .swagger-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #d32f2f;
+      margin-bottom: 1rem;
+      letter-spacing: 0.01em;
+    }
+    .swagger-code {
+      background: #23272b;
+      color: #fff;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-size: 1.05rem;
+      font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+      margin: 0;
+      width: 100%;
+      min-height: 400px;
+      overflow-x: auto;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+    }
+    .swagger-preview-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #23272b;
+      margin-bottom: 1rem;
+      letter-spacing: 0.01em;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container-fluid">
     <div class="agent-card text-center">
-      <div class="agent-title">Service Builder Agent</div>
+      <div class="agent-title-container d-flex align-items-center justify-content-center w-100" style="background:#d32f2f; border-radius:1.2rem; padding:0.7rem 0; margin-bottom:0.5rem; min-height:3.5rem;">
+        <span class="agent-title" style="color:#fff; font-size:2.8rem; letter-spacing:0.03em; width:100%; text-align:center;">Step 5: Service Builder Agent</span>
+      </div>
       <div class="agent-desc">Build the modernized service based on finalized scope and design. (GPT-3.5, instructions from file)</div>
+      <div class="d-flex justify-content-between w-100" style="width:100%; margin-bottom:1.5rem;">
+        <a href="/design-decomposer" class="btn px-4 d-flex align-items-center gap-2" style="font-weight:600; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); background:#6c757d; border:none; color:#fff; min-width:180px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+            <path d="M8.354 11.354a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L6.707 8H11.5a.5.5 0 0 1 0 1H6.707l1.647 1.646a.5.5 0 0 1 0 .708z"/>
+          </svg>
+          <span style="color:#fff;">Back to Step 4</span>
+        </a>
+      </div>
       <form id="builderForm">
-        <div class="mb-3">
-          <label for="scope" class="form-label">Finalized Scope & Design</label>
-          <textarea class="form-control" id="scope" rows="3" placeholder="Paste finalized scope and design here..."></textarea>
+        <div class="mb-3 text-start">
+          <label for="scope" class="form-label" style="color:#d32f2f; font-weight:600;">Finalized Scope & Design</label>
+          <textarea class="form-control" id="scope" rows="1" placeholder="Paste finalized scope and design here..." style="background:#f5f5f5; border-radius:0.75rem; font-size:1.08rem; color:#23272b; width:100%; min-width:1000px; max-width:100%; resize:none;"></textarea>
         </div>
         <button type="submit" class="btn btn-next">Run Builder</button>
       </form>
@@ -69,14 +202,34 @@
           return;
         }
         let swagger = data.swagger || '';
-        // Try to pretty print JSON if possible
-        let prettySwagger = '';
+        let swaggerObj = null;
+        let codePanel = '';
+        let previewPanel = '';
         try {
-          prettySwagger = `<pre>${JSON.stringify(JSON.parse(swagger), null, 2)}</pre>`;
+          swaggerObj = JSON.parse(swagger);
+          codePanel = `<div class='swagger-editor-panel'><div class='swagger-title'>Swagger/OpenAPI Specification (Editable View)</div><pre class='swagger-code'>${JSON.stringify(swaggerObj, null, 2)}</pre></div>`;
+          // Simple preview: list endpoints and methods
+          let paths = swaggerObj.paths || {};
+          let previewHtml = `<div class='swagger-preview-title'>Endpoints Preview</div>`;
+          if (Object.keys(paths).length === 0) {
+            previewHtml += `<div class='text-secondary'>No endpoints found in spec.</div>`;
+          } else {
+            previewHtml += `<ul style='padding-left:1.2em;'>`;
+            for (const [path, methods] of Object.entries(paths)) {
+              previewHtml += `<li style='margin-bottom:0.7em;'><b style='color:#d32f2f;'>${path}</b><ul style='padding-left:1em;'>`;
+              for (const method of Object.keys(methods)) {
+                previewHtml += `<li style='color:#23272b;'>${method.toUpperCase()} <span style='color:#6c757d;'>${methods[method].summary || ''}</span></li>`;
+              }
+              previewHtml += `</ul></li>`;
+            }
+            previewHtml += `</ul>`;
+          }
+          previewPanel = `<div class='swagger-preview-panel'>${previewHtml}</div>`;
         } catch (e) {
-          prettySwagger = `<pre>${swagger}</pre>`;
+          codePanel = `<div class='swagger-editor-panel'><div class='swagger-title'>Swagger/OpenAPI Specification (Editable View)</div><pre class='swagger-code'>${swagger}</pre></div>`;
+          previewPanel = `<div class='swagger-preview-panel'><div class='swagger-preview-title'>Endpoints Preview</div><div class='text-secondary'>Unable to parse Swagger JSON.</div></div>`;
         }
-        document.getElementById('result').innerHTML = `<div class='alert alert-success'><b>Swagger/OpenAPI Specification:</b><br>${prettySwagger}</div>`;
+        document.getElementById('result').innerHTML = `<div class='swagger-editor-wrapper'>${codePanel}${previewPanel}</div>`;
       } catch (err) {
         document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
       }

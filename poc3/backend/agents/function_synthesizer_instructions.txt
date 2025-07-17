@@ -22,12 +22,12 @@ Example Output:
 [
   {
     "name": "calculateLateFee",
-    "description": "Calculates the late fee for an account if payment is posted after the statement end date.",
+    "description": "Implements the business logic to compute the late fee for a customer account. This function determines if a payment was posted after the statement end date and applies the appropriate penalty rate based on account type and payment history. Handles edge cases such as partial payments and fee waivers.",
     "source": "legacy_code"
   },
   {
     "name": "validatePaymentDate",
-    "description": "Validates if the last payment date is after the statement end date.",
+    "description": "Performs validation to ensure the last payment date occurs after the statement end date. This function enforces business rules for payment processing, triggers error handling for invalid dates, and integrates with downstream transaction audit modules.",
     "source": "user_story"
   }
 ]

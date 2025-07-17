@@ -15,9 +15,9 @@
     .main-app-container {
       min-height: 95vh;
       height: 95vh;
-      max-width: 1400px;
+      max-width: 1800px;
       margin: 2.5vh auto;
-      padding: 24px 18px;
+      padding: 40px 48px;
       background: #fff;
       border-radius: 2rem;
       box-shadow: 0 8px 32px rgba(44,44,44,0.18);
@@ -97,23 +97,13 @@
       background: #f8f9fa;
     }
     /* Force font size 10px for all business breakdown content */
-    .business-breakdown-font, .business-breakdown-font * {
+    .business-breakdown-font, .business-breakdown-font *,
+    .business-breakdown-font h1, .business-breakdown-font h2, .business-breakdown-font h3,
+    .business-breakdown-font h4, .business-breakdown-font h5, .business-breakdown-font h6,
+    .business-breakdown-font p, .business-breakdown-font div, .business-breakdown-font span,
+    .business-breakdown-font ul, .business-breakdown-font ol, .business-breakdown-font li,
+    .business-breakdown-font table, .business-breakdown-font th, .business-breakdown-font td {
       font-size: 18px !important;
-    }
-    /* Force font size 10px for all business breakdown content */
-    .business-breakdown-font, .business-breakdown-font * {
-      font-size: 10px !important;
-    }
-    /* Force font size 10px for all business breakdown content */
-    .business-breakdown-font, .business-breakdown-font * {
-      font-size: 10px !important;
-    }
-    /* Force font size 10px for all business breakdown content */
-    .business-breakdown-font, .business-breakdown-font * {
-      font-size: 10px !important;
-    }
-    .business-breakdown-font, .business-breakdown-font * {
-      font-size: 10px !important;
     }
     @media (max-width: 991px) {
       .main-app-container { padding: 16px 4px; }
@@ -182,7 +172,7 @@
                   <div class="card h-100 border-0 shadow-sm d-flex flex-column">
                     <div class="card-header bg-success text-white fw-bold">Section 2: Business Breakdown</div>
                     <div class="card-body flex-grow-1 p-2" style="min-height:0;">
-                      <div id="agentResponse" class="response markdown-content p-2 rounded" style="height:100%; background:#fff; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.08); color:#23272b;"></div>
+                      <div id="agentResponse" class="response markdown-content p-2 rounded" style="height:100%; background:#fff; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.08); color:#23272b; font-size:18px;"></div>
                       <div class="d-flex justify-content-end">
                         <button id="nextStepBtn" class="btn btn-primary mt-4 px-5" style="display:none;" type="button">
                           <i class="bi bi-arrow-right-circle"></i> Next: User Story Decomposer

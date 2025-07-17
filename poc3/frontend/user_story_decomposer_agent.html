@@ -97,6 +97,10 @@
       border-radius: 1rem;
       padding: 1rem;
       color: #23272b;
+      font-size: 16px !important;
+    }
+    #storiesList * {
+      font-size: 16px !important;
     }
     #storyDetails {
       min-height: 700px;
@@ -162,8 +166,14 @@
       <div class="agent-title">Step 2: User Story Decomposer Agent</div>
       <div class="d-flex align-items-center justify-content-between mb-4" style="gap: 1rem;">
         <div>
-          <button id="backBtn" class="btn btn-secondary px-4" style="font-weight:600; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.10);"><i class="bi bi-arrow-left-circle"></i> Back</button>
-         </div>
+          <button id="backBtn" class="btn px-4 d-flex align-items-center gap-2" style="font-weight:600; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); background:#6c757d; border:none; color:#fff;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+              <path d="M8.354 11.354a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L6.707 8H11.5a.5.5 0 0 1 0 1H6.707l1.647 1.646a.5.5 0 0 1 0 .708z"/>
+            </svg>
+            <span style="color:#fff;">Step 1</span>
+          </button>
+        </div>
         <div>
           <button id="synthesizeBtn" class="btn btn-next px-5" style="white-space:nowrap; border-radius:1rem; box-shadow:0 2px 8px rgba(211,47,47,0.10);">Synthesize Functions</button>
         </div>
@@ -335,15 +345,25 @@
     };
     // Back button click handler
     document.getElementById('backBtn').addEventListener('click', function() {
-      // Save session to localStorage (simulate session/redis)
+      // Persist session data in localStorage
       const selected = Array.from(document.querySelectorAll('input[name="storyCheckbox"]:checked'));
       localStorage.setItem('selectedUserStories', JSON.stringify(selected.map(cb => ({
         key: cb.value,
         summary: cb.getAttribute('data-summary'),
         description: cb.getAttribute('data-description')
       }))));
-      localStorage.setItem('legacyEnglish', document.getElementById('legacyEnglish').value);
-      window.history.back();
+      // Also persist legacy business breakdown and file names if available
+      if (window.latestLegacyEnglish) {
+        localStorage.setItem('latestLegacyEnglish', window.latestLegacyEnglish);
+      }
+      // If legacyBusinessBreakdown and legacyFileNames are available, persist them
+      if (localStorage.getItem('legacyBusinessBreakdown')) {
+        localStorage.setItem('legacyBusinessBreakdown', localStorage.getItem('legacyBusinessBreakdown'));
+      }
+      if (localStorage.getItem('legacyFileNames')) {
+        localStorage.setItem('legacyFileNames', localStorage.getItem('legacyFileNames'));
+      }
+      window.location.href = 'http://localhost:5050/';
     });
 
     // Initial load

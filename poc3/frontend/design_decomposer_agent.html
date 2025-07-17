@@ -149,23 +149,43 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="agent-card text-center">
-      <div class="agent-title">Design Decomposer Agent</div>
-      <div class="agent-desc">Decompose functions into design elements referencing standards. (GPT-3.5, instructions from file)</div>
-      <div class="standards">
-        <span class="badge-standard">Open API</span>
-        <span class="badge-standard">Bian</span>
-        <span class="badge-standard">ISO</span>
+  <div class="container-fluid">
+    <div class="agent-card text-center" style="max-width:1800px; min-width:1100px;">
+      <div class="agent-title-container d-flex align-items-center justify-content-center w-100" style="background:#d32f2f; border-radius:1.2rem; padding:0.7rem 0; margin-bottom:0.5rem; min-height:3.5rem;">
+        <span class="agent-title" style="color:#fff; font-size:2.8rem; letter-spacing:0.03em; width:100%; text-align:center;">Step 4 : Design Decomposer Agent</span>
       </div>
-      <form id="designForm">
-        <div class="mb-3 text-start">
-          <label class="form-label">Select Functions for Design Decomposition</label>
-          <div id="functionsList" class="mb-2"></div>
+      <div class="agent-desc mb-2">Decompose functions into design elements referencing standards. (GPT-3.5, instructions from file)</div>
+      <div class="alert alert-info text-start mb-3" style="background:#e3f2fd; color:#23272b; border:1.5px solid #90caf9; border-radius:1rem; font-size:1.08rem;">
+        <b>Session Info:</b> <br>
+        The design decomposition process is <b>based on the following industry standards</b> for service modeling and interoperability. Click any badge below to learn more about each standard.
+      </div>
+      <div class="standards" style="margin-bottom:2.2rem;">
+        <a class="badge-standard clickable-standard" href="https://www.openapis.org/" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #1976d2; border:2px solid #1976d2; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
+          <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#1976d2" style="margin-right:2px;" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>OpenAPI</span>
+        </a>
+        <a class="badge-standard clickable-standard" href="https://bian.org/" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #388e3c; border:2px solid #388e3c; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
+          <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#388e3c" style="margin-right:2px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="#fff">BIAN</text></svg>BIAN</span>
+        </a>
+        <a class="badge-standard clickable-standard" href="https://www.iso.org/standards.html" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #fbc02d; border:2px solid #fbc02d; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
+          <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#fbc02d" style="margin-right:2px;" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="4"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="#23272b">ISO</text></svg>ISO</span>
+        </a>
+      </div>
+      <div class="row w-100" style="margin:0;">
+        <div class="col-lg-6 col-md-12 mb-3 d-flex flex-column align-items-center justify-content-start" style="border-right:1.5px solid #f1f3f4; min-height:500px;">
+          <form id="designForm" class="w-100" style="display:flex; flex-direction:column; min-height:450px;">
+            <div class="mb-3 text-start" style="flex:1 1 auto;">
+              <label class="form-label">Select Functions for Design Decomposition</label>
+              <div id="functionsList" class="mb-2"></div>
+            </div>
+            <div style="flex:0 0 auto; margin-top:auto; padding-bottom:1.5rem;">
+              <button type="submit" class="btn btn-next">Run Design Synthesis</button>
+            </div>
+          </form>
         </div>
-        <button type="submit" class="btn btn-next">Run Design Synthesis</button>
-      </form>
-      <div id="result" class="mt-4"></div>
+        <div class="col-lg-6 col-md-12 mt-3 mt-lg-0 d-flex flex-column align-items-center justify-content-start">
+          <div id="result" class="mt-0 w-100"></div>
+        </div>
+      </div>
     </div>
   </div>
   <script>
@@ -186,10 +206,11 @@
         return;
       }
       container.innerHTML = functions.map((fn, idx) => `
-        <div class="form-check mb-2">
+        <div class="form-check mb-2" style="background:#f5f5f5; border-radius:0.75rem; box-shadow:0 2px 8px rgba(44,44,44,0.06); padding:1rem 1.2rem; margin-bottom:1rem;">
           <input class="form-check-input" type="checkbox" value="${encodeURIComponent(JSON.stringify(fn))}" id="fn${idx}">
-          <label class="form-check-label" for="fn${idx}">
-            <span class="fw-bold" style="color:#d32f2f;">${fn.name || ''}</span> <span class="text-secondary small">${fn.description || ''}</span>
+          <label class="form-check-label" for="fn${idx}" style="width:95%;">
+            <span class="fw-bold" style="color:#d32f2f;">${fn.name || ''}</span>
+            <span class="text-secondary small" style="font-weight:400;">${fn.description || ''}</span>
           </label>
         </div>
       `).join('');
