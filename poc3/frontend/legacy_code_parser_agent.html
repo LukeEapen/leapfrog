@@ -76,14 +76,15 @@
     .form-label { font-size: 1.15rem; color: #23272b; }
     .response, .markdown-content {
       font-size: 1.05rem;
-      max-height: 350px;
+      min-height: 400px;
+      max-height: 600px;
       overflow-y: auto;
       background: #f1f3f4;
       color: #23272b;
     }
     .card-body {
-      min-height: 620px;
-      max-height: 700px;
+      min-height: 900px;
+      max-height: 1100px;
       overflow-y: auto;
       background: #f8f9fa;
     }
@@ -108,13 +109,38 @@
             </div>
             <div class="card-body bg-light flex-grow-1 d-flex flex-column" style="min-height:0;">
               <form id="uploadForm" class="mb-4">
+                <div id="spinnerTimerContainer" class="d-none mb-3 text-center">
+                  <div class="d-flex flex-column align-items-center justify-content-center">
+                    <div class="spinner-border text-danger mb-2" role="status" style="width:3rem;height:3rem;">
+                      <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <div class="fw-bold text-secondary">Processing... <span id="timer">0</span>s</div>
+                  </div>
+                </div>
                 <div class="mb-3">
+                  <label class="form-label fw-bold">Select Upload Mode</label>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="uploadMode" id="fileMode" value="file" checked>
+                    <label class="form-check-label" for="fileMode">Single File</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="uploadMode" id="folderMode" value="folder">
+                    <label class="form-check-label" for="folderMode">Folder</label>
+                  </div>
+                </div>
+                <div class="mb-3" id="fileInputDiv">
                   <label for="fileInput" class="form-label fw-bold">Upload Legacy Code File</label>
                   <input type="file" class="form-control" id="fileInput" name="file" required>
                 </div>
-                <div class="d-flex justify-content-end">
-                  <button type="submit" class="btn btn-danger btn-lg px-5"><i class="bi bi-upload"></i> Submit</button>
+                <div class="mb-3 d-none" id="folderInputDiv">
+                  <label for="folderInput" class="form-label fw-bold">Upload Folder of COBOL Files</label>
+                  <input type="file" class="form-control" id="folderInput" name="folder" webkitdirectory directory multiple>
+                  <small class="text-secondary">All files in the selected folder will be processed.</small>
                 </div>
+              <div class="d-flex justify-content-between">
+                <button id="backBtn" type="button" class="btn btn-secondary btn-lg px-5"><i class="bi bi-arrow-left-circle"></i> Back</button>
+                <button type="submit" class="btn btn-danger btn-lg px-5"><i class="bi bi-upload"></i> Submit</button>
+              </div>
               </form>
               <div class="row g-3 h-100" style="height:100%;">
                 <div class="col-md-6 h-100 d-flex flex-column">
@@ -162,23 +188,62 @@
           }).join('\n');
         }
 
+        // Toggle input fields based on mode
+        document.querySelectorAll('input[name="uploadMode"]').forEach(radio => {
+          radio.addEventListener('change', function() {
+            if (this.value === 'file') {
+              document.getElementById('fileInputDiv').classList.remove('d-none');
+              document.getElementById('folderInputDiv').classList.add('d-none');
+              document.getElementById('fileInput').required = true;
+              document.getElementById('folderInput').required = false;
+            } else {
+              document.getElementById('fileInputDiv').classList.add('d-none');
+              document.getElementById('folderInputDiv').classList.remove('d-none');
+              document.getElementById('fileInput').required = false;
+              document.getElementById('folderInput').required = true;
+            }
+          });
+        });
+
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
           e.preventDefault();
-          const fileInput = document.getElementById('fileInput');
-          const formData = new FormData();
-          formData.append('file', fileInput.files[0]);
-
-          try {
+          const mode = document.querySelector('input[name="uploadMode"]:checked').value;
+          let formData = new FormData();
+          let fileNames = [];
+          if (mode === 'file') {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files[0]) return;
+            formData.append('file', fileInput.files[0]);
+            fileNames = [fileInput.files[0].name];
             // Read the file content and display it in Section 1
-            const file = fileInput.files[0];
             const reader = new FileReader();
             reader.onload = function(event) {
-              const fileContent = document.getElementById('fileContent');
-              fileContent.textContent = event.target.result || 'No content in the file.';
+              document.getElementById('fileContent').textContent = event.target.result || 'No content in the file.';
             };
-            reader.readAsText(file);
+            reader.readAsText(fileInput.files[0]);
+          } else {
+            const folderInput = document.getElementById('folderInput');
+            if (!folderInput.files.length) return;
+            for (let i = 0; i < folderInput.files.length; i++) {
+              formData.append('files', folderInput.files[i]);
+              fileNames.push(folderInput.files[i].name);
+            }
+            // Display all file names in Section 1 as a clickable list
+            document.getElementById('fileContent').innerHTML = fileNames.map(name => `<div class='p-1 border-bottom'>${name}</div>`).join('');
+          }
 
-            // Call backend to process file
+          // Show spinner and timer
+          const spinnerContainer = document.getElementById('spinnerTimerContainer');
+          spinnerContainer.classList.remove('d-none');
+          let seconds = 0;
+          document.getElementById('timer').textContent = seconds;
+          let timerInterval = setInterval(() => {
+            seconds++;
+            document.getElementById('timer').textContent = seconds;
+          }, 1000);
+
+          try {
+            // Call backend to process file(s)
             const response = await fetch('/upload', {
               method: 'POST',
               body: formData
@@ -189,11 +254,15 @@
             } catch (jsonError) {
               document.getElementById('agentResponse').textContent = 'Error parsing backend response.';
               document.getElementById('nextStepBtn').style.display = 'none';
+              spinnerContainer.classList.add('d-none');
+              clearInterval(timerInterval);
               return;
             }
             if (data.error) {
               document.getElementById('agentResponse').innerHTML = `<span class='text-danger'>${data.error}</span>`;
               document.getElementById('nextStepBtn').style.display = 'none';
+              spinnerContainer.classList.add('d-none');
+              clearInterval(timerInterval);
               return;
             }
             // Beautify and render markdown output
@@ -207,12 +276,26 @@
           } catch (err) {
             document.getElementById('agentResponse').innerHTML = `<span class='text-danger'>${err.message || err}`;
             document.getElementById('nextStepBtn').style.display = 'none';
+          } finally {
+            spinnerContainer.classList.add('d-none');
+            clearInterval(timerInterval);
           }
         });
 
         // Next step button click handler
         document.getElementById('nextStepBtn').addEventListener('click', function() {
+          // Save current session data to localStorage before navigating
+          localStorage.setItem('legacyFileNames', document.getElementById('fileContent').textContent);
+          localStorage.setItem('legacyBusinessBreakdown', document.getElementById('agentResponse').innerHTML);
           window.location.href = '/user-story-decomposer';
+        });
+
+        // Back button click handler
+        document.getElementById('backBtn').addEventListener('click', function() {
+          // Save current session data to localStorage before navigating
+          localStorage.setItem('legacyFileNames', document.getElementById('fileContent').textContent);
+          localStorage.setItem('legacyBusinessBreakdown', document.getElementById('agentResponse').innerHTML);
+          window.history.back();
         });
     </script>
 </body>

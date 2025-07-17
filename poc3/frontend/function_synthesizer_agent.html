@@ -79,16 +79,8 @@
       <div class="agent-title text-center">Step 3: Function Synthesizer Agent</div>
       <div class="agent-desc text-center">Synthesize functions from parsed legacy code and decomposed user stories. (GPT-3.5, instructions from file)</div>
       <form id="synthForm">
-        <div class="mb-3">
-          <label for="legacyCode" class="form-label">Parsed Legacy Code</label>
-          <textarea class="form-control" id="legacyCode" rows="3" placeholder="Paste parsed legacy code here..."></textarea>
-        </div>
-        <div class="mb-3">
-          <label for="userStories" class="form-label">Decomposed User Stories</label>
-          <textarea class="form-control" id="userStories" rows="3" placeholder="Paste decomposed user stories here..."></textarea>
-        </div>
-        <div class="d-flex justify-content-end">
-          <button type="submit" class="btn btn-next px-5">Run Synthesis</button>
+        <div class="d-flex justify-content-end mt-4">
+          <a href="/design-decomposer" class="btn btn-next px-5">Run Design Synthesis</a>
         </div>
       </form>
       <div id="result" class="mt-4"></div>
@@ -124,53 +116,7 @@
       }
     });
 
-    document.getElementById('synthForm').onsubmit = async function(e) {
-      e.preventDefault();
-      const legacyCode = document.getElementById('legacyCode').value;
-      const userStories = document.getElementById('userStories').value;
-      document.getElementById('result').innerHTML = '<div class="text-secondary">Running agent...</div>';
-      try {
-        const res = await fetch('/api/synthesize-functions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ legacy_english: legacyCode, user_story: userStories })
-        });
-        const data = await res.json();
-        if (data.error) {
-          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
-          return;
-        }
-        // Save to localStorage for next step/page reload
-        if (data.result) {
-          localStorage.setItem('latestSynthesisResult', data.result);
-        }
-        let pretty = data.result;
-        try {
-          const parsed = JSON.parse(data.result);
-          if (Array.isArray(parsed)) {
-            pretty = parsed.map(item => `
-              <div class="card mb-3" style="background:#f1f3f4; border:none;">
-                <div class="card-body p-3">
-                  <div class="fw-bold" style="font-size:1.15rem; color:#d32f2f;">${item.name || ''}</div>
-                  <div class="mb-1" style="color:#23272b;">${item.description || ''}</div>
-                  ${item.source ? `<span class="badge bg-dark">${item.source}</span>` : ''}
-                </div>
-              </div>
-            `).join('');
-          } else {
-            pretty = `<pre>${JSON.stringify(parsed, null, 2)}</pre>`;
-          }
-        } catch (e) {
-          pretty = `<pre>${data.result}</pre>`;
-        }
-        document.getElementById('result').innerHTML = `<div class='alert alert-success'><b>Output:</b><br>${pretty}</div>`;
-        setTimeout(() => {
-          window.location.href = '/design-decomposer';
-        }, 1500);
-      } catch (err) {
-        document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
-      }
-    };
+    // No form submission needed; button is now a link to /design-decomposer
   </script>
 </body>
 </html>

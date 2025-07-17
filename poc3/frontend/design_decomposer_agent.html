@@ -40,7 +40,7 @@
           <label class="form-label">Select Functions for Design Decomposition</label>
           <div id="functionsList" class="mb-2"></div>
         </div>
-        <button type="submit" class="btn btn-next">Design Decomposition</button>
+        <button type="submit" class="btn btn-next">Run Design Synthesis</button>
       </form>
       <div id="result" class="mt-4"></div>
     </div>
@@ -83,8 +83,8 @@
       const selectedFunctions = checked.map(cb => JSON.parse(decodeURIComponent(cb.value)));
       document.getElementById('result').innerHTML = '<div class="text-secondary">Running design decomposition...</div>';
       try {
-        // Call backend API (replace with real endpoint if available)
-        const res = await fetch('/api/design-decompose', {
+        // Call the design_decomposer_instructions agent endpoint
+        const res = await fetch('/api/design_decomposer_instructions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ functions: selectedFunctions })
@@ -94,9 +94,11 @@
           document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
           return;
         }
-        // Beautify result
+        // Beautify result: expect sequence diagram/system interaction markdown or HTML
         let pretty = '';
-        if (data.design && Array.isArray(data.design)) {
+        if (data.design_diagram) {
+          pretty = `<div class='mb-3'><b>Design Diagram:</b></div><div style='background:#fff; border-radius:8px; padding:1rem;'>${data.design_diagram}</div>`;
+        } else if (data.design && Array.isArray(data.design)) {
           pretty = data.design.map(item => `
             <div class="card mb-2" style="background:#fff; border:none;">
               <div class="card-body p-2">
@@ -109,9 +111,10 @@
           pretty = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
         }
         document.getElementById('result').innerHTML = `<div class='alert alert-success'><b>Design Output:</b><br>${pretty}</div>`;
+        // Next: This output will go as input to Service Scoping (Step 5)
         setTimeout(() => {
           window.location.href = '/service-builder';
-        }, 1500);
+        }, 2000);
       } catch (err) {
         document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
       }

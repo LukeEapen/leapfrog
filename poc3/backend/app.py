@@ -206,50 +206,85 @@ def call_agent(assistant_id, message):
 def upload_file():
     import traceback
     try:
-        if 'file' not in request.files:
-            logging.error('No file part in request')
-            return jsonify({'error': 'No file part'}), 400
-
-        file = request.files['file']
-        if file.filename == '':
-            logging.error('No selected file')
-            return jsonify({'error': 'No selected file'}), 400
-
-        # Save file to uploads folder
         uploads_dir = os.path.join(os.getcwd(), 'uploads')
         os.makedirs(uploads_dir, exist_ok=True)
-        file_path = os.path.join(uploads_dir, file.filename)
-        file.save(file_path)
-
-        # Read file content
-        with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
-            file_content = f.read()
-
-        # Load system instructions for legacy code parser
         instructions_path = os.path.join(os.path.dirname(__file__), 'agents', 'legacy_code_parser_instructions.txt')
         with open(instructions_path, 'r', encoding='utf-8') as f:
             system_instructions = f.read()
 
-        # Compose prompt for GPT-3.5
-        prompt = f"{system_instructions}\n\nLegacy Code:\n{file_content}\n\nTranslate and output as instructed."
+        # Check for multiple files (folder upload)
+        files = request.files.getlist('files')
+        MAX_FILES = 10  # Limit number of files processed
+        MAX_FILE_SIZE = 100 * 1024  # 100KB per file
+        MAX_CONTENT_CHARS = 4000  # Truncate file content to 4000 chars
+        if files and len(files) > 0:
+            all_outputs = []
+            processed_count = 0
+            for file in files:
+                if processed_count >= MAX_FILES:
+                    logging.warning(f"Skipping file {file.filename}: max file count reached.")
+                    break
+                if file.filename == '':
+                    continue
+                # Normalize path and create subdirectories if needed
+                norm_filename = os.path.normpath(file.filename)
+                file_path = os.path.join(uploads_dir, norm_filename)
+                file_dir = os.path.dirname(file_path)
+                if not os.path.exists(file_dir):
+                    os.makedirs(file_dir, exist_ok=True)
+                file.save(file_path)
+                file_size = os.path.getsize(file_path)
+                if file_size > MAX_FILE_SIZE:
+                    logging.warning(f"Skipping file {file.filename}: exceeds max size {MAX_FILE_SIZE} bytes.")
+                    all_outputs.append(f"### {file.filename}\nSkipped: File too large (>100KB)")
+                    continue
+                with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                    file_content = f.read(MAX_CONTENT_CHARS)
+                if len(file_content) == MAX_CONTENT_CHARS:
+                    file_content += '\n...TRUNCATED...'
+                prompt = f"{system_instructions}\n\nLegacy Code:\n{file_content}\n\nTranslate and output as instructed."
+                chat_response = openai.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": system_instructions},
+                        {"role": "user", "content": file_content}
+                    ],
+                    temperature=0.41,
+                    max_tokens=1024
+                )
+                output = chat_response.choices[0].message.content
+                all_outputs.append(f"### {file.filename}\n{output}")
+                logging.info(f"Processed file: {file.filename} (folder upload)")
+                processed_count += 1
+            combined_output = '\n\n'.join(all_outputs)
+            return jsonify({'response_agent_1': combined_output})
 
-        # Call OpenAI GPT-3.5 with temperature 0.2 using new API
-        chat_response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": system_instructions},
-                {"role": "user", "content": file_content}
-            ],
-            temperature=0.41,
-            max_tokens=1024
-        )
-        output = chat_response.choices[0].message.content
+        # Otherwise, check for single file
+        if 'file' in request.files:
+            file = request.files['file']
+            if file.filename == '':
+                logging.error('No selected file')
+                return jsonify({'error': 'No selected file'}), 400
+            file_path = os.path.join(uploads_dir, file.filename)
+            file.save(file_path)
+            with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                file_content = f.read()
+            prompt = f"{system_instructions}\n\nLegacy Code:\n{file_content}\n\nTranslate and output as instructed."
+            chat_response = openai.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": system_instructions},
+                    {"role": "user", "content": file_content}
+                ],
+                temperature=0.41,
+                max_tokens=1024
+            )
+            output = chat_response.choices[0].message.content
+            logging.info(f"Processed file: {file.filename} (single file upload)")
+            return jsonify({'response_agent_1': output})
 
-        # Log success
-        logging.info(f"Processed file: {file.filename} with Legacy Code Parser Agent")
-        return jsonify({
-            'response_agent_1': output
-        })
+        logging.error('No file part in request')
+        return jsonify({'error': 'No file part'}), 400
     except Exception as e:
         logging.error(f"Error in /upload: {str(e)}\n{traceback.format_exc()}")
         return jsonify({'error': f"Server error: {str(e)}"}), 500
