@@ -38,12 +38,48 @@
     </div>
   </div>
   <script>
-    document.getElementById('builderForm').onsubmit = function(e) {
+    // Auto-populate textarea if selected design exists
+    window.addEventListener('DOMContentLoaded', function() {
+      const selectedDesign = localStorage.getItem('selectedDesignForServiceBuilder');
+      if (selectedDesign) {
+        document.getElementById('scope').value = selectedDesign;
+        // Optionally auto-run builder
+        document.getElementById('builderForm').dispatchEvent(new Event('submit'));
+        localStorage.removeItem('selectedDesignForServiceBuilder');
+      }
+    });
+
+    document.getElementById('builderForm').onsubmit = async function(e) {
       e.preventDefault();
-      document.getElementById('result').innerHTML = '<div class="text-secondary">Running agent (mock)...</div>';
-      setTimeout(() => {
-        document.getElementById('result').innerHTML = `<div class='alert alert-success'><b>Output:</b><br><pre>{\n  "buildStatus": "success",\n  "service": "ModernizedServiceX"\n}</pre></div>`;
-      }, 1200);
+      const scope = document.getElementById('scope').value.trim();
+      if (!scope) {
+        document.getElementById('result').innerHTML = '<div class="alert alert-danger">Please enter finalized scope and design.</div>';
+        return;
+      }
+      document.getElementById('result').innerHTML = '<div class="text-secondary">Requesting Swagger spec from backend...</div>';
+      try {
+        const res = await fetch('/api/service-builder-swagger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ selected_design: scope })
+        });
+        const data = await res.json();
+        if (data.error) {
+          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
+          return;
+        }
+        let swagger = data.swagger || '';
+        // Try to pretty print JSON if possible
+        let prettySwagger = '';
+        try {
+          prettySwagger = `<pre>${JSON.stringify(JSON.parse(swagger), null, 2)}</pre>`;
+        } catch (e) {
+          prettySwagger = `<pre>${swagger}</pre>`;
+        }
+        document.getElementById('result').innerHTML = `<div class='alert alert-success'><b>Swagger/OpenAPI Specification:</b><br>${prettySwagger}</div>`;
+      } catch (err) {
+        document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
+      }
     };
   </script>
 </body>

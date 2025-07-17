@@ -1,4 +1,5 @@
 
+
 import os
 import openai
 import time
@@ -23,7 +24,40 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__, static_folder='../frontend', template_folder='../frontend')
 
+@app.route('/api/service-builder-swagger', methods=['POST'])
+def api_service_builder_swagger():
+    try:
+        data = request.get_json()
+        selected_design = data.get('selected_design', '')
+        if not selected_design:
+            return jsonify({'error': 'No design element provided'}), 400
+
+        # Load system instructions for service builder
+        instructions_path = os.path.join(os.path.dirname(__file__), 'agents', 'service_builder_instructions.txt')
+        with open(instructions_path, 'r', encoding='utf-8') as f:
+            system_instructions = f.read()
+
+        # Compose prompt for GPT-3.5
+        prompt = f"{system_instructions}\n\nSelected Design Element:\n{selected_design}\n\nGenerate Swagger (OpenAPI) specification for this service. Output only the Swagger JSON." 
+
+        # Call OpenAI GPT-3.5 with temperature 0.2
+        chat_response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2,
+            max_tokens=2048
+        )
+        output = chat_response.choices[0].message.content
+        return jsonify({'swagger': output})
+    except Exception as e:
+        logging.error(f"Error in service-builder-swagger: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
 # API endpoint to run Design Decomposer Agent
+@app.route('/api/design-decompose', methods=['POST'])
 def api_design_decompose():
     try:
         data = request.get_json()
@@ -73,21 +107,6 @@ def api_design_decompose():
         logging.error(f"Error in design-decompose: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# Logging configuration
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)s %(message)s',
-    handlers=[
-        logging.FileHandler('app.log', encoding='utf-8'),
-        logging.StreamHandler()
-    ]
-)
-
-# Load environment variables
-load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-app = Flask(__name__, static_folder='../frontend', template_folder='../frontend')
 
 # ...existing code...
 
@@ -144,7 +163,9 @@ for route, html_file in ROUTES:
         def route_func():
             return send_from_directory(app.template_folder, html_file)
         return route_func
-    app.add_url_rule(route, endpoint=html_file, view_func=make_route(html_file))
+    # Use a unique endpoint name to avoid conflicts with API endpoints
+    endpoint_name = f"page_{html_file.replace('.html','').replace('-','_')}"
+    app.add_url_rule(route, endpoint=endpoint_name, view_func=make_route(html_file))
 
 
 # Optional: redirect /start to first page
@@ -217,8 +238,8 @@ def upload_file():
         MAX_FILES = 10  # Limit number of files processed
         MAX_FILE_SIZE = 100 * 1024  # 100KB per file
         MAX_CONTENT_CHARS = 4000  # Truncate file content to 4000 chars
+        all_outputs = []
         if files and len(files) > 0:
-            all_outputs = []
             processed_count = 0
             for file in files:
                 if processed_count >= MAX_FILES:
@@ -242,12 +263,12 @@ def upload_file():
                     file_content = f.read(MAX_CONTENT_CHARS)
                 if len(file_content) == MAX_CONTENT_CHARS:
                     file_content += '\n...TRUNCATED...'
-                prompt = f"{system_instructions}\n\nLegacy Code:\n{file_content}\n\nTranslate and output as instructed."
+                prompt = f"{system_instructions}\n\nLegacy Code:\n{file_content}\n\nTranslate and output as instructed. Ensure output uses markdown headings and subheadings for business requirements."
                 chat_response = openai.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": system_instructions},
-                        {"role": "user", "content": file_content}
+                        {"role": "user", "content": prompt}
                     ],
                     temperature=0.41,
                     max_tokens=1024
@@ -256,6 +277,7 @@ def upload_file():
                 all_outputs.append(f"### {file.filename}\n{output}")
                 logging.info(f"Processed file: {file.filename} (folder upload)")
                 processed_count += 1
+        if all_outputs:
             combined_output = '\n\n'.join(all_outputs)
             return jsonify({'response_agent_1': combined_output})
 
@@ -269,12 +291,12 @@ def upload_file():
             file.save(file_path)
             with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
                 file_content = f.read()
-            prompt = f"{system_instructions}\n\nLegacy Code:\n{file_content}\n\nTranslate and output as instructed."
+            prompt = f"{system_instructions}\n\nLegacy Code:\n{file_content}\n\nTranslate and output as instructed. Ensure output uses markdown headings and subheadings for business requirements."
             chat_response = openai.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": system_instructions},
-                    {"role": "user", "content": file_content}
+                    {"role": "user", "content": prompt}
                 ],
                 temperature=0.41,
                 max_tokens=1024
@@ -336,10 +358,5 @@ def api_decompose_user_story():
     except Exception as e:
         logging.error(f"Error in decompose-user-story: {str(e)}")
         return jsonify({'error': str(e)}), 500
-if __name__ == '__main__':
-    app.run(debug=True, port=5050)
-# Register the design decomposer endpoint after all functions and routes are defined
-app.add_url_rule('/api/design-decompose', view_func=api_design_decompose, methods=['POST'])
-
 if __name__ == '__main__':
     app.run(debug=True, port=5050)

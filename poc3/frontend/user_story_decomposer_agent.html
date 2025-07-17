@@ -34,9 +34,20 @@
       margin: 0 auto 2rem auto;
       width: 100%;
       max-width: 100%;
+      border: 2px solid #e0e0e0;
     }
-    .agent-title { font-size: 2.2rem; font-weight: bold; }
-    .agent-desc { font-size: 1.15rem; margin-bottom: 2rem; }
+    .agent-title {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #fff;
+      background: #d32f2f;
+      border-radius: 1.25rem 1.25rem 0 0;
+      padding: 1.2rem 2rem;
+      margin-bottom: 0;
+      box-shadow: 0 2px 12px rgba(44,44,44,0.10);
+      display: block;
+      text-align: left;
+    }
     .btn-next, #synthesizeBtn {
       background: #d32f2f;
       color: #fff;
@@ -71,6 +82,7 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
+      border: 2px solid #e0e0e0;
     }
     .row.g-4.align-sections {
       display: flex;
@@ -96,6 +108,26 @@
       color: #23272b;
     }
     #legacySection {
+    #legacyEnglishMarkdown, #legacyEnglishMarkdown * {
+      font-size: 16px !important;
+    }
+    #storiesList, #storiesList * {
+      font-size: 16px !important;
+    }
+    #beautifiedStoryDetails, #beautifiedStoryDetails * {
+      font-size: 16px !important;
+    }
+    #beautifiedStoryDetails h1,
+    #beautifiedStoryDetails h2,
+    #beautifiedStoryDetails h3,
+    #beautifiedStoryDetails h4,
+    #beautifiedStoryDetails h5,
+    #beautifiedStoryDetails h6 {
+      font-size: 16px !important;
+      line-height: 1.3 !important;
+      font-weight: 600 !important;
+      margin: 0.5em 0 !important;
+    }
       min-height: 700px;
       max-height: 700px;
       overflow-y: auto;
@@ -127,48 +159,47 @@
 <body>
   <div class="main-app-container">
     <div class="agent-card">
-      <div class="d-flex align-items-center justify-content-between mb-2" style="gap: 1rem;">
+      <div class="agent-title">Step 2: User Story Decomposer Agent</div>
+      <div class="d-flex align-items-center justify-content-between mb-4" style="gap: 1rem;">
         <div>
-          <div class="agent-title">Step 2: User Story Decomposer Agent</div>
-          <div class="agent-desc">Decompose user stories into actionable requirements and functions. (GPT-3.5, instructions from file)</div>
-        </div>
-        <div class="d-flex align-items-center" style="gap:1rem;">
-          <button id="backBtn" class="btn btn-secondary px-4" style="font-weight:600;"><i class="bi bi-arrow-left-circle"></i> Back</button>
-          <button id="synthesizeBtn" class="btn btn-next px-5" style="white-space:nowrap;">Synthesize Functions</button>
+          <button id="backBtn" class="btn btn-secondary px-4" style="font-weight:600; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.10);"><i class="bi bi-arrow-left-circle"></i> Back</button>
+         </div>
+        <div>
+          <button id="synthesizeBtn" class="btn btn-next px-5" style="white-space:nowrap; border-radius:1rem; box-shadow:0 2px 8px rgba(211,47,47,0.10);">Synthesize Functions</button>
         </div>
       </div>
       <div id="spinnerTimerContainer" class="d-none my-4 text-center">
         <div class="d-flex flex-column align-items-center justify-content-center">
           <div class="spinner-border text-danger mb-2" role="status" style="width:3rem;height:3rem;"></div>
-          <div class="fw-bold text-secondary">Processing... <span id="timer">0</span>s</div>
+          <div class="fw-bold text-secondary" style="font-size:1.2rem;">Processing... <span id="timer">0</span>s</div>
         </div>
       </div>
-      <div id="loading" class="my-4 text-secondary text-center">Connecting to JIRA and loading user stories...</div>
-      <div id="error" class="alert alert-danger d-none"></div>
-      <div class="row g-4 align-sections">
+      <div id="loading" class="my-4 text-secondary text-center" style="font-size:1.1rem; background:#f8d7da; color:#b71c1c; border-radius:0.75rem; padding:0.75rem;">Connecting to JIRA and loading user stories...</div>
+      <div id="error" class="alert alert-danger d-none" style="font-size:1.1rem; border-radius:0.75rem;"></div>
+      <div class="row g-4 align-sections" style="margin-top:0.5rem;">
         <div class="col-md-4 d-flex flex-column h-100">
-          <div class="section-heading">User Story Summary</div>
-          <div class="section-card flex-grow-1 d-flex flex-column" style="background:#f1f3f4;">
+          <div class="section-heading" style="margin-bottom:0.5rem;">User Story Summary</div>
+          <div class="section-card flex-grow-1 d-flex flex-column" style="background:#f1f3f4; border:2px solid #e0e0e0;">
             <div id="storiesList" class="flex-grow-1"></div>
           </div>
         </div>
         <div class="col-md-4 d-flex flex-column h-100">
-          <div class="section-heading">User Story Details</div>
-          <div class="section-card flex-grow-1 d-flex flex-column" id="storyDetailsSection">
+          <div class="section-heading" style="margin-bottom:0.5rem; font-size:20px;">User Story Details</div>
+          <div class="section-card flex-grow-1 d-flex flex-column" id="storyDetailsSection" style="border:2px solid #e0e0e0;">
             <div id="storyDetails" class="d-none">
-              <div class="fw-bold mb-2" id="selectedStorySummary"></div>
-              <div class="text-secondary small mb-2" id="selectedStoryDescription"></div>
-              <div id="beautifiedStoryDetails" class="mt-2"></div>
+              <div class="fw-bold mb-2" id="selectedStorySummary" style="font-size:1.15rem;"></div>
+              <div class="text-secondary small mb-2" id="selectedStoryDescription" style="font-size:1.05rem;"></div>
+              <div id="beautifiedStoryDetails" class="mt-2" style="font-size:20px;"></div>
               <div id="synthResult" class="mt-3"></div>
             </div>
-            <div id="storyDetailsPlaceholder" class="text-secondary">Select a user story to see details here.</div>
+            <div id="storyDetailsPlaceholder" class="text-secondary" style="font-size:1.05rem;">Select a user story to see details here.</div>
           </div>
         </div>
         <div class="col-md-4 d-flex flex-column h-100">
-          <div class="section-heading">Legacy Business Requirement</div>
-          <div class="section-card flex-grow-1 d-flex flex-column" id="legacySection" style="height:100%;">
+          <div class="section-heading" style="margin-bottom:0.5rem;">Legacy Business Requirement</div>
+          <div class="section-card flex-grow-1 d-flex flex-column" id="legacySection" style="height:100%; border:2px solid #e0e0e0;">
             <div class="flex-grow-1 d-flex flex-column">
-              <textarea id="legacyEnglish" class="form-control mb-2 flex-grow-1" style="min-height:0; height:100%; resize:none;" rows="8" readonly placeholder="Upload legacy code in previous step to see English output..."></textarea>
+              <div id="legacyEnglishMarkdown" class="flex-grow-1" style="background:#f1f3f4; border:1.5px solid #e0e0e0; font-size:20px; color:#23272b; padding:0.5rem; border-radius:0.75rem; min-height:0; height:100%; overflow-y:auto;"></div>
             </div>
           </div>
         </div>
@@ -223,15 +254,18 @@
       selected.forEach((cb, idx) => {
         const summary = cb.getAttribute('data-summary');
         const description = cb.getAttribute('data-description');
+        // Render markdown and force all headings to 16px inline
+        let html = marked.parse(description || '');
+        html = html.replace(/<h([1-6])([^>]*)>/gi, '<h$1$2 style="font-size:16px;line-height:1.3;font-weight:600;margin:0.5em 0;">');
         detailsHtml += `<div class='mb-4 pb-2 border-bottom'>
           <div class='fw-bold mb-1'>${summary}</div>
-          <div class='text-secondary small mb-1'>${marked.parse(description || '')}</div>
+          <div class='text-secondary small mb-1'>${html}</div>
         </div>`;
       });
       document.getElementById('selectedStorySummary').textContent = '';
       document.getElementById('selectedStoryDescription').innerHTML = '';
       document.getElementById('beautifiedStoryDetails').innerHTML = detailsHtml;
-      document.getElementById('legacyEnglish').value = window.latestLegacyEnglish || '';
+      document.getElementById('legacyEnglishMarkdown').innerHTML = marked.parse(window.latestLegacyEnglish || '');
       document.getElementById('synthResult').innerHTML = '';
     };
 
@@ -254,7 +288,8 @@
       const summaries = selected.map(cb => cb.getAttribute('data-summary'));
       const descriptions = selected.map(cb => cb.getAttribute('data-description'));
       const userStory = summaries.join('\n') + '\n' + descriptions.join('\n\n');
-      const legacyEnglish = document.getElementById('legacyEnglish').value;
+      // Get legacyEnglish from window.latestLegacyEnglish (set by fetchLegacyEnglish)
+      const legacyEnglish = window.latestLegacyEnglish || '';
       // Show spinner and timer
       const spinnerContainer = document.getElementById('spinnerTimerContainer');
       spinnerContainer.classList.remove('d-none');

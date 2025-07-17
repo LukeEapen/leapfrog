@@ -89,6 +89,12 @@ Condition: If the customer’s current balance is greater than zero, and their m
 
 Action: Flag the account for late fee assessment and add the defined late fee amount to the total fees for the current statement cycle.
 
+Instructions for Output:
+1. Start with a main heading: 'Business Requirements Breakdown'.
+2. For each major business requirement, use a subheading (e.g., 'Requirement 1: ...').
+3. Under each subheading, provide a concise description and any relevant details or logic.
+4. Use markdown formatting for headings and lists.
+5. Ensure clarity and modern business language.
 Use Case Alignment:
 This instruction is optimized for AI agents participating in reverse engineering, rules harvesting, and business capability mapping during credit card platform modernization at Capital One.
 
