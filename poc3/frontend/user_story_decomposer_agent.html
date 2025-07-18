@@ -23,8 +23,8 @@
       flex-direction: column;
       align-items: stretch;
       justify-content: flex-start;
-      max-width: 1800px;
-      width: 100%;
+      max-width: 2200px;
+      width: 98vw;
     }
     .agent-card {
       background: #f8f9fa;
@@ -176,7 +176,7 @@
         <span style="font-size:2.3rem; font-weight:900; letter-spacing:0.01em; margin-left:1.1rem; text-shadow:0 2px 8px rgba(44,44,44,0.10); vertical-align:middle; line-height:1;">User Story Decomposer</span>
       </div>
       <div style="font-size:1.13rem; font-weight:500; color:#fff; opacity:0.93; max-width:900px; text-align:center; margin-bottom:0.2rem;">
-        <span class="badge bg-warning text-dark me-2" style="font-size:1rem; border-radius:0.7rem; padding:0.5em 1em; vertical-align:middle;"><i class="bi bi-lightbulb me-2"></i>Step 2</span>
+        <span class="badge bg-warning text-dark me-2" style="font-size:1rem; border-radius:0.7rem; padding:0.5em 1em; vertical-align:middle; background:#ffc107 !important; color:#23272b !important;"><i class="bi bi-lightbulb me-2"></i>Step 2</span>
         Select user stories and synthesize business logic, rules, and functions for modernization.<br>
         <span style="opacity:0.85;">Visualize and break down user stories for technical modernization and function synthesis.</span>
       </div>
@@ -204,7 +204,7 @@
   <main class="container-fluid d-flex justify-content-center" style="max-width: 2000px;">
     <div class="main-app-container mx-auto" style="background: #fff; border-radius: 2rem; box-shadow: 0 8px 32px rgba(44,44,44,0.18); padding: 2.5rem 2rem; margin-bottom: 2rem;">
       <div class="d-flex align-items-center justify-content-between mb-4" style="gap: 1rem;">
-        <button id="backBtn" class="btn px-4 d-flex align-items-center gap-2" style="font-weight:600; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); background:#6c757d; border:none; color:#fff;">
+        <button id="backBtn" class="btn px-5 btn-lg d-flex align-items-center gap-2" style="font-weight:700; border-radius:0.75rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); background:#6c757d; border:none; color:#fff; height:56px; min-height:56px; font-size:1.15rem;">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
             <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
             <path d="M8.354 11.354a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L6.707 8H11.5a.5.5 0 0 1 0 1H6.707l1.647 1.646a.5.5 0 0 1 0 .708z"/>
@@ -385,24 +385,30 @@
     };
     // Back button click handler
     document.getElementById('backBtn').addEventListener('click', function() {
-      // Persist session data in localStorage
+      // Persist all relevant session data in localStorage
       const selected = Array.from(document.querySelectorAll('input[name="storyCheckbox"]:checked'));
       localStorage.setItem('selectedUserStories', JSON.stringify(selected.map(cb => ({
         key: cb.value,
         summary: cb.getAttribute('data-summary'),
         description: cb.getAttribute('data-description')
       }))));
-      // Also persist legacy business breakdown and file names if available
+      // Persist legacy English output
       if (window.latestLegacyEnglish) {
         localStorage.setItem('latestLegacyEnglish', window.latestLegacyEnglish);
       }
-      // If legacyBusinessBreakdown and legacyFileNames are available, persist them
+      // Persist legacy business breakdown and file names if available
       if (localStorage.getItem('legacyBusinessBreakdown')) {
         localStorage.setItem('legacyBusinessBreakdown', localStorage.getItem('legacyBusinessBreakdown'));
       }
       if (localStorage.getItem('legacyFileNames')) {
         localStorage.setItem('legacyFileNames', localStorage.getItem('legacyFileNames'));
       }
+      // Persist latest synthesis result if available
+      if (localStorage.getItem('latestSynthesisResult')) {
+        localStorage.setItem('latestSynthesisResult', localStorage.getItem('latestSynthesisResult'));
+      }
+      // Persist any other relevant session keys (add as needed)
+      // ...existing code...
       window.location.href = 'http://localhost:5050/';
     });
 

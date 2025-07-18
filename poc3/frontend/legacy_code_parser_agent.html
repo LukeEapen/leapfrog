@@ -131,7 +131,7 @@
           <span style="font-size:2.3rem; font-weight:900; letter-spacing:0.01em; margin-left:1.1rem; text-shadow:0 2px 8px rgba(44,44,44,0.10); vertical-align:middle; line-height:1;">Legacy Code Parser Agent</span>
         </div>
         <div style="font-size:1.13rem; font-weight:500; color:#fff; opacity:0.93; max-width:900px; text-align:center; margin-bottom:0.2rem;">
-          <span class="badge bg-warning text-dark me-2" style="font-size:1rem; border-radius:0.7rem; padding:0.5em 1em; vertical-align:middle;"><i class="bi bi-upload me-2"></i>Step 1</span>
+          <span class="badge bg-warning text-dark me-2" style="font-size:1rem; border-radius:0.7rem; padding:0.5em 1em; vertical-align:middle; background:#ffc107 !important; color:#23272b !important;"><i class="bi bi-upload me-2"></i>Step 1</span>
           Upload legacy COBOL or batch code and instantly translate it into clear, business-friendly requirements for modernization.<br>
           </div>
         <noscript><div class="alert alert-danger mt-2">Bootstrap Icons require JavaScript enabled.</div></noscript>
@@ -176,10 +176,15 @@
                   <input type="file" class="form-control" id="folderInput" name="folder" webkitdirectory directory multiple>
                   <small class="text-secondary">All files in the selected folder will be processed.</small>
                 </div>
-              <div class="d-flex justify-content-between">
-                <button id="backBtn" type="button" class="btn btn-secondary btn-lg px-5"><i class="bi bi-arrow-left-circle"></i> Back</button>
-                <button type="submit" class="btn btn-danger btn-lg px-5"><i class="bi bi-upload"></i> Submit</button>
-              </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <button id="backBtn" type="button" class="btn btn-secondary btn-lg px-5"><i class="bi bi-arrow-left-circle"></i> Back</button>
+                  <div class="d-flex gap-2">
+                    <button id="submitBtn" type="submit" class="btn btn-danger btn-lg px-5"><i class="bi bi-upload"></i> Submit</button>
+                    <button id="nextStepBtn" class="btn btn-primary btn-lg px-5" style="display:none;" type="button" disabled>
+                      <i class="bi bi-arrow-right-circle"></i> Next: User Story Decomposer
+                    </button>
+                  </div>
+                </div>
               </form>
               <div class="row g-3 h-100" style="height:100%;">
                 <div class="col-md-6 h-100 d-flex flex-column">
@@ -195,11 +200,6 @@
                     <div class="card-header bg-success text-white fw-bold">Section 2: Business Breakdown</div>
                     <div class="card-body flex-grow-1 p-2" style="min-height:0;">
                       <div id="agentResponse" class="response markdown-content p-2 rounded" style="height:100%; background:#fff; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.08); color:#23272b; font-size:18px;"></div>
-                      <div class="d-flex justify-content-end">
-                        <button id="nextStepBtn" class="btn btn-primary mt-4 px-5" style="display:none;" type="button">
-                          <i class="bi bi-arrow-right-circle"></i> Next: User Story Decomposer
-                        </button>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -309,6 +309,12 @@
             document.getElementById('timer').textContent = seconds;
           }, 1000);
 
+          // Disable submit, keep next disabled until results
+          const submitBtn = document.getElementById('submitBtn');
+          const nextStepBtn = document.getElementById('nextStepBtn');
+          submitBtn.disabled = true;
+          nextStepBtn.disabled = true;
+
           try {
             // Call backend to process file(s)
             const response = await fetch('/upload', {
@@ -320,14 +326,16 @@
               data = await response.json();
             } catch (jsonError) {
               document.getElementById('agentResponse').textContent = 'Error parsing backend response.';
-              document.getElementById('nextStepBtn').style.display = 'none';
+              nextStepBtn.style.display = 'none';
+              submitBtn.disabled = false;
               spinnerContainer.classList.add('d-none');
               clearInterval(timerInterval);
               return;
             }
             if (data.error) {
               document.getElementById('agentResponse').innerHTML = `<span class='text-danger'>${data.error}</span>`;
-              document.getElementById('nextStepBtn').style.display = 'none';
+              nextStepBtn.style.display = 'none';
+              submitBtn.disabled = false;
               spinnerContainer.classList.add('d-none');
               clearInterval(timerInterval);
               return;
@@ -339,10 +347,13 @@
             if (data.response_agent_1) {
               localStorage.setItem('latestLegacyEnglish', data.response_agent_1);
             }
-            document.getElementById('nextStepBtn').style.display = 'block';
+            nextStepBtn.style.display = 'block';
+            nextStepBtn.disabled = false;
+            submitBtn.disabled = true;
           } catch (err) {
             document.getElementById('agentResponse').innerHTML = `<span class='text-danger'>${err.message || err}`;
-            document.getElementById('nextStepBtn').style.display = 'none';
+            nextStepBtn.style.display = 'none';
+            submitBtn.disabled = false;
           } finally {
             spinnerContainer.classList.add('d-none');
             clearInterval(timerInterval);

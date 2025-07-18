@@ -5,6 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Step 6 : Microservice Project Viewer</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Bootstrap Icons fallback check -->
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      var testIcon = document.createElement('i');
+      testIcon.className = 'bi bi-folder2-open';
+      document.body.appendChild(testIcon);
+      var style = window.getComputedStyle(testIcon, '::before');
+      var content = style.getPropertyValue('content');
+      if (!content || content === 'none' || content === '""') {
+        var fallback = document.getElementById('icon-fallback');
+        if (fallback) fallback.style.display = 'block';
+      }
+      document.body.removeChild(testIcon);
+    });
+  </script>
   <style>
     body { background: #f7f8fa; font-family: 'Segoe UI', Arial, sans-serif; }
     .repo-card {
@@ -115,10 +132,82 @@
       color: #388e3c;
       font-weight: 600;
     }
+    /* Modern Banner Styles */
+    .banner {
+      background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%);
+      color: #fff;
+      padding: 1.2rem 0 1rem 0;
+      border-radius: 0 0 1.2rem 1.2rem;
+      box-shadow: 0 4px 32px rgba(44,44,44,0.22);
+      margin-bottom: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      border: 4px solid #fff;
+      min-height: unset;
+    }
+    .banner-icon {
+      font-size: 7rem;
+      position: absolute;
+      top: -40px;
+      right: -60px;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    .banner-content {
+      position: relative;
+      z-index: 2;
+    }
+    .banner-title {
+      font-size: 2.3rem;
+      font-weight: 900;
+      letter-spacing: 0.01em;
+      margin-left: 1.1rem;
+      text-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .banner-subtitle {
+      font-size: 1.13rem;
+      font-weight: 500;
+      color: #fff;
+      opacity: 0.93;
+      max-width: 900px;
+      text-align: center;
+      margin-bottom: 0.2rem;
+    }
+    .badge-warning {
+      background-color: #ffc107;
+      color: #212529;
+      border-radius: 0.7rem;
+      padding: 0.5em 1em;
+      vertical-align: middle;
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
   <div class="container-fluid">
+    <!-- Modern Banner Start -->
+    <header class="banner">
+      <i class="bi bi-folder2-open banner-icon"></i>
+      <div class="container d-flex flex-column align-items-center position-relative">
+        <div class="d-flex align-items-center justify-content-center flex-wrap" style="gap:1.1rem; margin-bottom:0.2rem;">
+          <i class="bi bi-folder2-open" style="font-size:1.7rem;"></i>
+          <i class="bi bi-diagram-3" style="font-size:1.7rem;"></i>
+          <i class="bi bi-file-earmark-code" style="font-size:1.7rem;"></i>
+          <i class="bi bi-gear" style="font-size:1.7rem;"></i>
+          <span class="banner-title">Microservice Project Viewer</span>
+        </div>
+        <div class="banner-subtitle">
+          <span class="badge badge-warning me-2"><i class="bi bi-folder2-open me-2"></i>Step 6</span>
+          Browse the generated microservice application files and folders.<br>
+          <span style="opacity:0.85;">Click any file to view its contents. Use the project structure to navigate.</span>
+        </div>
+        <noscript><div class="alert alert-danger mt-2">Bootstrap Icons require JavaScript enabled.</div></noscript>
+        <div id="icon-fallback" style="display:none; color:yellow; font-weight:bold;">[Icons failed to load]</div>
+      </div>
+    </header>
+    <!-- Modern Banner End -->
     <div class="repo-card">
       <div class="repo-title">Microservice Project</div>
       <div class="repo-desc">Browse the generated microservice application files and folders. Click any file to view its contents.</div>
