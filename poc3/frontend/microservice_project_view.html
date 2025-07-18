@@ -208,18 +208,29 @@
       </div>
     </header>
     <!-- Modern Banner End -->
-    <div class="repo-card">
-      <div class="repo-title">Microservice Project</div>
-      <div class="repo-desc">Browse the generated microservice application files and folders. Click any file to view its contents.</div>
-      <div class="d-flex w-100" style="gap:2.5rem; align-items:flex-start;">
-        <div class="tree-panel">
-          <div class="fw-bold mb-2" style="color:#d32f2f;">Project Structure</div>
-          <ul class="file-list" id="fileTree"></ul>
+    <div class="container-fluid">
+      <div class="repo-card">
+        <div class="d-flex align-items-center w-100 mb-3" style="gap:1.2rem; justify-content:flex-start;">
+          <a href="/service-builder-agent" class="btn btn-next d-flex align-items-center gap-2" style="background:#6c757d; min-width:180px; padding:0.85rem 2.5rem; font-size:1.15rem; font-weight:600; border-radius:0.75rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); border:none; color:#fff; height:48px; width:max-content;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+              <path d="M8.354 11.354a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L6.707 8H11.5a.5.5 0 0 1 0 1H6.707l1.647 1.646a.5.5 0 0 1 0 .708z"/>
+            </svg>
+            <span style="color:#fff;">Back to Step 5</span>
+          </a>
+          <div class="repo-title flex-grow-1 text-center m-0" style="text-align:center; margin:0 auto;">Microservice Project</div>
         </div>
-        <div class="code-panel">
-          <div class="code-title" id="codeTitle">Select a file to view its contents</div>
-          <pre class="code-block" id="codeBlock"></pre>
-          <div class="project-status" id="projectStatus"></div>
+        <div class="repo-desc">Browse the generated microservice application files and folders. Click any file to view its contents.</div>
+        <div class="d-flex w-100" style="gap:2.5rem; align-items:flex-start;">
+          <div class="tree-panel">
+            <div class="fw-bold mb-2" style="color:#d32f2f;">Project Structure</div>
+            <ul class="file-list" id="fileTree"></ul>
+          </div>
+          <div class="code-panel">
+            <div class="code-title" id="codeTitle">Select a file to view its contents</div>
+            <pre class="code-block" id="codeBlock"></pre>
+            <div class="project-status" id="projectStatus"></div>
+          </div>
         </div>
       </div>
     </div>
