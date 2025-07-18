@@ -149,39 +149,76 @@
   </style>
 </head>
 <body>
+  <header style="background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color: #fff; padding: 1.2rem 0 1rem 0; border-radius: 0 0 1.2rem 1.2rem; box-shadow: 0 4px 32px rgba(44,44,44,0.22); margin-bottom: 2.5rem; position:relative; overflow:hidden; border: 4px solid #fff; min-height:unset;">
+    <div style="position:absolute; top:-40px; right:-60px; opacity:0.12; pointer-events:none;">
+      <i class="bi bi-diagram-3" style="font-size:7rem;"></i>
+    </div>
+    <div class="container d-flex flex-column align-items-center position-relative" style="z-index:2;">
+      <div class="d-flex align-items-center justify-content-center flex-wrap" style="gap:1.1rem; margin-bottom:0.2rem;">
+        <i class="bi bi-cpu" style="font-size:1.7rem;"></i>
+        <i class="bi bi-diagram-3" style="font-size:1.7rem;"></i>
+        <i class="bi bi-lightbulb" style="font-size:1.7rem;"></i>
+        <i class="bi bi-arrow-repeat" style="font-size:1.7rem;"></i>
+        <i class="bi bi-gear" style="font-size:1.7rem;"></i>
+        <span style="font-size:2.3rem; font-weight:900; letter-spacing:0.01em; margin-left:1.1rem; text-shadow:0 2px 8px rgba(44,44,44,0.10); vertical-align:middle; line-height:1;">Design Decomposer Agent</span>
+      </div>
+      <div style="font-size:1.13rem; font-weight:500; color:#fff; opacity:0.93; max-width:900px; text-align:center; margin-bottom:0.2rem;">
+        <span class="badge bg-warning text-dark me-2" style="font-size:1rem; border-radius:0.7rem; padding:0.5em 1em; vertical-align:middle;"><i class="bi bi-diagram-3 me-2"></i>Step 4</span>
+        Decompose synthesized functions into design elements referencing industry standards.<br>
+        <span style="opacity:0.85;">Click a standard badge to learn more about OpenAPI, BIAN, or ISO.</span>
+      </div>
+      <noscript><div class="alert alert-danger mt-2">Bootstrap Icons require JavaScript enabled.</div></noscript>
+      <div id="icon-fallback" style="display:none; color:yellow; font-weight:bold;">[Icons failed to load]</div>
+    </div>
+  </header>
   <div class="container-fluid">
     <div class="agent-card text-center" style="max-width:1800px; min-width:1100px;">
-      <div class="agent-title-container d-flex align-items-center justify-content-center w-100" style="background:#d32f2f; border-radius:1.2rem; padding:0.7rem 0; margin-bottom:0.5rem; min-height:3.5rem;">
-        <span class="agent-title" style="color:#fff; font-size:2.8rem; letter-spacing:0.03em; width:100%; text-align:center;">Step 4 : Design Decomposer Agent</span>
-      </div>
-      <div class="agent-desc mb-2">Decompose functions into design elements referencing standards. (GPT-3.5, instructions from file)</div>
+      <!-- ...existing code... -->
+  <!-- Bootstrap Icons CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Bootstrap Icons fallback check -->
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      var testIcon = document.createElement('i');
+      testIcon.className = 'bi bi-cpu';
+      document.body.appendChild(testIcon);
+      var style = window.getComputedStyle(testIcon, '::before');
+      var content = style.getPropertyValue('content');
+      if (!content || content === 'none' || content === '""') {
+        var fallback = document.getElementById('icon-fallback');
+        if (fallback) fallback.style.display = 'block';
+      }
+      document.body.removeChild(testIcon);
+    });
+  </script>
       <div class="alert alert-info text-start mb-3" style="background:#e3f2fd; color:#23272b; border:1.5px solid #90caf9; border-radius:1rem; font-size:1.08rem;">
         <b>Session Info:</b> <br>
         The design decomposition process is <b>based on the following industry standards</b> for service modeling and interoperability. Click any badge below to learn more about each standard.
       </div>
-      <div class="standards" style="margin-bottom:2.2rem;">
-        <a class="badge-standard clickable-standard" href="https://www.openapis.org/" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #1976d2; border:2px solid #1976d2; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
-          <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#1976d2" style="margin-right:2px;" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>OpenAPI</span>
+      <div class="d-flex align-items-center justify-content-between w-100 mb-4" style="gap:1rem; margin-bottom:2.2rem !important;">
+        <a href="/function-synthesizer-agent" class="btn px-4 d-flex align-items-center gap-2" style="font-weight:600; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); background:#6c757d; border:none; color:#fff; min-width:180px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+            <path d="M8.354 11.354a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L6.707 8H11.5a.5.5 0 0 1 0 1H6.707l1.647 1.646a.5.5 0 0 1 0 .708z"/>
+          </svg>
+          <span style="color:#fff;">Back</span>
         </a>
-        <a class="badge-standard clickable-standard" href="https://bian.org/" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #388e3c; border:2px solid #388e3c; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
-          <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#388e3c" style="margin-right:2px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="#fff">BIAN</text></svg>BIAN</span>
-        </a>
-        <a class="badge-standard clickable-standard" href="https://www.iso.org/standards.html" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #fbc02d; border:2px solid #fbc02d; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
-          <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#fbc02d" style="margin-right:2px;" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="4"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="#23272b">ISO</text></svg>ISO</span>
-        </a>
+        <div class="standards d-flex align-items-center justify-content-center flex-grow-1" style="margin-bottom:0;">
+          <a class="badge-standard clickable-standard" href="https://www.openapis.org/" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #1976d2; border:2px solid #1976d2; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
+            <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#1976d2" style="margin-right:2px;" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>OpenAPI</span>
+          </a>
+          <a class="badge-standard clickable-standard" href="https://bian.org/" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #388e3c; border:2px solid #388e3c; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
+            <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#388e3c" style="margin-right:2px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="#fff">BIAN</text></svg>BIAN</span>
+          </a>
+          <a class="badge-standard clickable-standard" href="https://www.iso.org/standards.html" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #fbc02d; border:2px solid #fbc02d; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
+            <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#fbc02d" style="margin-right:2px;" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="4"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="#23272b">ISO</text></svg>ISO</span>
+          </a>
+        </div>
+        <button type="submit" form="designForm" class="btn btn-next" style="min-width:180px;">Run Design Synthesis</button>
       </div>
       <div class="row w-100" style="margin:0;">
         <div class="col-lg-6 col-md-12 mb-3 d-flex flex-column align-items-center justify-content-start" style="border-right:1.5px solid #f1f3f4; min-height:500px;">
           <form id="designForm" class="w-100" style="display:flex; flex-direction:column; min-height:450px;">
-            <div class="mb-3 d-flex justify-content-start">
-              <a href="/function-synthesizer-agent" class="btn px-4 d-flex align-items-center gap-2" style="font-weight:600; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); background:#6c757d; border:none; color:#fff; min-width:180px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
-                  <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
-                  <path d="M8.354 11.354a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L6.707 8H11.5a.5.5 0 0 1 0 1H6.707l1.647 1.646a.5.5 0 0 1 0 .708z"/>
-                </svg>
-                <span style="color:#fff;">Back</span>
-              </a>
-            </div>
             <div class="mb-3 text-start" style="flex:1 1 auto;">
               <label class="form-label">Select Functions for Design Decomposition</label>
               <div id="functionsList" class="mb-2"></div>

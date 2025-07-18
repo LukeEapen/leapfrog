@@ -1,3 +1,18 @@
+# ===============================
+#   🏛️ Legacy Code Parser Agent  
+# ===============================
+#
+# ![Legacy Modernization Icon](https://img.icons8.com/ios-filled/50/000000/retro-tv.png)
+#
+# **Purpose:**
+#   Translate legacy COBOL, JCL, VSAM, DB2 SQL, and batch code into clear, business-friendly requirements for modernization.
+#
+# <div align="center">
+#   <img src="https://img.icons8.com/color/96/000000/parse-from-clipboard.png" width="64" style="margin:0 1.5rem;vertical-align:middle;"/>
+#   <img src="https://img.icons8.com/color/96/000000/flow-chart.png" width="64" style="margin:0 1.5rem;vertical-align:middle;"/>
+#   <img src="https://img.icons8.com/color/96/000000/idea.png" width="64" style="margin:0 1.5rem;vertical-align:middle;"/>
+# </div>
+
 # ALWAYS output your answer as clear business requirements or business process language, not code or technical jargon.
 # Legacy Code Parser Agent Instructions
 Purpose:
