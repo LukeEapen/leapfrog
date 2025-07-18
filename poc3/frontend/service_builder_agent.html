@@ -221,8 +221,33 @@
         // Display Swagger in left/right columns
         document.getElementById('result').innerHTML = '';
         let leftCol = `<div class='swagger-editor-panel'><div class='swagger-title'>Swagger JSON</div><pre class='swagger-code'>${JSON.stringify(swaggerObj, null, 2)}</pre></div>`;
-        let rightCol = `<div class='swagger-preview-panel'><div class='swagger-preview-title'>Swagger Preview</div><pre class='swagger-code'>${JSON.stringify(swaggerObj, null, 2)}</pre></div>`;
+        let rightCol = `<div class='swagger-preview-panel'><div class='swagger-preview-title'>Swagger Preview</div><div id='swagger-ui'></div></div>`;
         document.getElementById('swaggerColumns').innerHTML = `<div class='swagger-editor-wrapper'>${leftCol}${rightCol}</div>`;
+        // Load Swagger UI
+        if (!window.swaggerUiLoaded) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'https://unpkg.com/swagger-ui-dist@5.11.7/swagger-ui.css';
+          document.head.appendChild(link);
+          const script = document.createElement('script');
+          script.src = 'https://unpkg.com/swagger-ui-dist@5.11.7/swagger-ui-bundle.js';
+          script.onload = () => { window.swaggerUiLoaded = true; renderSwaggerUI(swaggerObj); };
+          document.body.appendChild(script);
+        } else {
+          renderSwaggerUI(swaggerObj);
+        }
+        function renderSwaggerUI(swaggerObj) {
+          if (window.SwaggerUIBundle) {
+            window.ui = SwaggerUIBundle({
+              spec: swaggerObj,
+              dom_id: '#swagger-ui',
+              presets: [SwaggerUIBundle.presets.apis],
+              layout: 'BaseLayout',
+              docExpansion: 'none',
+              defaultModelsExpandDepth: -1
+            });
+          }
+        }
         document.getElementById('swaggerColumns').style.display = 'block';
         document.getElementById('runBuilderContainer').style.display = 'block';
         // Store swaggerObj for builder step

@@ -6,15 +6,17 @@ Inputs:
 - Swagger (OpenAPI) JSON document describing the service API, endpoints, schemas, and business logic.
 
 Responsibilities:
+
 - Analyze the Swagger document and generate a production-ready microservice application.
 - Use Python Flask for the backend implementation, with all endpoints, request/response models, and business logic as described in the Swagger spec.
+- For every file in the project, generate complete, production-ready code implementing all endpoints, models, business logic, and error handling as described in the Swagger spec. Do not leave any file empty or as a placeholder; every file must contain the actual code needed for a working, deployable microservice.
 - Generate a requirements.txt file listing all dependencies.
 - Create a README.md with setup and usage instructions.
 - Organize the project with clear folder structure: app.py, models/, routes/, static/, templates/ (if needed).
 - Ensure all endpoints, request/response validation, and error handling are implemented.
 - Output should be a JSON object with:
   - project_structure: tree of folders/files
-  - files: mapping of file paths to file contents
+  - files: mapping of file paths to file contents (all files must have full code, not just names)
   - build_status: success or error
   - message: any notes or warnings
 

@@ -81,6 +81,7 @@ def api_service_builder_swagger():
         prompt = (
             f"{system_instructions}\n\nSelected Design Element:\n{selected_design}\n\n"
             "Generate a fully exhaustive Swagger (OpenAPI 3.0.0) specification for this service, matching the standards and completeness of https://editor.swagger.io/. "
+            "Include all business logic, rules, and flows from the functional breakdown, not just endpoints. "
             "Include all required fields: openapi, info, servers, tags, paths (with all methods, parameters, request/response schemas), components (schemas, security), and security. "
             "For each endpoint, provide detailed request and response bodies, parameters, and error responses. "
             "Output only the Swagger JSON object, no markdown or explanation."
