@@ -133,7 +133,7 @@ def api_design_decompose():
         prompt = (
             f"{system_instructions}\n\nFunctions:\n"
             + '\n'.join([f"- {fn.get('name', '')}: {fn.get('description', '')}" for fn in functions])
-            + "\n\nUse BIAN, ISO, and Open API standards to create a simple design. Output as a JSON array of design elements with 'element' and 'standard'."
+            + "\n\nFor each design element, also generate the core business logic as clear, readable pseudocode (not real code, but detailed logic steps). Output as a JSON array, each object with: 'element', 'standard', and 'pseudocode' fields."
         )
 
         # Call OpenAI GPT-3.5 with temperature 0.2 using new API
@@ -144,7 +144,7 @@ def api_design_decompose():
                 {"role": "user", "content": prompt}
             ],
             temperature=0.2,
-            max_tokens=1024
+            max_tokens=2048
         )
         output = chat_response.choices[0].message.content
 

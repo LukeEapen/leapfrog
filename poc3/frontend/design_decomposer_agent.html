@@ -205,7 +205,7 @@
         </a>
         <div class="standards d-flex align-items-center justify-content-center flex-grow-1" style="margin-bottom:0;">
           <a class="badge-standard clickable-standard" href="https://www.openapis.org/" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #1976d2; border:2px solid #1976d2; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
-            <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#1976d2" style="margin-right:2px;" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>OpenAPI</span>
+            <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#1976d2" style="margin-right:2px;" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>OpenAPI</span>
           </a>
           <a class="badge-standard clickable-standard" href="https://bian.org/" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #388e3c; border:2px solid #388e3c; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
             <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#388e3c" style="margin-right:2px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="#fff">BIAN</text></svg>BIAN</span>
@@ -218,7 +218,7 @@
       </div>
       <hr style="border: none; border-top: 1.5px solid #bdbdbd; margin: 0 0 1.5rem 0; height:1.5px; width:100%;" />
       <div class="row w-100" style="margin:0;">
-        <div class="col-lg-6 col-md-12 mb-3 d-flex flex-column align-items-center justify-content-start" style="border-right:1.5px solid #f1f3f4; min-height:500px;">
+        <div class="col-lg-4 col-md-12 mb-3 d-flex flex-column align-items-center justify-content-start" style="border-right:1.5px solid #f1f3f4; min-height:500px;">
           <form id="designForm" class="w-100" style="display:flex; flex-direction:column; min-height:450px;">
             <div class="mb-3 text-start" style="flex:1 1 auto;">
               <label class="form-label">Select Functions for Design Decomposition</label>
@@ -229,8 +229,11 @@
             </div>
           </form>
         </div>
-        <div class="col-lg-6 col-md-12 mt-3 mt-lg-0 d-flex flex-column align-items-center justify-content-start">
-          <div id="result" class="mt-0 w-100"></div>
+        <div class="col-lg-4 col-md-12 mt-3 mt-lg-0 d-flex flex-column align-items-center justify-content-start" style="border-right:1.5px solid #f1f3f4; min-height:500px;">
+          <div id="designElementsCol" class="w-100"></div>
+        </div>
+        <div class="col-lg-4 col-md-12 mt-3 mt-lg-0 d-flex flex-column align-items-center justify-content-start" style="min-height:500px;">
+          <div id="businessLogicCol" class="w-100"></div>
         </div>
       </div>
     </div>
@@ -267,12 +270,14 @@
       e.preventDefault();
       const checked = Array.from(document.querySelectorAll('#functionsList input[type=checkbox]:checked'));
       if (checked.length === 0) {
-        document.getElementById('result').innerHTML = '<div class="alert alert-warning">Please select at least one function.</div>';
+        document.getElementById('designElementsCol').innerHTML = '<div class="alert alert-warning">Please select at least one function.</div>';
+        document.getElementById('businessLogicCol').innerHTML = '';
         return;
       }
       // Collect selected functions
       const selectedFunctions = checked.map(cb => JSON.parse(decodeURIComponent(cb.value)));
-      document.getElementById('result').innerHTML = '<div class="text-secondary">Running design decomposition...</div>';
+      document.getElementById('designElementsCol').innerHTML = '<div class="text-secondary">Running design decomposition...</div>';
+      document.getElementById('businessLogicCol').innerHTML = '';
       try {
         // Call the correct backend endpoint for design decomposition
         const res = await fetch('/api/design-decompose', {
@@ -286,20 +291,20 @@
           data = await res.json();
         } else {
           const text = await res.text();
-          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> Unexpected response from server.<br><pre style='white-space:pre-wrap;'>${text}</pre></div>`;
+          document.getElementById('designElementsCol').innerHTML = `<div class='alert alert-danger'><b>Error:</b> Unexpected response from server.<br><pre style='white-space:pre-wrap;'>${text}</pre></div>`;
           return;
         }
         if (data.error) {
-          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
+          document.getElementById('designElementsCol').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
           return;
         }
-        // Beautify result: expect sequence diagram/system interaction markdown or HTML
+        // Show design elements as selectable cards in column 2
         let pretty = '';
-        if (data.design_diagram) {
-          pretty = `<div class='mb-3'><b>Design Diagram:</b></div><div style='background:#fff; border-radius:8px; padding:1rem;'>${data.design_diagram}</div>`;
-        } else if (data.design && Array.isArray(data.design)) {
+        let designArray = [];
+        if (data.design && Array.isArray(data.design)) {
+          designArray = data.design;
           pretty = data.design.map((item, idx) => `
-            <div class="card mb-2 clickable-design" data-design='${encodeURIComponent(JSON.stringify(item))}' style="background:#fff; border:none; cursor:pointer;">
+            <div class="card mb-2 clickable-design" data-design-idx='${idx}' style="background:#fff; border:none; cursor:pointer;">
               <div class="card-body p-2">
                 <div class="fw-bold" style="color:#d32f2f;">${item.element || ''}</div>
                 <div class="small text-secondary">Standard: <span class="fw-semibold">${item.standard || ''}</span></div>
@@ -309,19 +314,49 @@
         } else {
           pretty = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
         }
-        document.getElementById('result').innerHTML = `<div class='alert alert-success'><b>Design Output (click to build service):</b><br>${pretty}</div>`;
+        document.getElementById('designElementsCol').innerHTML = `<div class='alert alert-success'><b>Design Elements (click to view business logic):</b><br>${pretty}</div>`;
+        document.getElementById('businessLogicCol').innerHTML = '';
         // Add click handler for design cards
         setTimeout(() => {
           document.querySelectorAll('.clickable-design').forEach(card => {
             card.onclick = async function() {
-              const selectedDesign = decodeURIComponent(this.getAttribute('data-design'));
-              localStorage.setItem('selectedDesignForServiceBuilder', selectedDesign);
-              window.location.href = '/service-builder';
+              const idx = this.getAttribute('data-design-idx');
+              const designObj = designArray[idx];
+              const pseudoCode = designObj && designObj.pseudocode ? designObj.pseudocode : '// No business logic available';
+              let beautified = '';
+              // If pseudocode is a numbered list, render as HTML ordered list
+              if (/\d+\./.test(pseudoCode)) {
+                // Match all numbered steps, even if on the same line
+                const stepRegex = /\d+\.\s*[^\d]+(?=(?:\d+\.|$))/g;
+                const steps = pseudoCode.match(stepRegex);
+                if (steps && steps.length > 0) {
+                  beautified = '<ol style="font-size:1.1rem; color:#23272b; padding-left:2em;">' +
+                    steps.map(step => '<li>' + step.replace(/^\d+\.\s*/, '').trim() + '</li>').join('') +
+                    '</ol>';
+                } else {
+                  beautified = `<pre style='font-size:1.1rem; color:#23272b;'>${pseudoCode}</pre>`;
+                }
+              } else {
+                beautified = `<pre style='font-size:1.1rem; color:#23272b;'>${pseudoCode}</pre>`;
+              }
+              document.getElementById('businessLogicCol').innerHTML = `<div class='card clickable-pseudocode' style='background:#fff; border:none; cursor:pointer;'><div class='card-body' style='text-align:left;'>${beautified}</div></div>`;
+              // Add click handler for pseudocode card to trigger Step 5
+              setTimeout(() => {
+                document.querySelectorAll('.clickable-pseudocode').forEach(pseudo => {
+                  pseudo.onclick = function() {
+                    // Save selected design and pseudocode for next step
+                    localStorage.setItem('selectedDesignForServiceBuilder', JSON.stringify(designObj));
+                    localStorage.setItem('selectedBusinessLogicPseudocode', pseudoCode);
+                    window.location.href = '/service-builder';
+                  };
+                });
+              }, 50);
             };
           });
         }, 100);
       } catch (err) {
-        document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
+        document.getElementById('designElementsCol').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
+        document.getElementById('businessLogicCol').innerHTML = '';
       }
     };
 

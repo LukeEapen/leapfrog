@@ -188,17 +188,59 @@
         try {
           const parsed = JSON.parse(latest);
           if (Array.isArray(parsed)) {
-            // Only show up to 10 functions, prioritize by order
-            const topFunctions = parsed.slice(0, 10);
-            pretty = topFunctions.map(item => `
-              <div class="card mb-3" style="background:#f5f5f5; border:none; box-shadow:0 2px 8px rgba(44,44,44,0.06);">
+            // Conservative: primary output is common (both) functions
+            const commonFuncs = parsed.filter(f => f.source === 'both');
+            const uncommonUser = parsed.filter(f => f.source === 'user_story');
+            const uncommonLegacy = parsed.filter(f => f.source === 'legacy_code');
+            // Helper to render function cards
+            function renderFuncCard(item, highlight) {
+              return `<div class="card mb-3" style="background:#f5f5f5; border:none; box-shadow:0 2px 8px rgba(44,44,44,0.06);">
                 <div class="card-body p-3">
                   <div class="fw-bold" style="font-size:1.15rem; color:#d32f2f;">${item.name || ''}</div>
                   <div class="mb-1" style="color:#23272b;">${item.description ? item.description.replace(/([^.])$/, '$1.') : ''}</div>
                   ${item.source ? `<span class="badge bg-dark">${item.source}</span>` : ''}
+                  ${highlight ? `<span class='badge bg-warning text-dark ms-2'>Delta</span>` : ''}
                 </div>
-              </div>
-            `).join('');
+              </div>`;
+            }
+            // Main: show common functions
+            let mainSection = '';
+            if (commonFuncs.length > 0) {
+              mainSection = `
+                <div class='mb-4'>
+                  <div class='p-3 bg-light rounded border mb-2'><b>Common Functions (User Story & Legacy Code)</b></div>
+                  <div class='p-3 bg-white rounded border' style='min-height:200px;'>
+                    ${commonFuncs.map(item => renderFuncCard(item, false)).join('')}
+                  </div>
+                </div>
+              `;
+            }
+            // Delta: only show if present
+            let deltaSection = '';
+            if (uncommonUser.length > 0 || uncommonLegacy.length > 0) {
+              deltaSection = `
+                <div class='row mt-4'>
+                  <div class='col-md-6 col-12 mb-4 mb-md-0'>
+                    <div class='p-3 bg-light rounded border mb-2'><b>Delta: User Story Only</b></div>
+                    <div class='p-3 bg-white rounded border' style='min-height:100px;'>
+                      ${uncommonUser.length > 0 ? uncommonUser.map(item => renderFuncCard(item, true)).join('') : '<span class="text-secondary">No unique user story functions.</span>'}
+                    </div>
+                  </div>
+                  <div class='col-md-6 col-12'>
+                    <div class='p-3 bg-light rounded border mb-2'><b>Delta: Legacy Code Only</b></div>
+                    <div class='p-3 bg-white rounded border' style='min-height:100px;'>
+                      ${uncommonLegacy.length > 0 ? uncommonLegacy.map(item => renderFuncCard(item, true)).join('') : '<span class="text-secondary">No unique legacy code functions.</span>'}
+                    </div>
+                  </div>
+                </div>
+                <div class='mt-3'><b>Note:</b> <span class='badge bg-warning text-dark'>Delta</span> means the function is unique to either User Story or Legacy Code. Only shown if present.</div>
+              `;
+            }
+            pretty = `
+              <div class='alert-modern'><b>Most Important Synthesized Functions (5-10):</b></div>
+              ${mainSection}
+              ${deltaSection}
+            `;
           } else {
             pretty = `<pre>${JSON.stringify(parsed, null, 2)}</pre>`;
           }

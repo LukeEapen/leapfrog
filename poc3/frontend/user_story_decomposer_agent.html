@@ -23,8 +23,14 @@
       flex-direction: column;
       align-items: stretch;
       justify-content: flex-start;
-      max-width: 2000px;
-      width: 100%;
+      max-width: 100vw !important;
+      width: 100vw !important;
+    }
+    .container-fluid {
+      max-width: 100vw !important;
+      width: 100vw !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
     }
     .agent-card {
       background: #f8f9fa;
@@ -208,8 +214,8 @@
       document.body.removeChild(testIcon);
     });
   </script>
-  <main class="container-fluid d-flex justify-content-center" style="max-width: 2000px;">
-    <div class="main-app-container mx-auto" style="background: #fff; border-radius: 2rem; box-shadow: 0 8px 32px rgba(44,44,44,0.18); padding: 2.5rem 2rem; margin-bottom: 2rem;">
+  <main class="container-fluid d-flex justify-content-center" style="width:100vw;max-width:100vw;padding:0;">
+    <div class="main-app-container mx-auto" style="background: #fff; border-radius: 2rem; box-shadow: 0 8px 32px rgba(44,44,44,0.18); padding: 2.5rem 2rem; margin-bottom: 2rem; width:100vw;max-width:100vw;">
       <div class="d-flex align-items-center justify-content-between mb-4" style="gap: 1rem;">
         <button id="backBtn" class="btn px-5 btn-lg d-flex align-items-center gap-2" style="font-weight:700; border-radius:0.75rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); background:#6c757d; border:none; color:#fff; height:56px; min-height:56px; font-size:1.15rem;">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
