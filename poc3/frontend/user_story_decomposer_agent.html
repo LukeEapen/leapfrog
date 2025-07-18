@@ -23,8 +23,8 @@
       flex-direction: column;
       align-items: stretch;
       justify-content: flex-start;
-      max-width: 2200px;
-      width: 98vw;
+      max-width: 2000px;
+      width: 100%;
     }
     .agent-card {
       background: #f8f9fa;
@@ -89,6 +89,8 @@
       display: flex;
       align-items: stretch;
       height: 100%;
+      flex-wrap: wrap;
+      gap: 2rem 0;
     }
     #storiesList {
       min-height: 700px;
@@ -150,12 +152,17 @@
       font-size: 1.05rem;
       color: #23272b;
     }
-    @media (max-width: 991px) {
-      .main-app-container { padding: 16px 4px; }
-      .agent-card { padding: 1.5rem 0.5rem; }
+    @media (max-width: 1400px) {
+      .main-app-container { max-width: 100vw; }
     }
-    @media (max-width: 767px) {
-      .main-app-container { border-radius: 0.5rem; }
+    @media (max-width: 1200px) {
+      .main-app-container { max-width: 100vw; }
+      .row.g-4.align-sections { flex-direction: column; gap: 1.5rem 0; }
+      .col-md-4 { width: 100%; max-width: 100%; }
+    }
+    @media (max-width: 991px) {
+      .main-app-container { padding: 16px 4px; border-radius: 0.5rem; }
+      .agent-card { padding: 1.5rem 0.5rem; }
       .agent-title { font-size: 1.3rem; }
       .agent-desc { font-size: 1rem; }
     }
