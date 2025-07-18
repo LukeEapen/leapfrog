@@ -41,27 +41,32 @@ def api_msbuilder_generate():
         # Compose prompt for MSBuilder agent
         prompt = f"{system_instructions}\n\nSwagger Document:\n{json.dumps(swagger, indent=2)}\n\nGenerate the microservice project as instructed. Output only the JSON object."
 
-        # Call OpenAI GPT-3.5 (or MSBuilder agent if available)
-
-        # Increase max_tokens and add more error logging
+        # Use BEXT (gpt-4o) model and best temperature for MS Builder only
         try:
             chat_response = openai.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o",  # BEXT model for highest code fidelity
                 messages=[
                     {"role": "system", "content": system_instructions},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.2,
-                max_tokens=4096
+                temperature=0.1,  # Lower temperature for deterministic, production-ready code
+                max_tokens=8192  # Increased for demo: allow more lines of code
             )
             output = chat_response.choices[0].message.content
         except Exception as e:
             logging.error(f"OpenAI API error in msbuilder-generate: {str(e)}\n{traceback.format_exc()}")
             return jsonify({'error': f'OpenAI API error: {str(e)}'}), 500
 
-        # Try to parse output as JSON
+        # Try to parse output as JSON, stripping code block markers if present
         try:
-            project = json.loads(output)
+            cleaned_output = output.strip()
+            # Remove code block markers if present
+            if cleaned_output.startswith('```'):
+                cleaned_output = cleaned_output.split('\n', 1)[-1]
+                if cleaned_output.endswith('```'):
+                    cleaned_output = cleaned_output.rsplit('```', 1)[0]
+            cleaned_output = cleaned_output.strip()
+            project = json.loads(cleaned_output)
             return jsonify(project)
         except Exception as e:
             logging.error(f"Failed to parse project JSON: {str(e)}\nRaw output: {output}")

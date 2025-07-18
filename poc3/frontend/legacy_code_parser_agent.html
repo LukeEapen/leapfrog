@@ -118,6 +118,14 @@
 </head>
 <body>
     <header style="background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color: #fff; padding: 1.2rem 0 1rem 0; border-radius: 0 0 1.2rem 1.2rem; box-shadow: 0 4px 32px rgba(44,44,44,0.22); margin-bottom: 2.5rem; position:relative; overflow:hidden; border: 4px solid #fff; min-height:unset;">
+      <!-- Attribution: absolutely positioned top right -->
+      <div style="position:absolute; top:10px; right:32px; z-index:10;">
+        <span style="font-size:0.98rem; color:#ffe0e0; opacity:0.85; text-align:right; background:rgba(44,44,44,0.10); padding:0.18em 0.85em; border-radius:0.7em; box-shadow:0 1px 4px rgba(44,44,44,0.10);">
+          <i class="bi bi-link-45deg" style="font-size:1.1rem; vertical-align:middle;"></i>
+          <span class="d-none d-md-inline">Legacy code samples from</span>
+          <a href="https://github.com/aws-samples/aws-mainframe-modernization-carddemo" target="_blank" rel="noopener" style="color:#fff; text-decoration:underline; font-weight:500; margin-left:0.2em;">AWS CardDemo</a>
+        </span>
+      </div>
       <div style="position:absolute; top:-40px; right:-60px; opacity:0.12; pointer-events:none;">
         <i class="bi bi-diagram-3" style="font-size:7rem;"></i>
       </div>
@@ -133,11 +141,15 @@
         <div style="font-size:1.13rem; font-weight:500; color:#fff; opacity:0.93; max-width:900px; text-align:center; margin-bottom:0.2rem;">
           <span class="badge bg-warning text-dark me-2" style="font-size:1rem; border-radius:0.7rem; padding:0.5em 1em; vertical-align:middle; background:#ffc107 !important; color:#23272b !important;"><i class="bi bi-upload me-2"></i>Step 1</span>
           Upload legacy COBOL or batch code and instantly translate it into clear, business-friendly requirements for modernization.<br>
-          </div>
+        </div>
+        <div class="w-100 d-flex justify-content-end align-items-center" style="margin-top:0.2rem;">
+       
+        </div>
         <noscript><div class="alert alert-danger mt-2">Bootstrap Icons require JavaScript enabled.</div></noscript>
         <div id="icon-fallback" style="display:none; color:yellow; font-weight:bold;">[Icons failed to load]</div>
       </div>
     </header>
+
     <div class="main-app-container">
       <div class="row justify-content-center align-items-stretch h-100" style="height:100%;">
         <div class="col-12 h-100">
