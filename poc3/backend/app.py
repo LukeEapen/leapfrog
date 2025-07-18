@@ -42,22 +42,29 @@ def api_msbuilder_generate():
         prompt = f"{system_instructions}\n\nSwagger Document:\n{json.dumps(swagger, indent=2)}\n\nGenerate the microservice project as instructed. Output only the JSON object."
 
         # Call OpenAI GPT-3.5 (or MSBuilder agent if available)
-        chat_response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": system_instructions},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.2,
-            max_tokens=2048
-        )
-        output = chat_response.choices[0].message.content
+
+        # Increase max_tokens and add more error logging
+        try:
+            chat_response = openai.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": system_instructions},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.2,
+                max_tokens=4096
+            )
+            output = chat_response.choices[0].message.content
+        except Exception as e:
+            logging.error(f"OpenAI API error in msbuilder-generate: {str(e)}\n{traceback.format_exc()}")
+            return jsonify({'error': f'OpenAI API error: {str(e)}'}), 500
 
         # Try to parse output as JSON
         try:
             project = json.loads(output)
             return jsonify(project)
         except Exception as e:
+            logging.error(f"Failed to parse project JSON: {str(e)}\nRaw output: {output}")
             return jsonify({'error': f'Failed to parse project JSON: {str(e)}', 'raw': output}), 500
 
     except Exception as e:
