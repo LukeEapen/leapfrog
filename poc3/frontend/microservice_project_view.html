@@ -222,6 +222,9 @@
         </div>
         <div class="repo-desc">Browse the generated microservice application files and folders. Click any file to view its contents.</div>
         <div class="d-flex w-100" style="gap:2.5rem; align-items:flex-start;">
+          <button id="downloadZipBtn" class="btn btn-danger mb-3" style="font-weight:600; font-size:1.08rem; border-radius:0.7rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); min-width:180px; margin-bottom:2rem;">
+            <i class="bi bi-file-earmark-zip me-2"></i>Download Project as ZIP
+          </button>
           <div class="tree-panel">
             <div class="fw-bold mb-2" style="color:#d32f2f;">Project Structure</div>
             <ul class="file-list" id="fileTree"></ul>
@@ -235,6 +238,8 @@
       </div>
     </div>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script>
     // Load project from localStorage
     const project = JSON.parse(localStorage.getItem('generatedMicroserviceProject') || '{}');
@@ -262,6 +267,32 @@
     if (message) {
       document.getElementById('projectStatus').textContent += `\n${message}`;
     }
+
+    // ZIP download logic
+    function addFilesToZip(zip, tree, parentPath = '') {
+      for (const key in tree) {
+        if (typeof tree[key] === 'string' && tree[key] === 'file') {
+          const filePath = parentPath ? parentPath + '/' + key : key;
+          const content = files[filePath] || '';
+          zip.file(filePath, content);
+        } else if (typeof tree[key] === 'object') {
+          // Recursively add folder
+          addFilesToZip(zip, tree[key], parentPath ? parentPath + '/' + key : key);
+        }
+      }
+    }
+
+    document.getElementById('downloadZipBtn').addEventListener('click', function() {
+      if (!window.JSZip) {
+        alert('JSZip library not loaded.');
+        return;
+      }
+      const zip = new JSZip();
+      addFilesToZip(zip, structure);
+      zip.generateAsync({ type: 'blob' }).then(function(content) {
+        saveAs(content, 'microservice_project.zip');
+      });
+    });
 
     document.querySelectorAll('#fileTree li[data-path]').forEach(li => {
       li.addEventListener('click', function() {
