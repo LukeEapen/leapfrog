@@ -195,8 +195,8 @@
     </div>
   </header>
   <!-- Modern Banner End -->
-  <div class="container-fluid">
-    <div class="agent-card text-center" style="margin-top:0.2rem;">
+  <div class="container-fluid d-flex justify-content-center" style="padding:0;">
+    <div class="agent-card text-center" style="margin-top:0.2rem; margin-left:auto; margin-right:auto;">
       <!-- Unified action row: Back, Textarea, Run Design Synthesis, Run Builder -->
       <form id="synthesisForm" class="w-100" autocomplete="off" style="margin-bottom:0;">
         <div class="d-flex align-items-center w-100 mb-1" id="actionButtonsRow" style="gap:1.1rem; display:flex; justify-content:space-between; margin-top:0.1rem;">
@@ -209,7 +209,8 @@
           </a>
           <div class="flex-grow-1 d-flex flex-column" style="min-width:0;">
             <label for="scope" class="form-label mb-1" style="color:#d32f2f; font-weight:600;">Finalized Scope & Design</label>
-            <textarea class="form-control modern-textarea" id="scope" rows="1" placeholder="{𝐄𝐥𝐞𝐦𝐞𝐧𝐭: 'Program Termination', 𝐬𝐭𝐚𝐧𝐝𝐚𝐫𝐝: 'ISO/IEC 12207:2008'}"></textarea>
+            <textarea class="form-control modern-textarea" id="scope" rows="3" placeholder="{&quot;element&quot;: &quot;Program Termination&quot;, &quot;standard&quot;: &quot;ISO/IEC 12207:2008&quot;}" style="margin-bottom:0.5rem;"></textarea>
+            <div id="scopeJsonPreview" style="background:#fff; border-radius:0.7rem; box-shadow:0 2px 8px rgba(44,44,44,0.08); color:#23272b; padding:0.7rem 1.1rem; font-size:1.08rem; min-height:40px; margin-bottom:0.2rem; text-align:left; border:1.5px solid #e0e0e0; display:none;"></div>
           </div>
           <button type="submit" class="btn btn-next ms-2" id="runSynthesisBtn" style="white-space:nowrap;">Run Design Synthesis</button>
           <button class="btn btn-next ms-2" id="runBuilderBtn" disabled style="opacity:0.6; pointer-events:none; white-space:nowrap;">Run Builder</button>
@@ -234,7 +235,9 @@
   </script>
       <!-- Removed duplicate form row: all controls are now in the unified action row above -->
       <div id="swaggerColumns" style="display:none; width:100%; margin-top:0.7rem;"></div>
-      <div id="result" class="mt-4"></div>
+      <div style="display:flex; justify-content:center; width:100%;">
+        <div id="result" class="mt-4" style="display:inline-block; max-width:100%;"></div>
+      </div>
     </div>
   </div>
   <script>
@@ -246,6 +249,46 @@
         localStorage.removeItem('selectedDesignForServiceBuilder');
       }
     });
+
+    // Live JSON preview for Finalized Scope & Design
+    const scopeInput = document.getElementById('scope');
+    const scopeJsonPreview = document.getElementById('scopeJsonPreview');
+    function updateScopeJsonPreview() {
+      let val = scopeInput.value.trim();
+      if (!val) {
+        scopeJsonPreview.style.display = 'none';
+        scopeJsonPreview.innerHTML = '';
+        return;
+      }
+      try {
+        // Try to parse as JSON
+        let obj = JSON.parse(val);
+        let rows = '';
+        if (typeof obj === 'object' && obj !== null) {
+          for (const [key, value] of Object.entries(obj)) {
+            let renderedValue = '';
+            if (typeof value === 'string' && /^(\d+\..+\n?)+$/m.test(value.trim())) {
+              // Render numbered list as ordered list
+              const steps = value.trim().split(/\n/).filter(line => line.match(/^\d+\./));
+              renderedValue = `<ol style='margin:0; padding-left:1.2em;'>` + steps.map(step => `<li style='margin-bottom:0.2em;'>${step.replace(/^\d+\.\s*/, '')}</li>`).join('') + `</ol>`;
+            } else if (typeof value === 'object') {
+              renderedValue = `<pre style='margin:0; background:none; padding:0;'>${JSON.stringify(value, null, 2)}</pre>`;
+            } else {
+              renderedValue = value;
+            }
+            rows += `<div style='display:flex; gap:0.7em; border-bottom:1px solid #f1f3f4; padding:0.2em 0; align-items:flex-start;'><span style='font-weight:bold; color:#d32f2f; min-width:120px;'>${key}</span><span style='word-break:break-all;'>${renderedValue}</span></div>`;
+          }
+        }
+        scopeJsonPreview.innerHTML = `<b>Parsed JSON:</b><div style='background:#f7f8fa; border-radius:0.5rem; padding:0.7rem 1.1rem; margin:0; font-size:1.08rem; color:#23272b;'>${rows}</div>`;
+        scopeJsonPreview.style.display = 'block';
+      } catch (e) {
+        scopeJsonPreview.innerHTML = '<span style="color:#d32f2f;">Invalid JSON</span>';
+        scopeJsonPreview.style.display = 'block';
+      }
+    }
+    scopeInput.addEventListener('input', updateScopeJsonPreview);
+    // Initial preview if value exists
+    updateScopeJsonPreview();
 
     document.getElementById('synthesisForm').onsubmit = async function(e) {
       e.preventDefault();
