@@ -209,7 +209,7 @@
           </a>
           <div class="flex-grow-1 d-flex flex-column" style="min-width:0;">
             <label for="scope" class="form-label mb-1" style="color:#d32f2f; font-weight:600;">Finalized Scope & Design</label>
-            <textarea class="form-control modern-textarea" id="scope" rows="3" placeholder="{&quot;element&quot;: &quot;Program Termination&quot;, &quot;standard&quot;: &quot;ISO/IEC 12207:2008&quot;}" style="margin-bottom:0.5rem;"></textarea>
+            <textarea class="form-control modern-textarea" id="scope" rows="3" placeholder="{&quot;element&quot;: &quot;Program Termination&quot;, &quot;standard&quot;: &quot;ISO/IEC 12207:2008&quot;}" style="margin-bottom:0.5rem; display:none;"></textarea>
             <div id="scopeJsonPreview" style="background:#fff; border-radius:0.7rem; box-shadow:0 2px 8px rgba(44,44,44,0.08); color:#23272b; padding:0.7rem 1.1rem; font-size:1.08rem; min-height:40px; margin-bottom:0.2rem; text-align:left; border:1.5px solid #e0e0e0; display:none;"></div>
           </div>
           <button type="submit" class="btn btn-next ms-2" id="runSynthesisBtn" style="white-space:nowrap;">Run Design Synthesis</button>
@@ -245,8 +245,18 @@
     window.addEventListener('DOMContentLoaded', function() {
       const selectedDesign = localStorage.getItem('selectedDesignForServiceBuilder');
       if (selectedDesign) {
-        document.getElementById('scope').value = selectedDesign;
+        // If it's a JSON object, pretty-print it in the textarea
+        let val = selectedDesign;
+        try {
+          const obj = JSON.parse(selectedDesign);
+          val = JSON.stringify(obj, null, 2);
+        } catch (e) {}
+        document.getElementById('scope').value = val;
         localStorage.removeItem('selectedDesignForServiceBuilder');
+      }
+      // Always update the preview on load
+      if (document.getElementById('scope').value.trim()) {
+        setTimeout(() => updateScopeJsonPreview(), 10);
       }
     });
 
@@ -326,10 +336,11 @@
           return;
         }
         // Display Swagger in left/right columns
-        document.getElementById('result').innerHTML = '';
         let leftCol = `<div class='swagger-editor-panel'><div class='swagger-title'>Swagger JSON</div><pre class='swagger-code'>${JSON.stringify(swaggerObj, null, 2)}</pre></div>`;
         let rightCol = `<div class='swagger-preview-panel'><div class='swagger-preview-title'>Swagger Preview</div><div id='swagger-ui'></div></div>`;
         document.getElementById('swaggerColumns').innerHTML = `<div class='swagger-editor-wrapper'>${leftCol}${rightCol}</div>`;
+        document.getElementById('swaggerColumns').style.display = 'block';
+        document.getElementById('result').innerHTML = '';
         // Load Swagger UI
         if (!window.swaggerUiLoaded) {
           const link = document.createElement('link');
@@ -354,7 +365,7 @@
               defaultModelsExpandDepth: -1
             });
           }
-          // Show Run Builder button above the columns and enable it
+          // Show Run Builder button and enable it
           let runBuilderBtn = document.getElementById('runBuilderBtn');
           if (runBuilderBtn) {
             runBuilderBtn.disabled = false;
@@ -371,11 +382,21 @@
             runSynthesisBtn.style.pointerEvents = 'none';
           }
         }
-        document.getElementById('swaggerColumns').style.display = 'block';
-        // Show Run Builder button above the columns
-        let runBuilderContainer = document.getElementById('runBuilderContainer');
-        if (runBuilderContainer) {
-          runBuilderContainer.style.display = 'flex';
+        // Show Run Builder button and enable it
+        let runBuilderBtn = document.getElementById('runBuilderBtn');
+        if (runBuilderBtn) {
+          runBuilderBtn.disabled = false;
+          runBuilderBtn.classList.remove('disabled');
+          runBuilderBtn.style.opacity = '1';
+          runBuilderBtn.style.pointerEvents = 'auto';
+        }
+        // Grey out Run Design Synthesis button
+        const runSynthesisBtn = document.getElementById('runSynthesisBtn');
+        if (runSynthesisBtn) {
+          runSynthesisBtn.disabled = true;
+          runSynthesisBtn.classList.add('disabled');
+          runSynthesisBtn.style.opacity = '0.6';
+          runSynthesisBtn.style.pointerEvents = 'none';
         }
         // Store swaggerObj for builder step
         window._swaggerObjForBuilder = swaggerObj;
