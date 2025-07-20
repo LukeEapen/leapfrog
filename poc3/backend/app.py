@@ -244,7 +244,7 @@ def api_design_decompose():
         prompt = (
             f"{system_instructions}\n\nFunctions:\n"
             + '\n'.join([f"- {fn.get('name', '')}: {fn.get('description', '')}" for fn in functions])
-            + "\n\nFor each design element, also generate the core business logic as clear, readable pseudocode (not real code, but detailed logic steps). Output as a JSON array, each object with: 'element', 'standard', and 'pseudocode' fields."
+            + "\n\nFor each design element, generate the core business logic as exhaustive, step-by-step pseudocode (not real code), capturing all business rules, flows, and logic from both the user story and legacy code. The pseudocode must be detailed and actionable, not a summary. Output as a JSON array, each object with: 'element', 'standard', and 'pseudocode' fields."
         )
 
         # Call OpenAI GPT-3.5 with temperature 0.2 using new API
@@ -259,20 +259,73 @@ def api_design_decompose():
         )
         output = chat_response.choices[0].message.content
 
-        # Try to extract JSON array from output
+        # Try to extract JSON array from output, fallback to safe default
         import json, re
-        design = None
+        design = []
         try:
             # Try to find a JSON array in the output
             match = re.search(r'(\[.*?\])', output, re.DOTALL)
             if match:
                 design = json.loads(match.group(1))
             else:
-                design = json.loads(output)
-        except Exception:
-            design = None
+                parsed = json.loads(output)
+                if isinstance(parsed, list):
+                    design = parsed
+                elif isinstance(parsed, dict):
+                    design = [parsed]
+        except Exception as ex:
+            logging.warning(f"Could not parse design decomposer LLM output as JSON. Output was: {output.strip()[:200]}... Error: {ex}")
+            design = []
 
-        return jsonify({'design': design, 'raw': output})
+        # Enforce standards and required fields
+        allowed_standards = {"openapi": "OpenAPI", "bian": "BIAN", "iso": "ISO"}
+        def normalize_standard(val):
+            if not val:
+                return "OpenAPI"
+            val_lower = str(val).strip().lower()
+            for key, std in allowed_standards.items():
+                if key in val_lower:
+                    return std
+            return "OpenAPI"
+
+        def pseudocode_to_string(pseudo):
+            if isinstance(pseudo, str):
+                return pseudo.strip()
+            if isinstance(pseudo, list):
+                # If it's a list of step objects, try to format as numbered steps
+                steps = []
+                for idx, step in enumerate(pseudo, 1):
+                    if isinstance(step, dict):
+                        desc = step.get('description') or step.get('step') or ''
+                        actions = step.get('actions')
+                        if actions and isinstance(actions, list):
+                            actions_str = '\n    - ' + '\n    - '.join(str(a) for a in actions)
+                        else:
+                            actions_str = ''
+                        steps.append(f"{idx}. {desc}{actions_str}")
+                    else:
+                        steps.append(f"{idx}. {str(step)}")
+                return '\n'.join(steps)
+            return str(pseudo)
+
+        normalized = []
+        for item in design:
+            if not isinstance(item, dict):
+                continue
+            element = item.get('element', '').strip()
+            pseudocode = item.get('pseudocode', '')
+            pseudocode_str = pseudocode_to_string(pseudocode)
+            standard = normalize_standard(item.get('standard', ''))
+            if not element:
+                continue
+            if not pseudocode_str:
+                pseudocode_str = '// No business logic available'
+            normalized.append({
+                'element': element,
+                'standard': standard,
+                'pseudocode': pseudocode_str
+            })
+        return jsonify({'design': normalized, 'raw': output})
     except Exception as e:
         logging.error(f"Error in design-decompose: {str(e)}")
         return jsonify({'error': str(e)}), 500

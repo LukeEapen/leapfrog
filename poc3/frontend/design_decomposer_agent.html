@@ -307,23 +307,44 @@
           document.getElementById('designElementsCol').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
           return;
         }
-        // Show design elements as selectable cards in column 2
+        // Show design elements as selectable cards in column 2 (never as JSON)
         let pretty = '';
         let designArray = [];
-        if (data.design && Array.isArray(data.design) && data.design.length > 0) {
-          designArray = data.design;
-          pretty = data.design.map((item, idx) => `
-            <div class="card mb-2 clickable-design" data-design-idx='${idx}' style="background:#fff; border:none; cursor:pointer;">
-              <div class="card-body p-2">
-                <div class="fw-bold" style="color:#d32f2f;">${item.element || ''}</div>
-                <div class="small text-secondary">Standard: <span class="fw-semibold">${item.standard || ''}</span></div>
+        if (data.design && Array.isArray(data.design)) {
+          // Only keep valid objects with at least an element or standard
+          designArray = data.design.filter(item => item && (item.element || item.standard));
+          if (designArray.length === 0) {
+            let rawOutput = '';
+            if (data.raw && typeof data.raw === 'string' && data.raw.trim()) {
+              rawOutput = `<details style='margin-top:0.7em;'><summary style='cursor:pointer; color:#d32f2f; font-weight:600;'>Show raw LLM output</summary><pre style='background:#f7f7f9; color:#23272b; border-radius:0.5em; padding:0.7em 1em; margin-top:0.5em; font-size:1.02em;'>${data.raw.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></details>`;
+            }
+            pretty = `<div class="text-secondary">No design elements found for the selected functions.</div>${rawOutput}`;
+          } else {
+            pretty = designArray.map((item, idx) => `
+              <div class="card mb-2 clickable-design" data-design-idx='${idx}' style="background:#fff; border:none; cursor:pointer;">
+                <div class="card-body p-2">
+                  <div class="fw-bold" style="color:#d32f2f;">${item.element || ''}</div>
+                  <div class="small text-secondary">Standard: <span class="fw-semibold">${item.standard || ''}</span></div>
+                </div>
               </div>
-            </div>
-          `).join('');
-        } else if (data.design && Array.isArray(data.design) && data.design.length === 0) {
-          pretty = '<div class="text-secondary">No design elements found for the selected functions.</div>';
+            `).join('');
+          }
         } else {
-          pretty = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+          // If not an array, try to parse as a single object and render as a card
+          let item = data.design || data;
+          if (item && typeof item === 'object' && (item.element || item.standard)) {
+            designArray = [item];
+            pretty = `
+              <div class="card mb-2 clickable-design" data-design-idx='0' style="background:#fff; border:none; cursor:pointer;">
+                <div class="card-body p-2">
+                  <div class="fw-bold" style="color:#d32f2f;">${item.element || ''}</div>
+                  <div class="small text-secondary">Standard: <span class="fw-semibold">${item.standard || ''}</span></div>
+                </div>
+              </div>
+            `;
+          } else {
+            pretty = '<div class="text-secondary">No design elements found for the selected functions.</div>';
+          }
         }
         document.getElementById('designElementsCol').innerHTML = `<div class='alert alert-success'><b>Design Elements (click to view business logic):</b><br>${pretty}</div>`;
         document.getElementById('businessLogicCol').innerHTML = '';
