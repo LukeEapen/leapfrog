@@ -232,7 +232,12 @@
           <div class="fw-bold text-secondary" style="font-size:1.2rem;">Processing... <span id="timer">0</span>s</div>
         </div>
       </div>
-      <div id="loading" class="my-4 text-secondary text-center" style="font-size:1.1rem; background:#f8d7da; color:#b71c1c; border-radius:0.75rem; padding:0.75rem;">Connecting to JIRA and loading user stories...</div>
+      <div id="jiraSpinnerTimerContainer" class="my-4 text-center">
+        <div class="d-flex flex-column align-items-center justify-content-center">
+          <div class="spinner-border text-danger mb-2" role="status" style="width:2.5rem;height:2.5rem;"></div>
+          <div class="fw-bold text-secondary" style="font-size:1.1rem;">Connecting to JIRA and loading user stories... <span id="jiraTimer">0</span>s</div>
+        </div>
+      </div>
       <div id="error" class="alert alert-danger d-none" style="font-size:1.1rem; border-radius:0.75rem;"></div>
       <div class="row g-4 align-sections" style="margin-top:0.5rem;">
         <div class="col-md-4 d-flex flex-column h-100">
@@ -267,12 +272,20 @@
   <script>
     // Fetch user stories from backend
     async function loadUserStories() {
-      document.getElementById('loading').classList.remove('d-none');
+      const spinnerContainer = document.getElementById('jiraSpinnerTimerContainer');
+      spinnerContainer.classList.remove('d-none');
       document.getElementById('error').classList.add('d-none');
+      let seconds = 0;
+      document.getElementById('jiraTimer').textContent = seconds;
+      let timerInterval = setInterval(() => {
+        seconds++;
+        document.getElementById('jiraTimer').textContent = seconds;
+      }, 1000);
       try {
         const res = await fetch('/api/jira-user-stories');
         const data = await res.json();
-        document.getElementById('loading').classList.add('d-none');
+        spinnerContainer.classList.add('d-none');
+        clearInterval(timerInterval);
         if (data.error) {
           document.getElementById('error').textContent = data.error;
           document.getElementById('error').classList.remove('d-none');
@@ -294,7 +307,8 @@
           </label>
         `).join('');
       } catch (err) {
-        document.getElementById('loading').classList.add('d-none');
+        spinnerContainer.classList.add('d-none');
+        clearInterval(timerInterval);
         document.getElementById('error').textContent = 'Failed to load user stories: ' + (err.message || err);
         document.getElementById('error').classList.remove('d-none');
       }

@@ -24,12 +24,75 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 app = Flask(__name__, static_folder='../frontend', template_folder='../frontend')
 
 
-# API endpoint to generate microservice project from Swagger using MSBuilder agent
+
+# --- Refactored MSBuilder Orchestration ---
+import concurrent.futures
+
+def is_stub_or_empty(code):
+    # Simple check for stubs or empty code
+    if not code or code.strip() == '':
+        return True
+    stub_keywords = [
+        'pass', '...', 'raise NotImplementedError', 'TODO', 'to be implemented', 'stub', 'placeholder', 'return None'
+    ]
+    code_lower = code.lower()
+    for kw in stub_keywords:
+        if kw in code_lower:
+            return True
+    return False
+
+def build_file_prompt(file_path, swagger, business_logic, system_instructions):
+    html_hint = "\nIf this is an HTML file (e.g., index.html), generate a simple, modern, visually appealing HTML page that could serve as a landing or status page for the microservice."
+    backend_hint = "\nIf this is a backend file (e.g., in routes/, models/, or utils/), ensure it contains all required code for endpoints, models, business logic, and error handling as described in the Swagger and business logic. Do not leave any file empty or as a stub."
+    return (
+        f"{system_instructions}\n\n"
+        f"You are generating the file: {file_path} for a Python Flask microservice.\n"
+        f"The Swagger spec is:\n{json.dumps(swagger, indent=2)}\n"
+        f"The business logic is:\n{business_logic}\n"
+        f"Implement all endpoints, models, and business logic relevant to this file. Do not leave any stubs or placeholders. Output only the code for this file."
+        f"{html_hint if file_path.endswith('.html') else ''}"
+        f"{backend_hint if (file_path.endswith('.py') and file_path != 'app.py') or '/routes/' in file_path or '/models/' in file_path or '/utils/' in file_path else ''}"
+    )
+
+def walk_project_structure(structure, parent_path=''):
+    files = []
+    for key, value in structure.items():
+        path = os.path.join(parent_path, key) if parent_path else key
+        if value == 'file':
+            files.append(path.replace('\\', '/'))
+        elif isinstance(value, dict):
+            files.extend(walk_project_structure(value, path))
+    return files
+
+def call_llm_for_file(file_path, swagger, business_logic, system_instructions):
+    prompt = build_file_prompt(file_path, swagger, business_logic, system_instructions)
+    try:
+        chat_response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.1,
+            max_tokens=4096
+        )
+        code = chat_response.choices[0].message.content.strip()
+        # Remove code block markers if present
+        if code.startswith('```'):
+            code = code.split('\n', 1)[-1]
+            if code.endswith('```'):
+                code = code.rsplit('```', 1)[0]
+        return code
+    except Exception as e:
+        logging.error(f"OpenAI API error for file {file_path}: {str(e)}\n{traceback.format_exc()}")
+        return ''
+
 @app.route('/api/msbuilder-generate', methods=['POST'])
 def api_msbuilder_generate():
     try:
         data = request.get_json()
         swagger = data.get('swagger', None)
+        business_logic = data.get('business_logic', '')  # Accept business logic from previous stage
         if not swagger:
             return jsonify({'error': 'No Swagger document provided'}), 400
 
@@ -38,43 +101,91 @@ def api_msbuilder_generate():
         with open(instructions_path, 'r', encoding='utf-8') as f:
             system_instructions = f.read()
 
-        # Compose prompt for MSBuilder agent
-        prompt = f"{system_instructions}\n\nSwagger Document:\n{json.dumps(swagger, indent=2)}\n\nGenerate the microservice project as instructed. Output only the JSON object."
+        # Step 1: Ask LLM for project structure (single call)
+        structure_prompt = (
+            f"{system_instructions}\n\nSwagger Document:\n{json.dumps(swagger, indent=2)}\n\n"
+            "Generate only the project_structure JSON tree (no code, no files, just the structure as in the example). "
+            "In addition to all backend files, include a simple index.html file in the root or static/ folder."
+        )
+        chat_response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": structure_prompt}
+            ],
+            temperature=0.1,
+            max_tokens=1024
+        )
+        structure_output = chat_response.choices[0].message.content.strip()
+        # Remove code block markers if present
+        if structure_output.startswith('```'):
+            structure_output = structure_output.split('\n', 1)[-1]
+            if structure_output.endswith('```'):
+                structure_output = structure_output.rsplit('```', 1)[0]
+        structure_output = structure_output.strip()
+        project_structure = json.loads(structure_output)
 
-        # Use BEXT (gpt-4o) model and best temperature for MS Builder only
-        try:
-            chat_response = openai.chat.completions.create(
-                model="gpt-4o",  # BEXT model for highest code fidelity
-                messages=[
-                    {"role": "system", "content": system_instructions},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.1,  # Lower temperature for deterministic, production-ready code
-                max_tokens=8192  # Increased for demo: allow more lines of code
-            )
-            output = chat_response.choices[0].message.content
-        except Exception as e:
-            logging.error(f"OpenAI API error in msbuilder-generate: {str(e)}\n{traceback.format_exc()}")
-            return jsonify({'error': f'OpenAI API error: {str(e)}'}), 500
+        # Step 2: For each file, generate code in parallel
+        file_paths = walk_project_structure(project_structure)
+        files = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            future_to_file = {
+                executor.submit(call_llm_for_file, file_path, swagger, business_logic, system_instructions): file_path
+                for file_path in file_paths
+            }
+            for future in concurrent.futures.as_completed(future_to_file):
+                file_path = future_to_file[future]
+                code = future.result()
+                # Validate code
+                if is_stub_or_empty(code):
+                    # Retry once if stub/empty
+                    code = call_llm_for_file(file_path, swagger, business_logic, system_instructions)
+                files[file_path] = code
 
-        # Try to parse output as JSON, stripping code block markers if present
-        try:
-            cleaned_output = output.strip()
-            # Remove code block markers if present
-            if cleaned_output.startswith('```'):
-                cleaned_output = cleaned_output.split('\n', 1)[-1]
-                if cleaned_output.endswith('```'):
-                    cleaned_output = cleaned_output.rsplit('```', 1)[0]
-            cleaned_output = cleaned_output.strip()
-            project = json.loads(cleaned_output)
-            return jsonify(project)
-        except Exception as e:
-            logging.error(f"Failed to parse project JSON: {str(e)}\nRaw output: {output}")
-            return jsonify({'error': f'Failed to parse project JSON: {str(e)}', 'raw': output}), 500
+        # Step 3: Validate all files are present and non-empty
+        for file_path in file_paths:
+            if file_path not in files or is_stub_or_empty(files[file_path]):
+                return jsonify({
+                    'error': f'File {file_path} is missing or incomplete after generation.',
+                    'build_status': 'error',
+                    'message': f'File {file_path} is missing or incomplete. Please retry.'
+                }), 500
 
+        # Step 4: Generate msproject.xml (single call)
+        msproject_prompt = (
+            f"{system_instructions}\n\nSwagger Document:\n{json.dumps(swagger, indent=2)}\n\n"
+            "Generate only the msproject.xml file as Gantt-compatible XML, based on the endpoints and logic. Output only the XML."
+        )
+        chat_response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": msproject_prompt}
+            ],
+            temperature=0.1,
+            max_tokens=2048
+        )
+        msproject_xml = chat_response.choices[0].message.content.strip()
+        if msproject_xml.startswith('```'):
+            msproject_xml = msproject_xml.split('\n', 1)[-1]
+            if msproject_xml.endswith('```'):
+                msproject_xml = msproject_xml.rsplit('```', 1)[0]
+        msproject_xml = msproject_xml.strip()
+        files['msproject.xml'] = msproject_xml
+        if 'msproject.xml' not in file_paths:
+            # Add to structure if missing
+            project_structure['msproject.xml'] = 'file'
+
+        # Step 5: Aggregate and return
+        return jsonify({
+            'project_structure': project_structure,
+            'files': files,
+            'build_status': 'success',
+            'message': 'Microservice and MS Project plan generated from Swagger and business logic. Review for completeness.'
+        })
     except Exception as e:
-        logging.error(f"Error in msbuilder-generate: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        logging.error(f"Error in msbuilder-generate: {str(e)}\n{traceback.format_exc()}")
+        return jsonify({'error': str(e), 'build_status': 'error', 'message': 'Server error in msbuilder-generate.'}), 500
     
 @app.route('/api/service-builder-swagger', methods=['POST'])
 def api_service_builder_swagger():
