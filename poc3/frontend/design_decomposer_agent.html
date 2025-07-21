@@ -311,8 +311,37 @@
         let pretty = '';
         let designArray = [];
         if (data.design && Array.isArray(data.design)) {
-          // Only keep valid objects with at least an element or standard
-          designArray = data.design.filter(item => item && (item.element || item.standard));
+          // Normalize pseudocode to a readable string for each item
+          designArray = data.design.map(item => {
+            if (!item) return null;
+            let normalized = '';
+            if (Array.isArray(item.pseudocode)) {
+              // Array of strings or objects
+              normalized = item.pseudocode.map((step, idx) => {
+                if (typeof step === 'string') return `${idx + 1}. ${step.trim()}`;
+                if (typeof step === 'object' && step !== null) {
+                  let desc = step.description || step.action || step.step || '';
+                  let action = step.action || '';
+                  if (desc && action && action !== desc) {
+                    return `${idx + 1}. ${desc}: ${action}`;
+                  } else if (desc) {
+                    return `${idx + 1}. ${desc}`;
+                  } else if (action) {
+                    return `${idx + 1}. ${action}`;
+                  }
+                }
+                return '';
+              }).filter(Boolean).join('\n');
+            } else if (typeof item.pseudocode === 'object' && item.pseudocode !== null) {
+              normalized = Object.values(item.pseudocode).join(' ').trim();
+            } else if (typeof item.pseudocode === 'string') {
+              normalized = item.pseudocode.trim();
+            }
+            return {
+              ...item,
+              pseudocode: normalized
+            };
+          }).filter(item => item && item.element && item.pseudocode && item.pseudocode.trim());
           if (designArray.length === 0) {
             let rawOutput = '';
             if (data.raw && typeof data.raw === 'string' && data.raw.trim()) {

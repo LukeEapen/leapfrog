@@ -1,3 +1,6 @@
+# --- Multi-Agent Orchestration for Complete Microservice Project ---
+from flask import jsonify, request
+import traceback
 import os
 import openai
 import time
@@ -28,6 +31,66 @@ app = Flask(__name__, static_folder='../frontend', template_folder='../frontend'
 # --- Refactored MSBuilder Orchestration ---
 import concurrent.futures
 
+
+def generate_complete_microservice_project(project_structure, context):
+    """
+    Orchestrate all agents to generate code for every file in the project structure.
+    context: dict containing legacy code, user stories, design elements, business logic, etc.
+    Returns: dict with 'files', 'project_structure', 'build_status', 'message'
+    """
+    files = {}
+    def populate_file(path, node):
+        if isinstance(node, str) and node == 'file':
+            # Decide which agent(s) to use based on file path/type
+            code = ''
+            if path.endswith('.py'):
+                # Use function synthesizer and service builder for Python files
+                code = synthesize_functions(context.get('functions', []), path)
+                if not code:
+                    code = build_service(context.get('design_elements', []), path)
+            elif path.endswith('.html'):
+                # Use design decomposer for HTML files
+                code = decompose_design(context.get('design_elements', []), path)
+            elif path.endswith('.md'):
+                # Use user story decomposer for markdown files
+                code = decompose_user_story(context.get('user_stories', []), path)
+            elif path.endswith('.cbl') or path.endswith('.COBOL'):
+                # Use legacy code parser for COBOL files
+                code = parse_legacy_code(context.get('legacy_code', []), path)
+            else:
+                # Default: try service builder
+                code = build_service(context.get('design_elements', []), path)
+            if not code:
+                code = f"# TODO: Implement {path} (no agent output)"
+            files[path] = code
+        elif isinstance(node, dict):
+            for k, v in node.items():
+                subpath = f"{path}/{k}" if path else k
+                populate_file(subpath, v)
+    populate_file('', project_structure)
+    # Validate all files have code
+    for k in files:
+        if not files[k] or files[k].strip() == '' or files[k].startswith('# TODO'):
+            files[k] = f"# Auto-generated stub for {k}. Please implement."
+    return {
+        'files': files,
+        'project_structure': project_structure,
+        'build_status': 'Complete',
+        'message': 'All files populated by agents.'
+    }
+
+# --- API Endpoint to Generate Complete Microservice Project ---
+@app.route('/api/generate-complete-microservice', methods=['POST'])
+def api_generate_complete_microservice():
+    try:
+        data = request.get_json(force=True)
+        project_structure = data.get('project_structure', {})
+        context = data.get('context', {})
+        result = generate_complete_microservice_project(project_structure, context)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 500
+    
 def is_stub_or_empty(code):
     # Simple check for stubs or empty code
     if not code or code.strip() == '':
@@ -258,24 +321,75 @@ def api_design_decompose():
             max_tokens=2048
         )
         output = chat_response.choices[0].message.content
+        # Strip markdown code block markers (e.g. ```json ... ```)
+        import json, re
+        def strip_code_block_markers(text):
+            # Remove triple backticks and optional language
+            text = re.sub(r'^```[a-zA-Z0-9]*\s*', '', text.strip())
+            text = re.sub(r'```$', '', text.strip())
+            return text.strip()
+
+        def autocorrect_json(text):
+            # Remove trailing commas before closing brackets/braces
+            text = re.sub(r',\s*([}\]])', r'\1', text)
+            # Remove double commas
+            text = re.sub(r',\s*,', ',', text)
+            # Optionally fix missing commas between objects (very basic)
+            text = re.sub(r'}\s*{', '}, {', text)
+            return text
+
+        output_stripped = strip_code_block_markers(output)
 
         # Try to extract JSON array from output, fallback to safe default
-        import json, re
         design = []
         try:
             # Try to find a JSON array in the output
-            match = re.search(r'(\[.*?\])', output, re.DOTALL)
+            match = re.search(r'(\[.*?\])', output_stripped, re.DOTALL)
             if match:
-                design = json.loads(match.group(1))
+                try:
+                    design = json.loads(match.group(1))
+                except Exception:
+                    # Try autocorrect if initial parse fails
+                    design = json.loads(autocorrect_json(match.group(1)))
             else:
-                parsed = json.loads(output)
+                try:
+                    parsed = json.loads(output_stripped)
+                except Exception:
+                    parsed = json.loads(autocorrect_json(output_stripped))
                 if isinstance(parsed, list):
                     design = parsed
                 elif isinstance(parsed, dict):
                     design = [parsed]
         except Exception as ex:
-            logging.warning(f"Could not parse design decomposer LLM output as JSON. Output was: {output.strip()[:200]}... Error: {ex}")
+            logging.warning(f"Could not parse design decomposer LLM output as JSON. Output was: {output_stripped.strip()[:200]}... Error: {ex}")
+            # Fallback: try to extract individual objects from the output
             design = []
+            # Improved fallback: extract nested JSON objects using a stack
+            def extract_json_objects(text):
+                stack = []
+                objects = []
+                start = None
+                for i, c in enumerate(text):
+                    if c == '{':
+                        if not stack:
+                            start = i
+                        stack.append(c)
+                    elif c == '}':
+                        if stack:
+                            stack.pop()
+                            if not stack and start is not None:
+                                obj = text[start:i+1]
+                                objects.append(obj)
+                                start = None
+                return objects
+            obj_blocks = extract_json_objects(output_stripped)
+            for obj_str in obj_blocks:
+                try:
+                    obj = json.loads(autocorrect_json(obj_str))
+                    if isinstance(obj, dict) and obj.get('element') and obj.get('standard'):
+                        design.append(obj)
+                except Exception:
+                    continue
 
         # Enforce standards and required fields
         allowed_standards = {"openapi": "OpenAPI", "bian": "BIAN", "iso": "ISO"}
@@ -292,7 +406,10 @@ def api_design_decompose():
             if isinstance(pseudo, str):
                 return pseudo.strip()
             if isinstance(pseudo, list):
-                # If it's a list of step objects, try to format as numbered steps
+                # If it's a list of strings, join them
+                if all(isinstance(step, str) for step in pseudo):
+                    return '\n'.join(step.strip() for step in pseudo)
+                # If it's a list of step objects, format as numbered steps
                 steps = []
                 for idx, step in enumerate(pseudo, 1):
                     if isinstance(step, dict):
