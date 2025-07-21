@@ -449,6 +449,45 @@ def api_design_decompose():
 
 
 # ...existing code...
+@app.route('/api/design-element-business-logic', methods=['POST'])
+def api_design_element_business_logic():
+    try:
+        data = request.get_json()
+        element = data.get('element', '')
+        if not element:
+            return jsonify({'error': 'No design element provided'}), 400
+        # Load design decomposer instructions
+        instructions_path = os.path.join(os.path.dirname(__file__), 'agents', 'design_decomposer_instructions.txt')
+        with open(instructions_path, 'r', encoding='utf-8') as f:
+            system_instructions = f.read()
+        # Compose prompt for GPT-3.5
+        prompt = (
+            f"{system_instructions}\n\nDesign Element:\n{element}\n\nGenerate a sample perspective showcasing the implementation of core business logic for this design element. The pseudocode must be exhaustive, step-by-step, and capture all business rules, flows, and logic from both the user story and legacy code. The pseudocode must be detailed and actionable, not a summary. Output as a JSON object with: 'element', 'standard', and 'pseudocode'."
+        )
+        chat_response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_instructions},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2,
+            max_tokens=1024
+        )
+        output = chat_response.choices[0].message.content
+        import json, re
+        def strip_code_block_markers(text):
+            text = re.sub(r'^```[a-zA-Z0-9]*\s*', '', text.strip())
+            text = re.sub(r'```$', '', text.strip())
+            return text.strip()
+        output_stripped = strip_code_block_markers(output)
+        try:
+            obj = json.loads(output_stripped)
+        except Exception:
+            obj = {'element': element, 'standard': 'OpenAPI', 'pseudocode': output_stripped}
+        return jsonify(obj)
+    except Exception as e:
+        logging.error(f"Error in design-element-business-logic: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 # API endpoint to synthesize functions from user story and legacy English
 @app.route('/api/synthesize-functions', methods=['POST'])
@@ -497,6 +536,7 @@ ROUTES = [
     ('/', 'legacy_code_parser_agent.html'),
     ('/user-story-decomposer', 'user_story_decomposer_agent.html'),
     ('/function-synthesizer', 'function_synthesizer_agent.html'),
+    ('/function-synthesizer-chat', 'function_synthesizer_agent_chat.html'),
     ('/design-decomposer', 'design_decomposer_agent.html'),
     ('/review-prompt', 'review_prompt_agent.html'),
     ('/service-builder', 'service_builder_agent.html'),
