@@ -1,0 +1,80 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "POC3 Service Builder API",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {},
+  "x-business-logic": [
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Retrieve customer account transactions",
+            "pseudocode": "Retrieve all transactions associated with the customer's account\nInclude transaction details such as date, amount, type, and description",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Update account balances",
+            "pseudocode": "Calculate the new balance by summing up all transaction amounts\nUpdate the account balance with the new calculated value",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Review customer information",
+            "pseudocode": "Retrieve and display customer details such as name, address, contact information\nVerify the accuracy of the customer information",
+            "standard": "ISO"
+          },
+          {
+            "element": "Review product group information",
+            "pseudocode": "Retrieve information about the product group associated with the account\nDisplay details such as product type, features, and restrictions",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Identify applicable interest rates",
+            "pseudocode": "Retrieve the current interest rates applicable to the account\nDetermine the appropriate interest rate based on account type and balance",
+            "standard": "ISO"
+          },
+          {
+            "element": "Calculate monthly interest",
+            "pseudocode": "Apply the monthly interest rate to the account balance\nCalculate the interest amount for the current month",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Calculate cumulative interest",
+            "pseudocode": "Sum up all monthly interest amounts from previous months\nCalculate the total cumulative interest earned on the account",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Retrieve customer account transactions\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Retrieve all transactions associated with the customer's account\",\n            \"Include transaction details such as date, amount, type, and description\"\n        ]\n    },\n    {\n        \"element\": \"Update account balances\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Calculate the new balance by summing up all transaction amounts\",\n            \"Update the account balance with the new calculated value\"\n        ]\n    },\n    {\n        \"element\": \"Review customer information\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Retrieve and display customer details such as name, address, contact information\",\n            \"Verify the accuracy of the customer information\"\n        ]\n    },\n    {\n        \"element\": \"Review product group information\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Retrieve information about the product group associated with the account\",\n            \"Display details such as product type, features, and restrictions\"\n        ]\n    },\n    {\n        \"element\": \"Identify applicable interest rates\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Retrieve the current interest rates applicable to the account\",\n            \"Determine the appropriate interest rate based on account type and balance\"\n        ]\n    },\n    {\n        \"element\": \"Calculate monthly interest\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Apply the monthly interest rate to the account balance\",\n            \"Calculate the interest amount for the current month\"\n        ]\n    },\n    {\n        \"element\": \"Calculate cumulative interest\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Sum up all monthly interest amounts from previous months\",\n            \"Calculate the total cumulative interest earned on the account\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest for Transactions",
+            "pseudocode": "1. Retrieve all transactions for the given card number\n    - Query database for transactions related to the specified card number\n2. For each transaction, calculate interest based on balance, daily rate, and days since the transaction date\n    - Iterate through each transaction\n    - Calculate the number of days since the transaction date\n    - Calculate interest amount using the formula: balance * daily rate * days\n3. Display the card number and calculated interest for each transaction\n    - Output the card number and corresponding calculated interest for each transaction",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest for Transactions\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve all transactions for the given card number\",\n                \"actions\": [\n                    \"Query database for transactions related to the specified card number\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"For each transaction, calculate interest based on balance, daily rate, and days since the transaction date\",\n                \"actions\": [\n                    \"Iterate through each transaction\",\n                    \"Calculate the number of days since the transaction date\",\n                    \"Calculate interest amount using the formula: balance * daily rate * days\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Display the card number and calculated interest for each transaction\",\n                \"actions\": [\n                    \"Output the card number and corresponding calculated interest for each transaction\"\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "processTransactionRecord",
+            "pseudocode": "1. Calculate the number of days since the transaction date\n2. Determine if the previous payment was made in full\n3. Calculate the interest amount",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"processTransactionRecord\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Calculate the number of days since the transaction date\",\n                \"logic\": \"Get current date and time, subtract transaction date to get the number of days\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Determine if the previous payment was made in full\",\n                \"logic\": \"Check if the previous payment amount equals the total transaction amount\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Calculate the interest amount\",\n                \"logic\": \"Calculate interest based on balance, daily rate, and days since the transaction\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    }
+  ]
+}

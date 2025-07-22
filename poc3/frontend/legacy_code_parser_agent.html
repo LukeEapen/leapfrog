@@ -359,6 +359,23 @@
             // Save to localStorage for next step
             if (data.response_agent_1) {
               localStorage.setItem('latestLegacyEnglish', data.response_agent_1);
+              // Try to extract pseudocode from the response and save it
+              let pseudoCode = '';
+              // Look for a section header like 'Pseudocode' or 'Pseudo Code' (case-insensitive)
+              const pseudoMatch = data.response_agent_1.match(/(?:^|\n)\s*(?:Pseudocode|Pseudo Code)\s*[:\-\n]+([\s\S]*?)(?:\n\s*[A-Z][A-Z0-9 \-_]{4,}|$)/i);
+              if (pseudoMatch && pseudoMatch[1]) {
+                pseudoCode = pseudoMatch[1].trim();
+              }
+              // If not found, fallback: look for a code block
+              if (!pseudoCode) {
+                const codeBlock = data.response_agent_1.match(/```[a-zA-Z]*\n([\s\S]*?)```/);
+                if (codeBlock && codeBlock[1]) {
+                  pseudoCode = codeBlock[1].trim();
+                }
+              }
+              if (pseudoCode) {
+                localStorage.setItem('legacyPseudocode', pseudoCode);
+              }
             }
             nextStepBtn.style.display = 'block';
             nextStepBtn.disabled = false;

@@ -333,6 +333,10 @@
         runSynthesisBtn.style.pointerEvents = 'none';
       }
       try {
+        // Fetch the Swagger document directly to get x-business-logic
+        const swaggerRes = await fetch('/api/swagger.json');
+        let swaggerObj = await swaggerRes.json();
+        // Fetch the design-based Swagger from backend
         const res = await fetch('/api/service-builder-swagger', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -343,16 +347,20 @@
           document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
           return;
         }
-        let swagger = data.swagger || '';
-        let swaggerObj = null;
+        let backendSwagger = data.swagger || '';
+        let backendSwaggerObj = null;
         try {
-          swaggerObj = JSON.parse(swagger);
+          backendSwaggerObj = JSON.parse(backendSwagger);
         } catch (e) {
           document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> Unable to parse Swagger JSON.</div>`;
           return;
         }
+        // Merge x-business-logic from swaggerObj into backendSwaggerObj
+        if (swaggerObj && swaggerObj['x-business-logic']) {
+          backendSwaggerObj['x-business-logic'] = swaggerObj['x-business-logic'];
+        }
         // Display Swagger in left/right columns
-        let leftCol = `<div class='swagger-editor-panel'><div class='swagger-title'>Swagger JSON</div><pre class='swagger-code'>${JSON.stringify(swaggerObj, null, 2)}</pre></div>`;
+        let leftCol = `<div class='swagger-editor-panel'><div class='swagger-title'>Swagger JSON</div><pre class='swagger-code'>${JSON.stringify(backendSwaggerObj, null, 2)}</pre></div>`;
         let rightCol = `<div class='swagger-preview-panel'><div class='swagger-preview-title'>Swagger Preview</div><div id='swagger-ui'></div></div>`;
         document.getElementById('swaggerColumns').innerHTML = `<div class='swagger-editor-wrapper'>${leftCol}${rightCol}</div>`;
         document.getElementById('swaggerColumns').style.display = 'block';
@@ -365,10 +373,10 @@
           document.head.appendChild(link);
           const script = document.createElement('script');
           script.src = 'https://unpkg.com/swagger-ui-dist@5.11.7/swagger-ui-bundle.js';
-          script.onload = () => { window.swaggerUiLoaded = true; renderSwaggerUI(swaggerObj); };
+          script.onload = () => { window.swaggerUiLoaded = true; renderSwaggerUI(backendSwaggerObj); };
           document.body.appendChild(script);
         } else {
-          renderSwaggerUI(swaggerObj);
+          renderSwaggerUI(backendSwaggerObj);
         }
         function renderSwaggerUI(swaggerObj) {
           if (window.SwaggerUIBundle) {
@@ -420,7 +428,7 @@
           runSynthesisBtn.style.pointerEvents = 'none';
         }
         // Store swaggerObj for builder step
-        window._swaggerObjForBuilder = swaggerObj;
+        window._swaggerObjForBuilder = backendSwaggerObj;
       } catch (err) {
         document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
       }

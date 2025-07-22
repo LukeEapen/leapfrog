@@ -1,5 +1,4 @@
-# --- Multi-Agent Orchestration for Complete Microservice Project ---
-from flask import jsonify, request
+
 import traceback
 import os
 import openai
@@ -9,6 +8,7 @@ import traceback
 import json
 from dotenv import load_dotenv
 from flask import Flask, send_from_directory, redirect, url_for, request, jsonify
+from api.swagger_routes import swagger_bp
 
 from flask import Flask, request, jsonify, send_from_directory
 logging.basicConfig(
@@ -24,13 +24,28 @@ logging.basicConfig(
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+
 app = Flask(__name__, static_folder='../frontend', template_folder='../frontend')
+app.register_blueprint(swagger_bp)
 
 
 
 # --- Refactored MSBuilder Orchestration ---
 import concurrent.futures
 
+# Serve swagger.json for frontend
+@app.route('/api/swagger.json', methods=['GET'])
+def serve_swagger_json():
+    swagger_path = os.path.join(os.path.dirname(__file__), 'api', 'swagger.json')
+    if not os.path.exists(swagger_path):
+        return jsonify({'error': 'Swagger file not found'}), 404
+    with open(swagger_path, 'r', encoding='utf-8') as f:
+        try:
+            return jsonify(json.load(f))
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+# --- Multi-Agent Orchestration for Complete Microservice Project ---
+from flask import jsonify, request
 
 def generate_complete_microservice_project(project_structure, context):
     """

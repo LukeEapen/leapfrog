@@ -346,7 +346,45 @@
           if (designArray.length === 0) {
             let rawOutput = '';
             if (data.raw && typeof data.raw === 'string' && data.raw.trim()) {
-              rawOutput = `<details style='margin-top:0.7em;'><summary style='cursor:pointer; color:#d32f2f; font-weight:600;'>Show raw LLM output</summary><pre style='background:#f7f7f9; color:#23272b; border-radius:0.5em; padding:0.7em 1em; margin-top:0.5em; font-size:1.02em;'>${data.raw.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></details>`;
+              let rawStr = data.raw;
+              let prettyRaw = '';
+              // Try to extract JSON from code block
+              let codeBlockMatch = rawStr.match(/```json\s*([\s\S]*?)```/i);
+              let jsonStr = '';
+              if (codeBlockMatch) {
+                jsonStr = codeBlockMatch[1].trim();
+              } else {
+                // If not in code block, but string looks like JSON array or object, try to parse
+                let trimmed = rawStr.trim();
+                if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+                  jsonStr = trimmed;
+                }
+              }
+              if (jsonStr) {
+                try {
+                  // Remove any leading/trailing backticks or newlines
+                  jsonStr = jsonStr.replace(/^```json|```$/g, '').trim();
+                  // Unescape newlines and double quotes for display
+                  let displayStr = jsonStr.replace(/\\n/g, '\n');
+                  // Try to parse and pretty-print
+                  let parsed = null;
+                  try {
+                    parsed = JSON.parse(jsonStr);
+                  } catch (e) {}
+                  if (parsed) {
+                    prettyRaw = JSON.stringify(parsed, null, 2);
+                  } else {
+                    // If not valid JSON, just show with unescaped newlines
+                    prettyRaw = displayStr;
+                  }
+                } catch (e) {
+                  prettyRaw = jsonStr;
+                }
+              } else {
+                // If not JSON, just unescape newlines for readability
+                prettyRaw = rawStr.replace(/\\n/g, '\n');
+              }
+              rawOutput = `<details style='margin-top:0.7em;'><summary style='cursor:pointer; color:#d32f2f; font-weight:600;'>Show raw LLM output</summary><pre style='background:#f7f7f9; color:#23272b; border-radius:0.5em; padding:0.7em 1em; margin-top:0.5em; font-size:1.02em;'>${prettyRaw.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></details>`;
             }
             pretty = `<div class="text-secondary">No design elements found for the selected functions.</div>${rawOutput}`;
           } else {
@@ -490,7 +528,114 @@
                     ${beautified}
                   </div>
                 </div>
+                <div class='card mt-3' style='background:#f8f9fa; border:none;'>
+                  <div class='card-header fw-bold' style='background:#23272b; color:#fff;'>Raw Business Logic (Expandable JSON)</div>
+                  <div class='card-body' style='background:#23272b; color:#fff; text-align:left;'>
+                    <div id="rawBusinessLogicJson" style="font-size:1.05em;"></div>
+                    <button id="addToSwaggerBtn" class="btn btn-primary mt-3" style="background:#1976d2; border:none; font-weight:600;">Add Business Logic &amp; Pseudocode to Swagger Document</button>
+                  </div>
+                </div>
               `;
+              // Render the raw JSON as expandable/collapsible tree in Section 2
+              if (data) {
+                function parseRawJson(obj) {
+                  if (!obj) return null;
+                  let arr = null;
+                  if (Array.isArray(obj)) {
+                    arr = obj;
+                  } else if (typeof obj === 'object' && obj !== null) {
+                    if (typeof obj.raw === 'string') {
+                      let rawVal = obj.raw;
+                      let codeBlockMatch = rawVal.match(/```json\s*([\s\S]*?)```/i);
+                      let jsonStr = '';
+                      if (codeBlockMatch) {
+                        jsonStr = codeBlockMatch[1].trim();
+                      } else {
+                        let trimmed = rawVal.trim();
+                        if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+                          jsonStr = trimmed;
+                        }
+                      }
+                      if (jsonStr) {
+                        try {
+                          jsonStr = jsonStr.replace(/^```json|```$/g, '').trim();
+                          arr = JSON.parse(jsonStr);
+                        } catch (e) {
+                          arr = null;
+                        }
+                      }
+                    }
+                  }
+                  return arr;
+                }
+                function createJsonTree(obj, level = 0) {
+                  if (obj === null) return '<span style="color:#c678dd;">null</span>';
+                  if (typeof obj === 'string') return `<span style='color:#98c379;'>"${obj.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</span>`;
+                  if (typeof obj === 'number') return `<span style='color:#e5c07b;'>${obj}</span>`;
+                  if (typeof obj === 'boolean') return `<span style='color:#e06c75;'>${obj}</span>`;
+                  if (Array.isArray(obj)) {
+                    if (obj.length === 0) return '[ ]';
+                    let html = `<span style='color:#d19a66;'>[</span><div style='margin-left:${level * 1.5 + 1.5}em;'>`;
+                    obj.forEach((item, idx) => {
+                      html += `<div>${createJsonTree(item, level + 1)}${idx < obj.length - 1 ? ',' : ''}</div>`;
+                    });
+                    html += `</div><span style='color:#d19a66;'>]</span>`;
+                    return html;
+                  }
+                  if (typeof obj === 'object') {
+                    let keys = Object.keys(obj);
+                    if (keys.length === 0) return '{ }';
+                    let html = `<span style='color:#61afef;'>{</span><div style='margin-left:${level * 1.5 + 1.5}em;'>`;
+                    keys.forEach((k, idx) => {
+                      html += `<div><span style='color:#d32f2f;'>"${k}"</span>: <span class='json-expandable' data-level='${level + 1}'>${createJsonTree(obj[k], level + 1)}</span>${idx < keys.length - 1 ? ',' : ''}</div>`;
+                    });
+                    html += `</div><span style='color:#61afef;'>}</span>`;
+                    return html;
+                  }
+                  return '';
+                }
+                // Insert the expandable JSON
+                let rawJson = parseRawJson(data);
+                if (rawJson) {
+                  document.getElementById('rawBusinessLogicJson').innerHTML = createJsonTree(rawJson);
+                } else {
+                  document.getElementById('rawBusinessLogicJson').innerHTML = '<div style="color:#fff;">No raw business logic available.</div>';
+                }
+                // Add handler for Add to Swagger button
+                setTimeout(() => {
+                  const addBtn = document.getElementById('addToSwaggerBtn');
+                  if (addBtn) {
+                    addBtn.onclick = async function() {
+                      let businessLogic = data;
+                      let pseudocode = '';
+                      if (data && data.pseudocode) {
+                        pseudocode = data.pseudocode;
+                      }
+                      addBtn.innerText = 'Adding...';
+                      addBtn.disabled = true;
+                      try {
+                        const resp = await fetch('/api/add-business-logic-to-swagger', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ businessLogic, pseudocode })
+                        });
+                        const result = await resp.json();
+                        if (result && result.success) {
+                          addBtn.innerText = 'Added to Swagger!';
+                        } else {
+                          addBtn.innerText = 'Failed to Add';
+                        }
+                      } catch (err) {
+                        addBtn.innerText = 'Error Adding';
+                      }
+                      setTimeout(() => {
+                        addBtn.innerText = 'Add Business Logic & Pseudocode to Swagger Document';
+                        addBtn.disabled = false;
+                      }, 2000);
+                    };
+                  }
+                }, 50);
+              }
               // Enable Approve&Generate API button, disable Run Design Synthesis
               const approveBtn2 = document.getElementById('approveGenerateBtn');
               if (approveBtn2) {
