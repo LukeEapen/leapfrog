@@ -326,7 +326,7 @@
                     return `${idx + 1}. ${desc}: ${action}`;
                   } else if (desc) {
                     return `${idx + 1}. ${desc}`;
-                    
+
                   } else if (action) {
                     return `${idx + 1}. ${action}`;
                   }
@@ -384,29 +384,64 @@
             card.onclick = async function() {
               const idx = this.getAttribute('data-design-idx');
               const designObj = designArray[idx];
-              const pseudoCode = designObj && designObj.pseudocode ? designObj.pseudocode : '// No business logic available';
-              // Enhanced: Show Business Description, Rules, Technical Info if available
-              let businessDesc = designObj && (designObj.business_description || designObj.description || '');
-              let businessRules = designObj && (designObj.business_rules || designObj.rules || '');
-              let technicalInfo = designObj && (designObj.technical_info || designObj.technical || '');
+              // Show loading indicator
+              document.getElementById('businessLogicCol').innerHTML = `<div class='text-secondary' style='font-size:1.1rem;'><span class='spinner-border spinner-border-sm text-danger' role='status' aria-hidden='true'></span> Generating exhaustive business logic...</div>`;
+              let pseudoCode = '';
+              let businessDesc = '';
+              let businessRules = '';
+              let technicalInfo = '';
+              try {
+                // Always request exhaustive, step-by-step, detailed pseudocode from the agent
+                const res = await fetch('/api/design-element-business-logic', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ element: designObj.element, exhaustive: true })
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  // Render objects as beautiful key-value tables, arrays as lists, strings as-is
+                  function beautifyValue(val) {
+                    if (val == null) return '';
+                    if (typeof val === 'string') return `<span>${val}</span>`;
+                    if (Array.isArray(val)) {
+                      return '<ul style="margin-bottom:0; padding-left:1.2em;">' + val.map(v => `<li>${beautifyValue(v)}</li>`).join('') + '</ul>';
+                    }
+                    if (typeof val === 'object') {
+                      // Render each key as a header, value as content
+                      return Object.entries(val).map(([k, v]) =>
+                        `<div style='margin-bottom:0.7em;'><h6 style='color:#d32f2f; font-weight:700; margin-bottom:0.2em;'>${k}</h6><div>${beautifyValue(v)}</div></div>`
+                      ).join('');
+                    }
+                    return `<span>${String(val)}</span>`;
+                  }
+                  pseudoCode = data && data.pseudocode ? beautifyValue(data.pseudocode) : beautifyValue(designObj.pseudocode || '// No business logic available');
+                  businessDesc = data && (data.business_description || data.description) ? beautifyValue(data.business_description || data.description) : '';
+                  businessRules = data && (data.business_rules || data.rules) ? beautifyValue(data.business_rules || data.rules) : '';
+                  technicalInfo = data && (data.technical_info || data.technical) ? beautifyValue(data.technical_info || data.technical) : '';
+                } else {
+                  pseudoCode = safeString(designObj.pseudocode || '// No business logic available');
+                }
+              } catch (err) {
+                pseudoCode = designObj.pseudocode || '// No business logic available';
+              }
               let beautified = '';
-              // If pseudocode is a numbered list, render as HTML ordered list
-              if (/\d+\./.test(pseudoCode)) {
+              // If pseudocode is a numbered list string, render as HTML ordered list
+              if (typeof data?.pseudocode === 'string' && /\d+\./.test(data.pseudocode)) {
                 const stepRegex = /\d+\.\s*[^\d]+(?=(?:\d+\.|$))/g;
-                const steps = pseudoCode.match(stepRegex);
+                const steps = data.pseudocode.match(stepRegex);
                 if (steps && steps.length > 0) {
                   beautified = '<ol style="font-size:1.1rem; color:#23272b; padding-left:2em;">' +
                     steps.map(step => '<li>' + step.replace(/^\d+\.\s*/, '').trim() + '</li>').join('') +
                     '</ol>';
                 } else {
-                  beautified = `<pre style='font-size:1.1rem; color:#23272b;'>${pseudoCode}</pre>`;
+                  beautified = `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>${pseudoCode}</div>`;
                 }
               } else {
-                beautified = `<pre style='font-size:1.1rem; color:#23272b;'>${pseudoCode}</pre>`;
+                beautified = `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>${pseudoCode}</div>`;
               }
               let descSection = businessDesc ? `<div style='margin-bottom:0.7em;'><b>Business Description:</b><br><span style='color:#23272b;'>${businessDesc}</span></div>` : '';
-              let rulesSection = businessRules ? `<div style='margin-bottom:0.7em;'><b>Business Rules:</b><br><span style='color:#23272b;'>${businessRules}</span></div>` : '';
-              let techSection = technicalInfo ? `<div style='margin-bottom:0.7em;'><b>Technical Info:</b><br><span style='color:#23272b;'>${technicalInfo}</span></div>` : '';
+              let rulesSection = businessRules ? `<div style='margin-bottom:0.7em;'><b>Business Rules:</b><br><span style='color:#23272b; white-space:pre-wrap;'>${businessRules}</span></div>` : '';
+              let techSection = technicalInfo ? `<div style='margin-bottom:0.7em;'><b>Technical Info:</b><br><span style='color:#23272b; white-space:pre-wrap;'>${technicalInfo}</span></div>` : '';
               document.getElementById('businessLogicCol').innerHTML = `
                 <div class='alert-modern' style='font-size:1.13rem; font-weight:600; color:#d32f2f; margin-bottom:0.7em;'>
                   <b>Sample Perspective: Implementation of Core Business Logic</b>
