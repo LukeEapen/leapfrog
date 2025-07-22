@@ -6,17 +6,17 @@
   <title>Service Builder Agent</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background: #f7f8fa; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { background: linear-gradient(120deg, #f7f8fa 60%, #e3e6ed 100%); min-height:100vh; font-family: 'Segoe UI', Arial, sans-serif; }
     .agent-card {
       background: #f1f3f4;
       color: #23272b;
-      border-radius: 1.2rem;
-      box-shadow: 0 4px 16px rgba(44,44,44,0.10);
-      padding: 1.2rem 1.2rem 1.5rem 1.2rem;
-      margin: 1vh auto 0 auto;
-      max-width: 99vw;
-      min-width: 1600px;
-      width: 99vw;
+      border-radius: 2rem;
+      box-shadow: 0 8px 32px rgba(44,44,44,0.13);
+      padding: 2.5rem 3.5rem;
+      margin: 2.5rem auto;
+      max-width: 2200px;
+      min-width: 1200px;
+      width: 98vw;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -211,8 +211,8 @@
       <div id="builderTimer" style="font-size:1.08rem; color:#23272b; margin-top:0.5rem;">Elapsed: <span id="builderTimerSeconds">0</span> sec</div>
     </div>
   </div>
-  <div class="container-fluid d-flex justify-content-center" style="padding:0;">
-    <div class="agent-card text-center" style="margin-top:0.2rem; margin-left:auto; margin-right:auto;">
+  <div class="container-fluid d-flex justify-content-center align-items-start" style="padding:0; min-height:80vh;">
+    <div class="agent-card text-center shadow-lg" style="margin-top:2.5rem; margin-bottom:2.5rem; margin-left:auto; margin-right:auto; max-width:2200px; min-width:1200px; width:98vw; background:rgba(255,255,255,0.98); border-radius:2rem; box-shadow:0 8px 32px rgba(44,44,44,0.13); padding:2.5rem 3.5rem 2.5rem 3.5rem; display:flex; flex-direction:column; align-items:center;">
       <!-- Unified action row: Back, Textarea, Run Design Synthesis, Run Builder -->
       <form id="synthesisForm" class="w-100" autocomplete="off" style="margin-bottom:0;">
         <div class="d-flex align-items-center w-100 mb-1" id="actionButtonsRow" style="gap:1.1rem; display:flex; justify-content:space-between; margin-top:0.1rem;">
@@ -228,27 +228,27 @@
             <textarea class="form-control modern-textarea" id="scope" rows="3" placeholder="{&quot;element&quot;: &quot;Program Termination&quot;, &quot;standard&quot;: &quot;ISO/IEC 12207:2008&quot;}" style="margin-bottom:0.5rem; display:none;"></textarea>
             <div id="scopeJsonPreview" style="background:#fff; border-radius:0.7rem; box-shadow:0 2px 8px rgba(44,44,44,0.08); color:#23272b; padding:0.7rem 1.1rem; font-size:1.08rem; min-height:40px; margin-bottom:0.2rem; text-align:left; border:1.5px solid #e0e0e0; display:none;"></div>
           </div>
-          <button type="submit" class="btn btn-next ms-2" id="runSynthesisBtn" style="white-space:nowrap;">Run Design Synthesis</button>
-          <button class="btn btn-next ms-2" id="runBuilderBtn" disabled style="opacity:0.6; pointer-events:none; white-space:nowrap;">Run Builder</button>
+          <button type="submit" class="btn btn-next ms-2" id="runSynthesisBtn" style="white-space:nowrap; background:linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color:#fff; border:none;">Run Design Synthesis</button>
+          <button class="btn btn-next ms-2" id="runBuilderBtn" disabled style="opacity:0.6; pointer-events:none; white-space:nowrap; background:linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color:#fff; border:none;">Run Builder</button>
         </div>
       </form>
-  <!-- Bootstrap Icons CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <!-- Bootstrap Icons fallback check -->
-  <script>
-    window.addEventListener('DOMContentLoaded', function() {
-      var testIcon = document.createElement('i');
-      testIcon.className = 'bi bi-cpu';
-      document.body.appendChild(testIcon);
-      var style = window.getComputedStyle(testIcon, '::before');
-      var content = style.getPropertyValue('content');
-      if (!content || content === 'none' || content === '""') {
-        var fallback = document.getElementById('icon-fallback');
-        if (fallback) fallback.style.display = 'block';
-      }
-      document.body.removeChild(testIcon);
-    });
-  </script>
+      <!-- Bootstrap Icons CDN -->
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+      <!-- Bootstrap Icons fallback check -->
+      <script>
+        window.addEventListener('DOMContentLoaded', function() {
+          var testIcon = document.createElement('i');
+          testIcon.className = 'bi bi-cpu';
+          document.body.appendChild(testIcon);
+          var style = window.getComputedStyle(testIcon, '::before');
+          var content = style.getPropertyValue('content');
+          if (!content || content === 'none' || content === '""') {
+            var fallback = document.getElementById('icon-fallback');
+            if (fallback) fallback.style.display = 'block';
+          }
+          document.body.removeChild(testIcon);
+        });
+      </script>
       <!-- Removed duplicate form row: all controls are now in the unified action row above -->
       <div id="swaggerColumns" style="display:none; width:100%; margin-top:0.7rem;"></div>
       <div style="display:flex; justify-content:center; width:100%;">

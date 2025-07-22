@@ -261,25 +261,25 @@
           </svg>
           <span style="color:#fff;">Step 2</span>
         </a>
-        <a href="/design-decomposer" class="btn btn-next px-5" style="min-width:180px;">Synthesize Functions</a>
+        <a href="/design-decomposer" class="btn btn-next px-5" style="min-width:180px; min-height:56px; height:56px; background:linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color:#fff; border:none; display:flex; align-items:center; justify-content:center; font-size:1.08rem; font-weight:600;">Synthesize Functions</a>
       </div>
       <div class="row w-100 mt-4">
         <div class="col-lg-8 col-md-12">
           <div id="result" class="mt-4 w-100"></div>
         </div>
         <div class="col-lg-4 col-md-12 d-flex flex-column align-items-stretch justify-content-start" style="min-height:350px;">
-          <div class="chat-panel" style="max-width:520px; min-width:320px; margin-left:auto; margin-right:auto; background:rgba(255,255,255,0.25); border-radius:1.5rem; padding:2rem 2rem 1.5rem 2rem; margin-top:1rem; box-shadow:0 8px 32px rgba(44,44,44,0.18); backdrop-filter:blur(12px); border:1.5px solid rgba(255,255,255,0.18); position:relative; overflow:hidden;">
-        <div class="chat-header d-flex align-items-center justify-content-between" style="gap:1rem; background:linear-gradient(90deg, #d32f2f 0%, #f8f9fa 100%); border-radius:1rem; padding:0.7rem 1.2rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); color:#fff;">
+          <div class="chat-panel" style="max-width:900px; min-width:480px; margin-left:auto; margin-right:0; background:rgba(255,255,255,0.25); border-radius:1.5rem; padding:2.2rem 2.2rem 1.7rem 2.2rem; margin-top:1rem; box-shadow:0 8px 32px rgba(44,44,44,0.18); backdrop-filter:blur(12px); border:1.5px solid rgba(255,255,255,0.18); position:relative; overflow:hidden; float:right;">
+        <div class="chat-header d-flex align-items-center justify-content-between" style="gap:1rem; background:linear-gradient(120deg, #d32f2f 60%, #23272b 100%); border-radius:1rem; padding:0.7rem 1.2rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); color:#fff;">
           <div class="d-flex align-items-center gap-2">
             <div style="width:38px; height:38px; background:linear-gradient(135deg,#d32f2f 60%,#fff 100%); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(44,44,44,0.10);">
               <i class="bi bi-robot" style="font-size:1.5rem; color:#fff;"></i>
             </div>
             <div>
-              <div style="font-size:1.08rem; font-weight:700; color:#fff; letter-spacing:0.01em;">Function Synthesizer Chatbot</div>
-              <div style="font-size:0.92rem; color:#f8f9fa; opacity:0.85;">Ask questions, suggest changes, or remove functions below.</div>
+              <div style="font-size:1.08rem; font-weight:700; color:#fff; letter-spacing:0.01em; background:linear-gradient(120deg, #d32f2f 60%, #23272b 100%); border-radius:0.7rem; padding:0.2rem 1.1rem; display:inline-block;">Function Synthesizer Chatbot</div>
+              <div style="font-size:0.92rem; color:#fff; opacity:0.95; background:linear-gradient(120deg, #d32f2f 60%, #23272b 100%); border-radius:0.7rem; padding:0.18rem 1.1rem 0.18rem 1.1rem; display:inline-block; margin-top:0.3rem;">Ask questions, suggest changes, or remove functions below.</div>
             </div>
           </div>
-          <button id="clear-chat" class="btn btn-outline-danger btn-sm" style="margin-left:0.5rem; font-size:0.92rem; padding:0.3rem 0.7rem;"><i class="bi bi-trash"></i> Clear Chat</button>
+          <button id="clear-chat" class="btn btn-sm" style="background:#ffe066; color:#23272b; border:none; margin-left:0.5rem; font-size:0.92rem; padding:0.3rem 1.7rem; min-width:120px;"><i class="bi bi-trash"></i> Clear Chat</button>
         </div>
         <div id="chat-history" class="chat-history" style="max-height:400px; overflow-y:auto; margin-bottom:1.2rem; padding-right:1rem; background:rgba(255,255,255,0.18); border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.08); padding:1rem 1rem 1rem 1rem;">
         </div>
@@ -306,7 +306,6 @@
 
       // Render main function response
       function renderResponse(data) {
-        let pretty = '';
         if (Array.isArray(data)) {
           const commonFuncs = data.filter(f => f.source === 'both');
           const uncommonUser = data.filter(f => f.source === 'user_story');
@@ -353,9 +352,11 @@
             `;
           }
           pretty = `
-            <div class='alert-modern'><b>Most Important Synthesized Functions (5-10):</b></div>
-            ${mainSection}
-            ${deltaSection}
+            <div style="background: linear-gradient(120deg, #f8f9fa 60%, #ffe066 100%); border-radius: 1.2rem; box-shadow: 0 2px 12px rgba(44,44,44,0.10); padding: 1.5rem 2.2rem 2.2rem 2.2rem; margin-bottom: 2.2rem; border: 2.5px solid #ffe066;">
+              <div class='alert-modern' style="background: #d32f2f; color: #fff; border-radius: 0.8rem; padding: 1.5rem 1.5rem; font-size: 1.18rem; font-weight: 700; margin-bottom: 1.2rem; box-shadow: 0 2px 8px rgba(44,44,44,0.10); letter-spacing: 0.01em; min-height: 80px; display: flex; align-items: center;">Most Important Synthesized Functions (5-10):</div>
+              ${mainSection}
+              ${deltaSection}
+            </div>
           `;
         } else {
           pretty = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
@@ -370,6 +371,9 @@
       const applyChatBtn = document.getElementById('apply-chat');
       const clearChatBtn = document.getElementById('clear-chat');
       const chatHistoryDiv = document.getElementById('chat-history');
+
+      // This holds a working copy of the response for chat preview
+      let chatPreviewResponse = JSON.parse(JSON.stringify(responseData));
 
       function renderChatHistory() {
         chatHistoryDiv.innerHTML = '';
@@ -387,7 +391,12 @@
       }
       renderChatHistory();
 
-      // Send chat
+      // Render chat preview response (for chat panel)
+      function renderChatPreview() {
+        renderResponse(chatPreviewResponse);
+      }
+
+      // Send chat: only update chat history and preview, do not apply to result
       if (sendChatBtn && chatInput) {
         sendChatBtn.onclick = function(e) {
           e.preventDefault();
@@ -398,6 +407,11 @@
           renderChatHistory();
           chatInput.value = '';
           pendingNote = text;
+
+          // Preview: apply the question to a copy of the current responseData, but do NOT update the main result
+          chatPreviewResponse = JSON.parse(JSON.stringify(responseData));
+          applyChatLogicToResponse(chatPreviewResponse, text);
+          renderChatPreview();
         };
         chatInput.addEventListener('keydown', function(e) {
           if (e.key === 'Enter') {
@@ -407,67 +421,91 @@
         });
       }
 
-      // Apply chat note to Common Functions
+      // Apply chat logic to a response array (for preview or apply)
+      function applyChatLogicToResponse(respArr, text) {
+        let updated = false;
+        function normalizeFn(str) {
+          return (str || '').toString().replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        }
+        let fnName = '';
+        // Try to match quoted name anywhere
+        let quoted = text.match(/['"]([a-zA-Z0-9_\- ]+)['"]/);
+        if (quoted && quoted[1]) {
+          fnName = normalizeFn(quoted[1]);
+        } else {
+          // Try to match 'remove <name>'
+          let afterRemove = text.match(/remove\s+([a-zA-Z0-9_\-]+)/i);
+          if (afterRemove && afterRemove[1]) {
+            fnName = normalizeFn(afterRemove[1]);
+          } else {
+            // Try to match '<name> remove'
+            let beforeRemove = text.match(/([a-zA-Z0-9_\-]+)\s+remove/i);
+            if (beforeRemove && beforeRemove[1]) {
+              fnName = normalizeFn(beforeRemove[1]);
+            } else {
+              // Fallback: find any function name in the text that matches a function in respArr
+              for (let i = 0; i < respArr.length; i++) {
+                if (respArr[i].source === 'both') {
+                  let candidate = normalizeFn(respArr[i].name);
+                  if (text.toLowerCase().includes(candidate)) {
+                    fnName = candidate;
+                    break;
+                  }
+                }
+              }
+              // If still not found, fallback to first word
+              if (!fnName) {
+                let firstWord = text.match(/^([a-zA-Z0-9_\-]+)/);
+                if (firstWord && firstWord[1]) {
+                  fnName = normalizeFn(firstWord[1]);
+                }
+              }
+            }
+          }
+        }
+        if (text.toLowerCase().includes('remove') && fnName) {
+          for (let i = 0; i < respArr.length; i++) {
+            if (
+              respArr[i].source === 'both' &&
+              normalizeFn(respArr[i].name) === fnName
+            ) {
+              respArr.splice(i, 1);
+              updated = true;
+              break;
+            }
+          }
+        }
+        if (!updated && fnName) {
+          for (let i = 0; i < respArr.length; i++) {
+            if (
+              respArr[i].source === 'both' &&
+              normalizeFn(respArr[i].name) === fnName
+            ) {
+              respArr[i].description += ' [User note: ' + text + ']';
+              updated = true;
+              break;
+            }
+          }
+        }
+        if (!updated) {
+          const idx = respArr.findIndex(f => f.source === 'both');
+          if (idx !== -1) {
+            respArr[idx].description += ' [User note: ' + text + ']';
+          }
+        }
+      }
+
+      // Apply chat note to Common Functions and update session
       if (applyChatBtn) {
         applyChatBtn.onclick = function() {
           if (pendingNote && Array.isArray(responseData)) {
-            let text = pendingNote.trim();
-            let updated = false;
-            // Extract function name: quoted string, or first word
-            let fnNameMatch = text.match(/"([^"]+)"|'([^']+)'|^([a-zA-Z0-9_]+)/);
-            let fnName = '';
-            if (fnNameMatch) {
-              fnName = (fnNameMatch[1] || fnNameMatch[2] || fnNameMatch[3] || '').trim().toLowerCase();
-            }
-            // Normalize function names for robust comparison
-            function normalizeFn(str) {
-              return (str || '').replace(/\s+/g, '').replace(/[-_]+/g, '').toLowerCase();
-            }
-            // If note contains 'remove' and matches a function name, remove that function
-            if (text.toLowerCase().includes('remove') && fnName) {
-              const normFnName = normalizeFn(fnName);
-              for (let i = 0; i < responseData.length; i++) {
-                if (
-                  responseData[i].source === 'both' &&
-                  responseData[i].name &&
-                  normalizeFn(responseData[i].name) === normFnName
-                ) {
-                  responseData.splice(i, 1);
-                  updated = true;
-                  break;
-                }
-              }
-              if (!updated) {
-                alert('No function found to remove with name: ' + fnName);
-              }
-            }
-            // Otherwise, append note to exact match only (normalized)
-            if (!updated && fnName) {
-              const normFnName = normalizeFn(fnName);
-              for (let i = 0; i < responseData.length; i++) {
-                if (
-                  responseData[i].source === 'both' &&
-                  responseData[i].name &&
-                  normalizeFn(responseData[i].name) === normFnName
-                ) {
-                  responseData[i].description += ' [User note: ' + text + ']';
-                  updated = true;
-                  break;
-                }
-              }
-              if (!updated) {
-                alert('No function found to add note with name: ' + fnName);
-              }
-            }
-            // If no match or no function name, add as a new note to the first common function
-            if (!updated) {
-              const idx = responseData.findIndex(f => f.source === 'both');
-              if (idx !== -1) {
-                responseData[idx].description += ' [User note: ' + text + ']';
-              }
-            }
+            // Apply the last chat message to the real responseData and session
+            applyChatLogicToResponse(responseData, pendingNote);
             localStorage.setItem('latestSynthesisResult', JSON.stringify(responseData));
             renderResponse(responseData);
+            // Reset preview to match new state
+            chatPreviewResponse = JSON.parse(JSON.stringify(responseData));
+            renderChatPreview(); // Ensure preview matches committed state
             pendingNote = null;
           }
         };
@@ -494,23 +532,20 @@
           .then(res => res.json())
           .then(data => {
             const col3 = document.getElementById('business-logic-col');
-            if (col3) {
-              col3.innerHTML = `
-                <div class='alert-modern'><b>Sample Perspective: Implementation of Core Business Logic</b></div>
-                <div class='card mb-3' style='background:#f5f5f5; border:none; box-shadow:0 2px 8px rgba(44,44,44,0.06);'>
-                  <div class='card-body p-3'>
-                    <div class='fw-bold' style='font-size:1.15rem; color:#d32f2f;'>${elementName}</div>
-                    <div class='mb-1' style='color:#23272b;'>${data.pseudocode ? data.pseudocode.replace(/([^.])$/, '$1.') : 'No business logic found.'}</div>
-                    <span class='badge bg-dark'>${data.standard || ''}</span>
-                  </div>
-                </div>
-              `;
+            if (data && data.length > 0) {
+              col3.innerHTML = data.map(item => `<div class="mb-3" style="padding:1rem; border-radius:0.7rem; background:#f8f9fa; box-shadow:0 2px 8px rgba(44,44,44,0.06);">
+                <div style="font-size:1.1rem; font-weight:500; color:#d32f2f;">${item.name || ''}</div>
+                <div style="font-size:0.95rem; color:#23272b;">${item.description || ''}</div>
+              </div>`).join('');
+            } else {
+              col3.innerHTML = '<div style="color:#6c757d; font-size:0.9rem;">No business logic found for this design element.</div>';
             }
-          });
+          })
+          .catch(err => console.error(err));
         });
       });
     });
-    // No form submission needed; button is now a link to /design-decomposer
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
