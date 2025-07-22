@@ -443,23 +443,20 @@
             if (beforeRemove && beforeRemove[1]) {
               fnName = normalizeFn(beforeRemove[1]);
             } else {
-              // Fallback: find any function name in the text that matches a function in respArr
+              // Robust: match any function name as a whole word (normalized) in the text
+              let textNorm = normalizeFn(text);
               for (let i = 0; i < respArr.length; i++) {
                 if (respArr[i].source === 'both') {
                   let candidate = normalizeFn(respArr[i].name);
-                  if (text.toLowerCase().includes(candidate)) {
+                  // Only match if candidate is a whole word in the normalized text
+                  let regex = new RegExp('(^|[^a-zA-Z0-9])' + candidate + '([^a-zA-Z0-9]|$)');
+                  if (regex.test(textNorm)) {
                     fnName = candidate;
                     break;
                   }
                 }
               }
-              // If still not found, fallback to first word
-              if (!fnName) {
-                let firstWord = text.match(/^([a-zA-Z0-9_\-]+)/);
-                if (firstWord && firstWord[1]) {
-                  fnName = normalizeFn(firstWord[1]);
-                }
-              }
+              // No fallback to first word
             }
           }
         }
@@ -487,12 +484,8 @@
             }
           }
         }
-        if (!updated) {
-          const idx = respArr.findIndex(f => f.source === 'both');
-          if (idx !== -1) {
-            respArr[idx].description += ' [User note: ' + text + ']';
-          }
-        }
+        // Only add a note if a function name was matched; do not add to first function as fallback
+        // If not updated and no fnName match, do nothing
       }
 
       // Apply chat note to Common Functions and update session
@@ -500,13 +493,35 @@
         applyChatBtn.onclick = function() {
           if (pendingNote && Array.isArray(responseData)) {
             // Apply the last chat message to the real responseData and session
-            applyChatLogicToResponse(responseData, pendingNote);
-            localStorage.setItem('latestSynthesisResult', JSON.stringify(responseData));
+            // Use a fresh copy of responseData for mutation
+            let sessionData = localStorage.getItem('latestSynthesisResult');
+            let sessionResponse = sessionData ? JSON.parse(sessionData) : responseData;
+            applyChatLogicToResponse(sessionResponse, pendingNote);
+            localStorage.setItem('latestSynthesisResult', JSON.stringify(sessionResponse));
+            // Always reload from localStorage to guarantee sync
+            let updatedSession = localStorage.getItem('latestSynthesisResult');
+            responseData = updatedSession ? JSON.parse(updatedSession) : sessionResponse;
             renderResponse(responseData);
             // Reset preview to match new state
             chatPreviewResponse = JSON.parse(JSON.stringify(responseData));
             renderChatPreview(); // Ensure preview matches committed state
+            // Remove the last user message from chatHistory (since it was just applied)
+            if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'user') {
+              chatHistory.pop();
+              localStorage.setItem('fs_chat_history', JSON.stringify(chatHistory));
+              renderChatHistory();
+            }
             pendingNote = null;
+            // Clear chat input after apply
+            if (chatInput) chatInput.value = '';
+          } else {
+            // If nothing to apply, show a quick feedback
+            const statusMsg = document.getElementById('statusMsg');
+            if (statusMsg) {
+              statusMsg.innerText = 'No new chat message to apply.';
+              statusMsg.style.color = '#d32f2f';
+              setTimeout(() => { statusMsg.innerText = ''; }, 1800);
+            }
           }
         };
       }
