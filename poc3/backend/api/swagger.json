@@ -75,6 +75,19 @@
         "raw": "```json\n[\n    {\n        \"element\": \"processTransactionRecord\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Calculate the number of days since the transaction date\",\n                \"logic\": \"Get current date and time, subtract transaction date to get the number of days\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Determine if the previous payment was made in full\",\n                \"logic\": \"Check if the previous payment amount equals the total transaction amount\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Calculate the interest amount\",\n                \"logic\": \"Calculate interest based on balance, daily rate, and days since the transaction\"\n            }\n        ]\n    }\n]\n```"
       },
       "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Process Transaction Records",
+            "pseudocode": "1. Retrieve transaction records from the database\n2. Iterate through each transaction record\n3. Calculate days since the transaction\n4. Determine interest based on APR and transaction details\n5. Update transaction record with calculated interest",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Process Transaction Records\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve transaction records from the database\",\n                \"action\": \"Query database for transaction records\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Iterate through each transaction record\",\n                \"action\": \"For each transaction record in the retrieved list:\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Calculate days since the transaction\",\n                \"action\": \"Calculate the number of days since the transaction date\"\n            },\n            {\n                \"step\": 4,\n                \"description\": \"Determine interest based on APR and transaction details\",\n                \"action\": \"Based on the APR and transaction details, calculate the interest amount\"\n            },\n            {\n                \"step\": 5,\n                \"description\": \"Update transaction record with calculated interest\",\n                \"action\": \"Update the transaction record in the database with the calculated interest amount\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
     }
   ]
 }
