@@ -138,7 +138,29 @@ app.config.update(
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-executor = ThreadPoolExecutor(max_workers=10)
+THREAD_POOL_SIZE = 12  # Increased for more parallelism (tune as needed for your hardware)
+executor = ThreadPoolExecutor(max_workers=THREAD_POOL_SIZE)
+
+# Utility for parallel agent calls
+def run_agents_in_parallel(agent_tasks):
+    """
+    agent_tasks: dict of {key: (func, args)}
+    Returns: dict of {key: result}
+    """
+    import time
+    from concurrent.futures import as_completed
+    results = {}
+    start = time.time()
+    with ThreadPoolExecutor(max_workers=THREAD_POOL_SIZE) as executor:
+        future_to_key = {executor.submit(func, *args): key for key, (func, args) in agent_tasks.items()}
+        for future in as_completed(future_to_key):
+            key = future_to_key[future]
+            try:
+                results[key] = future.result()
+            except Exception as exc:
+                results[key] = f"Error: {exc}"
+    logging.info(f"[PERF] Parallel agent batch ({list(agent_tasks.keys())}) took {time.time() - start:.2f}s")
+    return results
 ########################
 # OPENAI ASSISTANT IDs
 ########################
@@ -572,17 +594,19 @@ def page1():
                 os.remove(path)
 
         def run_agents():
+            import time
+            t0 = time.time()
             try:
-                #a1 = call_agent(ASSISTANTS['agent_1'], context)
+                # Parallel agent calls using asyncio for OpenAI, fallback to threads for others
                 a11, a2, a3 = asyncio.run(call_agents_parallel([
                     (ASSISTANTS['agent_1_1'], context),
                     (ASSISTANTS['agent_2'], context),
                     (ASSISTANTS['agent_3'], context)
                 ]))
+                logging.info(f"[PERF] Page1 agent batch: {time.time() - t0:.2f}s")
                 logging.info(f"Agent 1.1 Output: {a11}")
                 logging.info(f"Agent 2 Output: {a2}")
                 final_data = {
-                    #"agent_1_output": a1,
                     "product_overview": a11,
                     "feature_overview": a2,
                     "highest_order": a3,

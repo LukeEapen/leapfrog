@@ -473,26 +473,50 @@
                     }
                     return `<span>${String(val)}</span>`;
                   }
-                  // Pseudocode rendering
-                  if (data && data.pseudocode !== undefined) {
-                    if (typeof data.pseudocode === 'object') {
-                      beautified = beautifyValue(data.pseudocode);
-                    } else if (typeof data.pseudocode === 'string' && /\d+\./.test(data.pseudocode)) {
+                  // Pseudocode rendering (robust: always show as table or list, never raw JSON)
+                  function renderPseudocode(val) {
+                    if (val == null) return `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>// No business logic available</div>`;
+                    if (typeof val === 'string') {
                       // Numbered steps string
-                      const stepRegex = /\d+\.\s*[^\d]+(?=(?:\d+\.|$))/g;
-                      const steps = data.pseudocode.match(stepRegex);
-                      if (steps && steps.length > 0) {
-                        beautified = '<ol style="font-size:1.1rem; color:#23272b; padding-left:2em;">' +
-                          steps.map(step => '<li>' + step.replace(/^\d+\.\s*/, '').trim() + '</li>').join('') +
-                          '</ol>';
-                      } else {
-                        beautified = `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>${beautifyValue(data.pseudocode)}</div>`;
+                      if (/\d+\./.test(val)) {
+                        const stepRegex = /\d+\.\s*[^\d]+(?=(?:\d+\.|$))/g;
+                        const steps = val.match(stepRegex);
+                        if (steps && steps.length > 0) {
+                          return '<ol style="font-size:1.1rem; color:#23272b; padding-left:2em;">' +
+                            steps.map(step => '<li>' + step.replace(/^\d+\.\s*/, '').trim() + '</li>').join('') +
+                            '</ol>';
+                        }
                       }
-                    } else if (Array.isArray(data.pseudocode)) {
-                      beautified = beautifyValue(data.pseudocode);
-                    } else {
-                      beautified = `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>${beautifyValue(data.pseudocode)}</div>`;
+                      // Otherwise, just show as pre-wrapped text
+                      return `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>${beautifyValue(val)}</div>`;
                     }
+                    if (Array.isArray(val)) {
+                      // If array of objects with same keys, render as table
+                      if (val.length > 0 && val.every(v => typeof v === 'object' && v !== null && !Array.isArray(v))) {
+                        const keys = Object.keys(val[0]);
+                        if (val.every(v => JSON.stringify(Object.keys(v)) === JSON.stringify(keys))) {
+                          let header = keys.map(k => `<th style='color:#d32f2f;'>${k}</th>`).join('');
+                          let body = val.map(row => `<tr>${keys.map(k => `<td>${beautifyValue(row[k])}</td>`).join('')}</tr>`).join('');
+                          return `<table class='table table-bordered table-sm' style='background:#f8f9fa; margin-bottom:0.7em;'><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
+                        }
+                      }
+                      // Otherwise, render as ordered list (recursively format children)
+                      return '<ol style="font-size:1.1rem; color:#23272b; padding-left:2em;">' + val.map((v, i) => `<li>${renderPseudocode(v)}</li>`).join('') + '</ol>';
+                    }
+                    if (typeof val === 'object') {
+                      // If object has only numeric keys, treat as array
+                      const keys = Object.keys(val);
+                      if (keys.length > 0 && keys.every(k => !isNaN(Number(k)))) {
+                        return renderPseudocode(keys.sort((a,b)=>a-b).map(k => val[k]));
+                      }
+                      // If object is a plain object, render as a table (not as raw JSON)
+                      return renderTable(val);
+                    }
+                    // For all other types, show as string
+                    return `<span>${String(val)}</span>`;
+                  }
+                  if (data && data.pseudocode !== undefined) {
+                    beautified = renderPseudocode(data.pseudocode);
                   } else {
                     beautified = `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>// No business logic available</div>`;
                   }

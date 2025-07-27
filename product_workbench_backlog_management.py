@@ -194,6 +194,11 @@ def main():
     def product_management_intermediate():
         return render_template('product_management_intermediate.html')
 
+    # Route for Software Development Intermediate page
+    @app.route('/development-intermediate')
+    def development_intermediate():
+        return render_template('development_intermediate.html')
+
     # Start server with enhanced error handling
     try:
         logger.info(f"Starting Flask server on port {port}")

@@ -79,12 +79,32 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-in-product
 # In production, make sure to set FLASK_SECRET_KEY environment variable
 
 # Performance optimizations
-THREAD_POOL_SIZE = 4
+THREAD_POOL_SIZE = 12  # Increased for more parallelism (tune as needed for your hardware)
 MAX_CACHE_SIZE = 1000
 CACHE_TTL = 3600  # 1 hour
 
 # Initialize thread pool for parallel processing
 executor = ThreadPoolExecutor(max_workers=THREAD_POOL_SIZE)
+
+# Utility for parallel agent calls
+def run_agents_in_parallel(agent_tasks):
+    """
+    agent_tasks: dict of {key: (func, args)}
+    Returns: dict of {key: result}
+    """
+    import time
+    results = {}
+    start = time.time()
+    with ThreadPoolExecutor(max_workers=THREAD_POOL_SIZE) as executor:
+        future_to_key = {executor.submit(func, *args): key for key, (func, args) in agent_tasks.items()}
+        for future in as_completed(future_to_key):
+            key = future_to_key[future]
+            try:
+                results[key] = future.result()
+            except Exception as exc:
+                results[key] = f"Error: {exc}"
+    logger.info(f"[PERF] Parallel agent batch ({list(agent_tasks.keys())}) took {time.time() - start:.2f}s")
+    return results
 
 # Cache for responses (in-memory with TTL)
 response_cache = TTLCache(maxsize=MAX_CACHE_SIZE, ttl=CACHE_TTL)
@@ -388,6 +408,7 @@ def home():
 @app.route("/user-story-upload", methods=["POST"])
 def process_user_story():
     start_time = time.time()
+    logger.info("[PERF] process_user_story: started")
     logger.info("POST request received for user story processing")
     
     # Collect input
@@ -418,7 +439,9 @@ def process_user_story():
             
             return prd_content, docs_content
     
+    t0 = time.time()
     prd_content, docs_content = read_files_parallel()
+    logger.info(f"[PERF] File read parallel: {time.time() - t0:.2f}s")
     
     # Debug file content
     if prd_content:
@@ -428,6 +451,7 @@ def process_user_story():
     logger.info("Processing documents with RAG enhancement")
     
     # Process PRD with RAG if content is substantial and valid
+    t1 = time.time()
     if is_valid_content(prd_content):
         if len(prd_content) > 5000:
             logger.info("Creating RAG-enhanced PRD summary")
@@ -440,8 +464,10 @@ def process_user_story():
     else:
         logger.warning(f"PRD content is invalid for RAG processing: {prd_content[:100] if prd_content else 'None'}")
         prd_content = "No valid PRD content available - please check file format and encoding."
+    logger.info(f"[PERF] PRD content processing: {time.time() - t1:.2f}s")
     
     # Process additional docs with RAG
+    t2 = time.time()
     if is_valid_content(docs_content):
         if len(docs_content) > 3000:
             logger.info("Creating RAG-enhanced docs summary")
@@ -454,10 +480,12 @@ def process_user_story():
     else:
         logger.warning(f"Additional docs content is invalid: {docs_content[:100] if docs_content else 'None'}")
         docs_content = "No valid additional documentation available."
+    logger.info(f"[PERF] Docs content processing: {time.time() - t2:.2f}s")
     
     logger.info(f"PRD content length (post-RAG): {len(prd_content)} characters")
-    logger.info(f"Additional docs content length (post-RAG): {len(docs_content)} characters")    # Combine prompt with RAG-enhanced content
+    logger.info(f"Additional docs content length (post-RAG): {len(docs_content)} characters")
     logger.info("Combining context and RAG-enhanced content")
+    t3 = time.time()
     
     # Create enhanced context for Epic Generator
     enhanced_context = f"""
@@ -473,19 +501,24 @@ Instructions: The above content has been intelligently extracted and summarized 
 It contains the most relevant requirements, user stories, and business objectives from the original documents.
 Use this curated information to generate comprehensive epics and user stories.
 """
+    logger.info(f"[PERF] Context assembly: {time.time() - t3:.2f}s")
     logger.info(f"Enhanced context length: {len(enhanced_context)} characters")
     
     # Check cache first with more granular caching
+    t4 = time.time()
     prompt_hash = get_cache_key(enhanced_context)
     cached_result = response_cache.get(prompt_hash)
     if cached_result:
         logger.info("Cache hit! Returning cached response")
         processing_time = time.time() - start_time
-        logger.info(f"Total processing time (cached): {processing_time:.2f} seconds")
+        logger.info(f"[PERF] Total processing time (cached): {processing_time:.2f} seconds")
         return render_template("poc2_epic_story_screen.html", epics=cached_result)
+    logger.info(f"[PERF] Cache check: {time.time() - t4:.2f}s")
       # Log token count for the enhanced context
+    t5 = time.time()
     context_tokens = count_tokens(enhanced_context, "gpt-4o")
     logger.info(f"Enhanced context token count: {context_tokens:,} tokens")
+    logger.info(f"[PERF] Token count: {time.time() - t5:.2f}s")
     
     # Check if context is within token limits
     if context_tokens > 120000:
@@ -508,40 +541,33 @@ Use this curated information to generate comprehensive epics and user stories.
     
     try:
         # Directly use Epic Generator with RAG-enhanced content
+        t6 = time.time()
         start_epic_time = time.time()
         epic_response = ask_assistant_from_file_optimized("poc2_agent2_epic_generator", enhanced_context)
         epic_processing_time = time.time() - start_epic_time
-        
+        logger.info(f"[PERF] Epic agent call: {epic_processing_time:.2f}s")
         logger.info("################Epic Generator response received")
-        logger.info(f"Epic Generator processing time: {epic_processing_time:.2f} seconds")
-        
         # Print Epic Agent Response
         logger.info("=" * 80)
         logger.info("EPIC AGENT RESPONSE OUTPUT:")
         logger.info("=" * 80)
         logger.info(epic_response)
         logger.info("=" * 80)
-        
         # Log token usage for Epic Generator interaction
         log_token_usage(enhanced_context, epic_response, model="gpt-4o", context="RAG-Enhanced Epic Generator")
-
         final_output = epic_response
         logger.info(f"Final output length: {len(final_output)} characters")
-        
         # Cache the result for future requests
         response_cache[prompt_hash] = final_output
         logger.info("Response cached for future requests")
-        
         processing_time = time.time() - start_time
-        logger.info(f"Total RAG-optimized processing time: {processing_time:.2f} seconds")
-        
+        logger.info(f"[PERF] Total RAG-optimized processing time: {processing_time:.2f} seconds")
         # Calculate time savings
         estimated_traditional_time = processing_time * 2  # Estimate of traditional two-agent approach
         time_saved = estimated_traditional_time - processing_time
-        logger.info(f"Estimated time saved by RAG optimization: {time_saved:.2f} seconds")        # Render page 2 with response
+        logger.info(f"Estimated time saved by RAG optimization: {time_saved:.2f} seconds")
         logger.info("Rendering epic story screen with RAG-optimized output")
         return render_template("poc2_epic_story_screen.html", epics=final_output)
-        
     except Exception as e:
         logger.error(f"Error in RAG-optimized processing: {str(e)}")
         raise

@@ -53,9 +53,11 @@
       border: 1.5px solid rgba(255,255,255,0.18);
       position: relative;
       overflow: hidden;
-      max-width: 1200px;
+      max-width: 620px;
       min-width: 480px;
-      width: 100%;
+      width: 620px;
+      margin-left: auto;
+      margin-right: 0;
     }
     .agent-desc {
       font-size: 1.15rem;
@@ -268,7 +270,7 @@
           <div id="result" class="w-100" style="margin-top:0;"></div>
         </div>
         <div class="col-lg-5 col-md-12 d-flex flex-column align-items-end justify-content-start order-lg-2 order-2" style="max-width:600px; margin-left:auto; margin-right:0; padding-left:0; align-items:flex-end;">
-          <div class="chat-panel" style="margin-top:0; width:100%; min-width:0; max-width:540px; margin-left:auto; margin-right:0;">
+          <div class="chat-panel" style="margin-top:0; width:650px; min-width:480px; max-width:650px; margin-left:auto; margin-right:0;">
             <div class="chat-header d-flex align-items-center justify-content-between" style="gap:1rem; background:linear-gradient(120deg, #d32f2f 60%, #23272b 100%); border-radius:1rem; padding:0.7rem 1.2rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); color:#fff;">
               <div class="d-flex align-items-center gap-2">
                 <div style="width:38px; height:38px; background:linear-gradient(135deg,#d32f2f 60%,#fff 100%); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(44,44,44,0.10);">
@@ -362,7 +364,7 @@
             `;
             }
             pretty = `
-            <div style="background: linear-gradient(120deg, #f8f9fa 60%, #f1f3f4 100%); border-radius: 1.2rem; box-shadow: 0 2px 12px rgba(44,44,44,0.10); padding: 1.2rem 1vw 1.5rem 1vw; margin-bottom: 2.2rem; border: 2.5px solid #f1f3f4; max-width:70vw; min-width:320px; width:70vw; margin-left:auto; margin-right:auto;">
+            <div style="background: linear-gradient(120deg, #f8f9fa 60%, #f1f3f4 100%); border-radius: 1.2rem; box-shadow: 0 2px 12px rgba(44,44,44,0.10); padding: 1.2rem 1vw 1.5rem 1vw; margin-bottom: 2.2rem; border: 2.5px solid #f1f3f4; max-width:calc(70vw - 40px); min-width:320px; width:calc(70vw - 30px); margin-left:auto; margin-right:auto;">
               <div class='alert-modern' style="background: #d32f2f; color: #fff; border-radius: 0.8rem; padding: 0.7rem 1rem; font-size: 1.18rem; font-weight: 700; margin-bottom: 1.2rem; box-shadow: 0 2px 8px rgba(44,44,44,0.10); letter-spacing: 0.01em; min-height: 60px; display: flex; align-items: center;">Most Important Synthesized Functions (5-10):</div>
               ${mainSection}
               ${deltaSection}

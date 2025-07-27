@@ -88,6 +88,933 @@
         "raw": "```json\n[\n    {\n        \"element\": \"Process Transaction Records\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve transaction records from the database\",\n                \"action\": \"Query database for transaction records\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Iterate through each transaction record\",\n                \"action\": \"For each transaction record in the retrieved list:\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Calculate days since the transaction\",\n                \"action\": \"Calculate the number of days since the transaction date\"\n            },\n            {\n                \"step\": 4,\n                \"description\": \"Determine interest based on APR and transaction details\",\n                \"action\": \"Based on the APR and transaction details, calculate the interest amount\"\n            },\n            {\n                \"step\": 5,\n                \"description\": \"Update transaction record with calculated interest\",\n                \"action\": \"Update the transaction record in the database with the calculated interest amount\"\n            }\n        ]\n    }\n]\n```"
       },
       "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest for Transactions",
+            "pseudocode": "1. For each transaction, calculate the number of days since the transaction date\n    - Get the transaction date\n    - Get the current date\n    - Calculate the difference in days between the transaction date and current date\n2. Check if the previous payment was made in full for each transaction\n    - Get the previous payment amount\n    - Get the transaction amount\n    - Compare the previous payment amount with the transaction amount to determine if it was paid in full\n3. Calculate interest based on balance, daily rate, and days since the transaction date\n    - Get the balance for the transaction\n    - Get the daily interest rate\n    - Calculate interest using the formula: interest = balance * daily rate * days\n4. Display the card number and calculated interest for each transaction\n    - Retrieve the card number associated with the transaction\n    - Display the card number and calculated interest for the transaction",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest for Transactions\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"For each transaction, calculate the number of days since the transaction date\",\n                \"actions\": [\n                    \"Get the transaction date\",\n                    \"Get the current date\",\n                    \"Calculate the difference in days between the transaction date and current date\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Check if the previous payment was made in full for each transaction\",\n                \"actions\": [\n                    \"Get the previous payment amount\",\n                    \"Get the transaction amount\",\n                    \"Compare the previous payment amount with the transaction amount to determine if it was paid in full\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Calculate interest based on balance, daily rate, and days since the transaction date\",\n                \"actions\": [\n                    \"Get the balance for the transaction\",\n                    \"Get the daily interest rate\",\n                    \"Calculate interest using the formula: interest = balance * daily rate * days\"\n                ]\n            },\n            {\n                \"step\": 4,\n                \"description\": \"Display the card number and calculated interest for each transaction\",\n                \"actions\": [\n                    \"Retrieve the card number associated with the transaction\",\n                    \"Display the card number and calculated interest for the transaction\"\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Read transaction records from 'TXN.DAT' file",
+            "pseudocode": "Open 'TXN.DAT' file for reading\nLoop through each transaction record in the file\nExtract transaction details like card number, balance, daily rate, and transaction date",
+            "standard": "ISO"
+          },
+          {
+            "element": "Calculate daily interest",
+            "pseudocode": "For each transaction record:\nCalculate days since the transaction date\nCalculate daily interest using the formula: daily interest = balance * daily rate * days\nDisplay card number and calculated interest",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Read transaction records from 'TXN.DAT' file\",\n        \"standard\": \"ISO 2709:2008\",\n        \"pseudocode\": [\n            \"Open 'TXN.DAT' file for reading\",\n            \"Loop through each transaction record in the file\",\n            \"Extract transaction details like card number, balance, daily rate, and transaction date\"\n        ]\n    },\n    {\n        \"element\": \"Calculate daily interest\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            \"For each transaction record:\",\n            \"Calculate days since the transaction date\",\n            \"Calculate daily interest using the formula: daily interest = balance * daily rate * days\",\n            \"Display card number and calculated interest\"\n        ]\n    }\n]\n```  "
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate daily interest for credit card transactions",
+            "pseudocode": "Read transaction records from 'TXN.DAT' file\nGet the current system date\nCalculate the daily interest rate based on the annual percentage rate (APR)\nFor each transaction record:\n- Calculate the number of days since the transaction\n- Calculate the interest amount using the daily interest rate and days since transaction\n- Check if the previous payment was made in full:\n- If yes, set interest amount to zero\n- Output the transaction record with calculated interest amount\nStop the program when all transaction records have been processed",
+            "standard": "ISO"
+          },
+          {
+            "element": "Read transaction records from 'TXN.DAT' file",
+            "pseudocode": "Open 'TXN.DAT' file for reading\nLoop until end of file:\n- Read a transaction record\n- Process the transaction record",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Calculate daily interest rate based on APR",
+            "pseudocode": "Get the annual percentage rate (APR)\nCalculate the daily interest rate = (APR / 365)",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Calculate interest amount for each transaction record",
+            "pseudocode": "For each transaction record:\n- Calculate the number of days since the transaction\n- Calculate the interest amount = (daily interest rate * days since transaction)",
+            "standard": "ISO"
+          },
+          {
+            "element": "Handle cases where previous payment was made in full",
+            "pseudocode": "Check if the previous payment was made in full for the transaction record\nIf yes, set interest amount to zero",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Stop the program when all transaction records have been processed",
+            "pseudocode": "Check if all transaction records have been processed\nIf yes, stop the program",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate daily interest for credit card transactions\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": [\n            \"Read transaction records from 'TXN.DAT' file\",\n            \"Get the current system date\",\n            \"Calculate the daily interest rate based on the annual percentage rate (APR)\",\n            \"For each transaction record:\",\n            \"   - Calculate the number of days since the transaction\",\n            \"   - Calculate the interest amount using the daily interest rate and days since transaction\",\n            \"   - Check if the previous payment was made in full:\",\n            \"       - If yes, set interest amount to zero\",\n            \"   - Output the transaction record with calculated interest amount\",\n            \"Stop the program when all transaction records have been processed\"\n        ]\n    },\n    {\n        \"element\": \"Read transaction records from 'TXN.DAT' file\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Open 'TXN.DAT' file for reading\",\n            \"Loop until end of file:\",\n            \"   - Read a transaction record\",\n            \"   - Process the transaction record\"\n        ]\n    },\n    {\n        \"element\": \"Calculate daily interest rate based on APR\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Get the annual percentage rate (APR)\",\n            \"Calculate the daily interest rate = (APR / 365)\"\n        ]\n    },\n    {\n        \"element\": \"Calculate interest amount for each transaction record\",\n        \"standard\": \"ISO 20022\",\n        \"pseudocode\": [\n            \"For each transaction record:\",\n            \"   - Calculate the number of days since the transaction\",\n            \"   - Calculate the interest amount = (daily interest rate * days since transaction)\"\n        ]\n    },\n    {\n        \"element\": \"Handle cases where previous payment was made in full\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Check if the previous payment was made in full for the transaction record\",\n            \"If yes, set interest amount to zero\"\n        ]\n    },\n    {\n        \"element\": \"Stop the program when all transaction records have been processed\",\n        \"standard\": \"ISO 2709\",\n        \"pseudocode\": [\n            \"Check if all transaction records have been processed\",\n            \"If yes, stop the program\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Read transaction records from 'TXN.DAT' file",
+            "pseudocode": "Open 'TXN.DAT' file for reading\nLoop through each transaction record in the file\nExtract transaction details like transaction amount, date, etc.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Calculate daily interest rate based on APR and current date",
+            "pseudocode": "Get the annual percentage rate (APR) for credit card transactions\nCalculate daily interest rate = (APR / 365) * 100\nGet the current system date\nCalculate the number of days since each transaction",
+            "standard": "ISO"
+          },
+          {
+            "element": "Calculate interest amount for each transaction record",
+            "pseudocode": "For each transaction record:\nIf previous payment was made in full:\nSet interest amount to zero\nElse:\nCalculate interest amount = transaction amount * daily interest rate * number of days since transaction",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Handle cases where previous payment was made in full",
+            "pseudocode": "Check if the previous payment for the transaction was made in full\nIf yes, set the interest amount to zero for that transaction",
+            "standard": "ISO"
+          },
+          {
+            "element": "Stop the program when all transaction records have been processed",
+            "pseudocode": "Check if all transaction records have been processed\nIf yes, stop the program",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Read transaction records from 'TXN.DAT' file\",\n        \"standard\": \"ISO 2709:2008\",\n        \"pseudocode\": [\n            \"Open 'TXN.DAT' file for reading\",\n            \"Loop through each transaction record in the file\",\n            \"Extract transaction details like transaction amount, date, etc.\"\n        ]\n    },\n    {\n        \"element\": \"Calculate daily interest rate based on APR and current date\",\n        \"standard\": \"ISO 8601:2004\",\n        \"pseudocode\": [\n            \"Get the annual percentage rate (APR) for credit card transactions\",\n            \"Calculate daily interest rate = (APR / 365) * 100\",\n            \"Get the current system date\",\n            \"Calculate the number of days since each transaction\"\n        ]\n    },\n    {\n        \"element\": \"Calculate interest amount for each transaction record\",\n        \"standard\": \"Bian Open API\",\n        \"pseudocode\": [\n            \"For each transaction record:\",\n            \"If previous payment was made in full:\",\n            \"   Set interest amount to zero\",\n            \"Else:\",\n            \"   Calculate interest amount = transaction amount * daily interest rate * number of days since transaction\"\n        ]\n    },\n    {\n        \"element\": \"Handle cases where previous payment was made in full\",\n        \"standard\": \"ISO 20022\",\n        \"pseudocode\": [\n            \"Check if the previous payment for the transaction was made in full\",\n            \"If yes, set the interest amount to zero for that transaction\"\n        ]\n    },\n    {\n        \"element\": \"Stop the program when all transaction records have been processed\",\n        \"standard\": \"Open API Specification\",\n        \"pseudocode\": [\n            \"Check if all transaction records have been processed\",\n            \"If yes, stop the program\"\n        ]\n    }\n]\n```  "
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Daily Interest Rate",
+            "pseudocode": "1. Get the current system date\n2. Calculate the number of days since each transaction\n3. Calculate the daily interest rate based on the APR and the number of days\n4. Return the daily interest rate",
+            "standard": "ISO"
+          },
+          {
+            "element": "Read Transaction Records from 'TXN.DAT' File",
+            "pseudocode": "1. Open the 'TXN.DAT' file for reading\n2. Read each transaction record from the file\n3. Close the file after reading all transaction records",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Calculate Interest Amount for Each Transaction Record",
+            "pseudocode": "1. For each transaction record, calculate the interest amount using the daily interest rate\n2. Update the transaction record with the calculated interest amount",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Handle Cases Where Previous Payment Was Made in Full",
+            "pseudocode": "1. Check if the previous payment for the transaction was made in full\n2. If yes, set the interest amount for that transaction record to zero",
+            "standard": "ISO"
+          },
+          {
+            "element": "Stop Program When All Transaction Records Processed",
+            "pseudocode": "1. Check if all transaction records have been processed\n2. If yes, stop the program",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Daily Interest Rate\",\n        \"standard\": \"ISO 4217\",\n        \"pseudocode\": \"1. Get the current system date\\n2. Calculate the number of days since each transaction\\n3. Calculate the daily interest rate based on the APR and the number of days\\n4. Return the daily interest rate\"\n    },\n    {\n        \"element\": \"Read Transaction Records from 'TXN.DAT' File\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"1. Open the 'TXN.DAT' file for reading\\n2. Read each transaction record from the file\\n3. Close the file after reading all transaction records\"\n    },\n    {\n        \"element\": \"Calculate Interest Amount for Each Transaction Record\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": \"1. For each transaction record, calculate the interest amount using the daily interest rate\\n2. Update the transaction record with the calculated interest amount\"\n    },\n    {\n        \"element\": \"Handle Cases Where Previous Payment Was Made in Full\",\n        \"standard\": \"ISO 20022\",\n        \"pseudocode\": \"1. Check if the previous payment for the transaction was made in full\\n2. If yes, set the interest amount for that transaction record to zero\"\n    },\n    {\n        \"element\": \"Stop Program When All Transaction Records Processed\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"1. Check if all transaction records have been processed\\n2. If yes, stop the program\"\n    }\n]\n```  "
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest For Transaction",
+            "pseudocode": "1. Retrieve transaction details such as transaction date, balance, daily rate, and previous payment information.\n2. Calculate the number of days since the transaction date.\n3. Check if the previous payment was made in full.\n4. If previous payment was not made in full, calculate interest based on the balance, daily rate, and days since the transaction.\n5. Return the computed interest amount.",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest For Transaction\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve transaction details such as transaction date, balance, daily rate, and previous payment information.\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate the number of days since the transaction date.\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Check if the previous payment was made in full.\"\n            },\n            {\n                \"step\": 4,\n                \"description\": \"If previous payment was not made in full, calculate interest based on the balance, daily rate, and days since the transaction.\"\n            },\n            {\n                \"step\": 5,\n                \"description\": \"Return the computed interest amount.\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate interest for a specific credit card transaction",
+            "pseudocode": "Retrieve transaction details such as transaction date, balance, daily rate\nCalculate the number of days since the transaction date\nCheck if the previous payment was made in full\nIf previous payment was not made in full, calculate interest based on balance, daily rate, and days since the transaction\nReturn the calculated interest amount",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Retrieve transaction details",
+            "pseudocode": "Call the appropriate API endpoint to fetch transaction details\nExtract transaction date, balance, and daily rate from the response\nReturn the extracted transaction details",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Calculate the number of days since the transaction date",
+            "pseudocode": "Get the current date\nCalculate the difference in days between the current date and the transaction date\nReturn the number of days",
+            "standard": "ISO"
+          },
+          {
+            "element": "Check if the previous payment was made in full",
+            "pseudocode": "Retrieve the details of the previous payment\nCompare the previous payment amount with the total transaction amount\nIf the previous payment amount is equal to or greater than the total transaction amount, return true (payment made in full)\nOtherwise, return false (payment not made in full)",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Calculate interest based on balance, daily rate, and days since the transaction",
+            "pseudocode": "Calculate the interest amount using the formula: balance * daily rate * days since transaction\nReturn the calculated interest amount",
+            "standard": "BIAN"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate interest for a specific credit card transaction\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Retrieve transaction details such as transaction date, balance, daily rate\",\n            \"Calculate the number of days since the transaction date\",\n            \"Check if the previous payment was made in full\",\n            \"If previous payment was not made in full, calculate interest based on balance, daily rate, and days since the transaction\",\n            \"Return the calculated interest amount\"\n        ]\n    },\n    {\n        \"element\": \"Retrieve transaction details\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Call the appropriate API endpoint to fetch transaction details\",\n            \"Extract transaction date, balance, and daily rate from the response\",\n            \"Return the extracted transaction details\"\n        ]\n    },\n    {\n        \"element\": \"Calculate the number of days since the transaction date\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Get the current date\",\n            \"Calculate the difference in days between the current date and the transaction date\",\n            \"Return the number of days\"\n        ]\n    },\n    {\n        \"element\": \"Check if the previous payment was made in full\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Retrieve the details of the previous payment\",\n            \"Compare the previous payment amount with the total transaction amount\",\n            \"If the previous payment amount is equal to or greater than the total transaction amount, return true (payment made in full)\",\n            \"Otherwise, return false (payment not made in full)\"\n        ]\n    },\n    {\n        \"element\": \"Calculate interest based on balance, daily rate, and days since the transaction\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Calculate the interest amount using the formula: balance * daily rate * days since transaction\",\n            \"Return the calculated interest amount\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest for Transactions",
+            "pseudocode": "1. Read the transaction records from the file until the end is reached\n    - Open the transaction file\n    - Read the first transaction record\n2. Calculate interest for each transaction\n    - While not end of file:\n    - Get the transaction date and balance\n    - Calculate the number of days since the transaction date\n    - Check if the previous payment was made in full\n    - If yes, set interest to zero\n    - If no, calculate interest based on balance, daily rate, and days since transaction date\n    - Display the card number and calculated interest amount\n    - Read the next transaction record",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest for Transactions\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Read the transaction records from the file until the end is reached\",\n                \"actions\": [\n                    \"Open the transaction file\",\n                    \"Read the first transaction record\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate interest for each transaction\",\n                \"actions\": [\n                    \"While not end of file:\",\n                    \"Get the transaction date and balance\",\n                    \"Calculate the number of days since the transaction date\",\n                    \"Check if the previous payment was made in full\",\n                    \"If yes, set interest to zero\",\n                    \"If no, calculate interest based on balance, daily rate, and days since transaction date\",\n                    \"Display the card number and calculated interest amount\",\n                    \"Read the next transaction record\"\n                ]\n            }\n        ]\n    }\n]\n```  "
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "initializeProcess",
+            "pseudocode": "1. Accept the current date in YYYYMMDD format as input\n2. Calculate the daily interest rate based on the annual percentage rate (APR)\n3. Set up necessary variables and parameters for the interest calculation process\n4. Perform any additional setup or validation steps required\n5. Return the initialized process state",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"initializeProcess\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Accept the current date in YYYYMMDD format as input\",\n                \"action\": \"Receive inputDate\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate the daily interest rate based on the annual percentage rate (APR)\",\n                \"action\": \"Retrieve APR from system configuration\",\n                \"action\": \"Calculate dailyInterestRate = APR / 365\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Set up necessary variables and parameters for the interest calculation process\",\n                \"action\": \"Initialize variables: principalAmount, interestAccrued = 0, daysElapsed = 0\"\n            },\n            {\n                \"step\": 4,\n                \"description\": \"Perform any additional setup or validation steps required\",\n                \"action\": \"Check for valid inputDate format and range\",\n                \"action\": \"Validate APR value\"\n            },\n            {\n                \"step\": 5,\n                \"description\": \"Return the initialized process state\",\n                \"action\": \"Return initialized variables and parameters for interest calculation\"\n            }\n        ]\n    }\n]\n```  "
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Initialize current date",
+            "pseudocode": "Set current date to today's date in ISO 8601 format.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Initialize daily interest rate",
+            "pseudocode": "Retrieve the daily interest rate for credit card transactions in ISO 4217 currency code format.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Read transaction records from input file",
+            "pseudocode": "Use Open API to define the endpoint or method to read transaction records from the input file.",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Calculate number of days since each transaction",
+            "pseudocode": "For each transaction, calculate the number of days between the transaction date and the current date in ISO 8601 format.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Determine if full payment was made",
+            "pseudocode": "Check if the payment amount for the transaction equals the total transaction amount to determine if a full payment was made.",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Calculate interest based on balance, daily rate, and days since transaction",
+            "pseudocode": "For each transaction, calculate the interest based on the remaining balance, daily interest rate, and the number of days since the transaction.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Display card number and calculated interest",
+            "pseudocode": "Use Open API to define the response format for displaying the card number and calculated interest.",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Initialize current date\",\n        \"standard\": \"ISO 8601\",\n        \"pseudocode\": \"Set current date to today's date in ISO 8601 format.\"\n    },\n    {\n        \"element\": \"Initialize daily interest rate\",\n        \"standard\": \"ISO 4217\",\n        \"pseudocode\": \"Retrieve the daily interest rate for credit card transactions in ISO 4217 currency code format.\"\n    },\n    {\n        \"element\": \"Read transaction records from input file\",\n        \"standard\": \"Open API Specification\",\n        \"pseudocode\": \"Use Open API to define the endpoint or method to read transaction records from the input file.\"\n    },\n    {\n        \"element\": \"Calculate number of days since each transaction\",\n        \"standard\": \"ISO 8601\",\n        \"pseudocode\": \"For each transaction, calculate the number of days between the transaction date and the current date in ISO 8601 format.\"\n    },\n    {\n        \"element\": \"Determine if full payment was made\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": \"Check if the payment amount for the transaction equals the total transaction amount to determine if a full payment was made.\"\n    },\n    {\n        \"element\": \"Calculate interest based on balance, daily rate, and days since transaction\",\n        \"standard\": \"ISO 4217\",\n        \"pseudocode\": \"For each transaction, calculate the interest based on the remaining balance, daily interest rate, and the number of days since the transaction.\"\n    },\n    {\n        \"element\": \"Display card number and calculated interest\",\n        \"standard\": \"Open API Specification\",\n        \"pseudocode\": \"Use Open API to define the response format for displaying the card number and calculated interest.\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Initialize Interest Calculation",
+            "pseudocode": "1. Set the current date to today's date\n    - Retrieve the current date from the system\n    - Store the current date in a variable\n2. Compute the daily interest rate based on the APR\n    - Retrieve the annual percentage rate (APR) from the system\n    - Divide the APR by 365 to get the daily interest rate\n    - Store the daily interest rate in a variable",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Initialize Interest Calculation\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Set the current date to today's date\",\n                \"actions\": [\n                    \"Retrieve the current date from the system\",\n                    \"Store the current date in a variable\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Compute the daily interest rate based on the APR\",\n                \"actions\": [\n                    \"Retrieve the annual percentage rate (APR) from the system\",\n                    \"Divide the APR by 365 to get the daily interest rate\",\n                    \"Store the daily interest rate in a variable\"\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest For Transaction",
+            "pseudocode": "1. Retrieve balance, daily rate, and days since the transaction for the credit card transaction\n2. Calculate interest based on the provided inputs\n3. Return the calculated interest",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest For Transaction\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve balance, daily rate, and days since the transaction for the credit card transaction\",\n                \"action\": \"Retrieve balance, daily rate, and days since the transaction from the transaction data\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate interest based on the provided inputs\",\n                \"action\": \"Calculate interest using the formula: interest = balance * daily rate * days since the transaction\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Return the calculated interest\",\n                \"action\": \"Return the calculated interest for the credit card transaction\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest For Transaction",
+            "pseudocode": "1. Retrieve the balance, daily rate, and days since the transaction for the credit card transaction. \n2. Calculate the interest amount by multiplying the balance by the daily rate and then by the days since the transaction. \n3. Return the calculated interest amount.",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest For Transaction\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": \"1. Retrieve the balance, daily rate, and days since the transaction for the credit card transaction. \\n2. Calculate the interest amount by multiplying the balance by the daily rate and then by the days since the transaction. \\n3. Return the calculated interest amount.\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Initialize Interest Calculation",
+            "pseudocode": "Set current date to today's date\nRetrieve annual percentage rate (APR)\nCompute daily interest rate by dividing APR by 365\nReturn current date and daily interest rate",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Initialize Interest Calculation\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            \"Set current date to today's date\",\n            \"Retrieve annual percentage rate (APR)\",\n            \"Compute daily interest rate by dividing APR by 365\",\n            \"Return current date and daily interest rate\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Data Model",
+            "pseudocode": "Define the structure of the customer account data model\nInclude fields for account number, current balance, transaction history, etc.",
+            "standard": "BIAN"
+          },
+          {
+            "element": "API Endpoint",
+            "pseudocode": "Create an endpoint to receive requests to update account balances\nDefine the request parameters such as account number and transaction details\nImplement proper authentication and authorization mechanisms",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Business Logic",
+            "pseudocode": "Retrieve the customer account details based on the provided account number\nValidate the transaction details to ensure accuracy and consistency\nUpdate the account balance based on the transaction type (credit or debit)\nLog the transaction in the account's transaction history\nCalculate any applicable fees or interest based on the transaction",
+            "standard": "ISO"
+          },
+          {
+            "element": "Error Handling",
+            "pseudocode": "Define error codes and messages for various scenarios such as invalid account number, insufficient funds, etc.\nHandle exceptions gracefully and return appropriate error responses",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Data Model\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Define the structure of the customer account data model\",\n            \"Include fields for account number, current balance, transaction history, etc.\"\n        ]\n    },\n    {\n        \"element\": \"API Endpoint\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Create an endpoint to receive requests to update account balances\",\n            \"Define the request parameters such as account number and transaction details\",\n            \"Implement proper authentication and authorization mechanisms\"\n        ]\n    },\n    {\n        \"element\": \"Business Logic\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Retrieve the customer account details based on the provided account number\",\n            \"Validate the transaction details to ensure accuracy and consistency\",\n            \"Update the account balance based on the transaction type (credit or debit)\",\n            \"Log the transaction in the account's transaction history\",\n            \"Calculate any applicable fees or interest based on the transaction\"\n        ]\n    },\n    {\n        \"element\": \"Error Handling\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Define error codes and messages for various scenarios such as invalid account number, insufficient funds, etc.\",\n            \"Handle exceptions gracefully and return appropriate error responses\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Identify Eligible Transactions for Interest Accrual",
+            "pseudocode": "1. Retrieve all transactions for the customer\n2. Filter transactions for interest-bearing types\n3. Apply product-specific terms to filtered transactions\n4. Evaluate customer payment behaviors\n5. Determine eligible transactions for interest accrual",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Identify Eligible Transactions for Interest Accrual\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve all transactions for the customer\",\n                \"logic\": \"Call API endpoint to fetch all transactions associated with the customer\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Filter transactions for interest-bearing types\",\n                \"logic\": \"Iterate through the transactions and filter out those that are interest-bearing (e.g., purchases, cash advances)\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Apply product-specific terms to filtered transactions\",\n                \"logic\": \"Retrieve product-specific terms from the system and apply them to the filtered transactions\"\n            },\n            {\n                \"step\": 4,\n                \"description\": \"Evaluate customer payment behaviors\",\n                \"logic\": \"Analyze the customer's payment behaviors such as on-time payments, payment amounts, etc.\"\n            },\n            {\n                \"step\": 5,\n                \"description\": \"Determine eligible transactions for interest accrual\",\n                \"logic\": \"Based on the product-specific terms and customer payment behaviors, identify transactions eligible for daily interest accrual\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest",
+            "pseudocode": "1. Get transaction details: balance, daily rate, days since transaction date\n2. Check if previous payment was made in full\n3. If previous payment was in full, set interest to zero\n4. If previous payment was not in full, calculate interest as balance * daily rate * days since transaction date\n5. Display card number and calculated interest amount",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": \"1. Get transaction details: balance, daily rate, days since transaction date\\n2. Check if previous payment was made in full\\n3. If previous payment was in full, set interest to zero\\n4. If previous payment was not in full, calculate interest as balance * daily rate * days since transaction date\\n5. Display card number and calculated interest amount\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest",
+            "pseudocode": "1. Check if the previous payment was made in full\n2. Calculate interest amount\n3. Display card number and calculated interest amount",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Check if the previous payment was made in full\",\n                \"action\": \"Retrieve the payment status for the transaction\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate interest amount\",\n                \"action\": \"If previous payment was not made in full, calculate interest as balance * daily rate * days since transaction date\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Display card number and calculated interest amount\",\n                \"action\": \"Output the card number and the calculated interest amount\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Daily Interest Rate",
+            "pseudocode": "1. Retrieve the Annual Percentage Rate (APR) provided as input. \n2. Validate that the APR is a non-negative decimal value. \n3. Divide the APR by 365 to get the daily interest rate. \n4. Return the calculated daily interest rate.",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Daily Interest Rate\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": \"1. Retrieve the Annual Percentage Rate (APR) provided as input. \\n2. Validate that the APR is a non-negative decimal value. \\n3. Divide the APR by 365 to get the daily interest rate. \\n4. Return the calculated daily interest rate.\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Daily Interest Rate",
+            "pseudocode": "1. Input the Annual Percentage Rate (APR)\n    - Prompt user to enter the APR\n2. Calculate the daily interest rate\n    - Divide the APR by 365 to get the daily interest rate\n3. Output the daily interest rate\n    - Display the calculated daily interest rate to the user",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Daily Interest Rate\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Input the Annual Percentage Rate (APR)\",\n                \"actions\": [\n                    \"Prompt user to enter the APR\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate the daily interest rate\",\n                \"actions\": [\n                    \"Divide the APR by 365 to get the daily interest rate\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Output the daily interest rate\",\n                \"actions\": [\n                    \"Display the calculated daily interest rate to the user\"\n                ]\n            }\n        ]\n    }\n]\n```  "
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Daily Interest Rate",
+            "pseudocode": "1. Retrieve the Annual Percentage Rate (APR) provided as input.\n2. Validate that the APR is a valid numerical value.\n3. Check if the APR is within the acceptable range (e.g., between 0 and 100%).\n4. Calculate the daily interest rate using the formula: APR / 365.\n5. Round the calculated daily interest rate to the required precision (e.g., 2 decimal places).\n6. Return the calculated daily interest rate as the output.",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Daily Interest Rate\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve the Annual Percentage Rate (APR) provided as input.\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Validate that the APR is a valid numerical value.\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Check if the APR is within the acceptable range (e.g., between 0 and 100%).\"\n            },\n            {\n                \"step\": 4,\n                \"description\": \"Calculate the daily interest rate using the formula: APR / 365.\"\n            },\n            {\n                \"step\": 5,\n                \"description\": \"Round the calculated daily interest rate to the required precision (e.g., 2 decimal places).\"\n            },\n            {\n                \"step\": 6,\n                \"description\": \"Return the calculated daily interest rate as the output.\"\n            }\n        ]\n    }\n]\n```  "
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Daily Interest Rate",
+            "pseudocode": "1. Receive the Annual Percentage Rate (APR) as input.\n2. Validate that the APR is a valid numerical value.\n3. Divide the APR by 365 to get the daily interest rate.\n4. Return the calculated daily interest rate.",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Daily Interest Rate\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": \"1. Receive the Annual Percentage Rate (APR) as input.\\n2. Validate that the APR is a valid numerical value.\\n3. Divide the APR by 365 to get the daily interest rate.\\n4. Return the calculated daily interest rate.\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest For Transaction",
+            "pseudocode": "1. Check if the previous payment was made in full\n2. Calculate interest amount based on balance, daily rate, and days since transaction\n3. Adjust interest amount based on previous payment status\n4. Return the calculated interest amount",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest For Transaction\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Check if the previous payment was made in full\",\n                \"logic\": \"if previousPaymentAmount == transactionAmount then previousPaymentInFull = true else previousPaymentInFull = false\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate interest amount based on balance, daily rate, and days since transaction\",\n                \"logic\": \"interestAmount = balance * dailyRate * daysSinceTransaction\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Adjust interest amount based on previous payment status\",\n                \"logic\": \"if previousPaymentInFull then interestAmount = 0\"\n            },\n            {\n                \"step\": 4,\n                \"description\": \"Return the calculated interest amount\",\n                \"logic\": \"return interestAmount\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Transaction Interest",
+            "pseudocode": "1. Get transaction details: balance, daily rate, transaction date, previous payment date. \n2. Calculate days since the transaction date. \n3. If previous payment was made in full, set interest to zero. \n4. If previous payment was not made in full, calculate interest based on balance, daily rate, and days since transaction date. \n5. Display card number and calculated interest amount.",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Transaction Interest\",\n        \"standard\": \"ISO 20022\",\n        \"pseudocode\": \"1. Get transaction details: balance, daily rate, transaction date, previous payment date. \\n2. Calculate days since the transaction date. \\n3. If previous payment was made in full, set interest to zero. \\n4. If previous payment was not made in full, calculate interest based on balance, daily rate, and days since transaction date. \\n5. Display card number and calculated interest amount.\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Transaction Interest",
+            "pseudocode": "1. Retrieve transaction details including balance, daily rate, transaction date, and previous payment status\n2. Calculate the number of days since the transaction date\n3. Check if the previous payment was made in full\n4. If previous payment was made in full, set interest amount to zero\n5. If previous payment was not made in full, calculate interest based on balance, daily rate, and days since transaction date\n6. Display the card number and the calculated interest amount",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Transaction Interest\",\n        \"standard\": \"ISO 20022\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve transaction details including balance, daily rate, transaction date, and previous payment status\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate the number of days since the transaction date\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Check if the previous payment was made in full\"\n            },\n            {\n                \"step\": 4,\n                \"description\": \"If previous payment was made in full, set interest amount to zero\"\n            },\n            {\n                \"step\": 5,\n                \"description\": \"If previous payment was not made in full, calculate interest based on balance, daily rate, and days since transaction date\"\n            },\n            {\n                \"step\": 6,\n                \"description\": \"Display the card number and the calculated interest amount\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest for Transactions",
+            "pseudocode": "1. For each transaction in the list of transactions:\n    - Get the balance, daily rate, transaction date, and previous payment information\n2. Calculate interest for each transaction based on business rules:\n    - If previous payment was made in full:\n    -    - Set interest to zero\n    - Else:\n    -    - Calculate interest as balance * daily rate * days since transaction date\n3. Display the card number and calculated interest for each transaction\n    - Output card number and calculated interest",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest for Transactions\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"For each transaction in the list of transactions:\",\n                \"actions\": [\n                    \"Get the balance, daily rate, transaction date, and previous payment information\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate interest for each transaction based on business rules:\",\n                \"actions\": [\n                    \"If previous payment was made in full:\",\n                    \"   - Set interest to zero\",\n                    \"Else:\",\n                    \"   - Calculate interest as balance * daily rate * days since transaction date\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Display the card number and calculated interest for each transaction\",\n                \"actions\": [\n                    \"Output card number and calculated interest\"\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest for Transactions",
+            "pseudocode": "1. For each transaction in the list of transactions:\n    - Get the balance, daily rate, transaction date, and previous payment date for the transaction.\n2. Calculate the days since the transaction date:\n    - Get the current date.\n    - Calculate the difference in days between the current date and the transaction date.\n3. Check if the previous payment was made in full:\n    - If the previous payment date is before the transaction date and the previous payment amount equals the balance, set interest to zero.\n4. Calculate interest if previous payment was not made in full:\n    - Calculate interest as the product of balance, daily rate, and days since the transaction date.\n5. Display the card number and calculated interest for each transaction:\n    - Output the card number and calculated interest for the transaction.",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest for Transactions\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"For each transaction in the list of transactions:\",\n                \"actions\": [\n                    \"Get the balance, daily rate, transaction date, and previous payment date for the transaction.\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate the days since the transaction date:\",\n                \"actions\": [\n                    \"Get the current date.\",\n                    \"Calculate the difference in days between the current date and the transaction date.\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Check if the previous payment was made in full:\",\n                \"actions\": [\n                    \"If the previous payment date is before the transaction date and the previous payment amount equals the balance, set interest to zero.\"\n                ]\n            },\n            {\n                \"step\": 4,\n                \"description\": \"Calculate interest if previous payment was not made in full:\",\n                \"actions\": [\n                    \"Calculate interest as the product of balance, daily rate, and days since the transaction date.\"\n                ]\n            },\n            {\n                \"step\": 5,\n                \"description\": \"Display the card number and calculated interest for each transaction:\",\n                \"actions\": [\n                    \"Output the card number and calculated interest for the transaction.\"\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest for Transactions",
+            "pseudocode": "1. For each transaction in the list of transactions:\n    - Get the balance, daily interest rate, days since transaction date, and previous payment status\n2. Calculate interest for each transaction based on business rules:\n    - If previous payment was made in full:\n    - Set interest to zero\n    - Else:\n    - Calculate interest as balance * daily interest rate * days since transaction date\n3. Display the card number and calculated interest for each transaction",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest for Transactions\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"For each transaction in the list of transactions:\",\n                \"actions\": [\n                    \"Get the balance, daily interest rate, days since transaction date, and previous payment status\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate interest for each transaction based on business rules:\",\n                \"actions\": [\n                    \"If previous payment was made in full:\",\n                    \"Set interest to zero\",\n                    \"Else:\",\n                    \"Calculate interest as balance * daily interest rate * days since transaction date\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Display the card number and calculated interest for each transaction\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Monthly Interest",
+            "pseudocode": "1. Check if the account is eligible for interest application\n2. Retrieve the monthly interest rate for the account\n3. Retrieve the account balance\n4. Calculate the monthly interest amount\n5. Apply the calculated interest amount to the account\n6. Update the account with the new balance",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Monthly Interest\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Check if the account is eligible for interest application\",\n                \"logic\": \"if account type is eligible for interest calculation\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Retrieve the monthly interest rate for the account\",\n                \"logic\": \"retrieve monthly interest rate from the account details\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Retrieve the account balance\",\n                \"logic\": \"retrieve current account balance\"\n            },\n            {\n                \"step\": 4,\n                \"description\": \"Calculate the monthly interest amount\",\n                \"logic\": \"monthly interest amount = (monthly interest rate * account balance)\"\n            },\n            {\n                \"step\": 5,\n                \"description\": \"Apply the calculated interest amount to the account\",\n                \"logic\": \"add the calculated interest amount to the account balance\"\n            },\n            {\n                \"step\": 6,\n                \"description\": \"Update the account with the new balance\",\n                \"logic\": \"update the account balance in the system\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Monthly Interest Business Logic",
+            "pseudocode": "1. Check if the account is eligible for interest application\n    - Retrieve account details\n    - Check if the account type is eligible for interest calculation\n2. Calculate the monthly interest amount\n    - Retrieve the monthly interest rate for the account\n    - Retrieve the current balance of the account\n    - Apply the interest rate to the account balance to calculate the interest amount\n3. Apply the calculated interest amount to the account\n    - Add the calculated interest amount to the account balance\n    - Update the account balance in the system",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Monthly Interest Business Logic\",\n        \"standard\": \"ISO 20022\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Check if the account is eligible for interest application\",\n                \"actions\": [\n                    \"Retrieve account details\",\n                    \"Check if the account type is eligible for interest calculation\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate the monthly interest amount\",\n                \"actions\": [\n                    \"Retrieve the monthly interest rate for the account\",\n                    \"Retrieve the current balance of the account\",\n                    \"Apply the interest rate to the account balance to calculate the interest amount\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Apply the calculated interest amount to the account\",\n                \"actions\": [\n                    \"Add the calculated interest amount to the account balance\",\n                    \"Update the account balance in the system\"\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest for Transactions",
+            "pseudocode": "1. Read transaction records until the end of the file is reached\n    - Open the transaction file\n    - Read the first transaction record\n2. Calculate interest for each transaction\n    - While there are more transaction records:\n    -    - Calculate days since the transaction date\n    -    - Check if the previous payment was made in full\n    -    - If previous payment was made in full, set interest to zero\n    -    - If previous payment was not made in full:\n    -        - Calculate interest based on balance, daily rate, and days since the transaction\n    -        - Display card number and calculated interest for the transaction\n3. Display calculated interest for each transaction\n    - Repeat the above steps for each transaction record until the end of the file is reached",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest for Transactions\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Read transaction records until the end of the file is reached\",\n                \"actions\": [\n                    \"Open the transaction file\",\n                    \"Read the first transaction record\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate interest for each transaction\",\n                \"actions\": [\n                    \"While there are more transaction records:\",\n                    \"   - Calculate days since the transaction date\",\n                    \"   - Check if the previous payment was made in full\",\n                    \"   - If previous payment was made in full, set interest to zero\",\n                    \"   - If previous payment was not made in full:\",\n                    \"       - Calculate interest based on balance, daily rate, and days since the transaction\",\n                    \"       - Display card number and calculated interest for the transaction\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Display calculated interest for each transaction\",\n                \"actions\": [\n                    \"Repeat the above steps for each transaction record until the end of the file is reached\"\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Initialize Interest Calculation Process",
+            "pseudocode": "Step 1: Retrieve the Annual Percentage Rate (APR) from the system configuration.\nStep 2: Set the current date to the system's current date.\nStep 3: Calculate the daily interest rate based on the APR.\nStep 4: Store the current date and daily interest rate in the system for future calculations.\nStep 5: Log the initialization process for auditing purposes.",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Initialize Interest Calculation Process\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Step 1: Retrieve the Annual Percentage Rate (APR) from the system configuration.\",\n            \"Step 2: Set the current date to the system's current date.\",\n            \"Step 3: Calculate the daily interest rate based on the APR.\",\n            \"Step 4: Store the current date and daily interest rate in the system for future calculations.\",\n            \"Step 5: Log the initialization process for auditing purposes.\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Daily Interest Rate",
+            "pseudocode": "Input: Annual Percentage Rate (APR)\nStep 1: Validate that APR is a non-negative number\nStep 2: Calculate daily interest rate as APR divided by 365\nStep 3: Return the calculated daily interest rate",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Daily Interest Rate\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            \"Input: Annual Percentage Rate (APR)\",\n            \"Step 1: Validate that APR is a non-negative number\",\n            \"Step 2: Calculate daily interest rate as APR divided by 365\",\n            \"Step 3: Return the calculated daily interest rate\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest Amount",
+            "pseudocode": "1. Retrieve transaction balance, daily interest rate, and days since transaction date\n2. Calculate interest amount = transaction balance * daily interest rate * days since transaction date\n3. Return the calculated interest amount",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest Amount\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve transaction balance, daily interest rate, and days since transaction date\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate interest amount = transaction balance * daily interest rate * days since transaction date\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Return the calculated interest amount\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Interest Calculation Logic",
+            "pseudocode": "Retrieve account details including account group\nCheck if account is eligible for interest calculation based on account group\nIf account is eligible:\n- Retrieve interest rate applicable for the account group\n- Calculate interest amount based on account balance and interest rate\n- Record the interest transaction in the account's transaction history\nElse:\n- Skip interest calculation\nEnd if",
+            "standard": "ISO"
+          },
+          {
+            "element": "Interest Application Business Rule",
+            "pseudocode": "Identify the account group of the account\nCheck if the account group is eligible for interest application\nIf eligible:\n- Apply interest calculation logic\nElse:\n- Do not apply interest\nEnd if",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Interest Application API Endpoint",
+            "pseudocode": "Receive request to apply interest rules for an account\nValidate the request parameters\nCall the interest calculation logic function\nReturn success response with details of interest applied\nHandle any errors or exceptions",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Interest Calculation Logic\",\n        \"standard\": \"ISO 20022\",\n        \"pseudocode\": [\n            \"Retrieve account details including account group\",\n            \"Check if account is eligible for interest calculation based on account group\",\n            \"If account is eligible:\",\n            \"   - Retrieve interest rate applicable for the account group\",\n            \"   - Calculate interest amount based on account balance and interest rate\",\n            \"   - Record the interest transaction in the account's transaction history\",\n            \"Else:\",\n            \"   - Skip interest calculation\",\n            \"End if\"\n        ]\n    },\n    {\n        \"element\": \"Interest Application Business Rule\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Identify the account group of the account\",\n            \"Check if the account group is eligible for interest application\",\n            \"If eligible:\",\n            \"   - Apply interest calculation logic\",\n            \"Else:\",\n            \"   - Do not apply interest\",\n            \"End if\"\n        ]\n    },\n    {\n        \"element\": \"Interest Application API Endpoint\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Receive request to apply interest rules for an account\",\n            \"Validate the request parameters\",\n            \"Call the interest calculation logic function\",\n            \"Return success response with details of interest applied\",\n            \"Handle any errors or exceptions\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Retrieve Transaction Category Balance File",
+            "pseudocode": "Open connection to the Transaction Category Balance File\nRead each record in the file",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Update Account Balances",
+            "pseudocode": "For each transaction record:\n- Identify the account associated with the transaction\n- Update the account balance based on the transaction amount and type (credit/debit)",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Retrieve Account and Cross-Reference Data",
+            "pseudocode": "For each account involved in the transaction:\n- Retrieve account details such as owner information, account type, etc.\n- Retrieve cross-reference data if needed for further processing",
+            "standard": "ISO"
+          },
+          {
+            "element": "Compute Interest Rates",
+            "pseudocode": "For each account with a balance:\n- Determine the applicable interest rate based on account type and balance\n- Calculate and apply interest to the account balance",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Compute Fees",
+            "pseudocode": "For each transaction record:\n- Check if any fees are applicable based on transaction type or account conditions\n- Calculate and apply fees to the account balance",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Retrieve Transaction Category Balance File\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Open connection to the Transaction Category Balance File\",\n            \"Read each record in the file\"\n        ]\n    },\n    {\n        \"element\": \"Update Account Balances\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each transaction record:\",\n            \"   - Identify the account associated with the transaction\",\n            \"   - Update the account balance based on the transaction amount and type (credit/debit)\"\n        ]\n    },\n    {\n        \"element\": \"Retrieve Account and Cross-Reference Data\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"For each account involved in the transaction:\",\n            \"   - Retrieve account details such as owner information, account type, etc.\",\n            \"   - Retrieve cross-reference data if needed for further processing\"\n        ]\n    },\n    {\n        \"element\": \"Compute Interest Rates\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each account with a balance:\",\n            \"   - Determine the applicable interest rate based on account type and balance\",\n            \"   - Calculate and apply interest to the account balance\"\n        ]\n    },\n    {\n        \"element\": \"Compute Fees\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each transaction record:\",\n            \"   - Check if any fees are applicable based on transaction type or account conditions\",\n            \"   - Calculate and apply fees to the account balance\"\n        ]\n    }\n]\n```  "
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Update Account Balances",
+            "pseudocode": "For each customer account:\n- Retrieve current balance\n- Update balance based on recent transactions\n- Save updated balance",
+            "standard": "ISO"
+          },
+          {
+            "element": "Review Customer Information",
+            "pseudocode": "For each customer account:\n- Retrieve customer information\n- Validate customer details\n- Check for any discrepancies",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Review Product Group Information",
+            "pseudocode": "For each customer account:\n- Identify product group associated with the account\n- Retrieve product group information\n- Validate product group details",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Identify Applicable Interest Rates",
+            "pseudocode": "For each customer account:\n- Determine the type of account (e.g., savings, checking)\n- Fetch applicable interest rates based on account type",
+            "standard": "ISO"
+          },
+          {
+            "element": "Calculate Monthly Interest",
+            "pseudocode": "For each customer account:\n- Calculate monthly interest based on balance and interest rate\n- Update monthly interest amount",
+            "standard": "ISO"
+          },
+          {
+            "element": "Calculate Cumulative Interest",
+            "pseudocode": "For each customer account:\n- Calculate cumulative interest by summing monthly interest amounts\n- Update cumulative interest total",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Update Account Balances\",\n        \"standard\": \"ISO 20022\",\n        \"pseudocode\": [\n            \"For each customer account:\",\n            \"   - Retrieve current balance\",\n            \"   - Update balance based on recent transactions\",\n            \"   - Save updated balance\"\n        ]\n    },\n    {\n        \"element\": \"Review Customer Information\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each customer account:\",\n            \"   - Retrieve customer information\",\n            \"   - Validate customer details\",\n            \"   - Check for any discrepancies\"\n        ]\n    },\n    {\n        \"element\": \"Review Product Group Information\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each customer account:\",\n            \"   - Identify product group associated with the account\",\n            \"   - Retrieve product group information\",\n            \"   - Validate product group details\"\n        ]\n    },\n    {\n        \"element\": \"Identify Applicable Interest Rates\",\n        \"standard\": \"ISO 20022\",\n        \"pseudocode\": [\n            \"For each customer account:\",\n            \"   - Determine the type of account (e.g., savings, checking)\",\n            \"   - Fetch applicable interest rates based on account type\"\n        ]\n    },\n    {\n        \"element\": \"Calculate Monthly Interest\",\n        \"standard\": \"ISO 20022\",\n        \"pseudocode\": [\n            \"For each customer account:\",\n            \"   - Calculate monthly interest based on balance and interest rate\",\n            \"   - Update monthly interest amount\"\n        ]\n    },\n    {\n        \"element\": \"Calculate Cumulative Interest\",\n        \"standard\": \"ISO 20022\",\n        \"pseudocode\": [\n            \"For each customer account:\",\n            \"   - Calculate cumulative interest by summing monthly interest amounts\",\n            \"   - Update cumulative interest total\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Initialize current date and daily interest rate",
+            "pseudocode": "Set current date to today's date in ISO 8601 format. Set daily interest rate based on the annual percentage rate (APR) provided.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Calculate interest for each transaction",
+            "pseudocode": "For each credit card transaction: Calculate the balance, daily rate, and days since the transaction. Use these values to compute the interest accrued for that transaction.",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Display card number and calculated interest",
+            "pseudocode": "Display the card number associated with the transaction and the calculated interest amount for that transaction.",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Initialize current date and daily interest rate\",\n        \"standard\": \"ISO 8601\",\n        \"pseudocode\": \"Set current date to today's date in ISO 8601 format. Set daily interest rate based on the annual percentage rate (APR) provided.\"\n    },\n    {\n        \"element\": \"Calculate interest for each transaction\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": \"For each credit card transaction: Calculate the balance, daily rate, and days since the transaction. Use these values to compute the interest accrued for that transaction.\"\n    },\n    {\n        \"element\": \"Display card number and calculated interest\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"Display the card number associated with the transaction and the calculated interest amount for that transaction.\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Monthly Interest",
+            "pseudocode": "1. Check if interest applies to the account based on account type and interest rate\n    - Retrieve account type and interest rate from the account information\n    - Check if the interest rate is greater than 0 to determine if interest applies\n2. Calculate the monthly interest amount\n    - Retrieve the account balance from the account information\n    - Calculate the interest amount based on the account balance and interest rate\n    - Apply any specific rules or conditions for interest calculation based on the account group\n3. Update the account with the calculated interest amount\n    - Add the calculated interest amount to the account balance\n    - Update the account information with the new balance including the interest amount",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Monthly Interest\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Check if interest applies to the account based on account type and interest rate\",\n                \"actions\": [\n                    \"Retrieve account type and interest rate from the account information\",\n                    \"Check if the interest rate is greater than 0 to determine if interest applies\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate the monthly interest amount\",\n                \"actions\": [\n                    \"Retrieve the account balance from the account information\",\n                    \"Calculate the interest amount based on the account balance and interest rate\",\n                    \"Apply any specific rules or conditions for interest calculation based on the account group\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Update the account with the calculated interest amount\",\n                \"actions\": [\n                    \"Add the calculated interest amount to the account balance\",\n                    \"Update the account information with the new balance including the interest amount\"\n                ]\n            }\n        ]\n    }\n]\n```  "
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Initialize current date and daily interest rate",
+            "pseudocode": "Set current_date to today's date in ISO 8601 format. Set daily_interest_rate based on the annual percentage rate (APR) provided.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Read transaction records",
+            "pseudocode": "Retrieve transaction records from the credit card system using the appropriate API endpoint.",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Calculate days since each transaction",
+            "pseudocode": "For each transaction record, calculate the number of days since the transaction date using ISO 8601 date format and the current date.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Determine payment status",
+            "pseudocode": "Check the payment status of each transaction to determine if it has been paid or is outstanding based on the credit card system's payment status codes.",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Compute interest amount",
+            "pseudocode": "For each outstanding transaction, calculate the interest amount using the daily interest rate, number of days since the transaction, and transaction amount in the currency specified by ISO 4217.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Display card number with calculated interest",
+            "pseudocode": "Display the card number along with the calculated interest amount for each outstanding transaction in a user-friendly format using the appropriate API response structure.",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Initialize current date and daily interest rate\",\n        \"standard\": \"ISO 8601\",\n        \"pseudocode\": \"Set current_date to today's date in ISO 8601 format. Set daily_interest_rate based on the annual percentage rate (APR) provided.\"\n    },\n    {\n        \"element\": \"Read transaction records\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"Retrieve transaction records from the credit card system using the appropriate API endpoint.\"\n    },\n    {\n        \"element\": \"Calculate days since each transaction\",\n        \"standard\": \"ISO 8601\",\n        \"pseudocode\": \"For each transaction record, calculate the number of days since the transaction date using ISO 8601 date format and the current date.\"\n    },\n    {\n        \"element\": \"Determine payment status\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": \"Check the payment status of each transaction to determine if it has been paid or is outstanding based on the credit card system's payment status codes.\"\n    },\n    {\n        \"element\": \"Compute interest amount\",\n        \"standard\": \"ISO 4217\",\n        \"pseudocode\": \"For each outstanding transaction, calculate the interest amount using the daily interest rate, number of days since the transaction, and transaction amount in the currency specified by ISO 4217.\"\n    },\n    {\n        \"element\": \"Display card number with calculated interest\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"Display the card number along with the calculated interest amount for each outstanding transaction in a user-friendly format using the appropriate API response structure.\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Initialize current date and daily interest rate",
+            "pseudocode": "Set current date to today's date. Retrieve daily interest rate from system configuration.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Read transaction records",
+            "pseudocode": "Fetch transaction records from the credit card system API based on specified criteria such as card number and date range.",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Calculate days since each transaction",
+            "pseudocode": "For each transaction record, subtract the transaction date from the current date to determine the number of days since the transaction occurred.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Determine payment status",
+            "pseudocode": "Check the payment status of each transaction by comparing the payment date with the current date. If payment is made, mark the transaction as paid; otherwise, mark it as unpaid.",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Compute interest amount",
+            "pseudocode": "For each unpaid transaction, calculate the interest amount using the daily interest rate and the number of days since the transaction. Sum up the interest amounts for all unpaid transactions.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Display card number with calculated interest",
+            "pseudocode": "Output the card number along with the total calculated interest amount for all unpaid transactions.",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Initialize current date and daily interest rate\",\n        \"standard\": \"ISO 8601\",\n        \"pseudocode\": \"Set current date to today's date. Retrieve daily interest rate from system configuration.\"\n    },\n    {\n        \"element\": \"Read transaction records\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"Fetch transaction records from the credit card system API based on specified criteria such as card number and date range.\"\n    },\n    {\n        \"element\": \"Calculate days since each transaction\",\n        \"standard\": \"ISO 8601\",\n        \"pseudocode\": \"For each transaction record, subtract the transaction date from the current date to determine the number of days since the transaction occurred.\"\n    },\n    {\n        \"element\": \"Determine payment status\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": \"Check the payment status of each transaction by comparing the payment date with the current date. If payment is made, mark the transaction as paid; otherwise, mark it as unpaid.\"\n    },\n    {\n        \"element\": \"Compute interest amount\",\n        \"standard\": \"ISO 4217\",\n        \"pseudocode\": \"For each unpaid transaction, calculate the interest amount using the daily interest rate and the number of days since the transaction. Sum up the interest amounts for all unpaid transactions.\"\n    },\n    {\n        \"element\": \"Display card number with calculated interest\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"Output the card number along with the total calculated interest amount for all unpaid transactions.\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "initializeDailyInterestRate",
+            "pseudocode": "1. Accept the current date in YYYYMMDD format as input.\n2. Retrieve the annual percentage rate (APR) from the system.\n3. Calculate the daily interest rate by dividing the APR by 365.\n4. Return the calculated daily interest rate.",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"initializeDailyInterestRate\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": \"1. Accept the current date in YYYYMMDD format as input.\\n2. Retrieve the annual percentage rate (APR) from the system.\\n3. Calculate the daily interest rate by dividing the APR by 365.\\n4. Return the calculated daily interest rate.\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Initialize Interest Calculation",
+            "pseudocode": "Step 1: Retrieve the Annual Percentage Rate (APR) provided by the user.\nStep 2: Calculate the daily interest rate by dividing the APR by 365 (number of days in a year).\nStep 3: Set the current date to the system's current date.\nStep 4: Prepare the system for interest calculation for each transaction.",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Initialize Interest Calculation\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Step 1: Retrieve the Annual Percentage Rate (APR) provided by the user.\",\n            \"Step 2: Calculate the daily interest rate by dividing the APR by 365 (number of days in a year).\",\n            \"Step 3: Set the current date to the system's current date.\",\n            \"Step 4: Prepare the system for interest calculation for each transaction.\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate number of days since transaction date",
+            "pseudocode": "Get current date\nCalculate difference between current date and transaction date",
+            "standard": "ISO"
+          },
+          {
+            "element": "Determine interest amount based on balance, daily rate, and days since transaction",
+            "pseudocode": "If previous payment indicator is 'Y', set interest amount to zero\nElse calculate interest amount using formula: balance * daily rate * days since transaction",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate number of days since transaction date\",\n        \"standard\": \"ISO 8601\",\n        \"pseudocode\": [\n            \"Get current date\",\n            \"Calculate difference between current date and transaction date\"\n        ]\n    },\n    {\n        \"element\": \"Determine interest amount based on balance, daily rate, and days since transaction\",\n        \"standard\": \"ISO 4217\",\n        \"pseudocode\": [\n            \"If previous payment indicator is 'Y', set interest amount to zero\",\n            \"Else calculate interest amount using formula: balance * daily rate * days since transaction\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate number of days since transaction date",
+            "pseudocode": "Get current date\nCalculate difference between current date and transaction date",
+            "standard": "ISO"
+          },
+          {
+            "element": "Determine interest amount based on balance, daily rate, and days since transaction",
+            "pseudocode": "If previous payment indicator is 'Y', set interest amount to zero\nElse calculate interest amount using formula: balance * daily rate * days since transaction",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate number of days since transaction date\",\n        \"standard\": \"ISO 8601\",\n        \"pseudocode\": [\n            \"Get current date\",\n            \"Calculate difference between current date and transaction date\"\n        ]\n    },\n    {\n        \"element\": \"Determine interest amount based on balance, daily rate, and days since transaction\",\n        \"standard\": \"ISO 4217\",\n        \"pseudocode\": [\n            \"If previous payment indicator is 'Y', set interest amount to zero\",\n            \"Else calculate interest amount using formula: balance * daily rate * days since transaction\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "calculateDailyInterestRate",
+            "pseudocode": "1. Retrieve the Annual Percentage Rate (APR) from the configuration\n2. Calculate the daily interest rate\n3. Return the calculated daily interest rate",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"calculateDailyInterestRate\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve the Annual Percentage Rate (APR) from the configuration\",\n                \"action\": \"Fetch the APR value from the system configuration\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate the daily interest rate\",\n                \"action\": \"Divide the APR by the number of days in a year to get the daily rate\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Return the calculated daily interest rate\",\n                \"action\": \"Provide the computed daily interest rate as the output\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "calculateDailyInterestRate",
+            "pseudocode": "Retrieve the configured Annual Percentage Rate (APR) from the system\nCheck if the APR is valid and within the acceptable range\nIf APR is not valid, throw an error or return a default value\nCalculate the daily interest rate by dividing the APR by the number of days in a year\nReturn the calculated daily interest rate",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"calculateDailyInterestRate\",\n        \"standard\": \"ISO 4217\",\n        \"pseudocode\": [\n            \"Retrieve the configured Annual Percentage Rate (APR) from the system\",\n            \"Check if the APR is valid and within the acceptable range\",\n            \"If APR is not valid, throw an error or return a default value\",\n            \"Calculate the daily interest rate by dividing the APR by the number of days in a year\",\n            \"Return the calculated daily interest rate\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Retrieve recent financial activity for all customer accounts",
+            "pseudocode": "For each customer account:\n1. Retrieve recent transactions\n2. Update account balances to reflect recent transactions",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Review customer and product group information",
+            "pseudocode": "For each customer:\n1. Retrieve customer information\n2. Retrieve associated product group information\n3. Review the information",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Identify applicable interest rates",
+            "pseudocode": "For each product group:\n1. Identify the applicable interest rate based on product type and customer profile",
+            "standard": "ISO"
+          },
+          {
+            "element": "Calculate monthly and cumulative interest if applicable",
+            "pseudocode": "For each customer account with applicable interest rates:\n1. Calculate monthly interest based on the account balance and interest rate\n2. Update cumulative interest for the account",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Retrieve recent financial activity for all customer accounts\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each customer account:\",\n            \"1. Retrieve recent transactions\",\n            \"2. Update account balances to reflect recent transactions\"\n        ]\n    },\n    {\n        \"element\": \"Review customer and product group information\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each customer:\",\n            \"1. Retrieve customer information\",\n            \"2. Retrieve associated product group information\",\n            \"3. Review the information\"\n        ]\n    },\n    {\n        \"element\": \"Identify applicable interest rates\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"For each product group:\",\n            \"1. Identify the applicable interest rate based on product type and customer profile\"\n        ]\n    },\n    {\n        \"element\": \"Calculate monthly and cumulative interest if applicable\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each customer account with applicable interest rates:\",\n            \"1. Calculate monthly interest based on the account balance and interest rate\",\n            \"2. Update cumulative interest for the account\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Retrieve recent financial activity for all customer accounts",
+            "pseudocode": "For each customer account:\n1. Query recent transactions from the database\n2. Update account balances based on the transactions",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Review customer and product group information",
+            "pseudocode": "For each customer:\n1. Retrieve customer information from the customer database\n2. Retrieve associated product groups information\n3. Perform necessary validations and checks",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Identify applicable interest rates",
+            "pseudocode": "For each product group:\n1. Determine the type of product to apply interest rates\n2. Retrieve the applicable interest rates from the interest rate database",
+            "standard": "ISO"
+          },
+          {
+            "element": "Calculate monthly and cumulative interest if applicable",
+            "pseudocode": "For each account with applicable interest rates:\n1. Calculate monthly interest based on the account balance and interest rate\n2. Update the account with the calculated monthly interest\n3. Accumulate the monthly interest to calculate cumulative interest",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Retrieve recent financial activity for all customer accounts\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each customer account:\",\n            \"1. Query recent transactions from the database\",\n            \"2. Update account balances based on the transactions\"\n        ]\n    },\n    {\n        \"element\": \"Review customer and product group information\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each customer:\",\n            \"1. Retrieve customer information from the customer database\",\n            \"2. Retrieve associated product groups information\",\n            \"3. Perform necessary validations and checks\"\n        ]\n    },\n    {\n        \"element\": \"Identify applicable interest rates\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"For each product group:\",\n            \"1. Determine the type of product to apply interest rates\",\n            \"2. Retrieve the applicable interest rates from the interest rate database\"\n        ]\n    },\n    {\n        \"element\": \"Calculate monthly and cumulative interest if applicable\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each account with applicable interest rates:\",\n            \"1. Calculate monthly interest based on the account balance and interest rate\",\n            \"2. Update the account with the calculated monthly interest\",\n            \"3. Accumulate the monthly interest to calculate cumulative interest\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
     }
   ]
 }
