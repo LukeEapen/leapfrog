@@ -806,7 +806,9 @@ def page3():
         # Get user inputs and agent outputs
         user_inputs = data.get("inputs", {})
         feature_overview = data.get("feature_overview", "")
-        # Combine all relevant inputs into structured format
+
+        # Combine all relevant inputs into structured format, including Product Overview
+        product_overview = data.get("product_overview", "")
         combined_input = f"""
         # Original User Inputs
         Industry: {user_inputs.get('industry', '')}
@@ -814,6 +816,9 @@ def page3():
         Geography: {user_inputs.get('geography', '')}
         Intent: {user_inputs.get('intent', '')}
         Features: {user_inputs.get('features', '')}
+
+        # Product Overview (Agent 1.1 Output)
+        {product_overview}
 
         # Feature Overview (Agent 2 Analysis)
         {feature_overview}
