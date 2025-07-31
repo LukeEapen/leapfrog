@@ -1015,6 +1015,99 @@
         "raw": "```json\n[\n    {\n        \"element\": \"Retrieve recent financial activity for all customer accounts\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each customer account:\",\n            \"1. Query recent transactions from the database\",\n            \"2. Update account balances based on the transactions\"\n        ]\n    },\n    {\n        \"element\": \"Review customer and product group information\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each customer:\",\n            \"1. Retrieve customer information from the customer database\",\n            \"2. Retrieve associated product groups information\",\n            \"3. Perform necessary validations and checks\"\n        ]\n    },\n    {\n        \"element\": \"Identify applicable interest rates\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"For each product group:\",\n            \"1. Determine the type of product to apply interest rates\",\n            \"2. Retrieve the applicable interest rates from the interest rate database\"\n        ]\n    },\n    {\n        \"element\": \"Calculate monthly and cumulative interest if applicable\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each account with applicable interest rates:\",\n            \"1. Calculate monthly interest based on the account balance and interest rate\",\n            \"2. Update the account with the calculated monthly interest\",\n            \"3. Accumulate the monthly interest to calculate cumulative interest\"\n        ]\n    }\n]\n```"
       },
       "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest Business Logic",
+            "pseudocode": "Retrieve transaction details: balance, daily rate, days since transaction\nCheck if grace period compliance is required based on business rules\nIf grace period compliance required:\n- Determine if transaction falls within grace period\n- If yes, no interest accrual needed\n- If no, proceed to calculate interest\nCalculate interest amount based on balance, daily rate, and days since transaction\nReturn calculated interest amount",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest Business Logic\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": [\n            \"Retrieve transaction details: balance, daily rate, days since transaction\",\n            \"Check if grace period compliance is required based on business rules\",\n            \"If grace period compliance required:\",\n            \"   - Determine if transaction falls within grace period\",\n            \"   - If yes, no interest accrual needed\",\n            \"   - If no, proceed to calculate interest\",\n            \"Calculate interest amount based on balance, daily rate, and days since transaction\",\n            \"Return calculated interest amount\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest Business Logic",
+            "pseudocode": "1. Check if the previous payment was made in full\n    - Retrieve information about the previous payment\n    - Check if the previous payment amount equals the transaction amount\n2. Calculate interest based on balance, daily rate, and days since transaction\n    - Retrieve current balance, daily rate, and days since the transaction\n    - Calculate daily interest amount using the formula: daily rate * balance * days\n    - If previous payment was made in full, apply interest only to the remaining balance after the payment\n3. Determine the total interest amount\n    - Sum up the daily interest amounts calculated for each day since the transaction",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest Business Logic\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Check if the previous payment was made in full\",\n                \"actions\": [\n                    \"Retrieve information about the previous payment\",\n                    \"Check if the previous payment amount equals the transaction amount\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate interest based on balance, daily rate, and days since transaction\",\n                \"actions\": [\n                    \"Retrieve current balance, daily rate, and days since the transaction\",\n                    \"Calculate daily interest amount using the formula: daily rate * balance * days\",\n                    \"If previous payment was made in full, apply interest only to the remaining balance after the payment\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Determine the total interest amount\",\n                \"actions\": [\n                    \"Sum up the daily interest amounts calculated for each day since the transaction\"\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Retrieve Customer Accounts",
+            "pseudocode": "Retrieve list of all customer accounts from the database\nFilter out closed accounts or accounts with inactive status\nReturn the list of active customer accounts",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Review Financial Activity",
+            "pseudocode": "For each active customer account:\n- Fetch recent financial transactions\n- Calculate the total financial activity based on the transactions\n- Update the account balance to reflect the recent activity",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Update Account Balances",
+            "pseudocode": "For each active customer account:\n- Calculate the net change in balance from recent financial activity\n- Update the account balance in the database with the new balance",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Retrieve Customer Accounts\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Retrieve list of all customer accounts from the database\",\n            \"Filter out closed accounts or accounts with inactive status\",\n            \"Return the list of active customer accounts\"\n        ]\n    },\n    {\n        \"element\": \"Review Financial Activity\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each active customer account:\",\n            \" - Fetch recent financial transactions\",\n            \" - Calculate the total financial activity based on the transactions\",\n            \" - Update the account balance to reflect the recent activity\"\n        ]\n    },\n    {\n        \"element\": \"Update Account Balances\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"For each active customer account:\",\n            \" - Calculate the net change in balance from recent financial activity\",\n            \" - Update the account balance in the database with the new balance\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest",
+            "pseudocode": "1. Check if the previous payment was made in full\n2. Calculate the interest amount",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Check if the previous payment was made in full\",\n                \"logic\": \"if previous payment was made in full, set interest to zero\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate the interest amount\",\n                \"logic\": \"interest = balance * daily interest rate * days since transaction\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest for Transactions",
+            "pseudocode": "1. For each transaction in the transaction file:",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest for Transactions\",\n        \"standard\": \"ISO 10962:2015\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"For each transaction in the transaction file:\",\n                \"sub_steps\": [\n                    {\n                        \"sub_step\": 1,\n                        \"description\": \"Calculate the number of days since the transaction date based on the current date.\"\n                    },\n                    {\n                        \"sub_step\": 2,\n                        \"description\": \"Check if the previous payment was made in full:\"\n                    },\n                    {\n                        \"sub_step\": 3,\n                        \"description\": \"If previous payment was made in full, set interest amount to zero.\"\n                    },\n                    {\n                        \"sub_step\": 4,\n                        \"description\": \"If previous payment was not made in full, calculate interest amount using the formula:\",\n                        \"formula\": \"Interest Amount = Balance * Daily Interest Rate * Days Since Transaction\"\n                    },\n                    {\n                        \"sub_step\": 5,\n                        \"description\": \"Display the card number and the calculated interest amount for each transaction.\"\n                    }\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "initializeInterestCalculation",
+            "pseudocode": "Set up the current date by fetching the system date\nRetrieve the Annual Percentage Rate (APR) for interest calculation\nCalculate the daily interest rate by dividing APR by 365\nStore the calculated daily interest rate for future calculations",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "calculateInterest",
+            "pseudocode": "For each eligible account:\n- Retrieve the account balance and interest rate\n- Calculate the monthly interest by multiplying the balance with the monthly interest rate\n- Add the monthly interest to the account balance\n- Calculate the cumulative interest by summing up all monthly interests",
+            "standard": "BIAN"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"initializeInterestCalculation\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Set up the current date by fetching the system date\",\n            \"Retrieve the Annual Percentage Rate (APR) for interest calculation\",\n            \"Calculate the daily interest rate by dividing APR by 365\",\n            \"Store the calculated daily interest rate for future calculations\"\n        ]\n    },\n    {\n        \"element\": \"calculateInterest\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each eligible account:\",\n            \"   - Retrieve the account balance and interest rate\",\n            \"   - Calculate the monthly interest by multiplying the balance with the monthly interest rate\",\n            \"   - Add the monthly interest to the account balance\",\n            \"   - Calculate the cumulative interest by summing up all monthly interests\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
     }
   ]
 }
