@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 6 : Microservice Project Viewer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Bootstrap Icons fallback check -->
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      var testIcon = document.createElement('i');
+      testIcon.className = 'bi bi-folder2-open';
+      document.body.appendChild(testIcon);
+      var style = window.getComputedStyle(testIcon, '::before');
+      var content = style.getPropertyValue('content');
+      if (!content || content === 'none' || content === '""') {
+        var fallback = document.getElementById('icon-fallback');
+        if (fallback) fallback.style.display = 'block';
+      }
+      document.body.removeChild(testIcon);
+    });
+  </script>
+  <style>
+    body { background: #f7f8fa; font-family: 'Segoe UI', Arial, sans-serif; }
+    .repo-card {
+      background: #fff;
+      color: #23272b;
+      border-radius: 2rem;
+      box-shadow: 0 8px 32px rgba(44,44,44,0.10);
+      padding: 2.5rem 2rem;
+      margin: 3vh auto;
+      max-width: 1800px;
+      min-width: 1200px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      max-width: 2400px;
+      min-width: 1600px;
+      width: 98vw;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #d32f2f;
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.01em;
+    }
+    .repo-desc {
+      font-size: 1.15rem;
+      margin-bottom: 2rem;
+      color: #23272b;
+    }
+    .tree-panel {
+      background: #f5f5f5;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      border: 2px solid #e9ecef;
+      color: #23272b;
+      padding: 2rem 2rem 2rem 2rem;
+      font-size: 1.08rem;
+      width: 30%;
+      min-width: 420px;
+      max-width: 700px;
+      min-height: 500px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .code-panel {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      border: 2px solid #d32f2f;
+      color: #23272b;
+      padding: 2rem 2rem 2rem 2rem;
+      font-size: 1.08rem;
+      width: 40%;
+      min-width: 750px;
+      max-width: 1400px;
+      min-height: 500px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .file-list {
+      list-style: none;
+      padding-left: 0.5em;
+      margin-bottom: 0;
+      width: 100%;
+    }
+    .file-list li {
+      margin-bottom: 0.5em;
+      cursor: pointer;
+      font-size: 1.08em;
+      color: #1976d2;
+      transition: background 0.15s;
+      border-radius: 0.5em;
+      padding: 0.2em 0.5em;
+    }
+    .file-list li:hover {
+      background: #e3f2fd;
+      color: #d32f2f;
+    }
+    .file-list .folder {
+      font-weight: 700;
+      color: #23272b;
+    }
+    .code-title {
+      font-size: 1.15em;
+      font-weight: 700;
+      color: #d32f2f;
+      margin-bottom: 1em;
+    }
+    .code-block {
+      background: #23272b;
+      color: #fff;
+      border-radius: 0.5em;
+      padding: 1.2em 1.5em;
+      font-size: 1.08em;
+      font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+      margin: 0;
+      width: 100%;
+      min-height: 400px;
+      overflow-x: auto;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      text-align: left;
+    }
+    .project-status {
+      margin-top: 1.5em;
+      font-size: 1.08em;
+      color: #388e3c;
+      font-weight: 600;
+    }
+    /* Modern Banner Styles */
+    .banner {
+      background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%);
+      color: #fff;
+      padding: 1.2rem 0 1rem 0;
+      border-radius: 0 0 1.2rem 1.2rem;
+      box-shadow: 0 4px 32px rgba(44,44,44,0.22);
+      margin-bottom: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      border: 4px solid #fff;
+      min-height: unset;
+    }
+    .banner-icon {
+      font-size: 7rem;
+      position: absolute;
+      top: -40px;
+      right: -60px;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    .banner-content {
+      position: relative;
+      z-index: 2;
+    }
+    .banner-title {
+      font-size: 2.3rem;
+      font-weight: 900;
+      letter-spacing: 0.01em;
+      margin-left: 1.1rem;
+      text-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .banner-subtitle {
+      font-size: 1.13rem;
+      font-weight: 500;
+      color: #fff;
+      opacity: 0.93;
+      max-width: 900px;
+      text-align: center;
+      margin-bottom: 0.2rem;
+    }
+    .badge-warning {
+      background-color: #ffc107;
+      color: #212529;
+      border-radius: 0.7rem;
+      padding: 0.5em 1em;
+      vertical-align: middle;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <!-- Modern Banner Start -->
+    <header class="banner">
+      <i class="bi bi-folder2-open banner-icon"></i>
+      <div class="container d-flex flex-column align-items-center position-relative">
+        <div class="d-flex align-items-center justify-content-center flex-wrap" style="gap:1.1rem; margin-bottom:0.2rem;">
+          <i class="bi bi-folder2-open" style="font-size:1.7rem;"></i>
+          <i class="bi bi-diagram-3" style="font-size:1.7rem;"></i>
+          <i class="bi bi-file-earmark-code" style="font-size:1.7rem;"></i>
+          <i class="bi bi-gear" style="font-size:1.7rem;"></i>
+          <span class="banner-title">Microservice Project Viewer</span>
+        </div>
+        <div class="banner-subtitle">
+          <span class="badge badge-warning me-2"><i class="bi bi-folder2-open me-2"></i>Step 6</span>
+          Browse the generated microservice application files and folders.<br>
+          <span style="opacity:0.85;">Click any file to view its contents. Use the project structure to navigate.</span>
+        </div>
+        <noscript><div class="alert alert-danger mt-2">Bootstrap Icons require JavaScript enabled.</div></noscript>
+        <div id="icon-fallback" style="display:none; color:yellow; font-weight:bold;">[Icons failed to load]</div>
+      </div>
+    </header>
+    <!-- Modern Banner End -->
+    <div class="container-fluid">
+      <div class="repo-card">
+        <div class="d-flex align-items-center w-100 mb-3" style="gap:1.2rem; justify-content:space-between;">
+          <div class="d-flex align-items-center" style="gap:1.2rem;">
+            <a id="backToStep5Btn" href="#" class="btn btn-next d-flex align-items-center gap-2" style="background:#6c757d; min-width:180px; padding:0.85rem 2.5rem; font-size:1.15rem; font-weight:600; border-radius:0.75rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); border:none; color:#fff; height:48px; width:max-content;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+                <path d="M8.354 11.354a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L6.707 8H11.5a.5.5 0 0 1 0 1H6.707l1.647 1.646a.5.5 0 0 1 0 .708z"/>
+              </svg>
+              <span style="color:#fff;">Back to Step 5</span>
+            </a>
+          </div>
+          <div class="repo-title text-center m-0" style="flex:1; text-align:center; margin:0 auto;">Microservice Project</div>
+          <button id="downloadZipBtn" class="btn btn-danger" style="font-weight:600; font-size:1.08rem; border-radius:0.7rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); min-width:180px;">
+            <i class="bi bi-file-earmark-zip me-2"></i>Download Project as ZIP
+          </button>
+        </div>
+        <div class="repo-desc">Browse the generated microservice application files and folders. Click any file to view its contents.</div>
+        <div class="d-flex w-100" style="gap:2.5rem; align-items:flex-start;">
+
+          <div class="tree-panel">
+            <div class="fw-bold mb-2" style="color:#d32f2f;">Project Structure</div>
+            <ul class="file-list" id="fileTree"></ul>
+          </div>
+          <div class="code-panel">
+            <div class="code-title" id="codeTitle">Select a file to view its contents</div>
+            <pre class="code-block" id="codeBlock"></pre>
+            <div class="project-status" id="projectStatus"></div>
+          </div>
+          <div class="test-panel" style="background:#fff; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); border:2px solid #388e3c; color:#23272b; padding:2rem; font-size:1.08rem; width:32%; min-width:400px; max-width:600px; min-height:500px; display:flex; flex-direction:column; align-items:flex-start; gap:1.2rem;">
+            <div class="fw-bold mb-2" style="color:#388e3c;">Test Microservice Functions</div>
+            <button id="startAppBtn" class="btn btn-success mb-2" style="font-weight:600; font-size:1.08rem; border-radius:0.7rem; min-width:180px;"><i class="bi bi-play-circle me-2"></i>Start App</button>
+            <form id="testForm" style="width:100%;">
+              <div class="mb-2">
+                <label for="endpointUrl" class="form-label">Endpoint URL</label>
+                <input type="text" id="endpointUrl" class="form-control" placeholder="/api/your-endpoint" required>
+              </div>
+              <div class="mb-2">
+                <label for="httpMethod" class="form-label">HTTP Method</label>
+                <select id="httpMethod" class="form-select">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label for="requestBody" class="form-label">Request Body (JSON)</label>
+                <textarea id="requestBody" class="form-control" rows="4" placeholder="{ }"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Send Request</button>
+            </form>
+            <div id="testResult" style="width:100%; margin-top:1rem; background:#f5f5f5; border-radius:0.5em; padding:1em; color:#23272b; font-size:0.98em; min-height:80px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script>
+    // Load project from localStorage
+    const project = JSON.parse(localStorage.getItem('generatedMicroserviceProject') || '{}');
+    const files = project.files || {};
+    // Flatten project_structure: move all its contents to root, remove the folder itself
+    let structure = {};
+    if (project.project_structure) {
+      Object.entries(project.project_structure).forEach(([k, v]) => {
+        structure[k] = v;
+      });
+    }
+    // Also move models/routes from root if present (from previous logic)
+    if (project.models && !structure.models) {
+      structure.models = project.models;
+    }
+    if (project.routes && !structure.routes) {
+      structure.routes = project.routes;
+    }
+    // Remove any accidental 'project_structure' key at root (should not be shown)
+    if (structure['project_structure']) {
+      delete structure['project_structure'];
+    }
+    const status = project.build_status || '';
+    const message = project.message || '';
+    const incompleteFiles = project.incomplete_files || [];
+
+    // Back button logic: persist Step 5 session and go to service-builder
+    document.getElementById('backToStep5Btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      // Restore Step 5 session if available in project context
+      if (project.selectedDesignForServiceBuilder) {
+        localStorage.setItem('selectedDesignForServiceBuilder', JSON.stringify(project.selectedDesignForServiceBuilder));
+      }
+      if (project.selectedBusinessLogicPseudocode) {
+        localStorage.setItem('selectedBusinessLogicPseudocode', project.selectedBusinessLogicPseudocode);
+      }
+      window.location.href = '/service-builder';
+    });
+
+    function renderTree(tree, parentPath = '') {
+      let html = '';
+      for (const key in tree) {
+        if (typeof tree[key] === 'string' && tree[key] === 'file') {
+          const filePath = parentPath ? parentPath + '/' + key : key;
+          const isIncomplete = incompleteFiles.includes(filePath);
+          html += `<li data-path="${filePath}"${isIncomplete ? ' style="color:#d32f2f;font-weight:bold;"' : ''}>${key} ${isIncomplete ? '<i class="bi bi-exclamation-triangle-fill" style="color:#ffc107;" title="Incomplete file"></i>' : ''}</li>`;
+        } else if (typeof tree[key] === 'object') {
+          html += `<li class="folder">${key}</li>`;
+          html += '<ul class="file-list">' + renderTree(tree[key], parentPath ? parentPath + '/' + key : key) + '</ul>';
+        }
+      }
+      return html;
+    }
+
+    document.getElementById('fileTree').innerHTML = renderTree(structure);
+    function updateFileClickHandlers() {
+      document.querySelectorAll('#fileTree li[data-path]').forEach(li => {
+        li.addEventListener('click', function() {
+          const path = this.getAttribute('data-path');
+          document.getElementById('codeTitle').textContent = path;
+          let code = files[path];
+          let warning = '';
+          if (incompleteFiles.includes(path)) {
+            warning = '\n\u26A0\uFE0F This file is incomplete or a stub. Please regenerate or edit.';
+          }
+          if (typeof code === 'undefined') {
+            code = 'No content.';
+            warning = '\n\u26A0\uFE0F This file is missing from the generated output.';
+          }
+          document.getElementById('codeBlock').textContent = (code || 'No content.') + warning;
+        });
+      });
+    }
+    updateFileClickHandlers();
+    document.getElementById('projectStatus').textContent = status ? `Build Status: ${status}` : '';
+    if (message) {
+      document.getElementById('projectStatus').textContent += `\n${message}`;
+    }
+    if (incompleteFiles.length > 0) {
+      document.getElementById('projectStatus').textContent += `\n\u26A0\uFE0F Incomplete files detected. Please review highlighted files.`;
+    }
+
+    // ZIP download logic
+    function addFilesToZip(zip, tree, parentPath = '') {
+      for (const key in tree) {
+        if (typeof tree[key] === 'string' && tree[key] === 'file') {
+          const filePath = parentPath ? parentPath + '/' + key : key;
+          const content = files[filePath] || '';
+          zip.file(filePath, content);
+        } else if (typeof tree[key] === 'object') {
+          // Recursively add folder
+          addFilesToZip(zip, tree[key], parentPath ? parentPath + '/' + key : key);
+        }
+      }
+    }
+
+    document.getElementById('downloadZipBtn').addEventListener('click', function() {
+      if (!window.JSZip) {
+        alert('JSZip library not loaded.');
+        return;
+      }
+      const zip = new JSZip();
+      addFilesToZip(zip, structure);
+      zip.generateAsync({ type: 'blob' }).then(function(content) {
+        saveAs(content, 'microservice_project.zip');
+      });
+    });
+
+    document.querySelectorAll('#fileTree li[data-path]').forEach(li => {
+      li.addEventListener('click', function() {
+        const path = this.getAttribute('data-path');
+        document.getElementById('codeTitle').textContent = path;
+        document.getElementById('codeBlock').textContent = files[path] || 'No content.';
+      });
+    });
+
+    document.getElementById('startAppBtn').addEventListener('click', function() {
+      // Enhanced modal: includes endpoint test for /api/msbuilder-generate
+      const sampleSwagger = {
+        "openapi": "3.0.0",
+        "info": {"title": "Sample API", "version": "1.0.0"},
+        "paths": {
+          "/items": {
+            "get": {
+              "summary": "List items",
+              "responses": {"200": {"description": "A list of items"}}
+            }
+          }
+        },
+        "components": {"schemas": {}}
+      };
+      const sampleBusinessLogic = "Return all items from the database.";
+      const sampleRequest = {
+        swagger: sampleSwagger,
+        business_logic: sampleBusinessLogic
+      };
+      const modalHtml = `
+        <div id="startAppModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:9999; display:flex; align-items:center; justify-content:center;">
+          <div style="background:#fff; border-radius:1rem; padding:2.5rem 2rem; box-shadow:0 8px 32px rgba(44,44,44,0.18); min-width:350px; max-width:90vw;">
+            <h4 style="color:#388e3c; font-weight:700; margin-bottom:1.2rem;">Start Microservice Backend</h4>
+            <div style="margin-bottom:1.2rem;">
+              <b>Code Location:</b> <span style="color:#d32f2f;">backend/</span> folder in your project.<br>
+              <b>Terminal:</b> Open <span style="color:#1976d2;">PowerShell</span> or <span style="color:#1976d2;">Command Prompt (CMD)</span> in Windows.<br>
+              <span style="font-size:0.98em; color:#23272b;">(Or use VS Code's integrated terminal)</span>
+            </div>
+            <div style="margin-bottom:1.2rem;">
+              <span style="font-weight:600;">Python:</span>
+              <pre id="pyCmd" style="background:#23272b; color:#fff; border-radius:0.5em; padding:0.7em 1em; margin:0.5em 0;">cd backend\npython app.py</pre>
+              <button onclick="navigator.clipboard.writeText('cd backend\npython app.py')" class="btn btn-outline-success btn-sm mb-2">Copy Python Command</button>
+            </div>
+            <div style="margin-bottom:1.2rem;">
+              <span style="font-weight:600;">Docker:</span>
+              <pre id="dockerCmd" style="background:#23272b; color:#fff; border-radius:0.5em; padding:0.7em 1em; margin:0.5em 0;">docker build -t ms-backend ./backend\ndocker run -p 5000:5000 ms-backend</pre>
+              <button onclick="navigator.clipboard.writeText('docker build -t ms-backend ./backend\ndocker run -p 5000:5000 ms-backend')" class="btn btn-outline-primary btn-sm mb-2">Copy Docker Command</button>
+            </div>
+            <div style="margin-bottom:1.2rem; color:#388e3c; font-size:0.98em;">
+              After running, access your API at <b><a href="http://localhost:5000" target="_blank" style="color:#388e3c; text-decoration:underline;">http://localhost:5000</a></b>
+              <button onclick="window.open('http://localhost:5000', '_blank')" class="btn btn-outline-success btn-sm ms-2">Open API in New Tab</button>
+            </div>
+            <hr style="margin:1.5em 0;">
+            <div style="margin-bottom:1.2rem;">
+              <h5 style="color:#d32f2f; font-weight:700;">Test MS Project Endpoint</h5>
+              <div style="font-size:0.98em; color:#23272b; margin-bottom:0.5em;">POST <b>/api/msbuilder-generate</b></div>
+              <form id="msbuilderTestForm">
+                <label for="msbuilderRequest" style="font-weight:600;">Request Body (JSON):</label><br>
+                <textarea id="msbuilderRequest" rows="8" style="width:100%; border-radius:0.5em; border:1px solid #ccc; padding:0.5em; font-family:monospace;">${JSON.stringify(sampleRequest, null, 2)}</textarea>
+                <button type="submit" class="btn btn-primary mt-2">Send Test Request</button>
+              </form>
+              <div id="msbuilderTestResult" style="margin-top:1em; background:#f5f5f5; border-radius:0.5em; padding:1em; color:#23272b; font-size:0.98em; min-height:80px;"></div>
+            </div>
+            <button id="closeStartAppModal" class="btn btn-danger mt-2">Close</button>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      document.getElementById('closeStartAppModal').onclick = function() {
+        document.getElementById('startAppModal').remove();
+      };
+      // Endpoint test form logic
+      document.getElementById('msbuilderTestForm').onsubmit = function(e) {
+        e.preventDefault();
+        const reqBody = document.getElementById('msbuilderRequest').value;
+        let parsed;
+        try {
+          parsed = JSON.parse(reqBody);
+        } catch (err) {
+          document.getElementById('msbuilderTestResult').textContent = 'Invalid JSON: ' + err.message;
+          return;
+        }
+        document.getElementById('msbuilderTestResult').textContent = 'Sending...';
+        fetch('/api/msbuilder-generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(parsed)
+        })
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById('msbuilderTestResult').textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(err => {
+          document.getElementById('msbuilderTestResult').textContent = 'Error: ' + err.message;
+        });
+      };
+    });
+
+
+    document.getElementById('testForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const url = document.getElementById('endpointUrl').value;
+      const method = document.getElementById('httpMethod').value;
+      let body = document.getElementById('requestBody').value;
+      let options = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body && method !== 'GET') {
+        try { options.body = JSON.stringify(JSON.parse(body)); } catch { options.body = body; }
+      }
+      let resultDiv = document.getElementById('testResult');
+      resultDiv.textContent = 'Sending request...';
+      try {
+        const response = await fetch(url, options);
+        const text = await response.text();
+        resultDiv.textContent = `Status: ${response.status}\n` + text;
+      } catch (err) {
+        resultDiv.textContent = 'Error: ' + err;
+      }
+    });
+
+    // --- Auto-populate endpoint and sample request from swagger.json ---
+    async function populateEndpointAndSample() {
+      try {
+        // Use backend endpoint to get available endpoints and sample requests
+        const res = await fetch('http://localhost:5050/api/test-endpoints');
+        const data = await res.json();
+        if (data.endpoints && data.endpoints.length > 0) {
+          const ep = data.endpoints[0];
+          document.getElementById('endpointUrl').value = ep.url;
+          document.getElementById('httpMethod').value = ep.method;
+          document.getElementById('requestBody').value = ep.sample_body;
+        } else {
+          document.getElementById('endpointUrl').value = 'http://localhost:5050/api/generate-complete-microservice';
+          document.getElementById('httpMethod').value = 'POST';
+          document.getElementById('requestBody').value = JSON.stringify({ project_structure: {}, context: {} }, null, 2);
+        }
+      } catch (err) {
+        // fallback
+        document.getElementById('endpointUrl').value = 'http://localhost:5050/api/generate-complete-microservice';
+        document.getElementById('httpMethod').value = 'POST';
+        document.getElementById('requestBody').value = JSON.stringify({ project_structure: {}, context: {} }, null, 2);
+      }
+    }
+    populateEndpointAndSample();
+  </script>
+</body>
+</html>

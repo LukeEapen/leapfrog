@@ -1,0 +1,226 @@
+<!--
+    legacy.html
+
+    This HTML template provides a user interface for uploading a file and displaying multi-agent responses.
+    The UI consists of:
+      - A styled header with the page title.
+      - A file upload form allowing users to select and submit a file.
+      - A three-column table:
+          * Section 1: Displays the raw content of the uploaded file.
+          * Section 2: Shows the response from Agent 1, rendered from Markdown to HTML.
+          * Section 3: Shows the response from Agent 3, rendered from Markdown to HTML.
+
+    Key Features:
+      - Responsive and modern styling for form and table elements.
+      - Uses the FileReader API to display file content immediately after selection.
+      - Sends the uploaded file to the backend endpoint '/upload' via a POST request.
+      - Expects a JSON response with 'response_agent_1' and 'response_agent_3' fields.
+      - Uses the 'marked' library to render Markdown responses as HTML.
+      - Handles errors gracefully and displays error messages in the UI.
+
+    Dependencies:
+      - marked.js (loaded via CDN) for Markdown parsing.
+
+    Usage:
+      1. User selects a file and submits the form.
+      2. File content is displayed in Section 1.
+      3. Backend processes the file and returns agent responses.
+      4. Agent responses are rendered as formatted HTML in Sections 2 and 3.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-container h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-container label {
+            font-size: 16px;
+            color: #555;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .form-container input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .form-container button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            padding: 12px;
+            text-align: center;
+            font-size: 16px;
+            color: white;
+        }
+
+        td {
+            padding: 12px;
+            vertical-align: top;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .section-1-header {
+            background-color: #ff5722; /* Orange */
+        }
+
+        .section-2-header {
+            background-color: #4caf50; /* Green */
+        }
+
+        .section-3-header {
+            background-color: #2196f3; /* Blue */
+        }
+
+        .response {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            font-family: Consolas, monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .markdown-content {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1 class="page-title">⚙️ GPT Multi-Agent Response UI</h1>
+    </header>
+
+    <!-- File Upload Section -->
+    <div class="form-container">
+        <h2>Upload Your File</h2>
+        <form id="uploadForm">
+            <label for="fileInput">Select a File:</label>
+            <input type="file" id="fileInput" name="file" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <!-- Three-Column Table -->
+    <table>
+        <thead>
+            <tr>
+                <th class="section-1-header">Section 1: File Content</th>
+                <th class="section-2-header">Section 2: Agent 1 Response</th>
+                <th class="section-3-header">Section 3: Agent 3 Response</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td id="fileContent" class="response"></td>
+                <td id="uploadResponse" class="response markdown-content"></td>
+                <td id="assistant3Response" class="response markdown-content"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                // Read the file content and display it in Section 1
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const fileContent = document.getElementById('fileContent');
+                    fileContent.textContent = event.target.result || 'No content in the file.';
+                };
+                reader.readAsText(file);
+
+                // Send the file to the backend
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                // Update Section 2 with Agent 1's response (Markdown to HTML)
+                const uploadResponse = document.getElementById('uploadResponse');
+                uploadResponse.innerHTML = marked.parse(result.response_agent_1 || 'No response from Agent 1.');
+
+                // Update Section 3 with Agent 3's response (Markdown to HTML)
+                const assistant3Response = document.getElementById('assistant3Response');
+                assistant3Response.innerHTML = marked.parse(result.response_agent_3 || 'No response from Agent 3.');
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                const uploadResponse = document.getElementById('uploadResponse');
+                uploadResponse.textContent = 'Error processing the file.';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+{% extends 'poc4/base.html' %}
+{% block content %}
+<!-- Banner -->
+<div class="bg-danger text-white py-3 mb-4 rounded shadow-sm text-center">
+  <h2 class="mb-0">POC4 Data Migration & Reconciliation</h2>
+  <small>Modern Data Migration Workflow</small>
+</div>
+
+
+<!-- Modern Tabs -->
+<style>
+  .nav-pills .nav-link {
+    border-radius: 2rem;
+    margin: 0 0.25rem;
+    font-weight: 500;
+    color: #d32f2f;
+    background: #fff;
+    border: 1px solid #d32f2f;
+    transition: background 0.2s, color 0.2s;
+  }
+  .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+    background: linear-gradient(90deg, #d32f2f 60%, #b71c1c 100%);
+    color: #fff !important;
+    font-weight: 700;
+    border: 1px solid #d32f2f;
+    box-shadow: 0 2px 8px rgba(211,47,47,0.10);
+  }
+</style>
+<ul class="nav nav-pills mb-4 justify-content-center" id="poc4Tabs">
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('poc4.page1') }}">1. Upload</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link active" href="{{ url_for('poc4.page2') }}">2. Mapping</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('poc4.page3') }}">3. Rules</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('poc4.page4') }}">4. Validation</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('poc4.page5') }}">5. Reconciliation</a>
+  </li>
+</ul>
+
+
+<!-- 3 Column Layout with Visual Mapping -->
+<div class="row g-4">
+  <!-- Source Column -->
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-header bg-light text-danger fw-bold">Source Fields</div>
+      <div class="card-body">
+        <ul class="list-group" id="source-fields">
+          <li class="list-group-item">Field 1</li>
+          <li class="list-group-item">Field 2</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- Mapping Column -->
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-header bg-light text-danger fw-bold">Field Mapping</div>
+      <div class="card-body">
+        <form method="post" id="mapping-form">
+          <div class="mb-3">
+            <label class="form-label">Map Source to Target</label>
+            <div class="row align-items-center mb-2">
+              <div class="col-5 text-end">
+                <span class="fw-bold">Field 1</span>
+              </div>
+              <div class="col-2 text-center">
+                <i class="bi bi-arrow-right fs-4 text-danger"></i>
+              </div>
+              <div class="col-5">
+                <select class="form-select" name="mapping_field1">
+                  <option value="">Select Target</option>
+                  <option>Field A</option>
+                  <option>Field B</option>
+                </select>
+              </div>
+            </div>
+            <div class="row align-items-center mb-2">
+              <div class="col-5 text-end">
+                <span class="fw-bold">Field 2</span>
+              </div>
+              <div class="col-2 text-center">
+                <i class="bi bi-arrow-right fs-4 text-danger"></i>
+              </div>
+              <div class="col-5">
+                <select class="form-select" name="mapping_field2">
+                  <option value="">Select Target</option>
+                  <option>Field A</option>
+                  <option>Field B</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline-danger w-100 mb-2" id="generate-mapping">Generate Mapping</button>
+          <button type="submit" class="btn btn-danger w-100">Next</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- Chat Column -->
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm d-flex flex-column">
+      <div class="card-header bg-danger text-white">Chatbot Assistant</div>
+      <div class="card-body flex-grow-1 d-flex flex-column p-0">
+        <div class="flex-grow-1 p-3" style="overflow-y:auto; min-height: 400px;" id="chat-messages">
+          <div class="text-muted small">Ask me anything about field mapping and data transformations...</div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <form id="chat-form" onsubmit="return sendMessage(event);">
+          <div class="input-group">
+            <input type="text" class="form-control" id="chat-input" placeholder="Type your question..." required>
+            <button class="btn btn-danger" type="submit">Send</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Optionally include Bootstrap Icons for arrows -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<script>
+  document.getElementById('generate-mapping').onclick = function() {
+    alert('Auto-mapping logic goes here!');
+  };
+  async function sendMessage(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const msg = input.value;
+    if (!msg) return false;
+    appendMessage('You', msg);
+    input.value = '';
+    const res = await fetch('/poc4/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'message=' + encodeURIComponent(msg)
+    });
+    const data = await res.json();
+    appendMessage('Bot', data.response);
+    return false;
+  }
+  function appendMessage(sender, text) {
+    const chat = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+</script>
+
+<script>
+  async function sendMessage(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const msg = input.value;
+    if (!msg) return false;
+    appendMessage('You', msg);
+    input.value = '';
+    const res = await fetch('/poc4/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'message=' + encodeURIComponent(msg)
+    });
+    const data = await res.json();
+    appendMessage('Bot', data.response);
+    return false;
+  }
+  function appendMessage(sender, text) {
+    const chat = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+</script>
+{% endblock %}

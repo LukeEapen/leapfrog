@@ -594,7 +594,6 @@ def page1():
                 os.remove(path)
 
         def run_agents():
-            import time
             t0 = time.time()
             try:
                 # Parallel agent calls using asyncio for OpenAI, fallback to threads for others
@@ -606,7 +605,9 @@ def page1():
                 logging.info(f"[PERF] Page1 agent batch: {time.time() - t0:.2f}s")
                 logging.info(f"Agent 1.1 Output: {a11}")
                 logging.info(f"Agent 2 Output: {a2}")
+
                 final_data = {
+                    "inputs": inputs,
                     "product_overview": a11,
                     "feature_overview": a2,
                     "highest_order": a3,
@@ -625,6 +626,7 @@ def page1():
                     redis_client.setex(session_id, 3600, json.dumps(fail_data))
                 else:
                     with open(os.path.join(TEMP_DIR, f'prd_session_{session_id}.json'), 'w') as f:
+                        json.dump(fail_data, f)
                         json.dump(fail_data, f)
 
         executor.submit(run_agents)
@@ -672,12 +674,30 @@ def page2():
         return "⏳ Processing took too long. Please refresh the page shortly.", 504
 
     if request.method == 'POST':
-        data.update({
-            "product_overview": request.form.get("product_overview", ""),
-            "feature_overview": request.form.get("feature_overview", "")
-        })
+        # Debug: log the incoming form data
+        logging.info(f"[PAGE2][POST] request.form: {dict(request.form)}")
+        # Update product_overview and feature_overview from form only if not empty
+        po = request.form.get("product_overview", "").strip()
+        fo = request.form.get("feature_overview", "").strip()
+        if po:
+            data["product_overview"] = po
+        if fo:
+            data["feature_overview"] = fo
+
+        # Ensure user inputs are preserved and merged
+        if "inputs" not in data or not data["inputs"]:
+            # Try to get from session as fallback
+            data["inputs"] = session.get("inputs", {})
+
+        # Log the updated data for debugging
+        logging.info(f"[PAGE2][POST] Updated data: {json.dumps(data, indent=2)}")
+
+        # Save updated data
         if USING_REDIS:
             redis_client.setex(session_id, 3600, json.dumps(data))
+        else:
+            with open(os.path.join(TEMP_DIR, f'prd_session_{session_id}.json'), 'w') as f:
+                json.dump(data, f)
         return redirect('/page3')
 
     return render_template("page2_agents.html",
@@ -805,6 +825,13 @@ def page3():
     if request.method == 'POST':
         # Get user inputs and agent outputs
         user_inputs = data.get("inputs", {})
+
+        # Avoid UnicodeEncodeError in Windows console logs
+        try:
+            logging.info(f"[PAGE3] user_inputs: {user_inputs}")
+        except UnicodeEncodeError:
+            logging.info(f"[PAGE3] user_inputs: {str(user_inputs).encode('ascii', 'replace').decode('ascii')}")
+
         feature_overview = data.get("feature_overview", "")
 
         # Combine all relevant inputs into structured format, including Product Overview
@@ -824,7 +851,10 @@ def page3():
         {feature_overview}
         """
 
-        logging.info(f"[PAGE3] Combined input for agents: {combined_input}")
+        try:
+            logging.info(f"[PAGE3] Combined input for agents: {combined_input}")
+        except UnicodeEncodeError:
+            logging.info(f"[PAGE3] Combined input for agents: {combined_input.encode('ascii', 'replace').decode('ascii')}")
 
         keys = [k for k in ASSISTANTS if k.startswith("agent_4_")]
         # Use asyncio to call all agents in parallel

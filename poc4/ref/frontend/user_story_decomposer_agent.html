@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 2: User Story Decomposer Agent</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #23272b 0%, #343a40 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+    }
+    .main-app-container {
+      min-height: 80vh;
+      margin: 0 auto 2rem auto;
+      padding: 2.5rem 2rem;
+      background: #fff;
+      border-radius: 2rem;
+      box-shadow: 0 8px 32px rgba(44,44,44,0.18);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      max-width: 100vw !important;
+      width: 100vw !important;
+    }
+    .container-fluid {
+      max-width: 100vw !important;
+      width: 100vw !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    .agent-card {
+      background: #f8f9fa;
+      color: #23272b;
+      border-radius: 1.5rem;
+      box-shadow: 0 2px 12px rgba(44,44,44,0.10);
+      padding: 2.5rem 2rem;
+      margin: 0 auto 2rem auto;
+      width: 100%;
+      max-width: 100%;
+      border: 2px solid #e0e0e0;
+    }
+    .agent-title {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #fff;
+      background: #d32f2f;
+      border-radius: 1.25rem 1.25rem 0 0;
+      padding: 1.2rem 2rem;
+      margin-bottom: 0;
+      box-shadow: 0 2px 12px rgba(44,44,44,0.10);
+      display: block;
+      text-align: left;
+    }
+    .btn-next, #synthesizeBtn {
+      background: #d32f2f;
+      color: #fff;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.75rem 2.5rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(211,47,47,0.08);
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    .btn-next:hover, #synthesizeBtn:hover {
+      background: #b71c1c;
+    }
+    .section-heading {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #b71c1c;
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.01em;
+    }
+    .section-card {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.06);
+      padding: 1.25rem 1rem;
+      margin-bottom: 0;
+      min-height: 500px;
+      max-height: 800px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      border: 2px solid #e0e0e0;
+    }
+    .row.g-4.align-sections {
+      display: flex;
+      align-items: stretch;
+      height: 100%;
+      flex-wrap: wrap;
+      gap: 2rem 0;
+    }
+    #storiesList {
+      min-height: 700px;
+      max-height: 700px;
+      overflow-y: auto;
+      background: #f1f3f4;
+      border-radius: 1rem;
+      padding: 1rem;
+      color: #23272b;
+      font-size: 16px !important;
+    }
+    #storiesList * {
+      font-size: 16px !important;
+    }
+    #storyDetails {
+      min-height: 700px;
+      max-height: 700px;
+      overflow-y: auto;
+      background: #f1f3f4;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.08);
+      color: #23272b;
+    }
+    #legacySection {
+    #legacyEnglishMarkdown, #legacyEnglishMarkdown * {
+      font-size: 16px !important;
+    }
+    #storiesList, #storiesList * {
+      font-size: 16px !important;
+    }
+    #beautifiedStoryDetails, #beautifiedStoryDetails * {
+      font-size: 16px !important;
+    }
+    #beautifiedStoryDetails h1,
+    #beautifiedStoryDetails h2,
+    #beautifiedStoryDetails h3,
+    #beautifiedStoryDetails h4,
+    #beautifiedStoryDetails h5,
+    #beautifiedStoryDetails h6 {
+      font-size: 16px !important;
+      line-height: 1.3 !important;
+      font-weight: 600 !important;
+      margin: 0.5em 0 !important;
+    }
+      min-height: 700px;
+      max-height: 700px;
+      overflow-y: auto;
+      background: #f1f3f4;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.08);
+      color: #23272b;
+      padding: 1rem;
+      /* Remove margin-top to align with other sections */
+      margin-top: 0;
+    }
+    textarea.form-control {
+      background: #f1f3f4;
+      border-radius: 0.75rem;
+      font-size: 1.05rem;
+      color: #23272b;
+    }
+    @media (max-width: 1400px) {
+      .main-app-container { max-width: 100vw; }
+    }
+    @media (max-width: 1200px) {
+      .main-app-container { max-width: 100vw; }
+      .row.g-4.align-sections { flex-direction: column; gap: 1.5rem 0; }
+      .col-md-4 { width: 100%; max-width: 100%; }
+    }
+    @media (max-width: 991px) {
+      .main-app-container { padding: 16px 4px; border-radius: 0.5rem; }
+      .agent-card { padding: 1.5rem 0.5rem; }
+      .agent-title { font-size: 1.3rem; }
+      .agent-desc { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <header style="background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color: #fff; padding: 1.2rem 0 1rem 0; border-radius: 0 0 1.2rem 1.2rem; box-shadow: 0 4px 32px rgba(44,44,44,0.22); margin-bottom: 2.5rem; position:relative; overflow:hidden; border: 4px solid #fff; min-height:unset;">
+    <div style="position:absolute; top:-40px; right:-60px; opacity:0.12; pointer-events:none;">
+      <i class="bi bi-diagram-3" style="font-size:7rem;"></i>
+    </div>
+    <div class="container d-flex flex-column align-items-center position-relative" style="z-index:2;">
+      <div class="d-flex align-items-center justify-content-center flex-wrap" style="gap:1.1rem; margin-bottom:0.2rem;">
+        <i class="bi bi-cpu" style="font-size:1.7rem;"></i>
+        <i class="bi bi-diagram-3" style="font-size:1.7rem;"></i>
+        <i class="bi bi-lightbulb" style="font-size:1.7rem;"></i>
+        <i class="bi bi-arrow-repeat" style="font-size:1.7rem;"></i>
+        <i class="bi bi-gear" style="font-size:1.7rem;"></i>
+        <span style="font-size:2.3rem; font-weight:900; letter-spacing:0.01em; margin-left:1.1rem; text-shadow:0 2px 8px rgba(44,44,44,0.10); vertical-align:middle; line-height:1;">User Story Decomposer</span>
+      </div>
+      <div style="font-size:1.13rem; font-weight:500; color:#fff; opacity:0.93; max-width:900px; text-align:center; margin-bottom:0.2rem;">
+        <span class="badge bg-warning text-dark me-2" style="font-size:1rem; border-radius:0.7rem; padding:0.5em 1em; vertical-align:middle; background:#ffc107 !important; color:#23272b !important;"><i class="bi bi-lightbulb me-2"></i>Step 2</span>
+        Select user stories and synthesize business logic, rules, and functions for modernization.<br>
+        <span style="opacity:0.85;">Visualize and break down user stories for technical modernization and function synthesis.</span>
+      </div>
+      <noscript><div class="alert alert-danger mt-2">Bootstrap Icons require JavaScript enabled.</div></noscript>
+      <div id="icon-fallback" style="display:none; color:yellow; font-weight:bold;">[Icons failed to load]</div>
+    </div>
+  </header>
+  <!-- Bootstrap Icons CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Bootstrap Icons fallback check -->
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      var testIcon = document.createElement('i');
+      testIcon.className = 'bi bi-cpu';
+      document.body.appendChild(testIcon);
+      var style = window.getComputedStyle(testIcon, '::before');
+      var content = style.getPropertyValue('content');
+      if (!content || content === 'none' || content === '""') {
+        var fallback = document.getElementById('icon-fallback');
+        if (fallback) fallback.style.display = 'block';
+      }
+      document.body.removeChild(testIcon);
+    });
+  </script>
+  <main class="container-fluid d-flex justify-content-center" style="width:100vw;max-width:100vw;padding:0;">
+    <div class="main-app-container mx-auto" style="background: #fff; border-radius: 2rem; box-shadow: 0 8px 32px rgba(44,44,44,0.18); padding: 2.5rem 2rem; margin-bottom: 2rem; width:100vw;max-width:100vw;">
+      <div class="d-flex align-items-center justify-content-between mb-4" style="gap: 1rem;">
+        <button id="backBtn" class="btn px-5 btn-lg d-flex align-items-center gap-2" style="font-weight:700; border-radius:0.75rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); background:#6c757d; border:none; color:#fff; height:56px; min-height:56px; font-size:1.15rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+            <path d="M8.354 11.354a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L6.707 8H11.5a.5.5 0 0 1 0 1H6.707l1.647 1.646a.5.5 0 0 1 0 .708z"/>
+          </svg>
+          <span style="color:#fff;">Step 1</span>
+        </button>
+        <button id="synthesizeBtn" class="btn btn-next px-5" style="white-space:nowrap; border-radius:1rem; box-shadow:0 2px 8px rgba(211,47,47,0.10); background:#d32f2f; color:#fff; font-weight:700; font-size:1.2rem;">Synthesize Functions</button>
+      </div>
+      <div id="spinnerTimerContainer" class="d-none my-4 text-center">
+        <div class="d-flex flex-column align-items-center justify-content-center">
+          <div class="spinner-border text-danger mb-2" role="status" style="width:3rem;height:3rem;"></div>
+          <div class="fw-bold text-secondary" style="font-size:1.2rem;">Processing... <span id="timer">0</span>s</div>
+        </div>
+      </div>
+      <div id="jiraSpinnerTimerContainer" class="my-4 text-center">
+        <div class="d-flex flex-column align-items-center justify-content-center">
+          <div class="spinner-border text-danger mb-2" role="status" style="width:2.5rem;height:2.5rem;"></div>
+          <div class="fw-bold text-secondary" style="font-size:1.1rem;">Connecting to JIRA and loading user stories... <span id="jiraTimer">0</span>s</div>
+        </div>
+      </div>
+      <div id="error" class="alert alert-danger d-none" style="font-size:1.1rem; border-radius:0.75rem;"></div>
+      <div class="row g-4 align-sections" style="margin-top:0.5rem;">
+        <div class="col-md-4 d-flex flex-column h-100">
+          <div class="section-heading" style="margin-bottom:0.5rem; font-size:1.3rem; color:#d32f2f;">User Story Summary</div>
+          <div class="section-card flex-grow-1 d-flex flex-column" style="background:#f1f3f4; border:2px solid #e0e0e0;">
+            <div id="storiesList" class="flex-grow-1"></div>
+          </div>
+        </div>
+        <div class="col-md-4 d-flex flex-column h-100">
+          <div class="section-heading" style="margin-bottom:0.5rem; font-size:1.3rem; color:#d32f2f;">User Story Details</div>
+          <div class="section-card flex-grow-1 d-flex flex-column" id="storyDetailsSection" style="border:2px solid #e0e0e0;">
+            <div id="storyDetails" class="d-none">
+              <div class="fw-bold mb-2" id="selectedStorySummary" style="font-size:1.15rem;"></div>
+              <div class="text-secondary small mb-2" id="selectedStoryDescription" style="font-size:1.05rem;"></div>
+              <div id="beautifiedStoryDetails" class="mt-2" style="font-size:20px;"></div>
+              <div id="synthResult" class="mt-3"></div>
+            </div>
+            <div id="storyDetailsPlaceholder" class="text-secondary" style="font-size:1.05rem;">Select a user story to see details here.</div>
+          </div>
+        </div>
+        <div class="col-md-4 d-flex flex-column h-100">
+          <div class="section-heading" style="margin-bottom:0.5rem; font-size:1.3rem; color:#d32f2f;">Legacy Business Requirement</div>
+          <div class="section-card flex-grow-1 d-flex flex-column" id="legacySection" style="height:100%; border:2px solid #e0e0e0;">
+            <div class="flex-grow-1 d-flex flex-column">
+              <div id="legacyEnglishMarkdown" class="flex-grow-1" style="background:#f1f3f4; border:1.5px solid #e0e0e0; font-size:20px; color:#23272b; padding:0.5rem; border-radius:0.75rem; min-height:0; height:100%; overflow-y:auto;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    // Fetch user stories from backend
+    async function loadUserStories() {
+      const spinnerContainer = document.getElementById('jiraSpinnerTimerContainer');
+      spinnerContainer.classList.remove('d-none');
+      document.getElementById('error').classList.add('d-none');
+      let seconds = 0;
+      document.getElementById('jiraTimer').textContent = seconds;
+      let timerInterval = setInterval(() => {
+        seconds++;
+        document.getElementById('jiraTimer').textContent = seconds;
+      }, 1000);
+      try {
+        const res = await fetch('/api/jira-user-stories');
+        const data = await res.json();
+        spinnerContainer.classList.add('d-none');
+        clearInterval(timerInterval);
+        if (data.error) {
+          document.getElementById('error').textContent = data.error;
+          document.getElementById('error').classList.remove('d-none');
+          return;
+        }
+        const stories = data.stories || [];
+        const storiesList = document.getElementById('storiesList');
+        if (stories.length === 0) {
+          storiesList.innerHTML = '<div class="text-secondary">No user stories found in JIRA.</div>';
+          return;
+        }
+        storiesList.innerHTML = stories.map((story, idx) => `
+          <label class='list-group-item d-flex align-items-start' style='cursor:pointer;'>
+            <input class='form-check-input me-2' type='checkbox' name='storyCheckbox' value='${story.key}' data-summary='${story.summary.replace(/'/g, "&#39;")}' data-description='${(story.description||'').replace(/'/g, "&#39;")}' onchange='selectStoryCheckbox(this)'>
+            <div>
+              <div class='fw-bold'>${story.key}: ${story.summary}</div>
+              <div class='text-secondary small'>${story.description ? story.description.substring(0, 120) + (story.description.length > 120 ? '...' : '') : ''}</div>
+            </div>
+          </label>
+        `).join('');
+      } catch (err) {
+        spinnerContainer.classList.add('d-none');
+        clearInterval(timerInterval);
+        document.getElementById('error').textContent = 'Failed to load user stories: ' + (err.message || err);
+        document.getElementById('error').classList.remove('d-none');
+      }
+    }
+
+    // Story selection handler for checkboxes
+    window.selectStoryCheckbox = function(checkbox) {
+      // Show details card
+      document.getElementById('storyDetails').classList.remove('d-none');
+      document.getElementById('storyDetailsPlaceholder').style.display = 'none';
+      // Gather all selected stories
+      const selected = Array.from(document.querySelectorAll('input[name="storyCheckbox"]:checked'));
+      // Show each story's details one after another
+      let detailsHtml = '';
+      selected.forEach((cb, idx) => {
+        const summary = cb.getAttribute('data-summary');
+        const description = cb.getAttribute('data-description');
+        // Render markdown and force all headings to 16px inline
+        let html = marked.parse(description || '');
+        html = html.replace(/<h([1-6])([^>]*)>/gi, '<h$1$2 style="font-size:16px;line-height:1.3;font-weight:600;margin:0.5em 0;">');
+        detailsHtml += `<div class='mb-4 pb-2 border-bottom'>
+          <div class='fw-bold mb-1'>${summary}</div>
+          <div class='text-secondary small mb-1'>${html}</div>
+        </div>`;
+      });
+      document.getElementById('selectedStorySummary').textContent = '';
+      document.getElementById('selectedStoryDescription').innerHTML = '';
+      document.getElementById('beautifiedStoryDetails').innerHTML = detailsHtml;
+      document.getElementById('legacyEnglishMarkdown').innerHTML = marked.parse(window.latestLegacyEnglish || '');
+      document.getElementById('synthResult').innerHTML = '';
+    };
+
+
+    // Fetch latest legacy English output from backend (if available)
+    async function fetchLegacyEnglish() {
+      // This should be replaced with a real API call if you want to fetch the latest output
+      // For now, try to get from localStorage or set to empty
+      window.latestLegacyEnglish = localStorage.getItem('latestLegacyEnglish') || '';
+    }
+
+    // Synthesize button click
+    document.getElementById('synthesizeBtn').onclick = async function() {
+      // Gather all selected stories
+      const selected = Array.from(document.querySelectorAll('input[name="storyCheckbox"]:checked'));
+      if (selected.length === 0) {
+        document.getElementById('synthResult').innerHTML = '<div class="alert alert-danger">Please select at least one user story.</div>';
+        return;
+      }
+      const summaries = selected.map(cb => cb.getAttribute('data-summary'));
+      const descriptions = selected.map(cb => cb.getAttribute('data-description'));
+      const userStory = summaries.join('\n') + '\n' + descriptions.join('\n\n');
+      // Get legacyEnglish from window.latestLegacyEnglish (set by fetchLegacyEnglish)
+      const legacyEnglish = window.latestLegacyEnglish || '';
+      // Show spinner and timer
+      const spinnerContainer = document.getElementById('spinnerTimerContainer');
+      spinnerContainer.classList.remove('d-none');
+      let seconds = 0;
+      document.getElementById('timer').textContent = seconds;
+      let timerInterval = setInterval(() => {
+        seconds++;
+        document.getElementById('timer').textContent = seconds;
+      }, 1000);
+      document.getElementById('synthResult').innerHTML = '<div class="text-secondary">Synthesizing functions and business logic...</div>';
+      try {
+        // Save session to localStorage (simulate session/redis)
+        localStorage.setItem('selectedUserStories', JSON.stringify(selected.map(cb => ({
+          key: cb.value,
+          summary: cb.getAttribute('data-summary'),
+          description: cb.getAttribute('data-description')
+        }))));
+        localStorage.setItem('legacyEnglish', legacyEnglish);
+        // Explicitly request business logic and rules in the functional breakdown
+        const synthPayload = {
+          user_story: userStory + '\n\nWhen synthesizing functions, also create the detailed business logic and rules for each function as part of the functional breakdown. Ensure all business rules, flows, and logic are captured and output in a structured way.' ,
+          legacy_english: legacyEnglish
+        };
+        const res = await fetch('/api/synthesize-functions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(synthPayload)
+        });
+        const data = await res.json();
+        if (data.error) {
+          document.getElementById('synthResult').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
+          spinnerContainer.classList.add('d-none');
+          clearInterval(timerInterval);
+          return;
+        }
+        // Save to localStorage and redirect to next page
+        if (data.result) {
+          localStorage.setItem('latestSynthesisResult', data.result);
+        }
+        spinnerContainer.classList.add('d-none');
+        clearInterval(timerInterval);
+        window.location.href = '/function-synthesizer';
+      } catch (err) {
+        document.getElementById('synthResult').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
+        spinnerContainer.classList.add('d-none');
+        clearInterval(timerInterval);
+      }
+    };
+    // Back button click handler
+    document.getElementById('backBtn').addEventListener('click', function() {
+      // Persist all relevant session data in localStorage
+      const selected = Array.from(document.querySelectorAll('input[name="storyCheckbox"]:checked'));
+      localStorage.setItem('selectedUserStories', JSON.stringify(selected.map(cb => ({
+        key: cb.value,
+        summary: cb.getAttribute('data-summary'),
+        description: cb.getAttribute('data-description')
+      }))));
+      // Persist legacy English output
+      if (window.latestLegacyEnglish) {
+        localStorage.setItem('latestLegacyEnglish', window.latestLegacyEnglish);
+      }
+      // Persist legacy business breakdown and file names if available
+      if (localStorage.getItem('legacyBusinessBreakdown')) {
+        localStorage.setItem('legacyBusinessBreakdown', localStorage.getItem('legacyBusinessBreakdown'));
+      }
+      if (localStorage.getItem('legacyFileNames')) {
+        localStorage.setItem('legacyFileNames', localStorage.getItem('legacyFileNames'));
+      }
+      // Persist latest synthesis result if available
+      if (localStorage.getItem('latestSynthesisResult')) {
+        localStorage.setItem('latestSynthesisResult', localStorage.getItem('latestSynthesisResult'));
+      }
+      // Persist any other relevant session keys (add as needed)
+      // ...existing code...
+      window.location.href = 'http://localhost:5050/';
+    });
+
+    // Initial load
+    fetchLegacyEnglish();
+    loadUserStories();
+    // Hide details section placeholder if a story is already selected (on reload)
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!document.getElementById('storyDetails').classList.contains('d-none')) {
+        document.getElementById('storyDetailsPlaceholder').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Builder Agent</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(120deg, #f7f8fa 60%, #e3e6ed 100%); min-height:100vh; font-family: 'Segoe UI', Arial, sans-serif; }
+    .agent-card {
+      background: #f1f3f4;
+      color: #23272b;
+      border-radius: 2rem;
+      box-shadow: 0 8px 32px rgba(44,44,44,0.13);
+      padding: 2.5rem 3.5rem;
+      margin: 2.5rem auto;
+      max-width: 2200px;
+      min-width: 1200px;
+      width: 98vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .agent-title {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: #d32f2f;
+      margin-bottom: 0.2rem;
+      letter-spacing: 0.01em;
+    }
+    .agent-title-container {
+      background: #d32f2f;
+      border-radius: 1.2rem;
+      padding: 0.7rem 1.5rem;
+      display: inline-block;
+      margin-bottom: 0.5rem;
+      box-shadow: 0 2px 12px rgba(44,44,44,0.10);
+    }
+    .agent-desc {
+      font-size: 1.08rem;
+      margin-bottom: 0.7rem;
+      color: #23272b;
+      background: #f7f8fa;
+      border-radius: 0 0 1.25rem 1.25rem;
+      padding: 0.7rem 1.2rem 0.7rem 1.2rem;
+      display: block;
+      text-align: left;
+      width: 100%;
+      margin: 0 auto 0.7rem auto;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.04);
+    }
+    .btn-next {
+      background: #d32f2f;
+      color: #fff;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.85rem 2.5rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(211,47,47,0.08);
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    .btn-next:hover {
+      background: #b71c1c;
+    }
+    #result {
+      background: #e9ecef;
+      border-radius: 0.7rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.08);
+      color: #23272b;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0 0.5rem 0;
+      width: 100%;
+      max-width: 100%;
+      font-size: 1.08rem;
+      box-sizing: border-box;
+    }
+    .swagger-editor-wrapper {
+      display: flex;
+      gap: 1.2rem;
+      justify-content: center;
+      align-items: flex-start;
+      margin-top: 0.7rem;
+      min-height: 400px;
+      width: 100%;
+      max-width: 2100px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .swagger-editor-panel {
+      background: #fff;
+      border-radius: 0.7rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      border: 2px solid #d32f2f;
+      color: #23272b;
+      padding: 1.2rem 1.2rem 1.2rem 1.2rem;
+      font-size: 1.08rem;
+      width: 60%;
+      min-width: 700px;
+      max-width: 1200px;
+      min-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .swagger-preview-panel {
+      background: #f5f5f5;
+      border-radius: 0.7rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      border: 2px solid #e9ecef;
+      color: #23272b;
+      padding: 1.2rem 1.2rem 1.2rem 1.2rem;
+      font-size: 1.08rem;
+      width: 40%;
+      min-width: 500px;
+      max-width: 900px;
+      min-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .swagger-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #d32f2f;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.01em;
+      text-align: left;
+    }
+    .swagger-code {
+      background: #23272b;
+      color: #fff;
+      border-radius: 0.5rem;
+      padding: 1.2rem 1.5rem;
+      font-size: 1.08rem;
+      font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+      margin: 0;
+      width: 100%;
+      min-height: 400px;
+      overflow-x: auto;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      text-align: left;
+    }
+    .swagger-preview-title {
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: #d32f2f;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.01em;
+      text-align: left;
+    }
+    .modern-textarea {
+      background: linear-gradient(90deg, #f7f8fa 60%, #f1f3f4 100%);
+      border: none;
+      border-radius: 0.85rem;
+      font-size: 1.13rem;
+      color: #23272b;
+      width: 100%;
+      min-width: 400px;
+      max-width: 100%;
+      resize: none;
+      font-family: 'Fira Mono','Consolas','Menlo',monospace;
+      box-shadow: 0 2px 12px rgba(44,44,44,0.10), 0 1.5px 0.5px rgba(211,47,47,0.04);
+      padding: 0.7rem 1.1rem;
+      transition: box-shadow 0.18s, background 0.18s;
+    }
+    .modern-textarea:focus {
+      background: linear-gradient(90deg, #fff 60%, #f1f3f4 100%);
+      box-shadow: 0 4px 18px rgba(44,44,44,0.13), 0 0 0 2px #d32f2f33;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Modern Banner Start -->
+  <header style="background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color: #fff; padding: 1.2rem 0 0.7rem 0; border-radius: 0 0 1.2rem 1.2rem; box-shadow: 0 4px 32px rgba(44,44,44,0.22); margin-bottom: 1.1rem; position:relative; overflow:hidden; border: 4px solid #fff; min-height:unset;">
+    <div style="position:absolute; top:-40px; right:-60px; opacity:0.12; pointer-events:none;">
+      <i class="bi bi-diagram-3" style="font-size:7rem;"></i>
+    </div>
+    <div class="container d-flex flex-column align-items-center position-relative" style="z-index:2;">
+      <div class="d-flex align-items-center justify-content-center flex-wrap" style="gap:1.1rem; margin-bottom:0.2rem;">
+        <i class="bi bi-cpu" style="font-size:1.7rem;"></i>
+        <i class="bi bi-diagram-3" style="font-size:1.7rem;"></i>
+        <i class="bi bi-lightbulb" style="font-size:1.7rem;"></i>
+        <i class="bi bi-arrow-repeat" style="font-size:1.7rem;"></i>
+        <i class="bi bi-gear" style="font-size:1.7rem;"></i>
+        <span style="font-size:2.3rem; font-weight:900; letter-spacing:0.01em; margin-left:1.1rem; text-shadow:0 2px 8px rgba(44,44,44,0.10); vertical-align:middle; line-height:1;">Service Builder Agent</span>
+      </div>
+      <div style="font-size:1.13rem; font-weight:500; color:#fff; opacity:0.93; max-width:900px; text-align:center; margin-bottom:0.2rem;">
+        <span class="badge bg-warning text-dark me-2" style="font-size:1rem; border-radius:0.7rem; padding:0.5em 1em; vertical-align:middle;"><i class="bi bi-gear me-2"></i>Step 5</span>
+        Build the modernized service based on finalized scope and design.<br>
+        <span style="opacity:0.85;">Review, edit, and generate a production-ready microservice project from your design.</span>
+      </div>
+      <noscript><div class="alert alert-danger mt-2">Bootstrap Icons require JavaScript enabled.</div></noscript>
+      <div id="icon-fallback" style="display:none; color:yellow; font-weight:bold;">[Icons failed to load]</div>
+    </div>
+  </header>
+  <!-- Modern Banner End -->
+  <!-- Spinner/Timer Container (initially hidden) -->
+  <div id="builderSpinnerContainer" style="display:none; width:100%; max-width:2100px; margin:0 auto 0.5rem auto; padding-top:0.5rem;">
+    <div style='display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:120px;'>
+      <div class="spinner-border text-danger" role="status" style="width:3rem; height:3rem; margin-bottom:1rem;"></div>
+      <div style="font-size:1.15rem; color:#d32f2f; font-weight:600;">Generating microservice project...</div>
+      <div id="builderTimer" style="font-size:1.08rem; color:#23272b; margin-top:0.5rem;">Elapsed: <span id="builderTimerSeconds">0</span> sec</div>
+    </div>
+  </div>
+  <div class="container-fluid d-flex justify-content-center align-items-start" style="padding:0; min-height:80vh;">
+    <div class="agent-card text-center shadow-lg" style="margin-top:2.5rem; margin-bottom:2.5rem; margin-left:auto; margin-right:auto; max-width:2200px; min-width:1200px; width:98vw; background:rgba(255,255,255,0.98); border-radius:2rem; box-shadow:0 8px 32px rgba(44,44,44,0.13); padding:2.5rem 3.5rem 2.5rem 3.5rem; display:flex; flex-direction:column; align-items:center;">
+      <!-- Unified action row: Back, Textarea, Run Design Synthesis, Run Builder -->
+      <form id="synthesisForm" class="w-100" autocomplete="off" style="margin-bottom:0;">
+        <div class="d-flex align-items-center w-100 mb-1" id="actionButtonsRow" style="gap:1.1rem; display:flex; justify-content:space-between; margin-top:0.1rem;">
+          <a href="/design-decomposer" class="btn btn-next d-flex align-items-center gap-2" style="background:#6c757d; min-width:180px; padding:0.85rem 2.5rem; font-size:1.15rem; font-weight:600; border-radius:0.75rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); border:none; color:#fff; height:48px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+              <path d="M8.354 11.354a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L6.707 8H11.5a.5.5 0 0 1 0 1H6.707l1.647 1.646a.5.5 0 0 1 0 .708z"/>
+            </svg>
+            <span style="color:#fff;">Back to Step 4</span>
+          </a>
+          <div class="flex-grow-1 d-flex flex-column" style="min-width:0;">
+            <label for="scope" class="form-label mb-1" style="color:#d32f2f; font-weight:600;">Finalized Scope & Design</label>
+            <textarea class="form-control modern-textarea" id="scope" rows="3" placeholder="{&quot;element&quot;: &quot;Program Termination&quot;, &quot;standard&quot;: &quot;ISO/IEC 12207:2008&quot;}" style="margin-bottom:0.5rem; display:none;"></textarea>
+            <div id="scopeJsonPreview" style="background:#fff; border-radius:0.7rem; box-shadow:0 2px 8px rgba(44,44,44,0.08); color:#23272b; padding:0.7rem 1.1rem; font-size:1.08rem; min-height:40px; margin-bottom:0.2rem; text-align:left; border:1.5px solid #e0e0e0; display:none;"></div>
+          </div>
+          <button type="submit" class="btn btn-next ms-2" id="runSynthesisBtn" style="white-space:nowrap; background:linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color:#fff; border:none;">Run Design Synthesis</button>
+          <button class="btn btn-next ms-2" id="runBuilderBtn" disabled style="opacity:0.6; pointer-events:none; white-space:nowrap; background:linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color:#fff; border:none;">Run Builder</button>
+        </div>
+      </form>
+      <!-- Bootstrap Icons CDN -->
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+      <!-- Bootstrap Icons fallback check -->
+      <script>
+        window.addEventListener('DOMContentLoaded', function() {
+          var testIcon = document.createElement('i');
+          testIcon.className = 'bi bi-cpu';
+          document.body.appendChild(testIcon);
+          var style = window.getComputedStyle(testIcon, '::before');
+          var content = style.getPropertyValue('content');
+          if (!content || content === 'none' || content === '""') {
+            var fallback = document.getElementById('icon-fallback');
+            if (fallback) fallback.style.display = 'block';
+          }
+          document.body.removeChild(testIcon);
+        });
+      </script>
+      <!-- Removed duplicate form row: all controls are now in the unified action row above -->
+      <div id="swaggerColumns" style="display:none; width:100%; margin-top:0.7rem;"></div>
+      <div style="display:flex; justify-content:center; width:100%;">
+        <div id="result" class="mt-4" style="display:inline-block; max-width:100%;"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Auto-populate textarea if selected design exists
+    window.addEventListener('DOMContentLoaded', function() {
+      const selectedDesign = localStorage.getItem('selectedDesignForServiceBuilder');
+      let defaultDesign = {
+        "element": "User Management",
+        "standard": "OpenAPI",
+        "models": {
+          "User": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "name": { "type": "string" },
+              "email": { "type": "string", "format": "email" }
+            },
+            "required": ["id", "name", "email"]
+          },
+          "Role": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "role_name": { "type": "string" }
+            },
+            "required": ["id", "role_name"]
+          }
+        }
+      };
+      if (selectedDesign) {
+        // If it's a JSON object, pretty-print it in the textarea
+        let val = selectedDesign;
+        try {
+          const obj = JSON.parse(selectedDesign);
+          val = JSON.stringify(obj, null, 2);
+        } catch (e) {}
+        document.getElementById('scope').value = val;
+        localStorage.removeItem('selectedDesignForServiceBuilder');
+      } else {
+        // If no design is present, auto-populate with a sample including models
+        document.getElementById('scope').value = JSON.stringify(defaultDesign, null, 2);
+      }
+      // Always update the preview on load
+      if (document.getElementById('scope').value.trim()) {
+        setTimeout(() => updateScopeJsonPreview(), 10);
+      }
+    });
+
+    // Live JSON preview for Finalized Scope & Design
+    const scopeInput = document.getElementById('scope');
+    const scopeJsonPreview = document.getElementById('scopeJsonPreview');
+    function updateScopeJsonPreview() {
+      let val = scopeInput.value.trim();
+      if (!val) {
+        scopeJsonPreview.style.display = 'none';
+        scopeJsonPreview.innerHTML = '';
+        return;
+      }
+      try {
+        // Try to parse as JSON
+        let obj = JSON.parse(val);
+        let rows = '';
+        if (typeof obj === 'object' && obj !== null) {
+          for (const [key, value] of Object.entries(obj)) {
+            let renderedValue = '';
+            if (typeof value === 'string' && /^(\d+\..+\n?)+$/m.test(value.trim())) {
+              // Render numbered list as ordered list
+              const steps = value.trim().split(/\n/).filter(line => line.match(/^\d+\./));
+              renderedValue = `<ol style='margin:0; padding-left:1.2em;'>` + steps.map(step => `<li style='margin-bottom:0.2em;'>${step.replace(/^\d+\.\s*/, '')}</li>`).join('') + `</ol>`;
+            } else if (typeof value === 'object') {
+              renderedValue = `<pre style='margin:0; background:none; padding:0;'>${JSON.stringify(value, null, 2)}</pre>`;
+            } else {
+              renderedValue = value;
+            }
+            rows += `<div style='display:flex; gap:0.7em; border-bottom:1px solid #f1f3f4; padding:0.2em 0; align-items:flex-start;'><span style='font-weight:bold; color:#d32f2f; min-width:120px;'>${key}</span><span style='word-break:break-all;'>${renderedValue}</span></div>`;
+          }
+        }
+        scopeJsonPreview.innerHTML = `<b>Parsed JSON:</b><div style='background:#f7f8fa; border-radius:0.5rem; padding:0.7rem 1.1rem; margin:0; font-size:1.08rem; color:#23272b;'>${rows}</div>`;
+        scopeJsonPreview.style.display = 'block';
+      } catch (e) {
+        scopeJsonPreview.innerHTML = '<span style="color:#d32f2f;">Invalid JSON</span>';
+        scopeJsonPreview.style.display = 'block';
+      }
+    }
+    scopeInput.addEventListener('input', updateScopeJsonPreview);
+    // Initial preview if value exists
+    updateScopeJsonPreview();
+
+    document.getElementById('synthesisForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const scope = document.getElementById('scope').value.trim();
+      if (!scope) {
+        document.getElementById('result').innerHTML = '<div class="alert alert-danger">Please enter finalized scope and design.</div>';
+        return;
+      }
+      document.getElementById('result').innerHTML = '<div class="text-secondary">Requesting Swagger spec from backend...</div>';
+      // Disable Run Design Synthesis button while waiting
+      const runSynthesisBtn = document.getElementById('runSynthesisBtn');
+      if (runSynthesisBtn) {
+        runSynthesisBtn.disabled = true;
+        runSynthesisBtn.classList.add('disabled');
+        runSynthesisBtn.style.opacity = '0.6';
+        runSynthesisBtn.style.pointerEvents = 'none';
+      }
+      try {
+        // Fetch the Swagger document directly to get x-business-logic
+        const swaggerRes = await fetch('/api/swagger.json');
+        let swaggerObj = await swaggerRes.json();
+        // Fetch the design-based Swagger from backend
+        const res = await fetch('/api/service-builder-swagger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ selected_design: scope })
+        });
+        const data = await res.json();
+        if (data.error) {
+          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
+          return;
+        }
+        let backendSwagger = data.swagger || '';
+        let backendSwaggerObj = null;
+        try {
+          backendSwaggerObj = JSON.parse(backendSwagger);
+        } catch (e) {
+          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> Unable to parse Swagger JSON.</div>`;
+          return;
+        }
+        // Merge x-business-logic from swaggerObj into backendSwaggerObj
+        if (swaggerObj && swaggerObj['x-business-logic']) {
+          backendSwaggerObj['x-business-logic'] = swaggerObj['x-business-logic'];
+        }
+        // Change default server URL if present
+        if (backendSwaggerObj.servers && Array.isArray(backendSwaggerObj.servers)) {
+          backendSwaggerObj.servers = backendSwaggerObj.servers.map(s => {
+            if (typeof s.url === 'string' && s.url.includes('api.example.com')) {
+              return { ...s, url: 'https://bain.ai.workbench.com' };
+            }
+            return s;
+          });
+        }
+        // Also update any nested server URLs in paths (OpenAPI extensions)
+        if (backendSwaggerObj.paths) {
+          for (const [path, methods] of Object.entries(backendSwaggerObj.paths)) {
+            for (const [method, op] of Object.entries(methods)) {
+              if (op.servers && Array.isArray(op.servers)) {
+                op.servers = op.servers.map(s => {
+                  if (typeof s.url === 'string' && s.url.includes('api.example.com')) {
+                    return { ...s, url: 'https://bain.ai.workbench.com' };
+                  }
+                  return s;
+                });
+              }
+            }
+          }
+        }
+        // Display Swagger in left/right columns
+        let leftCol = `<div class='swagger-editor-panel'><div class='swagger-title'>Swagger JSON</div><pre class='swagger-code'>${JSON.stringify(backendSwaggerObj, null, 2)}</pre></div>`;
+        // --- Expanded right panel: show endpoints, business logic, models, and metadata visually ---
+        function renderSwaggerSummary(swaggerObj) {
+
+          // Collapsible/accordion style JSON renderer for readability
+          let uniqueIdCounter = 0;
+          function renderJsonAccordion(val, keyName = '', level = 0) {
+            const id = `json-accordion-${uniqueIdCounter++}`;
+            if (val === null) return `<span style='color:#888;'>null</span>`;
+            if (typeof val === 'string') return `<span style='color:#23272b;'>${val}</span>`;
+            if (typeof val === 'number' || typeof val === 'boolean') return `<span style='color:#23272b;'>${val}</span>`;
+            if (Array.isArray(val)) {
+              if (val.length === 0) return `<span style='color:#888;'>[]</span>`;
+              return `
+                <div class='json-accordion' style='margin-bottom:0.2em; margin-left:${level*1.2}em;'>
+                  <button class='btn btn-sm btn-light' type='button' data-bs-toggle='collapse' data-bs-target='#${id}' aria-expanded='false' aria-controls='${id}' style='font-size:0.98em; color:#d32f2f; padding:0.1em 0.7em; margin-bottom:0.2em;'>${keyName || 'Array'} [${val.length}]</button>
+                  <div class='collapse' id='${id}'>
+                    <ul style='margin:0.2em 0 0.2em 1.2em; padding:0; list-style-type:disc; text-align:left;'>
+                      ${val.map((v, i) => `<li>${renderJsonAccordion(v, '', level+1)}</li>`).join('')}
+                    </ul>
+                  </div>
+                </div>
+              `;
+            }
+            if (typeof val === 'object') {
+              const keys = Object.keys(val);
+              if (keys.length === 0) return `<span style='color:#888;'>{}</span>`;
+              return `
+                <div class='json-accordion' style='margin-bottom:0.2em; margin-left:${level*1.2}em;'>
+                  <button class='btn btn-sm btn-light' type='button' data-bs-toggle='collapse' data-bs-target='#${id}' aria-expanded='false' aria-controls='${id}' style='font-size:0.98em; color:#d32f2f; padding:0.1em 0.7em; margin-bottom:0.2em;'>${keyName || 'Object'}</button>
+                  <div class='collapse' id='${id}'>
+                    <div style='margin-left:1.2em;'>
+                      ${keys.map(k => `<div style='margin-bottom:0.2em;'><span style='color:#d32f2f; font-weight:600;'>${k}:</span> ${renderJsonAccordion(val[k], k, level+1)}</div>`).join('')}
+                    </div>
+                  </div>
+                </div>
+              `;
+            }
+            return `<span style='color:#888;'>?</span>`;
+          }
+
+          let html = "<div style='padding:0.5em 0; text-align:left;'>";
+          // Section: Endpoints
+          html += `<div style='margin-bottom:1.2em;'><div style='font-weight:700; color:#d32f2f; font-size:1.13em; margin-bottom:0.3em;'>Endpoints</div><div style='color:#23272b;'>`;
+          if (swaggerObj.paths && Object.keys(swaggerObj.paths).length > 0) {
+            html += renderJsonAccordion(swaggerObj.paths, 'paths', 0);
+          } else {
+            html += `<span style='color:#888;'>None found</span>`;
+          }
+          html += `</div></div>`;
+
+          // Section: Business Logic
+          html += `<div style='margin-bottom:1.2em;'><div style='font-weight:700; color:#d32f2f; font-size:1.13em; margin-bottom:0.3em;'>Business Logic</div><div style='color:#23272b;'>`;
+          if (swaggerObj['x-business-logic']) {
+            html += renderJsonAccordion(swaggerObj['x-business-logic'], 'x-business-logic', 0);
+          } else {
+            html += `<span style='color:#888;'>Not defined</span>`;
+          }
+          html += `</div></div>`;
+
+          // Section: Models
+          html += `<div style='margin-bottom:1.2em;'><div style='font-weight:700; color:#d32f2f; font-size:1.13em; margin-bottom:0.3em;'>Models</div><div style='color:#23272b;'>`;
+          if (swaggerObj.components && swaggerObj.components.schemas && Object.keys(swaggerObj.components.schemas).length > 0) {
+            html += renderJsonAccordion(swaggerObj.components.schemas, 'schemas', 0);
+          } else {
+            html += `<span style='color:#888;'>None found</span>`;
+          }
+          html += `</div></div>`;
+
+          // Section: Metadata
+          html += `<div style='margin-bottom:1.2em;'><div style='font-weight:700; color:#d32f2f; font-size:1.13em; margin-bottom:0.3em;'>Metadata</div><div style='color:#23272b;'>`;
+          let meta = {};
+          if (swaggerObj.info) {
+            meta['Title'] = swaggerObj.info.title || 'Not defined';
+            meta['Version'] = swaggerObj.info.version || 'Not defined';
+            meta['Description'] = swaggerObj.info.description || 'Not defined';
+          } else {
+            meta['Title'] = 'Not defined';
+            meta['Version'] = 'Not defined';
+            meta['Description'] = 'Not defined';
+          }
+          if (swaggerObj.servers && Array.isArray(swaggerObj.servers) && swaggerObj.servers.length > 0) {
+            meta['Servers'] = swaggerObj.servers.map(s => s.url).join(', ');
+          } else {
+            meta['Servers'] = 'Not defined';
+          }
+          html += renderJsonAccordion(meta, 'metadata', 0);
+          html += `</div></div>`;
+          html += "</div>";
+          return html;
+        }
+
+        let rightCol = `<div class='swagger-preview-panel'><div class='swagger-preview-title'>Swagger Preview</div><div id='swagger-ui'></div><div id='swagger-summary' style='margin-top:2em;'></div></div>`;
+        document.getElementById('swaggerColumns').innerHTML = `<div class='swagger-editor-wrapper'>${leftCol}${rightCol}</div>`;
+        document.getElementById('swaggerColumns').style.display = 'block';
+        document.getElementById('result').innerHTML = '';
+        // Load Swagger UI
+        if (!window.swaggerUiLoaded) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'https://unpkg.com/swagger-ui-dist@5.11.7/swagger-ui.css';
+          document.head.appendChild(link);
+          const script = document.createElement('script');
+          script.src = 'https://unpkg.com/swagger-ui-dist@5.11.7/swagger-ui-bundle.js';
+          script.onload = () => { window.swaggerUiLoaded = true; renderSwaggerUI(backendSwaggerObj); };
+          document.body.appendChild(script);
+        } else {
+          renderSwaggerUI(backendSwaggerObj);
+        }
+        function renderSwaggerUI(swaggerObj) {
+          if (window.SwaggerUIBundle) {
+            window.ui = SwaggerUIBundle({
+              spec: swaggerObj,
+              dom_id: '#swagger-ui',
+              presets: [SwaggerUIBundle.presets.apis],
+              layout: 'BaseLayout',
+              docExpansion: 'none',
+              defaultModelsExpandDepth: -1,
+              onComplete: function() {
+                // Force re-render summary after Swagger UI loads
+                document.getElementById('swagger-summary').innerHTML = renderSwaggerSummary(swaggerObj);
+              }
+            });
+            // Also render summary immediately in case onComplete is not triggered
+            setTimeout(() => {
+              document.getElementById('swagger-summary').innerHTML = renderSwaggerSummary(swaggerObj);
+            }, 500);
+          } else {
+            // Fallback: always render summary
+            document.getElementById('swagger-summary').innerHTML = renderSwaggerSummary(swaggerObj);
+          }
+          // Show Run Builder button and enable it
+          let runBuilderBtn = document.getElementById('runBuilderBtn');
+          if (runBuilderBtn) {
+            runBuilderBtn.disabled = false;
+            runBuilderBtn.classList.remove('disabled');
+            runBuilderBtn.style.opacity = '1';
+            runBuilderBtn.style.pointerEvents = 'auto';
+          }
+          // Grey out Run Design Synthesis button
+          const runSynthesisBtn = document.getElementById('runSynthesisBtn');
+          if (runSynthesisBtn) {
+            runSynthesisBtn.disabled = true;
+            runSynthesisBtn.classList.add('disabled');
+            runSynthesisBtn.style.opacity = '0.6';
+            runSynthesisBtn.style.pointerEvents = 'none';
+          }
+        }
+        // Show Run Builder button and enable it, and attach handler
+        let runBuilderBtn = document.getElementById('runBuilderBtn');
+        if (runBuilderBtn) {
+          runBuilderBtn.disabled = false;
+          runBuilderBtn.classList.remove('disabled');
+          runBuilderBtn.style.opacity = '1';
+          runBuilderBtn.style.pointerEvents = 'auto';
+          runBuilderBtn.onclick = null;
+          runBuilderBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            runBuilderWithSpinner();
+          });
+        }
+        // Grey out Run Design Synthesis button
+        const runSynthesisBtn = document.getElementById('runSynthesisBtn');
+        if (runSynthesisBtn) {
+          runSynthesisBtn.disabled = true;
+          runSynthesisBtn.classList.add('disabled');
+          runSynthesisBtn.style.opacity = '0.6';
+          runSynthesisBtn.style.pointerEvents = 'none';
+        }
+        // Store swaggerObj for builder step
+        window._swaggerObjForBuilder = backendSwaggerObj;
+      } catch (err) {
+        document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
+      }
+    };
+
+    // Builder handler with spinner/timer
+    async function runBuilderWithSpinner() {
+      const swaggerObj = window._swaggerObjForBuilder;
+      if (!swaggerObj) {
+        document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> Swagger not available.`;
+        return;
+      }
+      // Show spinner/timer at the top
+      const spinnerContainer = document.getElementById('builderSpinnerContainer');
+      if (spinnerContainer) {
+        spinnerContainer.style.display = 'block';
+        // Reset timer
+        const timerEl = document.getElementById('builderTimerSeconds');
+        if (timerEl) timerEl.textContent = '0';
+      }
+      // Timer logic
+      let seconds = 0;
+      let timerInterval = setInterval(() => {
+        seconds++;
+        const el = document.getElementById('builderTimerSeconds');
+        if (el) el.textContent = seconds;
+      }, 1000);
+      try {
+        const msRes = await fetch('/api/msbuilder-generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ swagger: swaggerObj })
+        });
+        clearInterval(timerInterval);
+        // Hide spinner/timer
+        const spinnerContainer = document.getElementById('builderSpinnerContainer');
+        if (spinnerContainer) spinnerContainer.style.display = 'none';
+        const msData = await msRes.json();
+        if (msData.error) {
+          document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${msData.error}</div>`;
+          return;
+        }
+        // Save project data to localStorage and navigate to project view page
+        localStorage.setItem('generatedMicroserviceProject', JSON.stringify(msData));
+        window.location.href = '/microservice-project-view';
+      } catch (err) {
+        clearInterval(timerInterval);
+        // Hide spinner/timer
+        const spinnerContainer = document.getElementById('builderSpinnerContainer');
+        if (spinnerContainer) spinnerContainer.style.display = 'none';
+        document.getElementById('result').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
+      }
+    }
+
+    document.getElementById('runBuilderBtn').onclick = runBuilderWithSpinner;
+</script>
+  <!-- Bootstrap 5 JS bundle for collapse/accordion -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

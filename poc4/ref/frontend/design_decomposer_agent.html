@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design Decomposer Agent</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #23272b 0%, #343a40 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      color: #23272b;
+    }
+    .agent-card {
+      background: #fff;
+      color: #23272b;
+      border-radius: 2rem;
+      box-shadow: 0 8px 32px rgba(44,44,44,0.18);
+      padding: 2.5rem 2rem;
+      margin: 3vh auto;
+      max-width: 900px;
+      min-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .agent-title {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: #d32f2f;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.01em;
+    }
+    .agent-desc {
+      font-size: 1.15rem;
+      margin-bottom: 2rem;
+      color: #343a40;
+    }
+    .btn-next {
+      background: #d32f2f;
+      color: #fff;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.85rem 2.5rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(211,47,47,0.08);
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    .btn-next:hover {
+      background: #b71c1c;
+    }
+    .standards {
+      margin: 1.5rem 0 2rem 0;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .badge-standard {
+      background: #23272b;
+      color: #fff;
+      border-radius: 8px;
+      padding: 8px 22px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+    }
+    .form-label {
+      font-size: 1.15rem;
+      color: #d32f2f;
+      font-weight: 600;
+    }
+    #functionsList .form-check-input {
+      accent-color: #d32f2f;
+      width: 1.3em;
+      height: 1.3em;
+    }
+    #functionsList .form-check-label {
+      font-size: 1.08rem;
+      color: #23272b;
+      font-weight: 500;
+    }
+    #result {
+      background: #f1f3f4;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.08);
+      color: #23272b;
+      padding: 1.5rem;
+      margin-top: 2rem;
+      font-size: 1.08rem;
+      min-height: 120px;
+    }
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      border: none;
+      background: #f8f9fa;
+    }
+    .card-body {
+      background: #fff;
+      border-radius: 1rem;
+      color: #23272b;
+      padding: 1rem 1.2rem;
+    }
+    .fw-bold {
+      color: #d32f2f !important;
+      font-weight: 700 !important;
+      font-size: 1.12rem;
+    }
+    .small.text-secondary {
+      color: #343a40 !important;
+      font-size: 0.98rem;
+    }
+    .alert-success {
+      background: #fff;
+      color: #23272b;
+      border: 2px solid #d32f2f;
+      border-radius: 1rem;
+      font-weight: 600;
+    }
+    .alert-danger {
+      background: #fff;
+      color: #d32f2f;
+      border: 2px solid #d32f2f;
+      border-radius: 1rem;
+      font-weight: 600;
+    }
+    .alert-warning {
+      background: #fff;
+      color: #b71c1c;
+      border: 2px solid #b71c1c;
+      border-radius: 1rem;
+      font-weight: 600;
+    }
+    @media (max-width: 991px) {
+      .agent-card { padding: 1.5rem 0.5rem; }
+      .agent-title { font-size: 1.5rem; }
+      #result { padding: 1rem; }
+    }
+    @media (max-width: 767px) {
+      .agent-card { border-radius: 0.5rem; }
+      .agent-title { font-size: 1.1rem; }
+      .agent-desc { font-size: 0.95rem; }
+      #result { font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <header style="background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color: #fff; padding: 1.2rem 0 1rem 0; border-radius: 0 0 1.2rem 1.2rem; box-shadow: 0 4px 32px rgba(44,44,44,0.22); margin-bottom: 2.5rem; position:relative; overflow:hidden; border: 4px solid #fff; min-height:unset;">
+    <div style="position:absolute; top:-40px; right:-60px; opacity:0.12; pointer-events:none;">
+      <i class="bi bi-diagram-3" style="font-size:7rem;"></i>
+    </div>
+    <div class="container d-flex flex-column align-items-center position-relative" style="z-index:2;">
+      <div class="d-flex align-items-center justify-content-center flex-wrap" style="gap:1.1rem; margin-bottom:0.2rem;">
+        <i class="bi bi-cpu" style="font-size:1.7rem;"></i>
+        <i class="bi bi-diagram-3" style="font-size:1.7rem;"></i>
+        <i class="bi bi-lightbulb" style="font-size:1.7rem;"></i>
+        <i class="bi bi-arrow-repeat" style="font-size:1.7rem;"></i>
+        <i class="bi bi-gear" style="font-size:1.7rem;"></i>
+        <span style="font-size:2.3rem; font-weight:900; letter-spacing:0.01em; margin-left:1.1rem; text-shadow:0 2px 8px rgba(44,44,44,0.10); vertical-align:middle; line-height:1;">Design Decomposer Agent</span>
+      </div>
+      <div style="font-size:1.13rem; font-weight:500; color:#fff; opacity:0.93; max-width:900px; text-align:center; margin-bottom:0.2rem;">
+        <span class="badge bg-warning text-dark me-2" style="font-size:1rem; border-radius:0.7rem; padding:0.5em 1em; vertical-align:middle;"><i class="bi bi-diagram-3 me-2"></i>Step 4</span>
+        Decompose synthesized functions into design elements referencing industry standards.<br>
+        <span style="opacity:0.85;">Click a standard badge to learn more about OpenAPI, BIAN, or ISO.</span>
+      </div>
+      <noscript><div class="alert alert-danger mt-2">Bootstrap Icons require JavaScript enabled.</div></noscript>
+      <div id="icon-fallback" style="display:none; color:yellow; font-weight:bold;">[Icons failed to load]</div>
+    </div>
+  </header>
+  <div class="container-fluid">
+    <div class="agent-card text-center" style="max-width:2400px; min-width:1600px; width:98vw;">
+      <!-- ...existing code... -->
+  <!-- Bootstrap Icons CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Bootstrap Icons fallback check -->
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      var testIcon = document.createElement('i');
+      testIcon.className = 'bi bi-cpu';
+      document.body.appendChild(testIcon);
+      var style = window.getComputedStyle(testIcon, '::before');
+      var content = style.getPropertyValue('content');
+      if (!content || content === 'none' || content === '""') {
+        var fallback = document.getElementById('icon-fallback');
+        if (fallback) fallback.style.display = 'block';
+      }
+      document.body.removeChild(testIcon);
+    });
+  </script>
+      <div class="alert alert-info text-start mb-3" style="background:#e3f2fd; color:#23272b; border:1.5px solid #90caf9; border-radius:1rem; font-size:1.08rem;">
+        <b>Session Info:</b> <br>
+        The design decomposition process is <b>based on the following industry standards</b> for service modeling and interoperability. Click any badge below to learn more about each standard.
+      </div>
+      <div class="d-flex align-items-center justify-content-between w-100 mb-4" style="gap:1rem; margin-bottom:2.2rem !important;">
+        <a href="/function-synthesizer-agent" class="btn px-5 btn-lg d-flex align-items-center gap-2" style="font-weight:700; border-radius:0.75rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); background:#6c757d; border:none; color:#fff; min-width:180px; height:56px; min-height:56px; font-size:1.15rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+            <path d="M8.354 11.354a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L6.707 8H11.5a.5.5 0 0 1 0 1H6.707l1.647 1.646a.5.5 0 0 1 0 .708z"/>
+          </svg>
+          <span style="color:#fff;">Back</span>
+        </a>
+        <div class="standards d-flex align-items-center justify-content-center flex-grow-1" style="margin-bottom:0;">
+          <a class="badge-standard clickable-standard" href="https://www.openapis.org/" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #1976d2; border:2px solid #1976d2; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
+            <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#1976d2" style="margin-right:2px;" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>OpenAPI</span>
+          </a>
+          <a class="badge-standard clickable-standard" href="https://bian.org/" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #388e3c; border:2px solid #388e3c; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
+            <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#388e3c" style="margin-right:2px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="#fff">BIAN</text></svg>BIAN</span>
+          </a>
+          <a class="badge-standard clickable-standard" href="https://www.iso.org/standards.html" target="_blank" style="text-decoration:none; box-shadow:0 0 0 2px #fbc02d; border:2px solid #fbc02d; cursor:pointer; transition:box-shadow 0.2s, border 0.2s;">
+            <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#fbc02d" style="margin-right:2px;" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="4"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="#23272b">ISO</text></svg>ISO</span>
+          </a>
+        </div>
+       
+      </div>
+      <hr style="border: none; border-top: 1.5px solid #bdbdbd; margin: 0 0 1.5rem 0; height:1.5px; width:100%;" />
+      <div class="row w-100" style="margin:0;">
+        <div class="col-lg-4 col-md-12 mb-3 d-flex flex-column align-items-center justify-content-start" style="border-right:1.5px solid #f1f3f4; min-height:500px;">
+          <form id="designForm" class="w-100" style="display:flex; flex-direction:column; min-height:450px;">
+            <div class="mb-3 text-start" style="flex:1 1 auto;">
+              <label class="form-label">Select Functions for Design Decomposition</label>
+              <div id="functionsList" class="mb-2"></div>
+            </div>
+            <div style="flex:0 0 auto; margin-top:auto; padding-bottom:1.5rem;">
+              <button type="submit" class="btn btn-next" id="runDesignSynthesisBtn">Run Design Synthesis</button>
+            </div>
+          </form>
+        </div>
+        <div class="col-lg-4 col-md-12 mt-3 mt-lg-0 d-flex flex-column align-items-center justify-content-start" style="border-right:1.5px solid #f1f3f4; min-height:500px;">
+          <div id="designElementsCol" class="w-100"></div>
+        </div>
+        <div class="col-lg-4 col-md-12 mt-3 mt-lg-0 d-flex flex-column align-items-center justify-content-start" style="min-height:500px;">
+          <div id="businessLogicCol" class="w-100"></div>
+          <button id="approveGenerateBtn" class="btn btn-success mt-3" style="min-width:180px; font-weight:600; font-size:1.12rem; display:none;">Approve&amp;Generate API</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Load functions from previous synthesis (localStorage)
+    function loadFunctionsList() {
+      const container = document.getElementById('functionsList');
+      container.innerHTML = '';
+      let latest = localStorage.getItem('latestSynthesisResult');
+      let functions = [];
+      try {
+        const parsed = JSON.parse(latest);
+        if (Array.isArray(parsed)) {
+          functions = parsed;
+        }
+      } catch (e) {}
+      if (functions.length === 0) {
+        container.innerHTML = '<div class="text-secondary">No functions found. Please complete the previous step.</div>';
+        return;
+      }
+      container.innerHTML = functions.map((fn, idx) => `
+        <div class="form-check mb-2" style="background:#f5f5f5; border-radius:0.75rem; box-shadow:0 2px 8px rgba(44,44,44,0.06); padding:1rem 1.2rem; margin-bottom:1rem;">
+          <input class="form-check-input" type="checkbox" value="${encodeURIComponent(JSON.stringify(fn))}" id="fn${idx}">
+          <label class="form-check-label" for="fn${idx}" style="width:95%;">
+            <span class="fw-bold" style="color:#d32f2f;">${fn.name || ''}</span>
+            <span class="text-secondary small" style="font-weight:400;">${fn.description || ''}</span>
+          </label>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('designForm').onsubmit = async function(e) {
+      // Hide Approve&Generate API button, enable Run Design Synthesis on new synthesis
+      const approveBtn = document.getElementById('approveGenerateBtn');
+      if (approveBtn) {
+        approveBtn.style.display = 'none';
+        approveBtn.disabled = true;
+      }
+      const runBtn = document.getElementById('runDesignSynthesisBtn');
+      if (runBtn) runBtn.disabled = false;
+      e.preventDefault();
+      const checked = Array.from(document.querySelectorAll('#functionsList input[type=checkbox]:checked'));
+      if (checked.length === 0) {
+        document.getElementById('designElementsCol').innerHTML = '<div class="alert alert-warning">Please select at least one function.</div>';
+        document.getElementById('businessLogicCol').innerHTML = '';
+        return;
+      }
+      // Collect selected functions
+      const selectedFunctions = checked.map(cb => JSON.parse(decodeURIComponent(cb.value)));
+      document.getElementById('designElementsCol').innerHTML = '<div class="text-secondary">Running design decomposition...</div>';
+      document.getElementById('businessLogicCol').innerHTML = '';
+      try {
+        // Call the correct backend endpoint for design decomposition
+        const res = await fetch('/api/design-decompose', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ functions: selectedFunctions })
+        });
+        let data;
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.indexOf('application/json') !== -1) {
+          data = await res.json();
+        } else {
+          const text = await res.text();
+          document.getElementById('designElementsCol').innerHTML = `<div class='alert alert-danger'><b>Error:</b> Unexpected response from server.<br><pre style='white-space:pre-wrap;'>${text}</pre></div>`;
+          return;
+        }
+        if (data.error) {
+          document.getElementById('designElementsCol').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${data.error}</div>`;
+          return;
+        }
+        // Show design elements as selectable cards in column 2 (never as JSON)
+        let pretty = '';
+        let designArray = [];
+        if (data.design && Array.isArray(data.design)) {
+          // Normalize pseudocode to a readable string for each item
+          designArray = data.design.map(item => {
+            if (!item) return null;
+            let normalized = '';
+            if (Array.isArray(item.pseudocode)) {
+              // Array of strings or objects
+              normalized = item.pseudocode.map((step, idx) => {
+                if (typeof step === 'string') return `${idx + 1}. ${step.trim()}`;
+                if (typeof step === 'object' && step !== null) {
+                  let desc = step.description || step.action || step.step || '';
+                  let action = step.action || '';
+                  if (desc && action && action !== desc) {
+                    return `${idx + 1}. ${desc}: ${action}`;
+                  } else if (desc) {
+                    return `${idx + 1}. ${desc}`;
+
+                  } else if (action) {
+                    return `${idx + 1}. ${action}`;
+                  }
+                }
+                return '';
+              }).filter(Boolean).join('\n');
+            } else if (typeof item.pseudocode === 'object' && item.pseudocode !== null) {
+              normalized = Object.values(item.pseudocode).join(' ').trim();
+            } else if (typeof item.pseudocode === 'string') {
+              normalized = item.pseudocode.trim();
+            }
+            return {
+              ...item,
+              pseudocode: normalized
+            };
+          }).filter(item => item && item.element && item.pseudocode && item.pseudocode.trim());
+          if (designArray.length === 0) {
+            let rawOutput = '';
+            if (data.raw && typeof data.raw === 'string' && data.raw.trim()) {
+              let rawStr = data.raw;
+              let prettyRaw = '';
+              // Try to extract JSON from code block
+              let codeBlockMatch = rawStr.match(/```json\s*([\s\S]*?)```/i);
+              let jsonStr = '';
+              if (codeBlockMatch) {
+                jsonStr = codeBlockMatch[1].trim();
+              } else {
+                // If not in code block, but string looks like JSON array or object, try to parse
+                let trimmed = rawStr.trim();
+                if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+                  jsonStr = trimmed;
+                }
+              }
+              if (jsonStr) {
+                try {
+                  // Remove any leading/trailing backticks or newlines
+                  jsonStr = jsonStr.replace(/^```json|```$/g, '').trim();
+                  // Unescape newlines and double quotes for display
+                  let displayStr = jsonStr.replace(/\\n/g, '\n');
+                  // Try to parse and pretty-print
+                  let parsed = null;
+                  try {
+                    parsed = JSON.parse(jsonStr);
+                  } catch (e) {}
+                  if (parsed) {
+                    prettyRaw = JSON.stringify(parsed, null, 2);
+                  } else {
+                    // If not valid JSON, just show with unescaped newlines
+                    prettyRaw = displayStr;
+                  }
+                } catch (e) {
+                  prettyRaw = jsonStr;
+                }
+              } else {
+                // If not JSON, just unescape newlines for readability
+                prettyRaw = rawStr.replace(/\\n/g, '\n');
+              }
+              rawOutput = `<details style='margin-top:0.7em;'><summary style='cursor:pointer; color:#d32f2f; font-weight:600;'>Show raw LLM output</summary><pre style='background:#f7f7f9; color:#23272b; border-radius:0.5em; padding:0.7em 1em; margin-top:0.5em; font-size:1.02em;'>${prettyRaw.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></details>`;
+            }
+            pretty = `<div class="text-secondary">No design elements found for the selected functions.</div>${rawOutput}`;
+          } else {
+            pretty = designArray.map((item, idx) => `
+              <div class="card mb-2 clickable-design" data-design-idx='${idx}' style="background:#fff; border:none; cursor:pointer;">
+                <div class="card-body p-2">
+                  <div class="fw-bold" style="color:#d32f2f;">${item.element || ''}</div>
+                  <div class="small text-secondary">Standard: <span class="fw-semibold">${item.standard || ''}</span></div>
+                </div>
+              </div>
+            `).join('');
+          }
+        } else {
+          // If not an array, try to parse as a single object and render as a card
+          let item = data.design || data;
+          if (item && typeof item === 'object' && (item.element || item.standard)) {
+            designArray = [item];
+            pretty = `
+              <div class="card mb-2 clickable-design" data-design-idx='0' style="background:#fff; border:none; cursor:pointer;">
+                <div class="card-body p-2">
+                  <div class="fw-bold" style="color:#d32f2f;">${item.element || ''}</div>
+                  <div class="small text-secondary">Standard: <span class="fw-semibold">${item.standard || ''}</span></div>
+                </div>
+              </div>
+            `;
+          } else {
+            pretty = '<div class="text-secondary">No design elements found for the selected functions.</div>';
+          }
+        }
+        document.getElementById('designElementsCol').innerHTML = `<div class='alert alert-success'><b>Design Elements (click to view business logic):</b><br>${pretty}</div>`;
+        document.getElementById('businessLogicCol').innerHTML = '';
+        // Add click handler for design cards
+        setTimeout(() => {
+          document.querySelectorAll('.clickable-design').forEach(card => {
+            card.onclick = async function() {
+              const idx = this.getAttribute('data-design-idx');
+              const designObj = designArray[idx];
+              // Show loading indicator
+              document.getElementById('businessLogicCol').innerHTML = `<div class='text-secondary' style='font-size:1.1rem;'><span class='spinner-border spinner-border-sm text-danger' role='status' aria-hidden='true'></span> Generating exhaustive business logic...</div>`;
+              let pseudoCode = '';
+              let businessDesc = '';
+              let businessRules = '';
+              let technicalInfo = '';
+              let beautified = '';
+              let descSection = '';
+              let rulesSection = '';
+              let techSection = '';
+              try {
+                // Always request exhaustive, step-by-step, detailed pseudocode from the agent
+                const res = await fetch('/api/design-element-business-logic', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ element: designObj.element, exhaustive: true })
+                });
+                let data = null;
+                if (res.ok) {
+                  data = await res.json();
+                  // Helper: render object as table
+                  function renderTable(obj) {
+                    if (!obj || typeof obj !== 'object') return '';
+                    let rows = Object.entries(obj).map(([k, v]) =>
+                      `<tr><th style='color:#d32f2f; font-weight:700; padding-right:1em; vertical-align:top;'>${k}</th><td>${beautifyValue(v)}</td></tr>`
+                    ).join('');
+                    return `<table class='table table-bordered table-sm' style='background:#f8f9fa; margin-bottom:0.7em;'><tbody>${rows}</tbody></table>`;
+                  }
+                  // Recursive beautifier
+                  function beautifyValue(val) {
+                    if (val == null) return '';
+                    if (typeof val === 'string') return `<span>${val}</span>`;
+                    if (Array.isArray(val)) {
+                      // If array of objects, render as table if all elements are objects with same keys
+                      if (val.length > 0 && val.every(v => typeof v === 'object' && v !== null && !Array.isArray(v))) {
+                        // Check if all objects have same keys
+                        const keys = Object.keys(val[0]);
+                        if (val.every(v => JSON.stringify(Object.keys(v)) === JSON.stringify(keys))) {
+                          let header = keys.map(k => `<th style='color:#d32f2f;'>${k}</th>`).join('');
+                          let body = val.map(row => `<tr>${keys.map(k => `<td>${beautifyValue(row[k])}</td>`).join('')}</tr>`).join('');
+                          return `<table class='table table-bordered table-sm' style='background:#f8f9fa; margin-bottom:0.7em;'><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
+                        }
+                      }
+                      // Otherwise, render as ordered list
+                      return '<ol style="margin-bottom:0; padding-left:1.5em;">' + val.map(v => `<li>${beautifyValue(v)}</li>`).join('') + '</ol>';
+                    }
+                    if (typeof val === 'object') {
+                      return renderTable(val);
+                    }
+                    return `<span>${String(val)}</span>`;
+                  }
+                  // Pseudocode rendering (robust: always show as table or list, never raw JSON)
+                  function renderPseudocode(val) {
+                    if (val == null) return `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>// No business logic available</div>`;
+                    if (typeof val === 'string') {
+                      // Numbered steps string
+                      if (/\d+\./.test(val)) {
+                        const stepRegex = /\d+\.\s*[^\d]+(?=(?:\d+\.|$))/g;
+                        const steps = val.match(stepRegex);
+                        if (steps && steps.length > 0) {
+                          return '<ol style="font-size:1.1rem; color:#23272b; padding-left:2em;">' +
+                            steps.map(step => '<li>' + step.replace(/^\d+\.\s*/, '').trim() + '</li>').join('') +
+                            '</ol>';
+                        }
+                      }
+                      // Otherwise, just show as pre-wrapped text
+                      return `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>${beautifyValue(val)}</div>`;
+                    }
+                    if (Array.isArray(val)) {
+                      // If array of objects with same keys, render as table
+                      if (val.length > 0 && val.every(v => typeof v === 'object' && v !== null && !Array.isArray(v))) {
+                        const keys = Object.keys(val[0]);
+                        if (val.every(v => JSON.stringify(Object.keys(v)) === JSON.stringify(keys))) {
+                          let header = keys.map(k => `<th style='color:#d32f2f;'>${k}</th>`).join('');
+                          let body = val.map(row => `<tr>${keys.map(k => `<td>${beautifyValue(row[k])}</td>`).join('')}</tr>`).join('');
+                          return `<table class='table table-bordered table-sm' style='background:#f8f9fa; margin-bottom:0.7em;'><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
+                        }
+                      }
+                      // Otherwise, render as ordered list (recursively format children)
+                      return '<ol style="font-size:1.1rem; color:#23272b; padding-left:2em;">' + val.map((v, i) => `<li>${renderPseudocode(v)}</li>`).join('') + '</ol>';
+                    }
+                    if (typeof val === 'object') {
+                      // If object has only numeric keys, treat as array
+                      const keys = Object.keys(val);
+                      if (keys.length > 0 && keys.every(k => !isNaN(Number(k)))) {
+                        return renderPseudocode(keys.sort((a,b)=>a-b).map(k => val[k]));
+                      }
+                      // If object is a plain object, render as a table (not as raw JSON)
+                      return renderTable(val);
+                    }
+                    // For all other types, show as string
+                    return `<span>${String(val)}</span>`;
+                  }
+                  if (data && data.pseudocode !== undefined) {
+                    beautified = renderPseudocode(data.pseudocode);
+                  } else {
+                    beautified = `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>// No business logic available</div>`;
+                  }
+                  // Business Description, Rules, Technical Info as tables if object, else as text
+                  if (data && (data.business_description || data.description)) {
+                    const desc = data.business_description || data.description;
+                    descSection = typeof desc === 'object' ? `<div style='margin-bottom:0.7em;'><b>Business Description:</b>${renderTable(desc)}</div>` : `<div style='margin-bottom:0.7em;'><b>Business Description:</b><br><span style='color:#23272b;'>${beautifyValue(desc)}</span></div>`;
+                  }
+                  if (data && (data.business_rules || data.rules)) {
+                    const rules = data.business_rules || data.rules;
+                    rulesSection = typeof rules === 'object' ? `<div style='margin-bottom:0.7em;'><b>Business Rules:</b>${renderTable(rules)}</div>` : `<div style='margin-bottom:0.7em;'><b>Business Rules:</b><br><span style='color:#23272b; white-space:pre-wrap;'>${beautifyValue(rules)}</span></div>`;
+                  }
+                  if (data && (data.technical_info || data.technical)) {
+                    const tech = data.technical_info || data.technical;
+                    techSection = typeof tech === 'object' ? `<div style='margin-bottom:0.7em;'><b>Technical Info:</b>${renderTable(tech)}</div>` : `<div style='margin-bottom:0.7em;'><b>Technical Info:</b><br><span style='color:#23272b; white-space:pre-wrap;'>${beautifyValue(tech)}</span></div>`;
+                  }
+                } else {
+                  beautified = `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>${designObj.pseudocode || '// No business logic available'}</div>`;
+                }
+              } catch (err) {
+                beautified = `<div style='font-size:1.1rem; color:#23272b; white-space:pre-wrap;'>${designObj.pseudocode || '// No business logic available'}</div>`;
+              }
+              document.getElementById('businessLogicCol').innerHTML = `
+                <div class='alert-modern' style='font-size:1.13rem; font-weight:600; color:#d32f2f; margin-bottom:0.7em;'>
+                  <b>Sample Perspective: Implementation of Core Business Logic</b>
+                </div>
+                <div class='card clickable-pseudocode' style='background:#fff; border:none; cursor:pointer;'>
+                  <div class='card-body' style='text-align:left;'>
+                    ${descSection}
+                    ${rulesSection}
+                    ${techSection}
+                    <div style='margin-top:0.7em;'><b>Step-by-step Pseudocode:</b></div>
+                    ${beautified}
+                  </div>
+                </div>
+                <div class='card mt-3' style='background:#f8f9fa; border:none;'>
+                  <div class='card-header fw-bold' style='background:#23272b; color:#fff;'>Raw Business Logic (Expandable JSON)</div>
+                  <div class='card-body' style='background:#23272b; color:#fff; text-align:left;'>
+                    <div id="rawBusinessLogicJson" style="font-size:1.05em;"></div>
+                    <button id="addToSwaggerBtn" class="btn btn-primary mt-3" style="background:#1976d2; border:none; font-weight:600;">Add Business Logic &amp; Pseudocode to Swagger Document</button>
+                  </div>
+                </div>
+              `;
+              // Render the raw JSON as expandable/collapsible tree in Section 2
+              if (data) {
+                function parseRawJson(obj) {
+                  if (!obj) return null;
+                  let arr = null;
+                  if (Array.isArray(obj)) {
+                    arr = obj;
+                  } else if (typeof obj === 'object' && obj !== null) {
+                    if (typeof obj.raw === 'string') {
+                      let rawVal = obj.raw;
+                      let codeBlockMatch = rawVal.match(/```json\s*([\s\S]*?)```/i);
+                      let jsonStr = '';
+                      if (codeBlockMatch) {
+                        jsonStr = codeBlockMatch[1].trim();
+                      } else {
+                        let trimmed = rawVal.trim();
+                        if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+                          jsonStr = trimmed;
+                        }
+                      }
+                      if (jsonStr) {
+                        try {
+                          jsonStr = jsonStr.replace(/^```json|```$/g, '').trim();
+                          arr = JSON.parse(jsonStr);
+                        } catch (e) {
+                          arr = null;
+                        }
+                      }
+                    }
+                  }
+                  return arr;
+                }
+                function createJsonTree(obj, level = 0) {
+                  if (obj === null) return '<span style="color:#c678dd;">null</span>';
+                  if (typeof obj === 'string') return `<span style='color:#98c379;'>"${obj.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</span>`;
+                  if (typeof obj === 'number') return `<span style='color:#e5c07b;'>${obj}</span>`;
+                  if (typeof obj === 'boolean') return `<span style='color:#e06c75;'>${obj}</span>`;
+                  if (Array.isArray(obj)) {
+                    if (obj.length === 0) return '[ ]';
+                    let html = `<span style='color:#d19a66;'>[</span><div style='margin-left:${level * 1.5 + 1.5}em;'>`;
+                    obj.forEach((item, idx) => {
+                      html += `<div>${createJsonTree(item, level + 1)}${idx < obj.length - 1 ? ',' : ''}</div>`;
+                    });
+                    html += `</div><span style='color:#d19a66;'>]</span>`;
+                    return html;
+                  }
+                  if (typeof obj === 'object') {
+                    let keys = Object.keys(obj);
+                    if (keys.length === 0) return '{ }';
+                    let html = `<span style='color:#61afef;'>{</span><div style='margin-left:${level * 1.5 + 1.5}em;'>`;
+                    keys.forEach((k, idx) => {
+                      html += `<div><span style='color:#d32f2f;'>"${k}"</span>: <span class='json-expandable' data-level='${level + 1}'>${createJsonTree(obj[k], level + 1)}</span>${idx < keys.length - 1 ? ',' : ''}</div>`;
+                    });
+                    html += `</div><span style='color:#61afef;'>}</span>`;
+                    return html;
+                  }
+                  return '';
+                }
+                // Insert the expandable JSON
+                let rawJson = parseRawJson(data);
+                if (rawJson) {
+                  document.getElementById('rawBusinessLogicJson').innerHTML = createJsonTree(rawJson);
+                } else {
+                  document.getElementById('rawBusinessLogicJson').innerHTML = '<div style="color:#fff;">No raw business logic available.</div>';
+                }
+                // Add handler for Add to Swagger button
+                setTimeout(() => {
+                  const addBtn = document.getElementById('addToSwaggerBtn');
+                  if (addBtn) {
+                    addBtn.onclick = async function() {
+                      let businessLogic = data;
+                      let pseudocode = '';
+                      if (data && data.pseudocode) {
+                        pseudocode = data.pseudocode;
+                      }
+                      addBtn.innerText = 'Adding...';
+                      addBtn.disabled = true;
+                      try {
+                        const resp = await fetch('/api/add-business-logic-to-swagger', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ businessLogic, pseudocode })
+                        });
+                        const result = await resp.json();
+                        if (result && result.success) {
+                          addBtn.innerText = 'Added to Swagger!';
+                        } else {
+                          addBtn.innerText = 'Failed to Add';
+                        }
+                      } catch (err) {
+                        addBtn.innerText = 'Error Adding';
+                      }
+                      setTimeout(() => {
+                        addBtn.innerText = 'Add Business Logic & Pseudocode to Swagger Document';
+                        addBtn.disabled = false;
+                      }, 2000);
+                    };
+                  }
+                }, 50);
+              }
+              // Enable Approve&Generate API button, disable Run Design Synthesis
+              const approveBtn2 = document.getElementById('approveGenerateBtn');
+              if (approveBtn2) {
+                approveBtn2.style.display = 'block';
+                approveBtn2.disabled = false;
+              }
+              const runBtn2 = document.getElementById('runDesignSynthesisBtn');
+              if (runBtn2) runBtn2.disabled = true;
+              // Add click handler for pseudocode card to trigger Step 5
+              setTimeout(() => {
+                document.querySelectorAll('.clickable-pseudocode').forEach(pseudo => {
+                  pseudo.onclick = function() {
+                    // Save selected design and pseudocode for next step
+                    localStorage.setItem('selectedDesignForServiceBuilder', JSON.stringify(designObj));
+                    localStorage.setItem('selectedBusinessLogicPseudocode', pseudoCode);
+                    window.location.href = '/service-builder';
+                  };
+                });
+                // Approve&Generate API button click handler
+                const approveBtn3 = document.getElementById('approveGenerateBtn');
+                if (approveBtn3) {
+                  approveBtn3.onclick = function() {
+                    // Save selected design and pseudocode for next step
+                    localStorage.setItem('selectedDesignForServiceBuilder', JSON.stringify(designObj));
+                    localStorage.setItem('selectedBusinessLogicPseudocode', pseudoCode);
+                    window.location.href = '/service-builder';
+                  };
+                }
+              }, 50);
+            };
+          });
+        }, 100);
+      } catch (err) {
+        document.getElementById('designElementsCol').innerHTML = `<div class='alert alert-danger'><b>Error:</b> ${err.message || err}</div>`;
+        document.getElementById('businessLogicCol').innerHTML = '';
+      }
+    };
+
+    // Initial load
+    loadFunctionsList();
+  </script>
+</body>
+</html>
