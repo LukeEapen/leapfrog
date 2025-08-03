@@ -198,6 +198,20 @@ def main():
     @app.route('/development-intermediate')
     def development_intermediate():
         return render_template('development_intermediate.html')
+    # Route for Planning Intermediate page
+    @app.route('/planning-intermediate')
+    def planning_intermediate():
+        return render_template('planning_intermediate.html')
+
+    # Route for Architecture Intermediate page
+    @app.route('/architecture-intermediate')
+    def architecture_intermediate():
+        return render_template('architecture_intermediate.html')
+
+    # Route for Migration Intermediate page
+    @app.route('/migration-intermediate')
+    def migration_intermediate():
+        return render_template('migration_intermediate.html')
 
     # Start server with enhanced error handling
     try:

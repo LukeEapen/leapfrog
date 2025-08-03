@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>POC 5 - Architecture Workbench</title>
+    <link rel="stylesheet" href="/static/custom.css">
+    <style>
+        .banner { font-size: 2em; color: #b71c1c; font-style: italic; text-align: center; margin-bottom: 1em; }
+        .tabs { display: flex; border-bottom: 2px solid #3949ab; margin-bottom: 1em; }
+        .tab { padding: 1em; cursor: pointer; background: #e3e3e3; margin-right: 2px; border-radius: 4px 4px 0 0; }
+        .tab.active { background: #3949ab; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .section { margin-bottom: 2em; }
+        label { font-weight: bold; }
+    </style>
+    <script>
+        function showTab(idx) {
+            var tabs = document.querySelectorAll('.tab');
+            var contents = document.querySelectorAll('.tab-content');
+            tabs.forEach((t,i) => t.classList.toggle('active', i===idx));
+            contents.forEach((c,i) => c.classList.toggle('active', i===idx));
+        }
+        window.onload = function() { showTab(0); };
+    </script>
+</head>
+<body>
+    <div class="banner">Implementation specifications</div>
+    <div class="tabs">
+        <div class="tab" onclick="showTab(0)">1. Context & Requirements</div>
+        <div class="tab" onclick="showTab(1)">2. Initial Blueprint</div>
+        <div class="tab" onclick="showTab(2)">3. Key Decisions</div>
+        <div class="tab" onclick="showTab(3)">4. Communication & Integration</div>
+        <div class="tab" onclick="showTab(4)">5. Pros & Cons</div>
+        <div class="tab" onclick="showTab(5)">6. Documentation & Review</div>
+    </div>
+    <form method="post">
+        <!-- Tab 1 -->
+        <div class="tab-content section" id="tab1">
+            <h2>Context & Requirements</h2>
+            <label>Business Goals:</label><br>
+            <textarea name="business_goals"></textarea><br>
+            <label>Legacy System Description:</label><br>
+            <textarea name="legacy_system"></textarea><br>
+            <label>Constraints (tech stack, compliance, etc.):</label><br>
+            <textarea name="constraints"></textarea><br>
+            <label>Desired Architecture Style:</label><br>
+            <select name="architecture_style">
+                <option>Monolith</option>
+                <option>Event Driven</option>
+                <option>Microservices</option>
+                <option>Other</option>
+            </select><br>
+            <label>Additional Requirements:</label><br>
+            <textarea name="additional_requirements"></textarea><br>
+        </div>
+        <!-- Tab 2 -->
+        <div class="tab-content section" id="tab2">
+            <h2>Initial Blueprint</h2>
+            <label>High-level Architecture Diagram (Mermaid/PlantUML):</label><br>
+            <textarea name="architecture_diagram"></textarea><br>
+            <label>Major Components/Services:</label><br>
+            <textarea name="major_components"></textarea><br>
+            <label>Interface Definitions:</label><br>
+            <textarea name="interface_definitions"></textarea><br>
+            <label>Data Schemas:</label><br>
+            <textarea name="data_schemas"></textarea><br>
+            <label>Reusable Patterns:</label><br>
+            <textarea name="reusable_patterns"></textarea><br>
+        </div>
+        <!-- Tab 3 -->
+        <div class="tab-content section" id="tab3">
+            <h2>Key Decisions Extraction</h2>
+            <label>Architectural Decisions:</label><br>
+            <textarea name="architectural_decisions"></textarea><br>
+            <label>Rationale & Trade-offs:</label><br>
+            <textarea name="rationale_tradeoffs"></textarea><br>
+            <label>Blueprint References:</label><br>
+            <textarea name="blueprint_references"></textarea><br>
+        </div>
+        <!-- Tab 4 -->
+        <div class="tab-content section" id="tab4">
+            <h2>Communication & Integration Mapping</h2>
+            <label>Communication Protocols (gRPC, REST, Kafka, etc.):</label><br>
+            <textarea name="communication_protocols"></textarea><br>
+            <label>Data Flow Diagrams:</label><br>
+            <textarea name="data_flow_diagrams"></textarea><br>
+            <label>Integration Points:</label><br>
+            <textarea name="integration_points"></textarea><br>
+        </div>
+        <!-- Tab 5 -->
+        <div class="tab-content section" id="tab5">
+            <h2>Pros & Cons Analysis</h2>
+            <label>SWOT Analysis (Strengths, Weaknesses, Opportunities, Threats):</label><br>
+            <textarea name="swot_analysis"></textarea><br>
+            <label>Risks & Mitigation Strategies:</label><br>
+            <textarea name="risks_mitigation"></textarea><br>
+        </div>
+        <!-- Tab 6 -->
+        <div class="tab-content section" id="tab6">
+            <h2>Documentation & Review</h2>
+            <label>Compiled Architecture Document:</label><br>
+            <textarea name="compiled_document"></textarea><br>
+            <label>Stakeholder Checklist:</label><br>
+            <textarea name="stakeholder_checklist"></textarea><br>
+            <button type="submit">Download/Share</button>
+        </div>
+    </form>
+</body>
+</html>
