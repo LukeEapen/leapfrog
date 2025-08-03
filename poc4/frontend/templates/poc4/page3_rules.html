@@ -52,8 +52,12 @@
       <div class="card-header bg-light text-danger fw-bold">Source Fields</div>
       <div class="card-body">
         <ul class="list-group">
-          <li class="list-group-item">Field 1</li>
-          <li class="list-group-item">Field 2</li>
+          {% for m in mapping %}
+          <li class="list-group-item">
+            <strong>{{ m.source }}</strong>
+            {% if m.target %} <span class="text-muted">→ {{ m.target }}</span>{% endif %}
+          </li>
+          {% endfor %}
         </ul>
       </div>
     </div>
@@ -69,26 +73,27 @@
               <th>Field</th>
               <th>Rule</th>
               <th>Example</th>
-              <th>Edit</th>
             </tr>
           </thead>
           <tbody>
+            <form method="post" id="rules-form">
+            {% for rule in rules %}
             <tr>
-              <td>Field 1</td>
-              <td>Uppercase</td>
-              <td>abc → ABC</td>
-              <td><button class="btn btn-sm btn-secondary">Edit</button></td>
+              <td>{{ rule.field }}</td>
+              <td>
+                <input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control" />
+              </td>
+              <td>{{ rule.example }}</td>
+              <td>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="editRule({{ loop.index0 }})">Edit</button>
+              </td>
             </tr>
-            <tr>
-              <td>Field 2</td>
-              <td>Date Format</td>
-              <td>01/01/2020 → 2020-01-01</td>
-              <td><button class="btn btn-sm btn-secondary">Edit</button></td>
-            </tr>
+            {% endfor %}
+            </form>
           </tbody>
         </table>
         <form method="post" class="mt-4">
-          <button type="submit" class="btn btn-danger w-100 mt-3">Validate & Simulate</button>
+          <button type="submit" form="rules-form" class="btn btn-danger w-100 mt-3">Validate & Simulate</button>
         </form>
       </div>
     </div>

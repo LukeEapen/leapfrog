@@ -1,0 +1,45 @@
+{
+  "tables": [
+    {
+      "name": "customer",
+      "fields": [
+        {"name": "customer_id", "type": "int", "primary_key": true},
+        {"name": "first_name", "type": "varchar(50)"},
+        {"name": "last_name", "type": "varchar(50)"},
+        {"name": "email", "type": "varchar(100)"},
+        {"name": "phone", "type": "varchar(20)"},
+        {"name": "address", "type": "varchar(200)"},
+        {"name": "created_at", "type": "datetime"}
+      ]
+    },
+    {
+      "name": "account",
+      "fields": [
+        {"name": "account_id", "type": "int", "primary_key": true},
+        {"name": "customer_id", "type": "int"},
+        {"name": "account_type", "type": "varchar(20)"},
+        {"name": "balance", "type": "decimal(15,2)"},
+        {"name": "opened_at", "type": "datetime"}
+      ]
+    },
+    {
+      "name": "transaction",
+      "fields": [
+        {"name": "transaction_id", "type": "int", "primary_key": true},
+        {"name": "account_id", "type": "int"},
+        {"name": "amount", "type": "decimal(15,2)"},
+        {"name": "transaction_type", "type": "varchar(20)"},
+        {"name": "transaction_date", "type": "datetime"}
+      ]
+    },
+    {
+      "name": "product",
+      "fields": [
+        {"name": "product_id", "type": "int", "primary_key": true},
+        {"name": "product_name", "type": "varchar(100)"},
+        {"name": "product_type", "type": "varchar(50)"},
+        {"name": "interest_rate", "type": "decimal(5,2)"}
+      ]
+    }
+  ]
+}

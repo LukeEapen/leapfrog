@@ -52,18 +52,13 @@
       <div class="card-header bg-light text-danger fw-bold">Source System</div>
       <div class="card-body">
         <div class="mb-3">
-          <label class="form-label">Upload Source Schema</label>
-          <input type="file" class="form-control" name="source_schema" required form="upload-form">
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Select Source System</label>
-          <select class="form-select" name="source_system" required form="upload-form">
-            <option value="">Choose...</option>
-            <option>Legacy DB</option>
-            <option>CSV</option>
-            <option>Excel</option>
+          <label class="form-label">Source Schema</label>
+          <select class="form-select mb-2" id="source-schema-select">
+            <option value="source_schema.json">Banking RDBMS (Sample)</option>
           </select>
+          <input type="file" class="form-control" id="source-schema-upload" accept="application/json">
         </div>
+        <div id="source-schema-fields"></div>
       </div>
     </div>
   </div>
@@ -74,18 +69,13 @@
       <div class="card-body">
         <form method="post" enctype="multipart/form-data" id="upload-form">
           <div class="mb-3">
-            <label class="form-label">Upload Target Schema</label>
-            <input type="file" class="form-control" name="target_schema" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Select Target System</label>
-            <select class="form-select" name="target_system" required>
-              <option value="">Choose...</option>
-              <option>Cloud DB</option>
-              <option>CSV</option>
-              <option>Excel</option>
+            <label class="form-label">Target Schema</label>
+            <select class="form-select mb-2" id="target-schema-select">
+              <option value="target_schema.json">Banking OLAP Flat (Sample)</option>
             </select>
+            <input type="file" class="form-control" id="target-schema-upload" accept="application/json">
           </div>
+          <div id="target-schema-fields"></div>
           <button type="submit" class="btn btn-danger w-100 mt-3">Next</button>
         </form>
       </div>
@@ -113,28 +103,95 @@
 </div>
 
 <script>
-  async function sendMessage(e) {
-    e.preventDefault();
-    const input = document.getElementById('chat-input');
-    const msg = input.value;
-    if (!msg) return false;
-    appendMessage('You', msg);
-    input.value = '';
-    const res = await fetch('/poc4/chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: 'message=' + encodeURIComponent(msg)
+// Chatbot logic
+async function sendMessage(e) {
+  e.preventDefault();
+  const input = document.getElementById('chat-input');
+  const msg = input.value;
+  if (!msg) return false;
+  appendMessage('You', msg);
+  input.value = '';
+  const res = await fetch('/poc4/chat', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'message=' + encodeURIComponent(msg)
+  });
+  const data = await res.json();
+  appendMessage('Bot', data.response);
+  return false;
+}
+function appendMessage(sender, text) {
+  const chat = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// Schema preview logic
+async function loadSchema(file, target) {
+  try {
+    const res = await fetch(`/poc4/static_schema/schemas/${file}`);
+    const schema = await res.json();
+    renderSchemaFields(schema, target);
+  } catch (e) {
+    document.getElementById(target).innerHTML = '<div class="text-danger">Failed to load schema.</div>';
+  }
+}
+
+function renderSchemaFields(schema, target) {
+  let html = '';
+  if (schema.tables) {
+    schema.tables.forEach(table => {
+      html += `<div class="card mb-2"><div class="card-header bg-light fw-bold">${table.name}</div><div class="card-body p-2"><ul class="list-group">`;
+      table.fields.forEach(field => {
+        html += `<li class="list-group-item d-flex justify-content-between align-items-center"><span>${field.name}</span><span class="badge bg-danger">${field.type}</span></li>`;
+      });
+      html += '</ul></div></div>';
     });
-    const data = await res.json();
-    appendMessage('Bot', data.response);
-    return false;
   }
-  function appendMessage(sender, text) {
-    const chat = document.getElementById('chat-messages');
-    const div = document.createElement('div');
-    div.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-  }
+  document.getElementById(target).innerHTML = html;
+}
+
+document.getElementById('source-schema-select').addEventListener('change', function() {
+  loadSchema(this.value, 'source-schema-fields');
+});
+document.getElementById('target-schema-select').addEventListener('change', function() {
+  loadSchema(this.value, 'target-schema-fields');
+});
+
+document.getElementById('source-schema-upload').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      const schema = JSON.parse(evt.target.result);
+      renderSchemaFields(schema, 'source-schema-fields');
+    } catch (err) {
+      document.getElementById('source-schema-fields').innerHTML = '<div class="text-danger">Invalid JSON file.</div>';
+    }
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('target-schema-upload').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      const schema = JSON.parse(evt.target.result);
+      renderSchemaFields(schema, 'target-schema-fields');
+    } catch (err) {
+      document.getElementById('target-schema-fields').innerHTML = '<div class="text-danger">Invalid JSON file.</div>';
+    }
+  };
+  reader.readAsText(file);
+});
+
+// Initial load
+loadSchema('source_schema.json', 'source-schema-fields');
+loadSchema('target_schema.json', 'target-schema-fields');
 </script>
 {% endblock %}

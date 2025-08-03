@@ -1,0 +1,30 @@
+{
+  "tables": [
+    {
+      "name": "banking_olap_flat_exact",
+      "fields": [
+        {"name": "customer_id", "type": "int"},
+        {"name": "first_name", "type": "string"},
+        {"name": "last_name", "type": "string"},
+        {"name": "email", "type": "string"},
+        {"name": "phone", "type": "string"},
+        {"name": "address", "type": "string"},
+        {"name": "created_at", "type": "timestamp"},
+        {"name": "account_id", "type": "int"},
+        {"name": "customer_id", "type": "int"},
+        {"name": "account_type", "type": "string"},
+        {"name": "balance", "type": "float"},
+        {"name": "opened_at", "type": "timestamp"},
+        {"name": "transaction_id", "type": "int"},
+        {"name": "account_id", "type": "int"},
+        {"name": "amount", "type": "float"},
+        {"name": "transaction_type", "type": "string"},
+        {"name": "transaction_date", "type": "timestamp"},
+        {"name": "product_id", "type": "int"},
+        {"name": "product_name", "type": "string"},
+        {"name": "product_type", "type": "string"},
+        {"name": "interest_rate", "type": "float"}
+      ]
+    }
+  ]
+}

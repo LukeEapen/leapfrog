@@ -1,5 +1,5 @@
 from flask import Flask
-from routes import poc4_bp
+from backend.routes import poc4_bp
 
 import os
 app = Flask(__name__, template_folder=os.path.join('frontend', 'templates'))

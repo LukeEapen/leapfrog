@@ -1,3 +1,4 @@
+# This file is legacy and not used by the current backend. See poc4/backend/routes.py for active routes.
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from agents import (
     schema_mapping_agent,

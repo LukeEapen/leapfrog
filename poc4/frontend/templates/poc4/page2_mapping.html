@@ -53,8 +53,15 @@
       <div class="card-header bg-light text-danger fw-bold">Source Fields</div>
       <div class="card-body">
         <ul class="list-group" id="source-fields">
-          <li class="list-group-item">Field 1</li>
-          <li class="list-group-item">Field 2</li>
+          {% for m in mapping %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+              <strong>{{ m.source }}</strong>
+              {% if m.source_table %}<span class="text-muted small ms-2">({{ m.source_table }})</span>{% endif %}
+            </span>
+            <span class="badge bg-danger">{{ m.source_type }}</span>
+          </li>
+          {% endfor %}
         </ul>
       </div>
     </div>
@@ -66,39 +73,42 @@
       <div class="card-body">
         <form method="post" id="mapping-form">
           <div class="mb-3">
-            <label class="form-label">Map Source to Target</label>
-            <div class="row align-items-center mb-2">
-              <div class="col-5 text-end">
-                <span class="fw-bold">Field 1</span>
+            <label class="form-label">Auto-mapped Fields</label>
+            <div id="mapping-fields">
+              {% for m in mapping %}
+              <div class="row align-items-center mb-2">
+                <div class="col-5 text-end">
+                  <span class="fw-bold">{{ m.source }}</span>
+                  {% if m.source_table %}<span class="text-muted small ms-2">({{ m.source_table }})</span>{% endif %}
+                  {% if m.get('source_description') %}<div class="text-muted small mt-1">{{ m.get('source_description') }}</div>{% endif %}
+                </div>
+                <div class="col-2 text-center">
+                  <i class="bi bi-arrow-right fs-4 text-danger"></i>
+                  <div class="text-muted small">{{ (m.get('similarity', 0) * 100)|round(1) }}% match</div>
+                </div>
+                <div class="col-5">
+                  <select class="form-select d-inline w-auto" name="target_{{ loop.index0 }}">
+                    <option value="">No Match</option>
+                    {% for tf in target_fields %}
+                      {% if m.target == tf %}
+                        <option value="{{ tf|e }}" selected="selected">{{ tf|e }}</option>
+                      {% else %}
+                        <option value="{{ tf|e }}">{{ tf|e }}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                  <input type="hidden" name="target_type_{{ loop.index0 }}" value="{{ target_types.get(m.target, '') }}">
+                  {% if m.target %}
+                    <span class="badge bg-secondary ms-2">{{ target_types.get(m.target, '') }}</span>
+                    {% if m.target_table %}<span class="text-muted small ms-2">({{ m.target_table }})</span>{% endif %}
+                    {% if m.get('target_description') %}<div class="text-muted small mt-1">{{ m.get('target_description') }}</div>{% endif %}
+                  {% endif %}
+                </div>
               </div>
-              <div class="col-2 text-center">
-                <i class="bi bi-arrow-right fs-4 text-danger"></i>
-              </div>
-              <div class="col-5">
-                <select class="form-select" name="mapping_field1">
-                  <option value="">Select Target</option>
-                  <option>Field A</option>
-                  <option>Field B</option>
-                </select>
-              </div>
-            </div>
-            <div class="row align-items-center mb-2">
-              <div class="col-5 text-end">
-                <span class="fw-bold">Field 2</span>
-              </div>
-              <div class="col-2 text-center">
-                <i class="bi bi-arrow-right fs-4 text-danger"></i>
-              </div>
-              <div class="col-5">
-                <select class="form-select" name="mapping_field2">
-                  <option value="">Select Target</option>
-                  <option>Field A</option>
-                  <option>Field B</option>
-                </select>
-              </div>
+              {% endfor %}
             </div>
           </div>
-          <button type="button" class="btn btn-outline-danger w-100 mb-2" id="generate-mapping">Generate Mapping</button>
+          <button type="button" class="btn btn-outline-danger w-100 mb-2" id="generate-mapping">Regenerate Mapping</button>
           <button type="submit" class="btn btn-danger w-100">Next</button>
         </form>
       </div>
@@ -129,9 +139,37 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 <script>
-  document.getElementById('generate-mapping').onclick = function() {
-    alert('Auto-mapping logic goes here!');
-  };
+  async function loadMapping() {
+    const res = await fetch('/poc4/auto_mapping');
+    const data = await res.json();
+    const mapping = data.mapping;
+    // Source fields
+    let srcHtml = '';
+    mapping.forEach(m => {
+      srcHtml += `<li class="list-group-item d-flex justify-content-between align-items-center"><span>${m.source}</span><span class="badge bg-danger">${m.source_type}</span></li>`;
+    });
+    document.getElementById('source-fields').innerHTML = srcHtml;
+    // Mapping fields
+    let mapHtml = '';
+    mapping.forEach(m => {
+      mapHtml += `<div class="row align-items-center mb-2">
+        <div class="col-5 text-end">
+          <span class="fw-bold">${m.source}</span>
+        </div>
+        <div class="col-2 text-center">
+          <i class="bi bi-arrow-right fs-4 text-danger"></i>
+        </div>
+        <div class="col-5">
+          <span class="fw-bold text-success">${m.target || '<i class=\'bi bi-x-circle text-danger\'></i>'}</span>
+          <span class="badge bg-secondary ms-2">${m.target_type}</span>
+        </div>
+      </div>`;
+    });
+    document.getElementById('mapping-fields').innerHTML = mapHtml;
+  }
+  document.getElementById('generate-mapping').onclick = loadMapping;
+  // Initial load
+  loadMapping();
   async function sendMessage(e) {
     e.preventDefault();
     const input = document.getElementById('chat-input');
