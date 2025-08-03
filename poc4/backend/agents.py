@@ -92,6 +92,21 @@ class SchemaMappingAgent:
                 tokens = tokens.lower().split()
                 return set(tokens)
             src_tokens = tokenize(src['name'])
+            # Guarantee exact normalized name match (case-insensitive, ignore underscores, dashes, spaces)
+            for tgt in tgt_list:
+                tgt_norm = normalize(tgt['name'])
+                if src_norm == tgt_norm:
+                    # If types differ, penalize similarity but guarantee mapping
+                    src_type = src['type'].split('(')[0].lower()
+                    tgt_type = tgt['type'].split('(')[0].lower()
+                    similarity = 1.0 if src_type == tgt_type else 0.6
+                    return tgt, similarity, src_desc, describe_field(tgt)
+            # Also check for alternate spellings (e.g., first_name vs firstname)
+            for tgt in tgt_list:
+                tgt_norm = normalize(tgt['name'])
+                if src_norm.replace('name', '') == tgt_norm.replace('name', ''):
+                    return tgt, 0.95, src_desc, describe_field(tgt)
+            # Fallback to fuzzy logic
             best = None
             best_score = 0.0
             best_type_penalty = 0.0
@@ -100,7 +115,7 @@ class SchemaMappingAgent:
                 tgt_norm = normalize(tgt['name'])
                 tgt_tokens = tokenize(tgt['name'])
                 desc_score = semantic_similarity(src_desc, tgt_desc)
-                name_score = 1.0 if src_norm == tgt_norm else difflib.SequenceMatcher(None, src_norm, tgt_norm).ratio()
+                name_score = difflib.SequenceMatcher(None, src_norm, tgt_norm).ratio()
                 token_score = len(src_tokens & tgt_tokens) / max(len(src_tokens | tgt_tokens), 1)
                 # Boost for special token pairs
                 boost = 0.0
@@ -126,9 +141,7 @@ class SchemaMappingAgent:
                     best_score = score
                     best = tgt
                     best_type_penalty = type_penalty
-            # If best match is a name match but type differs, similarity should be ~0.6
             if best_score >= 0.4 or best is not None:
-                # Clamp to 0.6 if name matches but type penalty applied
                 if best_type_penalty == 0.4 and best_score > 0.6:
                     best_score = 0.6
                 return best, best_score, src_desc, describe_field(best) if best else ''
@@ -165,9 +178,9 @@ class SchemaMappingAgent:
         mapped_targets = set()
         for s_field in source_fields:
             match, confidence, src_desc, tgt_desc = fuzzy_match(s_field, target_fields)
-            # Always map to the best match, even if below threshold
+            # Guarantee exact match mapping and update mapped_targets for all matches
             if match:
-                mapped_targets.add(match['name'].lower())
+                mapped_targets.add(normalize(match['name']))
             mapping.append({
                 'source': s_field['name'],
                 'source_type': s_field['type'],
@@ -210,15 +223,20 @@ class TransformationRuleAgent:
         # For each mapping, if source_type != target_type, add a rule
         rules = []
         for m in mapping:
+            # Only add rules for valid source-target pairs
             if m.get('source') and m.get('target'):
                 src_type = m.get('source_type', '').split('(')[0].lower()
                 tgt_type = m.get('target_type', '').split('(')[0].lower()
-                if src_type != tgt_type:
-                    rule = f"Convert {src_type} to {tgt_type}"
-                    example = f"Example: Cast {m['source']} from {src_type} to {tgt_type} for {m['target']}"
+                if src_type and tgt_type:
+                    if src_type != tgt_type:
+                        rule = f"Convert {src_type} to {tgt_type}"
+                        example = f"Example: Cast {m['source']} from {src_type} to {tgt_type} for {m['target']}"
+                    else:
+                        rule = "Direct mapping"
+                        example = f"Example: Map {m['source']} to {m['target']}"
                 else:
-                    rule = "Direct mapping"
-                    example = f"Example: Map {m['source']} to {m['target']}"
+                    rule = "Manual review required"
+                    example = f"Example: Check mapping for {m['source']} to {m['target']}"
                 rules.append({
                     'field': f"{m['source']} → {m['target']}",
                     'rule': rule,
