@@ -593,11 +593,20 @@ def page1():
             if os.path.exists(path):
                 os.remove(path)
 
+
+        # Persistent event loop for agent orchestration
         def run_agents():
+            import threading, psutil, gc
             t0 = time.time()
             try:
-                # Parallel agent calls using asyncio for OpenAI, fallback to threads for others
-                a11, a2, a3 = asyncio.run(call_agents_parallel([
+                loop = None
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                # Run all agent calls in the persistent event loop
+                a11, a2, a3 = loop.run_until_complete(call_agents_parallel([
                     (ASSISTANTS['agent_1_1'], context),
                     (ASSISTANTS['agent_2'], context),
                     (ASSISTANTS['agent_3'], context)
@@ -628,9 +637,15 @@ def page1():
                     with open(os.path.join(TEMP_DIR, f'prd_session_{session_id}.json'), 'w') as f:
                         json.dump(fail_data, f)
                         json.dump(fail_data, f)
+            # Resource usage logging and cleanup
+            try:
+                logging.info(f"[RESOURCE] Thread count: {threading.active_count()}")
+                logging.info(f"[RESOURCE] Memory usage: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB")
+                gc.collect()
+            except Exception as e:
+                logging.warning(f"Resource logging failed: {e}")
 
         executor.submit(run_agents)
-
         return redirect('/page2')
 
     return render_template('page1_input.html')
@@ -856,9 +871,17 @@ def page3():
         except UnicodeEncodeError:
             logging.info(f"[PAGE3] Combined input for agents: {combined_input.encode('ascii', 'replace').decode('ascii')}")
 
+
+        # Persistent event loop for agent orchestration
+        import threading, psutil, gc
+        loop = None
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
         keys = [k for k in ASSISTANTS if k.startswith("agent_4_")]
-        # Use asyncio to call all agents in parallel
-        results = asyncio.run(call_agents_parallel([
+        results = loop.run_until_complete(call_agents_parallel([
             (ASSISTANTS[k], combined_input) for k in keys
         ]))
         outputs = dict(zip(keys, results))
@@ -871,6 +894,13 @@ def page3():
         else:
             with open(os.path.join(TEMP_DIR, f'prd_session_{session["data_key"]}.json'), 'w') as f:
                 json.dump(data, f)
+        # Resource usage logging and cleanup
+        try:
+            logging.info(f"[RESOURCE] Thread count: {threading.active_count()}")
+            logging.info(f"[RESOURCE] Memory usage: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB")
+            gc.collect()
+        except Exception as e:
+            logging.warning(f"Resource logging failed: {e}")
 
         return redirect('/page4')
 

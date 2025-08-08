@@ -63,7 +63,7 @@ def page2():
         from .agents import transformation_rule_agent
         rules = transformation_rule_agent.suggest_rules(new_mapping)
         session['rules'] = rules
-        return render_template('poc4/page3_rules.html', mapping=new_mapping, rules=rules, example="Example transformation: Convert int to uuid for product_id.")
+        return redirect(url_for('poc4.page3'))
     # GET: Render mapping visually
     return render_template('poc4/page2_mapping.html', mapping=mapping, target_fields=[f['name'] for t in target_schema.get('tables', []) for f in t.get('fields', [])], target_types={f['name']: f['type'] for t in target_schema.get('tables', []) for f in t.get('fields', [])})
 
@@ -82,18 +82,44 @@ def page3():
 @poc4_bp.route('/page4', methods=['GET', 'POST'])
 def page4():
     if request.method == 'POST':
-        print('Page 4 POST: Next button clicked. Running migration_execution_agent.')
+        print('Page 4 POST: Next button clicked. Running sqlite_data_transfer_demo.py as subprocess with mapping and rules.')
+        import subprocess, tempfile, json
         try:
-            # Run migration_execution_agent (simulate or call real agent)
-            result = migration_execution_agent.run(session.get('mapping', []))
-            session['migration_result'] = result
-            print(f'Migration execution result: {result}')
+            # Write mapping and rules to a temp file
+            mapping = session.get('mapping', [])
+            rules = session.get('rules', [])
+            with tempfile.NamedTemporaryFile('w', delete=False, suffix='.json') as tf:
+                json.dump({'mapping': mapping, 'rules': rules}, tf)
+                tf.flush()
+                mapfile = tf.name
+            # Run sqlite_data_transfer_demo.py and pass mapping file
+            result = subprocess.run([
+                'python', 'sqlite_data_transfer_demo.py',
+                '--source', 'poc4/frontend/static/schemas/source_schema.json',
+                '--target', 'poc4/frontend/static/schemas/target_schema.json',
+                '--mapfile', mapfile
+            ], capture_output=True, text=True)
+            output = result.stdout + '\n' + result.stderr
+            session['migration_result'] = output
+            print(f'Migration execution output:\n{output}')
         except Exception as e:
-            print(f'Error in migration_execution_agent: {e}')
+            print(f'Error running sqlite_data_transfer_demo.py: {e}')
             return render_template('poc4/page4_validation.html', error=str(e))
         return redirect(url_for('poc4.page5'))
     # Show validation results from validation_agent
-    return render_template('poc4/page4_validation.html')
+    # List available schemas for dropdowns
+    schemas_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+    source_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
+    target_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
+    selected_source_db = session.get('source_schema', 'source_schema.json')
+    selected_target_db = session.get('target_schema', 'target_schema.json')
+    return render_template(
+        'poc4/page4_validation.html',
+        source_schemas=source_schemas,
+        target_schemas=target_schemas,
+        selected_source_db=selected_source_db,
+        selected_target_db=selected_target_db
+    )
 
 @poc4_bp.route('/page5', methods=['GET', 'POST'])
 def page5():

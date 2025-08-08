@@ -1900,6 +1900,9 @@ function selectVectorDbPrd(filename) {
                   <button class="chat-send-btn" id="details-chat-send" onclick="sendDetailsMessage()" disabled>
                     <i class="fas fa-paper-plane"></i>
                   </button>
+                  <button class="btn btn-primary ms-2" id="details-chat-apply" onclick="applyStoryDetailsChatChangesFromPanel()" style="display:none;">
+                    <i class="fas fa-check"></i> Apply
+                  </button>
                 </div>
               </div>
             </div>
@@ -3164,6 +3167,67 @@ Epic IDs: ${data.epic_ids ? data.epic_ids.join(', ') : 'None'}`);
         alert('Error fetching session debug info: ' + error.message);
       }
     }
+
+    // Apply Story Details Chat changes to the Story Details panel
+function applyStoryDetailsChatChanges(newContent) {
+  // Only update the story details description in the details section with the AI response
+  if (!selectedUserStory) {
+    alert('No user story selected to apply changes.');
+    return;
+  }
+  const storyInfo = document.getElementById('story-info');
+  if (storyInfo) {
+    // Update only the description field
+    const descP = Array.from(storyInfo.querySelectorAll('p')).find(p => p.textContent.includes('Description:'));
+    if (descP) {
+      descP.innerHTML = `<strong>Description:</strong> ${newContent}`;
+    }
+    // Also update the global story details object
+    if (currentStoryDetails) {
+      currentStoryDetails.description = newContent;
+    }
+    if (selectedUserStory) {
+      selectedUserStory.description = newContent;
+    }
+  }
+}
+// Apply Story Details Chat changes to the Story Details panel
+function applyStoryDetailsChatChangesFromPanel() {
+  if (!selectedUserStory || !currentStoryDetails) {
+    alert('No user story selected to apply changes.');
+    return;
+  }
+  // Collect updated details from UI (example: description, acceptance criteria, etc.)
+  const storyInfo = document.getElementById('story-info');
+  let updatedDescription = currentStoryDetails.description;
+  if (storyInfo) {
+    const descP = Array.from(storyInfo.querySelectorAll('p')).find(p => p.textContent.includes('Description:'));
+    if (descP) {
+      updatedDescription = descP.textContent.replace('Description:', '').trim();
+    }
+  }
+  // Build updated details object
+  const updatedDetails = Object.assign({}, currentStoryDetails, { description: updatedDescription });
+  // Persist to backend
+  fetch('/tabbed-apply-story-details', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ story_id: selectedUserStory.id, story_details: updatedDetails })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      // Optionally show a success message
+      alert('Story details applied and saved.');
+    } else {
+      alert('Failed to save story details: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(err => {
+    alert('Error saving story details: ' + err);
+  });
+}
+
   </script>
 </body>
 </html>

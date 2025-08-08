@@ -1108,6 +1108,80 @@
         "raw": "```json\n[\n    {\n        \"element\": \"initializeInterestCalculation\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Set up the current date by fetching the system date\",\n            \"Retrieve the Annual Percentage Rate (APR) for interest calculation\",\n            \"Calculate the daily interest rate by dividing APR by 365\",\n            \"Store the calculated daily interest rate for future calculations\"\n        ]\n    },\n    {\n        \"element\": \"calculateInterest\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each eligible account:\",\n            \"   - Retrieve the account balance and interest rate\",\n            \"   - Calculate the monthly interest by multiplying the balance with the monthly interest rate\",\n            \"   - Add the monthly interest to the account balance\",\n            \"   - Calculate the cumulative interest by summing up all monthly interests\"\n        ]\n    }\n]\n```"
       },
       "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Identify Eligible Transactions",
+            "pseudocode": "Retrieve all transactions from the database\nFilter transactions based on predefined criteria for daily interest calculation\nCriteria may include transaction type, date range, account status, etc.\nStore the eligible transactions in a separate list or data structure",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Apply Interest Calculation",
+            "pseudocode": "For each eligible transaction identified:\nCalculate daily interest based on transaction amount and interest rate\nUpdate the transaction with the calculated interest amount\nStore the updated transaction back in the database",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Update Transaction Status",
+            "pseudocode": "For each transaction processed for interest calculation:\nCheck if the interest application was successful\nUpdate the transaction status based on the outcome (success/failure)\nLog any errors or exceptions encountered during the process",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Identify Eligible Transactions\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Retrieve all transactions from the database\",\n            \"Filter transactions based on predefined criteria for daily interest calculation\",\n            \"Criteria may include transaction type, date range, account status, etc.\",\n            \"Store the eligible transactions in a separate list or data structure\"\n        ]\n    },\n    {\n        \"element\": \"Apply Interest Calculation\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each eligible transaction identified:\",\n            \"Calculate daily interest based on transaction amount and interest rate\",\n            \"Update the transaction with the calculated interest amount\",\n            \"Store the updated transaction back in the database\"\n        ]\n    },\n    {\n        \"element\": \"Update Transaction Status\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"For each transaction processed for interest calculation:\",\n            \"Check if the interest application was successful\",\n            \"Update the transaction status based on the outcome (success/failure)\",\n            \"Log any errors or exceptions encountered during the process\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Calculate Interest Business Logic",
+            "pseudocode": "1. Check if the previous payment was a full payment\n2. Calculate interest if previous payment was not a full payment\n3. Retrieve transaction details\n4. Calculate interest amount\n5. Display card number and calculated interest amount",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Calculate Interest Business Logic\",\n        \"standard\": \"ISO 10962\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Check if the previous payment was a full payment\",\n                \"logic\": \"Retrieve the payment history for the card number and determine if the last payment was a full payment\"\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Calculate interest if previous payment was not a full payment\",\n                \"logic\": \"If the previous payment was not a full payment, proceed to calculate interest for the transaction\"\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Retrieve transaction details\",\n                \"logic\": \"Get the balance, daily rate, and days since the transaction date for the transaction\"\n            },\n            {\n                \"step\": 4,\n                \"description\": \"Calculate interest amount\",\n                \"logic\": \"Use the formula: interest = balance * daily rate * days\"\n            },\n            {\n                \"step\": 5,\n                \"description\": \"Display card number and calculated interest amount\",\n                \"logic\": \"Output the card number and the calculated interest amount for the transaction\"\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "calculatePremium",
+            "pseudocode": "1. Receive policy details including coverage, risk factors, and customer information. \n2. Perform dynamic risk assessment based on the provided data. \n3. Integrate real-time data sources to adjust premium calculations. \n4. Calculate the premium amount considering the risk assessment and data integration. \n5. Generate a detailed breakdown display showing how the premium is calculated. \n6. Handle complex cases such as multiple coverages or special conditions. \n7. Trigger on-demand policy document events if required.",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "calculatePremium",
+            "pseudocode": "1. Identify the policy details entity and its attributes. \n2. Determine the risk assessment process entity and its factors. \n3. Access real-time data integration services entity. \n4. Define the premium calculation algorithm entity. \n5. Specify the breakdown display entity. \n6. Manage complex cases entity. \n7. Implement on-demand policy document events entity.",
+            "standard": "BIAN"
+          },
+          {
+            "element": "calculatePremium",
+            "pseudocode": "1. Define the inputs required for premium calculation. \n2. Establish a risk assessment methodology. \n3. Ensure real-time data integration compliance. \n4. Calculate premium using standardized formulas. \n5. Present detailed breakdown following ISO guidelines. \n6. Address complex cases according to ISO standards. \n7. Manage on-demand policy document events in a secure and auditable manner.",
+            "standard": "ISO"
+          },
+          {
+            "element": "trackTimingsSLA",
+            "pseudocode": "1. Record the start timestamp when the SLA begins. \n2. Record the end timestamp when the SLA ends. \n3. Calculate the elapsed time by subtracting the start time from the end time. \n4. Convert the elapsed time to milliseconds for accuracy.",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "trackTimingsSLA",
+            "pseudocode": "1. Define the start timestamp attribute. \n2. Define the end timestamp attribute. \n3. Calculate the elapsed time by subtracting start time from end time. \n4. Convert the elapsed time to milliseconds.",
+            "standard": "BIAN"
+          },
+          {
+            "element": "trackTimingsSLA",
+            "pseudocode": "1. Capture the start timestamp following ISO time format. \n2. Capture the end timestamp following ISO time format. \n3. Calculate elapsed time using ISO time standards. \n4. Convert the elapsed time to milliseconds as per ISO guidelines.",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"calculatePremium\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"1. Receive policy details including coverage, risk factors, and customer information. \\n2. Perform dynamic risk assessment based on the provided data. \\n3. Integrate real-time data sources to adjust premium calculations. \\n4. Calculate the premium amount considering the risk assessment and data integration. \\n5. Generate a detailed breakdown display showing how the premium is calculated. \\n6. Handle complex cases such as multiple coverages or special conditions. \\n7. Trigger on-demand policy document events if required.\"\n    },\n    {\n        \"element\": \"calculatePremium\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": \"1. Identify the policy details entity and its attributes. \\n2. Determine the risk assessment process entity and its factors. \\n3. Access real-time data integration services entity. \\n4. Define the premium calculation algorithm entity. \\n5. Specify the breakdown display entity. \\n6. Manage complex cases entity. \\n7. Implement on-demand policy document events entity.\"\n    },\n    {\n        \"element\": \"calculatePremium\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": \"1. Define the inputs required for premium calculation. \\n2. Establish a risk assessment methodology. \\n3. Ensure real-time data integration compliance. \\n4. Calculate premium using standardized formulas. \\n5. Present detailed breakdown following ISO guidelines. \\n6. Address complex cases according to ISO standards. \\n7. Manage on-demand policy document events in a secure and auditable manner.\"\n    },\n    {\n        \"element\": \"trackTimingsSLA\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"1. Record the start timestamp when the SLA begins. \\n2. Record the end timestamp when the SLA ends. \\n3. Calculate the elapsed time by subtracting the start time from the end time. \\n4. Convert the elapsed time to milliseconds for accuracy.\"\n    },\n    {\n        \"element\": \"trackTimingsSLA\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": \"1. Define the start timestamp attribute. \\n2. Define the end timestamp attribute. \\n3. Calculate the elapsed time by subtracting start time from end time. \\n4. Convert the elapsed time to milliseconds.\"\n    },\n    {\n        \"element\": \"trackTimingsSLA\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": \"1. Capture the start timestamp following ISO time format. \\n2. Capture the end timestamp following ISO time format. \\n3. Calculate elapsed time using ISO time standards. \\n4. Convert the elapsed time to milliseconds as per ISO guidelines.\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
     }
   ]
 }

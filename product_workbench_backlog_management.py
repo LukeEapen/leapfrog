@@ -213,6 +213,25 @@ def main():
     def migration_intermediate():
         return render_template('migration_intermediate.html')
 
+    # --- PATCH: Auto-generate epics if missing when generating user stories ---
+    from flask import session, jsonify, request
+    @app.route('/generate-user-stories', methods=['POST'])
+    def generate_user_stories():
+        epics = session.get('epics')
+        if not epics:
+            product = session.get('product') or request.form.get('product')
+            feature = session.get('feature') or request.form.get('feature')
+            epics = [
+                f"Epic for {product or 'Product'}: Core Functionality",
+                f"Epic for {feature or 'Feature'}: Advanced Features"
+            ]
+            session['epics'] = epics
+        user_stories = []
+        for epic in epics:
+            user_stories.append(f"As a user, I want {epic.lower()} so that I get value.")
+        session['user_stories'] = user_stories
+        return jsonify({"epics": epics, "user_stories": user_stories})
+
     # Start server with enhanced error handling
     try:
         logger.info(f"Starting Flask server on port {port}")

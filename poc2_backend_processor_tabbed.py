@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 Tabbed Layout Backend Processor - Complete Standalone System
@@ -103,6 +104,7 @@ def ask_assistant_from_file_optimized(code_filepath, user_prompt):
         logger.error(f"Traceback: {traceback.format_exc()}")
         return f"Error: {str(e)}"
 
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key-change-in-production-very-long-secret")
 
@@ -119,6 +121,55 @@ os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 # Initialize Flask-Session
 Session(app)
+
+
+    
+@app.route("/tabbed-apply-story-details", methods=["POST"])
+def tabbed_apply_story_details():
+    """Persist updated story details from the chat panel."""
+    try:
+        data = request.get_json()
+        story_id = data.get('story_id')
+        updated_details = data.get('story_details')
+        if not story_id or not updated_details:
+            return jsonify({"success": False, "error": "Story ID and details required"}), 400
+
+        # Get current epic context
+        current_epic = session.get('current_epic', {})
+        epic_id = current_epic.get('id')
+
+        # Update only the story matching story_id and current epic
+        user_stories = session.get('generated_user_stories', [])
+        story_updated = False
+        for story in user_stories:
+            if story.get('id') == story_id and story.get('epic_id') == epic_id:
+                story.update(updated_details)
+                story_updated = True
+
+        # Persist updated story details for agent and next steps
+        session['generated_user_stories'] = user_stories
+        session['story_details'] = updated_details
+        session.modified = True
+
+        # Optionally, update agent response cache or context if needed
+        # (e.g., session['agent_response'] = ...)
+
+        if story_updated:
+            return jsonify({
+                "success": True,
+                "message": "Story details updated and persisted for selected epic.",
+                "updated_story": updated_details,
+                "epic_id": epic_id
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": "No matching story found for selected epic.",
+                "epic_id": epic_id
+            }), 404
+    except Exception as e:
+        logger.error(f"Error persisting story details: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # Constants
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx', 'md', 'csv'}
@@ -818,27 +869,16 @@ Focus on the core functionality and edge cases."""
                 acceptance_criteria = [
                     f"Given a user accesses {story_name.lower()}, when they perform the required actions, then the system should respond appropriately",
                     f"Given invalid input is provided, when {story_name.lower()} is attempted, then appropriate error messages should be displayed",
-                    f"Given a user completes {story_name.lower()}, when the operation is successful, then the system should provide confirmation"
+                    f"Given a user completes {story_name.lower()}, when the operation is successful, then the system should provide confirmation",
+                    f"Given a compliance rule applies, when {story_name.lower()} is processed, then all regulatory requirements must be met",
+                    f"Given a data integrity constraint, when {story_name.lower()} is updated, then the system must validate and preserve data integrity",
+                    f"Given a system error occurs, when {story_name.lower()} is executed, then the error must be logged and handled gracefully",
+                    f"Given an edge case scenario, when {story_name.lower()} is triggered, then the system must behave as expected"
                 ]
-            
-            acceptance_criteria_text = '\n'.join([f"• {criteria}" for criteria in acceptance_criteria])
         
-        # Generate tagged requirements
-        requirements_prompt = f"""For the following user story, identify and tag relevant requirements:
-
-Story: {story_name}
-Description: {story_description}
-
-Generate 3-5 tagged requirements that this story addresses.
-Return as a JSON array of strings."""
-        
-        requirements_response = ask_assistant_from_file_optimized("poc2_traceability_agent", requirements_prompt)
-        
-        try:
-            tagged_requirements = json.loads(requirements_response)
-            if not isinstance(tagged_requirements, list):
-                tagged_requirements = [requirements_response]
-        except json.JSONDecodeError:
+        # Extract tagged requirements from session or generate based on story
+        tagged_requirements = session.get('tagged_requirements', [])
+        if not tagged_requirements or not isinstance(tagged_requirements, list):
             tagged_requirements = [
                 "REQ-001: User authentication and authorization",
                 "REQ-002: Data security and privacy",

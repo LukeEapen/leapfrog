@@ -88,7 +88,7 @@ class SchemaMappingAgent:
                 import re
                 # Split camelCase, snake_case, kebab-case, and spaces
                 tokens = re.sub('([a-z])([A-Z])', r'\1 \2', name)
-                tokens = re.sub(r'[_\-]', ' ', tokens)
+                tokens = re.sub(r'[_\-]', ' ', name)
                 tokens = tokens.lower().split()
                 return set(tokens)
             src_tokens = tokenize(src['name'])
@@ -96,15 +96,15 @@ class SchemaMappingAgent:
             for tgt in tgt_list:
                 tgt_norm = normalize(tgt['name'])
                 if src_norm == tgt_norm:
-                    # If types differ, penalize similarity but guarantee mapping
-                    src_type = src['type'].split('(')[0].lower()
-                    tgt_type = tgt['type'].split('(')[0].lower()
-                    similarity = 1.0 if src_type == tgt_type else 0.6
+                    print(f"[SchemaMappingAgent] Exact match: {src['name']} -> {tgt['name']}")
+                    # Always map if names match, regardless of type
+                    similarity = 1.0
                     return tgt, similarity, src_desc, describe_field(tgt)
             # Also check for alternate spellings (e.g., first_name vs firstname)
             for tgt in tgt_list:
                 tgt_norm = normalize(tgt['name'])
                 if src_norm.replace('name', '') == tgt_norm.replace('name', ''):
+                    print(f"[SchemaMappingAgent] Alt spelling match: {src['name']} -> {tgt['name']}")
                     return tgt, 0.95, src_desc, describe_field(tgt)
             # Fallback to fuzzy logic
             best = None
