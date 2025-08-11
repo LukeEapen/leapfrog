@@ -5,6 +5,13 @@ Tabbed Layout Backend Processor - Complete Standalone System
 Based on the working three-section system but with tabbed UI experience
 """
 
+# Ensure .env is loaded before any API key usage
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 import os
 import sys
 import logging

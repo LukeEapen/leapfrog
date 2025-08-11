@@ -1182,6 +1182,29 @@
         "raw": "```json\n[\n    {\n        \"element\": \"calculatePremium\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"1. Receive policy details including coverage, risk factors, and customer information. \\n2. Perform dynamic risk assessment based on the provided data. \\n3. Integrate real-time data sources to adjust premium calculations. \\n4. Calculate the premium amount considering the risk assessment and data integration. \\n5. Generate a detailed breakdown display showing how the premium is calculated. \\n6. Handle complex cases such as multiple coverages or special conditions. \\n7. Trigger on-demand policy document events if required.\"\n    },\n    {\n        \"element\": \"calculatePremium\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": \"1. Identify the policy details entity and its attributes. \\n2. Determine the risk assessment process entity and its factors. \\n3. Access real-time data integration services entity. \\n4. Define the premium calculation algorithm entity. \\n5. Specify the breakdown display entity. \\n6. Manage complex cases entity. \\n7. Implement on-demand policy document events entity.\"\n    },\n    {\n        \"element\": \"calculatePremium\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": \"1. Define the inputs required for premium calculation. \\n2. Establish a risk assessment methodology. \\n3. Ensure real-time data integration compliance. \\n4. Calculate premium using standardized formulas. \\n5. Present detailed breakdown following ISO guidelines. \\n6. Address complex cases according to ISO standards. \\n7. Manage on-demand policy document events in a secure and auditable manner.\"\n    },\n    {\n        \"element\": \"trackTimingsSLA\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"1. Record the start timestamp when the SLA begins. \\n2. Record the end timestamp when the SLA ends. \\n3. Calculate the elapsed time by subtracting the start time from the end time. \\n4. Convert the elapsed time to milliseconds for accuracy.\"\n    },\n    {\n        \"element\": \"trackTimingsSLA\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": \"1. Define the start timestamp attribute. \\n2. Define the end timestamp attribute. \\n3. Calculate the elapsed time by subtracting start time from end time. \\n4. Convert the elapsed time to milliseconds.\"\n    },\n    {\n        \"element\": \"trackTimingsSLA\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": \"1. Capture the start timestamp following ISO time format. \\n2. Capture the end timestamp following ISO time format. \\n3. Calculate elapsed time using ISO time standards. \\n4. Convert the elapsed time to milliseconds as per ISO guidelines.\"\n    }\n]\n```"
       },
       "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Select Coverage Options",
+            "pseudocode": "Retrieve list of available coverage options from the insurance provider's API\nDisplay the list of coverage options to the insurance agent\nAllow the insurance agent to select one or more coverage options",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Select Deductible Options",
+            "pseudocode": "Retrieve list of available deductible options from the insurance provider's system\nDisplay the list of deductible options to the insurance agent\nAllow the insurance agent to select a deductible option",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Customize Insurance Quote",
+            "pseudocode": "Calculate the insurance premium based on the selected coverage options and deductible\nApply any discounts or surcharges based on the policyholder's profile\nGenerate a customized insurance quote for the potential policyholder",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Select Coverage Options\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Retrieve list of available coverage options from the insurance provider's API\",\n            \"Display the list of coverage options to the insurance agent\",\n            \"Allow the insurance agent to select one or more coverage options\"\n        ]\n    },\n    {\n        \"element\": \"Select Deductible Options\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Retrieve list of available deductible options from the insurance provider's system\",\n            \"Display the list of deductible options to the insurance agent\",\n            \"Allow the insurance agent to select a deductible option\"\n        ]\n    },\n    {\n        \"element\": \"Customize Insurance Quote\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Calculate the insurance premium based on the selected coverage options and deductible\",\n            \"Apply any discounts or surcharges based on the policyholder's profile\",\n            \"Generate a customized insurance quote for the potential policyholder\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
     }
   ]
 }

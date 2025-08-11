@@ -432,7 +432,7 @@
                     </div>
                 </div>
 
-                <form method="POST" class="mt-4">
+                <form method="POST" action="/page3" class="mt-4" onsubmit="handleSubmit(event)">
                     <div class="d-grid">
                         <button type="submit" id="submitBtn" class="btn btn-lg" onclick="handleSubmit(event)">
                             <span class="default-text">
@@ -565,39 +565,30 @@
 
         function handleSubmit(event) {
             event.preventDefault();
-
             const form = event.target.closest('form');
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
             }
-
             const submitBtn = document.getElementById('submitBtn');
             const defaultText = submitBtn.querySelector('.default-text');
             const loadingText = submitBtn.querySelector('.loading-text');
             const loadingSpinner = document.getElementById('loadingSpinner');
             const loadingTimer = document.getElementById('loadingTimer');
-
-            // UI update
             submitBtn.disabled = true;
             defaultText.classList.add('d-none');
             loadingText.classList.remove('d-none');
             loadingSpinner.classList.remove('d-none');
-
-            // Start timer
             startTime = Date.now();
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
                 loadingTimer.textContent = `⏳ ${elapsedSeconds}s`;
-
                 if (elapsedSeconds > 180) {
                     clearInterval(timerInterval);
                     alert("Timeout. Please try again.");
                 }
             }, 1000);
-
-            // Submit using fetch
             fetch(form.action, {
                 method: 'POST',
                 body: new FormData(form)

@@ -6,10 +6,6 @@ app = Flask(__name__)
 # Ensure route is registered at top level
 @app.route('/api/upload-prd-to-vector-db', methods=['POST'])
 def upload_prd_to_vector_db():
-    """
-    API endpoint to upload the PRD to the Vector DB and return a link.
-    Expects a POST request with PRD data in JSON format.
-    """
     try:
         session_id = session.get('data_key', None)
         if not session_id:
@@ -143,10 +139,6 @@ executor = ThreadPoolExecutor(max_workers=THREAD_POOL_SIZE)
 
 # Utility for parallel agent calls
 def run_agents_in_parallel(agent_tasks):
-    """
-    agent_tasks: dict of {key: (func, args)}
-    Returns: dict of {key: result}
-    """
     import time
     from concurrent.futures import as_completed
     results = {}
@@ -168,7 +160,7 @@ def run_agents_in_parallel(agent_tasks):
 # Map of assistant IDs to their roles
 ASSISTANTS = {
     #'agent_1': 'asst_EvIwemZYiG4cCmYc7GnTZoQZ',
-    'agent_1_1': 'asst_sW7IMhE5tQ78Ylx0zQkh6YnZ', # Agent 1.1 - Product Overview Synthesizer – System Instructions
+    'agent_1_1': 'asst_htCAXHgeveZkjJj84Ldpnv6L', # Agent 1.1 - Product Overview Synthesizer – System Instructions
     'agent_2'  : 'asst_t5hnaKy1wPvD48jTbn8Mx45z',   # Agent 2: Feature Overview Generator – System Instructions
     'agent_3'  : 'asst_EqkbMBdfOpUoEUaBPxCChVLR',   # Agent 3: Highest-Order Requirements Agent
     'agent_24_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator - System Instructions
@@ -223,17 +215,6 @@ logger = logging.getLogger(__name__)
 ########################
 
 def store_data(data):
-    """Store session data with unique ID in Redis or file system.
-    
-    Args:
-        data (dict): Data to store, must be JSON serializable
-        
-    Returns:
-        str: Unique session ID for retrieving data
-        
-    Raises:
-        ValueError: If data is empty or cannot be serialized
-    """
     # Generate unique session ID
     session_id = str(uuid.uuid4())
     if USING_REDIS:
@@ -244,19 +225,6 @@ def store_data(data):
     return session_id
 
 def get_data(session_id):
-    """
-    Retrieve session data for a given session_id from either Redis or file storage.
-
-    Args:
-        session_id (str): The unique identifier for the session.
-
-    Returns:
-        dict or None: The session data as a dictionary if found, otherwise None.
-
-    Notes:
-        - If USING_REDIS is True, attempts to fetch data from Redis.
-        - If USING_REDIS is False or data is not found in Redis, attempts to fetch data from a JSON file in TEMP_DIR.
-    """
     if USING_REDIS:
         # Try Redis first
         data = redis_client.get(session_id)
@@ -273,20 +241,6 @@ def get_data(session_id):
 # MONITORING & PERFORMANCE
 ########################
 def monitor_agent_performance(func):
-    """Decorator to track agent execution time and log performance.
-    
-    Wraps agent calls to:
-    - Measure execution time
-    - Log successful completions
-    - Capture and log failures
-    - Maintain performance metrics
-    
-    Args:
-        func: The agent function to monitor
-        
-    Returns:
-        wrapper: Decorated function with monitoring
-    """
     @wraps(func)
     def wrapper(agent_id, input_text, *args, **kwargs):
         start_time = time.time()
@@ -302,21 +256,6 @@ def monitor_agent_performance(func):
     return wrapper
 
 async def wait_for_run_completion(thread_id, run_id, timeout=90, poll_interval=0.5):
-    """Wait for OpenAI assistant run to complete with timeout.
-    
-    Args:
-        thread_id (str): OpenAI thread identifier
-        run_id (str): OpenAI run identifier
-        timeout (int): Maximum seconds to wait (default: 90)
-        poll_interval (float): Seconds between status checks (default: 0.5)
-        
-    Returns:
-        dict: Completed run status
-        
-    Raises:
-        TimeoutError: If run exceeds timeout
-        RuntimeError: If run fails
-    """
     start_time = time.time()
     while time.time() - start_time < timeout:
         status = openai.beta.threads.runs.retrieve(run_id=run_id, thread_id=thread_id)
@@ -330,21 +269,6 @@ async def wait_for_run_completion(thread_id, run_id, timeout=90, poll_interval=0
 
 @monitor_agent_performance
 def call_agent(agent_id, input_text):
-    """
-    Calls an OpenAI assistant agent with the specified input text and returns the agent's response.
-    Args:
-        agent_id (str): The ID of the assistant agent to call.
-        input_text (str): The input text to send to the agent.
-    Returns:
-        str: The response from the agent, or an error message if the call fails.
-    Raises:
-        ValueError: If thread, message, or run creation fails, or if no messages are returned.
-        Exception: For any other unexpected errors during the agent call process.
-    Logs:
-        - Start and end of the agent call.
-        - The agent's response.
-        - Any errors encountered during the process.
-    """
     try:
         logging.info(f"[CALL START] Calling agent {agent_id}")
         thread_key = f"thread_{agent_id}"
@@ -404,17 +328,6 @@ def call_agent(agent_id, input_text):
 
 @monitor_agent_performance
 async def call_agent_async(agent_id, input_text):
-    """
-    Asynchronously calls an OpenAI agent with the specified agent ID and input text, manages the conversation thread,
-    waits for the agent's response, and returns the response text.
-    Args:
-        agent_id (str): The unique identifier of the OpenAI agent (assistant) to call.
-        input_text (str): The input message to send to the agent.
-    Returns:
-        str: The response text from the agent, or an error message if the call fails.
-    Raises:
-        Exception: Any exception encountered during the agent call is caught and logged, and an error message is returned.
-    """
     try:
         logging.info(f"[CALL START] Calling agent {agent_id}")
         thread_key = f"thread_{agent_id}"
@@ -451,23 +364,6 @@ async def call_agent_async(agent_id, input_text):
 
 # Update call_agents_parallel to use retry logic
 async def call_agents_parallel(agent_calls):
-    """
-    Executes multiple agent calls in parallel using asyncio.
-
-    Args:
-        agent_calls (list of tuple): A list of tuples, each containing an agent_id and input_text
-            to be passed to the agent.
-
-    Returns:
-        list: A list of results returned by each agent call, in the same order as the input.
-
-    Raises:
-        Exception: Propagates any exceptions raised by the agent calls.
-
-    Note:
-        This function assumes that `call_agent_with_cache` is an async function that takes
-        (agent_id, input_text) as arguments.
-    """
     tasks = [
         call_agent_with_cache(agent_id, input_text)
         for agent_id, input_text in agent_calls
@@ -477,19 +373,6 @@ async def call_agents_parallel(agent_calls):
 agent_semaphore = asyncio.Semaphore(3)  # Limit concurrent calls
 
 async def call_agent_with_limit(agent_id, input_text):
-    """
-    Asynchronously calls an agent with a concurrency limit.
-
-    Args:
-        agent_id (str): The identifier of the agent to call.
-        input_text (str): The input text to send to the agent.
-
-    Returns:
-        Any: The result returned by the agent.
-
-    Note:
-        This function enforces a concurrency limit using an asynchronous semaphore.
-    """
     async with agent_semaphore:
         return await call_agent_with_cache(agent_id, input_text)
 def verify_credentials(username, password):
@@ -499,15 +382,6 @@ def verify_credentials(username, password):
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
-    """
-    Handles user login functionality.
-
-    If the request method is POST, verifies the provided username and password.
-    - On successful authentication, sets the session as logged in and redirects to 'page1'.
-    - On failure, renders the login page with an error message.
-
-    If the request method is not POST, renders the login page without an error message.
-    """
     if request.method == 'POST':
         if verify_credentials(request.form.get('username'), request.form.get('password')):
             session['logged_in'] = True
@@ -518,22 +392,6 @@ def login():
 
 @app.route('/page1', methods=['GET', 'POST'])
 def page1():
-    """
-    Handles the logic for the first page of the workflow, including user authentication, form input processing, file upload handling, session data storage, and asynchronous agent execution.
-    Workflow:
-    - Checks if the user is logged in; redirects to login if not.
-    - On POST request:
-        - Collects form inputs: 'industry', 'sector', 'geography', 'intent', 'features'.
-        - Handles optional file upload ('context_file'), reads and decodes its content, and adds it to the inputs.
-        - Updates the session with input data.
-        - Constructs a context string from the inputs and file content.
-        - Stores the input data and status in a session store (Redis or file).
-        - Defines and submits a background task to run multiple agents in parallel using the constructed context.
-        - Stores agent outputs or error information in the session store.
-        - Redirects the user to the next page ('/page2').
-    - On GET request:
-        - Renders the input form template ('page1_input.html').
-    """
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
@@ -653,20 +511,6 @@ def page1():
 
 @app.route('/page2', methods=['GET', 'POST'])
 def page2():
-    """
-    Handles the logic for the second page of the workflow.
-    - Checks if the user is logged in; redirects to login if not.
-    - Retrieves session-specific data and waits for a background job to complete, with a timeout.
-    - Handles error and timeout cases during background processing.
-    - On POST requests, updates the data with form inputs and persists it (optionally to Redis).
-    - Renders the 'page2_agents.html' template with agent outputs for GET requests.
-    Returns:
-        - Redirects to login if not authenticated.
-        - Error message and 500 status if agent processing fails.
-        - Timeout message and 504 status if processing takes too long.
-        - Redirects to page 3 on successful POST.
-        - Renders the page with agent outputs on GET.
-    """
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
@@ -722,16 +566,6 @@ def page2():
 
 @app.route('/update_content', methods=['POST'])
 def update_content():
-    """
-    Handles updating content for a user's session based on the provided content type and new content.
-    This endpoint requires the user to be authenticated. It expects a JSON payload with the following fields:
-        - type: The type of content to update ('product' or 'feature').
-        - content: The new content to process.
-    Depending on the content type, the function re-runs the appropriate agent to generate a new overview, updates the stored session data, and persists the changes either in Redis or as a local file.
-    Returns:
-        - JSON response with {'success': True, 'response': <new_response>} on success.
-        - JSON error message and appropriate HTTP status code on failure.
-    """
     if not session.get('logged_in'):
         return jsonify({'error': 'Not authenticated'}), 401
         
@@ -815,41 +649,17 @@ def update_content():
     
 @app.route('/page3', methods=['GET', 'POST'])
 def page3():
-    """
-    Handles the logic for the third page of the workflow, including user authentication, data retrieval, 
-    processing user and agent inputs, parallel invocation of agent assistants, and storing combined outputs.
-    Workflow:
-    - Checks if the user is logged in; redirects to login if not.
-    - Retrieves session data and prepares a combined input string from user inputs and agent analysis.
-    - On POST requests:
-        - Gathers relevant data and formats it for agent processing.
-        - Runs multiple agent assistants in parallel using asyncio.
-        - Stores the combined outputs in the session and persistent storage (Redis or file).
-        - Redirects to the next page in the workflow.
-    - On GET requests:
-        - Renders the prompt picker template with the highest order data.
-    Returns:
-        - Redirects to login if not authenticated.
-        - Redirects to page 4 after processing POST request.
-        - Renders 'page3_prompt_picker.html' template on GET request.
-    """
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     data = get_data(session.get('data_key', '')) or {}
 
     if request.method == 'POST':
-        # Get user inputs and agent outputs
         user_inputs = data.get("inputs", {})
-
-        # Avoid UnicodeEncodeError in Windows console logs
         try:
             logging.info(f"[PAGE3] user_inputs: {user_inputs}")
         except UnicodeEncodeError:
             logging.info(f"[PAGE3] user_inputs: {str(user_inputs).encode('ascii', 'replace').decode('ascii')}")
-
         feature_overview = data.get("feature_overview", "")
-
-        # Combine all relevant inputs into structured format, including Product Overview
         product_overview = data.get("product_overview", "")
         combined_input = f"""
         # Original User Inputs
@@ -865,14 +675,10 @@ def page3():
         # Feature Overview (Agent 2 Analysis)
         {feature_overview}
         """
-
         try:
             logging.info(f"[PAGE3] Combined input for agents: {combined_input}")
         except UnicodeEncodeError:
             logging.info(f"[PAGE3] Combined input for agents: {combined_input.encode('ascii', 'replace').decode('ascii')}")
-
-
-        # Persistent event loop for agent orchestration
         import threading, psutil, gc
         loop = None
         try:
@@ -885,23 +691,19 @@ def page3():
             (ASSISTANTS[k], combined_input) for k in keys
         ]))
         outputs = dict(zip(keys, results))
-
         data['combined_outputs'] = outputs
         session['combined_outputs'] = outputs
-
         if USING_REDIS:
             redis_client.setex(session['data_key'], 3600, json.dumps(data))
         else:
             with open(os.path.join(TEMP_DIR, f'prd_session_{session["data_key"]}.json'), 'w') as f:
                 json.dump(data, f)
-        # Resource usage logging and cleanup
         try:
             logging.info(f"[RESOURCE] Thread count: {threading.active_count()}")
             logging.info(f"[RESOURCE] Memory usage: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB")
             gc.collect()
         except Exception as e:
             logging.warning(f"Resource logging failed: {e}")
-
         return redirect('/page4')
 
     return render_template('page3_prompt_picker.html', highest_order=data.get('highest_order', ''))
@@ -909,17 +711,6 @@ def page3():
 _agent_response_cache = {}
 
 async def call_agent_with_cache(agent_id, input_text):
-    """
-    Asynchronously calls an agent with the given input text, utilizing a cache to avoid redundant calls.
-    Args:
-        agent_id (str): The unique identifier for the agent to be called.
-        input_text (str): The input text to be processed by the agent.
-    Returns:
-        Any: The result returned by the agent, either from cache or from a fresh call.
-    Notes:
-        - If the response for the given agent_id and input_text is already cached, the cached response is returned.
-        - Otherwise, the agent is called and the response is cached for future use.
-    """
     cache_key = f"{agent_id}_{hash(input_text)}"
     if cache_key in _agent_response_cache:
         logging.info(f"[CACHE HIT] Returning cached response for {agent_id}")
@@ -940,18 +731,6 @@ def require_auth(f):
 @app.route('/page4')
 @require_auth
 def page4():
-    """
-    Handles the logic for rendering the fourth page of the workflow.
-    - Checks if the user is logged in; redirects to login if not.
-    - Retrieves session-specific data using a session key.
-    - If data is missing, logs an error and returns a 404 response.
-    - Extracts relevant output fields from the data for rendering.
-    - Logs the output values (truncated for readability).
-    - Renders the 'page4_final_output.html' template with the extracted outputs.
-    - Handles and logs any exceptions, returning a 500 response on error.
-    Returns:
-        Response: Rendered HTML template with outputs, or an error message with appropriate HTTP status code.
-    """
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
@@ -986,17 +765,6 @@ def page4():
 
 
 def add_hyperlink(paragraph, url, text=None):
-    """
-    Adds a clickable hyperlink to a python-docx Paragraph object.
-    Args:
-        paragraph (docx.text.paragraph.Paragraph): The paragraph to which the hyperlink will be added.
-        url (str): The URL that the hyperlink will point to.
-        text (str, optional): The display text for the hyperlink. If None, the URL will be used as the display text.
-    Returns:
-        docx.text.paragraph.Paragraph: The modified paragraph with the hyperlink appended.
-    Note:
-        This function uses lxml and python-docx internals to create a hyperlink, as python-docx does not natively support hyperlinks.
-    """
     if text is None:
         text = url
     part = paragraph.part
@@ -1038,14 +806,6 @@ def validate_reference(ref: str) -> bool:
     return not any(re.match(pattern, ref.strip()) for pattern in invalid_patterns)
 
 def extract_references_from_outputs(outputs):
-    """
-    Extracts and returns a sorted list of unique references found in the provided outputs.
-    This function scans the values of the `outputs` dictionary, searching for references using a variety of regular expression patterns. It supports extraction of references in formats such as Markdown links, raw URLs, DOI, ISBN, and common citation styles. The extracted references are cleaned of extraneous punctuation and filtered for minimum length to reduce noise.
-    Args:
-        outputs (dict): A dictionary where each value is a string potentially containing references.
-    Returns:
-        list: A sorted list of unique, cleaned reference strings extracted from the outputs.
-    """
     """Extract references from combined outputs."""
     all_refs = set()
     ref_patterns = [
@@ -1060,20 +820,6 @@ def extract_references_from_outputs(outputs):
     ]
     
     def extract_from_text(text):
-        """
-        Extracts references from the given text using predefined regular expression patterns.
-
-        Iterates over a set of reference patterns (`ref_patterns`), finds all matches in the input text,
-        and collects unique references. Handles markdown links differently by extracting the URL part
-        if available, otherwise adds the entire match. For other patterns, adds the full matched string.
-        Logs a warning if an error occurs during extraction.
-
-        Args:
-            text (str): The input text from which to extract references.
-
-        Returns:
-            set: A set of unique references extracted from the text.
-        """
         refs = set()
         for pattern in ref_patterns:
             matches = re.finditer(pattern, text, re.MULTILINE | re.IGNORECASE)
@@ -1120,19 +866,6 @@ limiter = Limiter(app=app, key_func=get_remote_address)
 @app.route('/generate_word_doc', methods=['POST'])
 @limiter.limit("5 per minute")
 def generate_word_doc():
-    """
-    Generates a Product Requirements Document (PRD) as a Word file from session data.
-    This function performs the following steps:
-    1. Checks user authentication via session.
-    2. Retrieves and validates PRD data from the session.
-    3. Initializes a Word document with custom styles.
-    4. Maps and processes PRD sections, adding them to the document.
-    5. Handles and logs errors for individual sections.
-    6. Adds a references section to the document.
-    7. Streams the generated document as a downloadable .docx file.
-    Returns:
-        Flask response: A Word document file if successful, or a JSON error response with appropriate HTTP status code.
-    """
     """Generate Word document from PRD content."""
     if not session.get('logged_in'):
         return jsonify({'error': 'Not authenticated'}), 401
@@ -1199,16 +932,6 @@ def generate_word_doc():
     
 
 def add_references_section(doc, outputs):
-    """
-    Adds a "References" section to a document using references extracted from the provided outputs.
-    Args:
-        doc: The document object to which the references section will be added.
-        outputs: The outputs from which references are to be extracted.
-    Raises:
-        Logs an error if any exception occurs during the process.
-    The function extracts references, adds a page break and a heading for the references section,
-    and then adds each reference as a bullet point. If a reference is a URL, it is added as a hyperlink.
-    """
     """Add references section to document."""
     try:
         refs = extract_references_from_outputs(outputs)
@@ -1229,16 +952,6 @@ def add_references_section(doc, outputs):
         logging.error(f"Error adding references: {str(e)}")
 
 def process_section(doc, title, raw_markdown):
-    """
-    Processes a single section of a document by adding a heading, converting Markdown content to HTML,
-    parsing the HTML, and processing its elements for inclusion in the document.
-    Args:
-        doc: The document object to which the section will be added.
-        title (str): The title of the section to be added as a heading.
-        raw_markdown (str): The raw Markdown content of the section.
-    Raises:
-        Logs any exceptions encountered during processing and adds an error note to the document.
-    """
     """Process a single section of the document."""
     try:
         doc.add_heading(title, level=2)
@@ -1267,20 +980,6 @@ def process_section(doc, title, raw_markdown):
         doc.add_paragraph(f"Error processing section: {str(e)}", style="Error")
 
 def process_element(doc, el):
-    """
-    Processes a single HTML element and adds its content to a Word document paragraph.
-    Args:
-        doc: A python-docx Document object to which the paragraph will be added.
-        el: A BeautifulSoup Tag object representing the HTML element to process.
-    Behavior:
-        - Extracts and strips text from the HTML element.
-        - If the text matches a requirement label pattern (e.g., "F123. Description"), adds the label in bold followed by the description.
-        - If the text matches a labeled line pattern (e.g., "Label: Description"), adds the label in bold followed by the description.
-        - Otherwise, adds the text as a regular paragraph. If the element is a list item ("li"), applies the "List Bullet" style.
-        - Sets the paragraph's space after to 6 points.
-    Returns:
-        None
-    """
     """Process a single HTML element."""
     text = el.get_text(strip=True)
     if not text:
@@ -1310,15 +1009,6 @@ def process_element(doc, el):
 
 @app.errorhandler(Exception)
 def handle_exception(e):
-    """
-    Handles unhandled exceptions by logging the error and returning a standardized JSON response.
-
-    Args:
-        e (Exception): The exception instance that was raised.
-
-    Returns:
-        tuple: A tuple containing a JSON response with error details and the HTTP status code 500.
-    """
     """Handle all unhandled exceptions."""
     logging.error(f"Unhandled exception: {str(e)}")
     return jsonify({
@@ -1365,16 +1055,6 @@ def process_section(doc, title, raw_markdown):
         doc.add_paragraph(f"Error processing section: {str(e)}", style="Error")
 
 def initialize_document_styles(doc):
-    """
-    Initializes custom paragraph styles for a Word document.
-    Adds the following styles to the document:
-    - 'Error': Red, italicized text for error messages.
-    - 'Requirement': Calibri font, size 11pt for requirement sections.
-    Args:
-        doc (docx.document.Document): The Word document object to which styles will be added.
-    Returns:
-        docx.document.Document: The document object with the new styles applied.
-    """
     """Initialize document styles."""
     styles = doc.styles
     
@@ -1391,17 +1071,6 @@ def initialize_document_styles(doc):
     return doc
 
 def cleanup_expired_sessions():
-    """
-    Removes expired session files from the temporary directory if Redis is not used.
-    This function iterates through files in the TEMP_DIR directory, identifying files
-    that start with 'prd_session_'. If a file's last modification time is more than
-    one hour ago, it attempts to delete the file. The function logs the number of
-    files successfully removed and any failures encountered during the process.
-    If Redis is used for session management, the function exits early since Redis
-    handles expiration automatically. All errors are logged for troubleshooting.
-    Raises:
-        Logs exceptions and errors encountered during file removal or directory access.
-    """
     """Clean up expired session data with better error handling."""
     if USING_REDIS:
         return  # Redis handles expiration
@@ -1431,16 +1100,6 @@ def cleanup_expired_sessions():
         logging.error(f"Session cleanup failed: {e}")
 
 class UserInputSchema(Schema):
-    """
-    Schema for validating user input data.
-
-    Attributes:
-        industry (str): The industry to which the user input pertains. Required.
-        sector (str): The sector within the specified industry. Required.
-        geography (str): The geographical region relevant to the input. Required.
-        intent (str): The user's intent or purpose for the input. Required.
-        features (str): The features or attributes specified by the user. Required.
-    """
     industry = fields.Str(required=True)
     sector = fields.Str(required=True)
     geography = fields.Str(required=True)
@@ -1448,21 +1107,6 @@ class UserInputSchema(Schema):
     features = fields.Str(required=True)
 
 def validate_form_input(form_data):
-    """
-    Validates and sanitizes form input data against a predefined schema.
-    This function first strips whitespace from all input values, then validates the sanitized data using the `UserInputSchema`.
-    It enforces additional rules:
-    - Each input value must be at least 3 characters and no more than 1000 characters long.
-    - Input values must not contain any of the following characters: `<`, `>`, `{`, `}`, `[`, `]`.
-    Args:
-        form_data (dict): Dictionary containing form input data as key-value pairs.
-    Returns:
-        tuple:
-            - bool: True if validation succeeds, False otherwise.
-            - dict: Validated data if successful, or a dictionary of error messages if validation fails.
-    Raises:
-        None. All exceptions are caught and logged internally.
-    """
     """Validate form input against schema with improved sanitization."""
     try:
         # Sanitize input before validation
@@ -1492,13 +1136,6 @@ def validate_form_input(form_data):
         return False, {"error": "Internal validation error"}
     
 def extend_session():
-    """
-    Extends the user's session lifetime if they are currently logged in.
-
-    If the user is logged in, this function sets the session to be permanent,
-    updates the application's permanent session lifetime to one hour, and marks
-    the session as modified to ensure the changes are saved.
-    """
     """Extend session lifetime if user is active."""
     if session.get('logged_in'):
         session.permanent = True
@@ -1522,19 +1159,6 @@ def before_request():
 ########################
 @monitor_agent_performance
 async def call_agent_with_retry(agent_id, input_text, max_retries=3):
-    """Call OpenAI assistant with exponential backoff retry logic.
-    
-    Args:
-        agent_id (str): OpenAI assistant identifier
-        input_text (str): Input prompt for the agent
-        max_retries (int): Maximum retry attempts (default: 3)
-        
-    Returns:
-        str: Agent response text
-        
-    Raises:
-        RuntimeError: If all retry attempts fail
-    """
     for attempt in range(max_retries):
         try:
             # Create thread with initial message
@@ -1560,21 +1184,6 @@ async def call_agent_with_retry(agent_id, input_text, max_retries=3):
             await asyncio.sleep(1.5)
             
 def store_session_data(data):
-    """
-    Stores large session data externally (in Redis or as a file) and saves only a reference key in the session.
-    Args:
-        data (dict): The session data to be stored. Must be serializable to JSON.
-    Returns:
-        str: The unique session ID used as the storage key.
-    Raises:
-        ValueError: If the input data is empty or not serializable to JSON.
-        Exception: If storage fails due to unforeseen errors.
-    Behavior:
-        - Serializes the input data to JSON.
-        - Attempts to store the data in Redis if enabled; falls back to file storage on failure.
-        - Stores only the generated session ID in the session under 'data_key'.
-        - Logs all major actions and errors.
-    """
     """Store large session data in Redis/files and keep only key in session."""
     try:
         if not data:
@@ -1613,13 +1222,6 @@ def store_session_data(data):
         raise
 
 def get_session_data():
-    """
-    Retrieve session data from storage with validation.
-    Attempts to retrieve session data using a session key. First tries to fetch data from Redis if enabled,
-    falling back to file-based storage if Redis is unavailable or retrieval fails. Handles and logs errors
-    during retrieval and deserialization. Returns the session data as a Python object if successful, or None
-    if retrieval fails or no session key is found.
-    """
     """Retrieve session data from storage with validation."""
     try:
         session_id = session.get('data_key')
@@ -1703,24 +1305,6 @@ def chat_agent3():
 
 @app.route("/review_prd", methods=["POST"])
 def review_prd():
-    """
-    Agent 4.6: PRD Review and Quality Assurance Agent
-    
-    This endpoint processes requests to review a complete PRD using Agent 4.6 (asst_JOtY81FnKEkrhgcJmuJSDyip).
-    The agent analyzes all PRD sections for:
-    - Completeness of requirements
-    - Clarity and consistency
-    - Missing critical information
-    - Improvement suggestions
-    
-    Args:
-        sections (dict): PRD sections to review, received as JSON in request body
-        
-    Returns:
-        JSON response containing:
-        - Array of issues found
-        - Each issue includes: section name, identified problem, and suggestion for improvement
-    """
     data = request.get_json()
     prd_sections = data.get("sections", {})
 

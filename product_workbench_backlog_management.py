@@ -64,15 +64,17 @@ def safe_import_backend():
 
         # --- PATCH: Speed up OpenAI API calls in backend ---
         # If backend exposes a config or settings object, set fastest model (gpt-4o) and low temperature
+        # Enforce max_tokens <= 2048 to avoid OpenAI context length errors
+        safe_max_tokens = 1024
         if hasattr(backend, 'set_ai_config'):
-            backend.set_ai_config(model="gpt-4o", temperature=0.3, max_tokens=1024, parallel=True)
-            logger.info("Set backend AI config: gpt-4o, temp=0.3, parallel=True")
+            backend.set_ai_config(model="gpt-4o", temperature=0.3, max_tokens=safe_max_tokens, parallel=True)
+            logger.info(f"Set backend AI config: gpt-4o, temp=0.3, max_tokens={safe_max_tokens}, parallel=True")
         elif hasattr(backend, 'ai_config'):
             backend.ai_config['model'] = "gpt-4o"
             backend.ai_config['temperature'] = 0.3
-            backend.ai_config['max_tokens'] = 1024
+            backend.ai_config['max_tokens'] = safe_max_tokens
             backend.ai_config['parallel'] = True
-            logger.info("Updated backend.ai_config for speed (gpt-4o)")
+            logger.info(f"Updated backend.ai_config for speed (gpt-4o, max_tokens={safe_max_tokens})")
         # If backend has a function to optimize story generation, call it
         if hasattr(backend, 'optimize_story_generation'):
             backend.optimize_story_generation()
@@ -88,10 +90,12 @@ def safe_import_backend():
         if not best_model:
             best_model = "gpt-4o"
         # Set lower temperature and max_tokens for speed
+        # Enforce max_tokens <= 2048 for all config
+        safe_max_tokens = 1024
         ai_config = {
             "model": best_model,
             "temperature": 0.2,
-            "max_tokens": 512,
+            "max_tokens": safe_max_tokens,
             "parallel": True,
             "stream": True
         }
