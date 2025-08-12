@@ -6,193 +6,110 @@
   <small>Modern Data Migration Workflow</small>
 </div>
 
-
-<!-- Modern Tabs -->
 <style>
-  .nav-pills .nav-link {
-    border-radius: 2rem;
-    margin: 0 0.25rem;
-    font-weight: 500;
-    color: #d32f2f;
-    background: #fff;
-    border: 1px solid #d32f2f;
-    transition: background 0.2s, color 0.2s;
-  }
-  .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
-    background: linear-gradient(90deg, #d32f2f 60%, #b71c1c 100%);
-    color: #fff !important;
-    font-weight: 700;
-    border: 1px solid #d32f2f;
-    box-shadow: 0 2px 8px rgba(211,47,47,0.10);
-  }
+  .nav-pills .nav-link { border-radius:2rem; margin:0 .25rem; font-weight:500; color:#d32f2f; background:#fff; border:1px solid #d32f2f; transition:.2s }
+  .nav-pills .nav-link.active,.nav-pills .show>.nav-link{background:linear-gradient(90deg,#d32f2f 60%,#b71c1c);color:#fff !important;font-weight:700;box-shadow:0 2px 8px rgba(211,47,47,.1)}
+  .floating-chat{position:fixed; bottom:20px; right:20px; width:340px; max-height:520px; z-index:1050; box-shadow:0 4px 18px rgba(0,0,0,.15)}
+  .floating-chat .card-body{overflow-y:auto}
 </style>
 <ul class="nav nav-pills mb-4 justify-content-center" id="poc4Tabs">
-  <li class="nav-item">
-    <a class="nav-link active" href="{{ url_for('poc4.page1') }}">1. Upload</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page2') }}">2. Mapping</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page3') }}">3. Rules</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page4') }}">4. Validation</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page5') }}">5. Reconciliation</a>
-  </li>
+  <li class="nav-item"><a class="nav-link active" href="{{ url_for('poc4.page1') }}">1. Upload</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page2') }}">2. Mapping</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page3') }}">3. Rules</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page4') }}">4. Validation</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page5') }}">5. Reconciliation</a></li>
 </ul>
 
-<!-- 3 Column Layout -->
-<div class="row g-4">
-  <!-- Source Column -->
-  <div class="col-md-4">
-    <div class="card h-100 shadow-sm">
-      <div class="card-header bg-light text-danger fw-bold">Source System</div>
-      <div class="card-body">
-        <div class="mb-3">
-          <label class="form-label">Source Schema</label>
+<form method="post" enctype="multipart/form-data" id="upload-form">
+  <div class="row g-4">
+    <!-- Source Column -->
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-light text-danger fw-bold">Source System</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Source Schema</label>
             <select class="form-select mb-2" id="source-schema-select" name="source_schema" required>
-              <option value="source_schema.json" selected>Banking RDBMS (Sample)</option>
-          </select>
-          <input type="file" class="form-control" id="source-schema-upload" accept="application/json">
+              <option value="source_schema.json" selected>Source (Relational)</option>
+            </select>
+            <input type="file" class="form-control" id="source-schema-upload" accept="application/json">
+          </div>
+          <div id="source-schema-fields"></div>
         </div>
-        <div id="source-schema-fields"></div>
       </div>
     </div>
-  </div>
-  <!-- Target Column -->
-  <div class="col-md-4">
-    <div class="card h-100 shadow-sm">
-      <div class="card-header bg-light text-danger fw-bold">Target System</div>
-      <div class="card-body">
-        <form method="post" enctype="multipart/form-data" id="upload-form">
+    <!-- Legacy Column -->
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-light text-danger fw-bold">Legacy System</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Legacy Schema</label>
+            <select class="form-select mb-2" id="legacy-schema-select" name="legacy_schema" required>
+              <option value="legacy_schema.json" selected>Legacy Core (Mainframe)</option>
+            </select>
+            <input type="file" class="form-control" id="legacy-schema-upload" accept="application/json">
+          </div>
+          <div id="legacy-schema-fields"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Target Column -->
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-light text-danger fw-bold">Target System</div>
+        <div class="card-body">
           <div class="mb-3">
             <label class="form-label">Target Schema</label>
             <select class="form-select mb-2" id="target-schema-select" name="target_schema" required>
-              <option value="" disabled selected>Select target schema</option>
-              <option value="target_schema.json">Banking OLAP Flat (Sample)</option>
+              <option value="target_schema.json" selected>Target OLAP Flat</option>
+              <option value="target_schema_future.json">Future OLAP Enhanced</option>
             </select>
             <input type="file" class="form-control" id="target-schema-upload" accept="application/json">
           </div>
           <div id="target-schema-fields"></div>
-          <button type="submit" class="btn btn-danger w-100 mt-3">Next</button>
-        </form>
+        </div>
       </div>
     </div>
   </div>
-  <!-- Chat Column -->
-  <div class="col-md-4">
-    <div class="card h-100 shadow-sm d-flex flex-column">
-      <div class="card-header bg-danger text-white">Chatbot Assistant</div>
-      <div class="card-body flex-grow-1 d-flex flex-column p-0">
-        <div class="flex-grow-1 p-3" style="overflow-y:auto; min-height: 400px;" id="chat-messages">
-          <div class="text-muted small">Ask me anything about the data migration process...</div>
-        </div>
+  <div class="mt-4 text-end">
+    <button type="submit" class="btn btn-danger px-5">Next</button>
+  </div>
+</form>
+
+<!-- Floating Chat Widget -->
+<div class="card floating-chat">
+  <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center">
+    <span>Assistant</span>
+    <button class="btn btn-sm btn-light" type="button" onclick="toggleChatBody()">▾</button>
+  </div>
+  <div class="card-body p-2" id="chat-body" style="min-height:250px; max-height:360px;">
+    <div id="chat-messages" class="small text-muted">Ask about the migration workflow...</div>
+  </div>
+  <div class="card-footer p-2">
+    <form id="chat-form" onsubmit="return sendMessage(event);">
+      <div class="input-group input-group-sm">
+        <input type="text" class="form-control" id="chat-input" placeholder="Type..." required>
+        <button class="btn btn-danger" type="submit">Send</button>
       </div>
-      <div class="card-footer">
-        <form id="chat-form" onsubmit="return sendMessage(event);">
-          <div class="input-group">
-            <input type="text" class="form-control" id="chat-input" placeholder="Type your question..." required>
-            <button class="btn btn-danger" type="submit">Send</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    </form>
   </div>
 </div>
 
 <script>
-// Chatbot logic
-async function sendMessage(e) {
-  e.preventDefault();
-  const input = document.getElementById('chat-input');
-  const msg = input.value;
-  if (!msg) return false;
-  appendMessage('You', msg);
-  input.value = '';
-  const res = await fetch('/poc4/chat', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: 'message=' + encodeURIComponent(msg)
-  });
-  const data = await res.json();
-  appendMessage('Bot', data.response);
-  return false;
-}
-function appendMessage(sender, text) {
-  const chat = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.innerHTML = `<strong>${sender}:</strong> ${text}`;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
+function toggleChatBody(){ const el=document.getElementById('chat-body'); el.style.display= el.style.display==='none' ? 'block':'none'; }
+async function sendMessage(e){ e.preventDefault(); const input=document.getElementById('chat-input'); const msg=input.value.trim(); if(!msg) return false; appendMessage('You', msg); input.value=''; try{ const res= await fetch('/poc4/chat',{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'message='+encodeURIComponent(msg)}); const data= await res.json(); appendMessage('Bot', data.response);}catch(err){ appendMessage('Bot','(error)'); } return false; }
+function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
 
-// Schema preview logic
-async function loadSchema(file, target) {
-  try {
-    const res = await fetch(`/poc4/static_schema/schemas/${file}`);
-    const schema = await res.json();
-    renderSchemaFields(schema, target);
-  } catch (e) {
-    document.getElementById(target).innerHTML = '<div class="text-danger">Failed to load schema.</div>';
-  }
-}
+async function loadSchema(file,target){ try{ const res= await fetch(`/poc4/static_schema/schemas/${file}`); const schema= await res.json(); renderSchemaFields(schema,target);}catch(e){ document.getElementById(target).innerHTML='<div class="text-danger">Failed to load schema.</div>'; }}
+function renderSchemaFields(schema,target){ let html=''; if(schema.tables){ schema.tables.forEach(t=>{ html+=`<div class=\"card mb-2\"><div class=\"card-header bg-light fw-bold\">${t.name}</div><div class=\"card-body p-2\"><ul class=\"list-group\">`; t.fields.forEach(f=>{ html+=`<li class=\"list-group-item d-flex justify-content-between align-items-center\"><span>${f.name}</span><span class=\"badge bg-danger\">${f.type}</span></li>`; }); html+='</ul></div></div>'; }); } document.getElementById(target).innerHTML=html; }
 
-function renderSchemaFields(schema, target) {
-  let html = '';
-  if (schema.tables) {
-    schema.tables.forEach(table => {
-      html += `<div class="card mb-2"><div class="card-header bg-light fw-bold">${table.name}</div><div class="card-body p-2"><ul class="list-group">`;
-      table.fields.forEach(field => {
-        html += `<li class="list-group-item d-flex justify-content-between align-items-center"><span>${field.name}</span><span class="badge bg-danger">${field.type}</span></li>`;
-      });
-      html += '</ul></div></div>';
-    });
-  }
-  document.getElementById(target).innerHTML = html;
-}
-
-document.getElementById('source-schema-select').addEventListener('change', function() {
-  loadSchema(this.value, 'source-schema-fields');
-});
-document.getElementById('target-schema-select').addEventListener('change', function() {
-  loadSchema(this.value, 'target-schema-fields');
-});
-
-document.getElementById('source-schema-upload').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt) {
-    try {
-      const schema = JSON.parse(evt.target.result);
-      renderSchemaFields(schema, 'source-schema-fields');
-    } catch (err) {
-      document.getElementById('source-schema-fields').innerHTML = '<div class="text-danger">Invalid JSON file.</div>';
-    }
-  };
-  reader.readAsText(file);
-});
-
-document.getElementById('target-schema-upload').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt) {
-    try {
-      const schema = JSON.parse(evt.target.result);
-      renderSchemaFields(schema, 'target-schema-fields');
-    } catch (err) {
-      document.getElementById('target-schema-fields').innerHTML = '<div class="text-danger">Invalid JSON file.</div>';
-    }
-  };
-  reader.readAsText(file);
-});
+['source','legacy','target'].forEach(kind=>{ const sel=document.getElementById(`${kind}-schema-select`); if(sel){ sel.addEventListener('change',()=>{ loadSchema(sel.value, `${kind}-schema-fields`); }); }});
+['source','legacy','target'].forEach(kind=>{ const up=document.getElementById(`${kind}-schema-upload`); if(up){ up.addEventListener('change', e=>{ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=evt=>{ try{ const schema=JSON.parse(evt.target.result); renderSchemaFields(schema, `${kind}-schema-fields`);}catch(err){ document.getElementById(`${kind}-schema-fields`).innerHTML='<div class="text-danger">Invalid JSON file.</div>'; } }; reader.readAsText(file); }); }});
 
 // Initial load
-loadSchema('source_schema.json', 'source-schema-fields');
-loadSchema('target_schema.json', 'target-schema-fields');
+loadSchema('source_schema.json','source-schema-fields');
+loadSchema('legacy_schema.json','legacy-schema-fields');
+loadSchema('target_schema.json','target-schema-fields');
 </script>
 {% endblock %}

@@ -54,8 +54,8 @@
         <ul class="list-group">
           {% for m in mapping %}
           <li class="list-group-item">
-            <strong>{{ m.source }}</strong>
-            {% if m.target %} <span class="text-muted">→ {{ m.target }}</span>{% endif %}
+            <strong>{% if m.source_table %}{{ m.source_table }}.{% endif %}{{ m.source }}</strong>
+            {% if m.target %} <span class="text-muted">→ {% if m.target_table %}{{ m.target_table }}.{% endif %}{{ m.target }}</span>{% endif %}
           </li>
           {% endfor %}
         </ul>
@@ -70,22 +70,25 @@
         <table class="table table-bordered mt-3">
           <thead>
             <tr>
-              <th>Field</th>
+              <th>Target Field</th>
+              <th>Source Field(s)</th>
               <th>Rule</th>
               <th>Example</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             <form method="post" id="rules-form">
             {% for rule in rules %}
             <tr>
-              <td>{{ rule.field }}</td>
+              <td>{{ rule.field_full or rule.field }}</td>
+              <td class="small text-muted">{{ rule.sources_display }}</td>
               <td>
                 <input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control" />
               </td>
-              <td>{{ rule.example }}</td>
+              <td class="small">{{ rule.example }}</td>
               <td>
-                <button type="button" class="btn btn-outline-danger btn-sm" onclick="editRule({{ loop.index0 }})">Edit</button>
+                <button type="button" class="btn btn-outline-danger btn-sm edit-rule-btn" data-index="{{ loop.index0 }}">Edit</button>
               </td>
             </tr>
             {% endfor %}
@@ -143,5 +146,14 @@
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
   }
+  function editRule(i){
+    const inp=document.querySelector(`input[name='rule_${i}']`);
+    if(!inp) return;
+    const val=prompt('Edit rule:', inp.value);
+    if(val!==null){ inp.value=val; }
+  }
+  document.querySelectorAll('.edit-rule-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> editRule(parseInt(btn.dataset.index)));
+  });
 </script>
 {% endblock %}

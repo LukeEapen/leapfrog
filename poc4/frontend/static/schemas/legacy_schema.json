@@ -1,0 +1,57 @@
+{
+  "tables": [
+    {
+      "name": "legacy_customer",
+      "fields": [
+        {"name": "cust_id", "type": "NUMBER", "primary_key": true},
+        {"name": "cust_first_nm", "type": "VARCHAR2(50)"},
+        {"name": "cust_last_nm", "type": "VARCHAR2(50)"},
+        {"name": "cust_email_addr", "type": "VARCHAR2(120)"},
+        {"name": "cust_phone_num", "type": "VARCHAR2(25)"},
+        {"name": "cust_postal_addr", "type": "VARCHAR2(255)"},
+        {"name": "cust_created_ts", "type": "DATE"}
+      ]
+    },
+    {
+      "name": "legacy_account",
+      "fields": [
+        {"name": "acct_id", "type": "NUMBER", "primary_key": true},
+        {"name": "cust_id", "type": "NUMBER"},
+        {"name": "acct_type_cd", "type": "CHAR(4)"},
+        {"name": "acct_status_cd", "type": "CHAR(1)"},
+        {"name": "acct_open_dt", "type": "DATE"},
+        {"name": "acct_close_dt", "type": "DATE"},
+        {"name": "acct_curr_bal_amt", "type": "NUMBER(18,2)"},
+        {"name": "acct_avail_bal_amt", "type": "NUMBER(18,2)"}
+      ]
+    },
+    {
+      "name": "legacy_ledger",
+      "fields": [
+        {"name": "ledger_entry_id", "type": "NUMBER", "primary_key": true},
+        {"name": "acct_id", "type": "NUMBER"},
+        {"name": "entry_ts", "type": "DATE"},
+        {"name": "dr_cr_ind", "type": "CHAR(1)"},
+        {"name": "txn_amt", "type": "NUMBER(18,2)"},
+        {"name": "currency_cd", "type": "CHAR(3)"},
+        {"name": "txn_type_cd", "type": "VARCHAR2(30)"},
+        {"name": "ref_txn_id", "type": "NUMBER"},
+        {"name": "batch_id", "type": "NUMBER"},
+        {"name": "created_by", "type": "VARCHAR2(50)"},
+        {"name": "created_ts", "type": "DATE"}
+      ]
+    }
+  ],
+  "metadata": {
+    "schema_name": "legacy_core",
+    "description": "Legacy core banking schema capturing customer, account, and ledger transaction history",
+    "version": "1.0.0",
+    "source_system": "Mainframe COBOL",
+    "naming_conventions": {
+      "prefixes": {
+        "customer": "cust_",
+        "account": "acct_"
+      }
+    }
+  }
+}

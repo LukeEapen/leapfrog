@@ -46,11 +46,17 @@
 
 <!-- 3 Column Layout -->
 <div class="row g-4">
-  <!-- Source/Target DB Selection Column -->
   <div class="col-md-4">
     <div class="card h-100 shadow-sm">
-      <div class="card-header bg-light text-danger fw-bold">Select Databases</div>
+      <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
+        <span>Select Databases</span>
+        <form method="post" style="margin:0;">
+          <input type="hidden" name="action" value="reset">
+          <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Reset & repopulate all DBs?');">Reset DBs</button>
+        </form>
+      </div>
       <div class="card-body">
+        <!-- existing select form -->
         <form method="post" id="db-select-form">
           <div class="mb-3">
             <label class="form-label">Source Database</label>
@@ -72,19 +78,59 @@
       </div>
     </div>
   </div>
-  <!-- Target Column -->
   <div class="col-md-4">
     <div class="card h-100 shadow-sm">
       <div class="card-header bg-light text-danger fw-bold">Migration Execution & Query</div>
       <div class="card-body">
-        <pre>Sample migrated data will appear here after migration.</pre>
-        <form method="post" id="migration-form" class="mt-4">
-          <button type="submit" class="btn btn-danger w-100 mt-3">Next: Run Migration</button>
-        </form>
+        {% if not migration_preview %}
+          <pre class="small text-muted">No migration executed yet. Click Validate to see the plan before execution.</pre>
+          <form method="post" id="migration-form" class="mt-3">
+            <input type="hidden" name="action" value="validate">
+            <button type="submit" class="btn btn-warning w-100">Validate Migration Plan</button>
+          </form>
+        {% else %}
+          <div class="alert alert-info p-2">
+            <strong>Migration Plan Preview</strong><br>
+            Table Pairs: {{ migration_preview.total_table_pairs }} | Field Mappings: {{ migration_preview.total_field_mappings }}<br>
+            Est. Rows: {{ migration_preview.estimated_total_rows }}
+          </div>
+          <div class="mb-3" style="max-height:240px; overflow:auto;">
+            <table class="table table-sm table-bordered align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Origin</th>
+                  <th>Source ➜ Target</th>
+                  <th>#Fields</th>
+                  <th>Rows</th>
+                  <th>Fields</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in migration_preview['items'] %}
+                  <tr>
+                    <td><span class="badge {% if item.origin=='legacy' %}bg-dark{% else %}bg-danger{% endif %}">{{ item.origin|capitalize }}</span></td>
+                    <td><code>{{ item.source_table }}</code><br><i class="bi bi-arrow-down-short"></i><code>{{ item.target_table }}</code></td>
+                    <td>{{ item.field_count }}</td>
+                    <td>{{ item.row_count }}</td>
+                    <td class="small">
+                      {% for f in item.fields %}
+                        <span class="d-inline-block me-1 mb-1 badge bg-light text-dark border">{{ f.source_col }} ➜ {{ f.target_col }}</span>
+                      {% endfor %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <form method="post" class="mt-2">
+            <input type="hidden" name="action" value="execute">
+            <button type="submit" class="btn btn-danger w-100">Approve & Execute Migration</button>
+          </form>
+        {% endif %}
         <hr>
-        <form method="post" id="query-form" class="mt-4">
+        <form method="post" id="query-form" class="mt-2">
           <label class="form-label">Run SQL Query on Migrated Data</label>
-          <input type="text" name="query" class="form-control mb-2" placeholder="SELECT * FROM tgt_banking_olap_flat_exact" />
+          <input type="text" name="query" class="form-control mb-2" placeholder="SELECT * FROM some_table" />
           <button type="submit" class="btn btn-outline-danger w-100">Run Query</button>
         </form>
         {% if query_result %}
@@ -111,8 +157,9 @@
       </div>
     </div>
   </div>
-  <!-- Chat Column -->
+  <!-- Chat Column (unchanged) -->
   <div class="col-md-4">
+    <!-- ...existing code... -->
     <div class="card h-100 shadow-sm d-flex flex-column">
       <div class="card-header bg-danger text-white">Chatbot Assistant</div>
       <div class="card-body flex-grow-1 d-flex flex-column p-0">
@@ -131,30 +178,15 @@
     </div>
   </div>
 </div>
-
 <script>
   async function sendMessage(e) {
     e.preventDefault();
     const input = document.getElementById('chat-input');
-    const msg = input.value;
-    if (!msg) return false;
-    appendMessage('You', msg);
-    input.value = '';
-    const res = await fetch('/poc4/chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: 'message=' + encodeURIComponent(msg)
-    });
-    const data = await res.json();
-    appendMessage('Bot', data.response);
-    return false;
+    const msg = input.value; if (!msg) return false;
+    appendMessage('You', msg); input.value='';
+    const res = await fetch('/poc4/chat', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'message=' + encodeURIComponent(msg)});
+    const data = await res.json(); appendMessage('Bot', data.response); return false;
   }
-  function appendMessage(sender, text) {
-    const chat = document.getElementById('chat-messages');
-    const div = document.createElement('div');
-    div.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-  }
+  function appendMessage(sender, text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
 </script>
 {% endblock %}

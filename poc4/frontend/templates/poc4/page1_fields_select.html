@@ -1,0 +1,144 @@
+{% extends 'poc4/base.html' %}
+{% block content %}
+<div class="bg-danger text-white py-3 mb-4 rounded shadow-sm text-center">
+  <h2 class="mb-0">Select Critical Fields</h2>
+  <small>Choose key fields from Legacy, Source, and Target schemas</small>
+</div>
+<ul class="nav nav-pills mb-4 justify-content-center" id="poc4Tabs">
+  <li class="nav-item"><a class="nav-link active" href="#">1b. Fields</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page2') }}">2. Mapping</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page3') }}">3. Rules</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page4') }}">4. Validation</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page5') }}">5. Reconciliation</a></li>
+</ul>
+<form method="post" id="field-select-form">
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
+          <span>Source ({{ source_schema_file }})</span>
+          <div class="form-check m-0 small">
+            <input class="form-check-input" type="checkbox" id="select_all_source">
+            <label class="form-check-label" for="select_all_source">All</label>
+          </div>
+        </div>
+        <div class="card-body" style="max-height:60vh;overflow:auto;">
+          {% for f in source_fields %}
+          <div class="form-check small">
+            <input class="form-check-input source-box" type="checkbox" name="source_field" value="{{ f.name }}" id="src_{{ loop.index }}">
+            <label class="form-check-label" for="src_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
+          <span>Legacy ({{ legacy_schema_file }})</span>
+          <div class="form-check m-0 small">
+            <input class="form-check-input" type="checkbox" id="select_all_legacy">
+            <label class="form-check-label" for="select_all_legacy">All</label>
+          </div>
+        </div>
+        <div class="card-body" style="max-height:60vh;overflow:auto;">
+          {% for f in legacy_fields %}
+          <div class="form-check small">
+            <input class="form-check-input legacy-box" type="checkbox" name="legacy_field" value="{{ f.name }}" id="leg_{{ loop.index }}">
+            <label class="form-check-label" for="leg_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
+          <span>Target ({{ target_schema_file }})</span>
+          <div class="form-check m-0 small">
+            <input class="form-check-input" type="checkbox" id="select_all_target">
+            <label class="form-check-label" for="select_all_target">All</label>
+          </div>
+        </div>
+        <div class="card-body" style="max-height:60vh;overflow:auto;">
+          {% for f in target_fields %}
+          <div class="form-check small">
+            <input class="form-check-input target-box" type="checkbox" name="target_field" value="{{ f.name }}" id="tgt_{{ loop.index }}">
+            <label class="form-check-label" for="tgt_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ER Diagram Row -->
+  <div class="row g-4 mt-4">
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-danger text-white py-2">Source ER Diagram</div>
+        <div class="card-body p-2 small">
+          <svg viewBox="0 0 320 200" class="w-100" style="max-height:190px">
+            <style>.ent{fill:#fff;stroke:#d32f2f;stroke-width:1.2}.rel{stroke:#555;stroke-width:1.1;marker-end:url(#arrow)}</style>
+            <defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" fill="#555"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
+            <rect class="ent" x="10" y="10" width="90" height="40" rx="4"/><text x="55" y="35" font-size="10" text-anchor="middle">customer</text>
+            <rect class="ent" x="120" y="10" width="90" height="40" rx="4"/><text x="165" y="35" font-size="10" text-anchor="middle">account</text>
+            <rect class="ent" x="230" y="10" width="80" height="40" rx="4"/><text x="270" y="35" font-size="10" text-anchor="middle">transaction</text>
+            <rect class="ent" x="120" y="80" width="90" height="40" rx="4"/><text x="165" y="105" font-size="10" text-anchor="middle">product</text>
+            <line class="rel" x1="100" y1="30" x2="120" y2="30"/>
+            <line class="rel" x1="210" y1="30" x2="230" y2="30"/>
+            <line class="rel" x1="165" y1="50" x2="165" y2="80"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-danger text-white py-2">Legacy ER Diagram</div>
+        <div class="card-body p-2 small">
+          <svg viewBox="0 0 320 200" class="w-100" style="max-height:190px">
+            <style>.ent{fill:#fff;stroke:#d32f2f;stroke-width:1.2}.rel{stroke:#555;stroke-width:1.1;marker-end:url(#arrow2)}</style>
+            <defs><marker id="arrow2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" fill="#555"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
+            <rect class="ent" x="15" y="10" width="110" height="40" rx="4"/><text x="70" y="35" font-size="10" text-anchor="middle">legacy_customer</text>
+            <rect class="ent" x="135" y="10" width="100" height="40" rx="4"/><text x="185" y="35" font-size="10" text-anchor="middle">legacy_account</text>
+            <rect class="ent" x="245" y="10" width="70" height="40" rx="4"/><text x="280" y="35" font-size="10" text-anchor="middle">ledger</text>
+            <line class="rel" x1="125" y1="30" x2="135" y2="30"/>
+            <line class="rel" x1="235" y1="30" x2="245" y2="30"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-danger text-white py-2">Target ER Diagram</div>
+        <div class="card-body p-2 small">
+          <svg viewBox="0 0 320 160" class="w-100" style="max-height:160px">
+            <style>.ent{fill:#fff;stroke:#d32f2f;stroke-width:1.2}.txt{font-size:11px}</style>
+            <rect class="ent" x="40" y="30" width="240" height="70" rx="6"/>
+            <text x="160" y="55" class="txt" text-anchor="middle">banking_olap_flat*</text>
+            <text x="160" y="72" class="txt" text-anchor="middle">(denormalized unified view)</text>
+          </svg>
+          <div class="small text-muted">*Flattened star-less structure combining customer, account, transaction, product.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mt-4 d-flex justify-content-between">
+    <a href="{{ url_for('poc4.page1') }}" class="btn btn-outline-secondary">Back</a>
+    <button type="submit" class="btn btn-danger">Next</button>
+  </div>
+</form>
+
+<script>
+// Select all handlers
+function bindSelectAll(masterId, boxClass){
+  const master=document.getElementById(masterId);
+  if(!master) return;
+  master.addEventListener('change',()=>{
+    document.querySelectorAll('.'+boxClass).forEach(cb=>{ cb.checked=master.checked; });
+  });
+}
+bindSelectAll('select_all_source','source-box');
+bindSelectAll('select_all_legacy','legacy-box');
+bindSelectAll('select_all_target','target-box');
+</script>
+{% endblock %}

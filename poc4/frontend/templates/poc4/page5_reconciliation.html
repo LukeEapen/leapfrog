@@ -6,6 +6,19 @@
   <small>Modern Data Migration Workflow</small>
 </div>
 
+{% if migration_result %}
+  <div class="alert alert-success shadow-sm">
+    <strong>Migration Complete:</strong> {{ migration_result.summary }}
+  </div>
+{% endif %}
+{% if reconciliation_result %}
+  <div class="alert alert-info shadow-sm">
+    <strong>Approval:</strong> {{ reconciliation_result.status or reconciliation_result.get('status') if reconciliation_result is mapping else reconciliation_result }}
+  </div>
+{% endif %}
+{% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
 
 <!-- Modern Tabs -->
 <style>
@@ -51,22 +64,52 @@
     <div class="card h-100 shadow-sm">
       <div class="card-header bg-light text-danger fw-bold">Reconciliation Summary</div>
       <div class="card-body">
-        <ul>
-          <li>Matched Records: 100</li>
-          <li>Unmatched Records: 2</li>
-          <li>Integrity Checks: Passed</li>
-        </ul>
+        {% if migration_result %}
+          <p class="small text-muted mb-1">Migration Details:</p>
+          <ul class="small">
+            <li>{{ migration_result.summary }}</li>
+            {% if migration_result.preview %}
+              <li>Table Pairs: {{ migration_result.preview.total_table_pairs }}</li>
+              <li>Field Mappings: {{ migration_result.preview.total_field_mappings }}</li>
+              <li>Est. Rows: {{ migration_result.preview.estimated_total_rows }}</li>
+            {% endif %}
+            {% if migration_result.table_counts %}
+              <li>Target Table Counts:
+                <ul>
+                  {% for t,c in migration_result.table_counts.items() %}<li>{{ t }}: {{ c }}</li>{% endfor %}
+                </ul>
+              </li>
+            {% endif %}
+            <li>Unmatched Source-only Fields: {{ migration_result.unmatched_sources }}</li>
+            <li>Unmatched Target-only Fields: {{ migration_result.unmatched_targets }}</li>
+            {% if migration_result.details %}
+              <li>Steps: {{ migration_result.details|length }}</li>
+            {% endif %}
+          </ul>
+        {% else %}
+          <p class="text-muted small">No migration result in session.</p>
+        {% endif %}
       </div>
     </div>
   </div>
   <!-- Target Column -->
   <div class="col-md-4">
     <div class="card h-100 shadow-sm">
-      <div class="card-header bg-light text-danger fw-bold">Export</div>
+      <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
+        <span>Export / Control</span>
+        {% if target_backup %}<span class="badge bg-secondary">Backup Ready</span>{% endif %}
+      </div>
       <div class="card-body">
-        <form method="post">
-          <button type="submit" class="btn btn-danger w-100 mt-3">Approve & Export</button>
+        <form method="post" class="mb-2">
+          <input type="hidden" name="action" value="approve">
+          <button type="submit" class="btn btn-danger w-100">Approve & Export</button>
         </form>
+        {% if target_backup %}
+        <form method="post">
+          <input type="hidden" name="action" value="rollback">
+          <button type="submit" class="btn btn-outline-secondary w-100" onclick="return confirm('Rollback target DB from backup?');">Rollback</button>
+        </form>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -77,6 +120,14 @@
       <div class="card-body flex-grow-1 d-flex flex-column p-0">
         <div class="flex-grow-1 p-3" style="overflow-y:auto; min-height: 400px;" id="chat-messages">
           <div class="text-muted small">Ask me about reconciliation results and data export options...</div>
+          {% if migration_result and migration_result.details %}
+            <div class="mt-2 small">
+              <strong>Steps:</strong>
+              <ul class="mb-0">
+                {% for d in migration_result.details[:8] %}<li>{{ d }}</li>{% endfor %}
+              </ul>
+            </div>
+          {% endif %}
         </div>
       </div>
       <div class="card-footer">
