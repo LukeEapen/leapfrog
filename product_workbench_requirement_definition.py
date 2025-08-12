@@ -1,5 +1,3 @@
-
-
 from flask import Flask, jsonify, request, session
 app = Flask(__name__)
 
@@ -131,6 +129,11 @@ app.config.update(
     SESSION_COOKIE_SAMESITE='Lax',
     PERMANENT_SESSION_LIFETIME=timedelta(hours=1)
 )
+# Development override: disable Secure flag when not running under HTTPS to ensure cookies are sent.
+if os.getenv('FLASK_ENV', 'development') != 'production':
+    app.config['SESSION_COOKIE_SECURE'] = False
+    # Optional: make explicit in logs
+    logging.info('SESSION_COOKIE_SECURE disabled for non-production environment')
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
