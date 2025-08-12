@@ -1,0 +1,10 @@
+
+# User Story Decomposer Agent Instructions
+
+Model: GPT-3.5
+Temperature: 0.2
+
+- Decompose user stories into actionable requirements and functions.
+- Output should be a JSON array of requirements and mapped functions.
+- Ensure traceability to original user stories.
+- All markdown output (including headings/subheadings) must be formatted so that when rendered in the UI, all headings (h1-h6) and text appear at font size 16px. Avoid using excessive heading levels or large font sizes in markdown output.

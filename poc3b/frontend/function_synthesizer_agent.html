@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 3: Function Synthesizer Agent</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #23272b 0%, #343a40 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+    }
+    .main-app-container {
+      max-width: 100vw;
+      margin: 40px auto;
+      padding: 32px 2vw;
+      background: #fff;
+      border-radius: 2rem;
+      box-shadow: 0 8px 32px rgba(44,44,44,0.18);
+      min-height: 98vh;
+      width: 100vw;
+    }
+    .agent-card {
+      background: #f8f9fa;
+      color: #23272b;
+      border-radius: 1.5rem;
+      box-shadow: 0 2px 12px rgba(44,44,44,0.10);
+      padding: 2.5rem 2vw;
+      margin: 2rem auto;
+      max-width: 2400px;
+      min-width: 1200px;
+      min-height: 700px;
+      width: 100vw;
+    }
+    .agent-title {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #fff;
+      background: #d32f2f;
+      border-radius: 1.25rem 1.25rem 0 0;
+      padding: 1.2rem 2rem;
+      margin-bottom: 0;
+      box-shadow: 0 2px 12px rgba(44,44,44,0.10);
+    }
+    .chat-panel {
+      background: rgba(255,255,255,0.25);
+      border-radius: 1.5rem;
+      padding: 2.5rem 3.5rem 2.2rem 3.5rem;
+      margin-top: 1rem;
+      box-shadow: 0 8px 32px rgba(44,44,44,0.18);
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(255,255,255,0.18);
+      position: relative;
+      overflow: hidden;
+      max-width: 620px;
+      min-width: 480px;
+      width: 620px;
+      margin-left: auto;
+      margin-right: 0;
+    }
+    .agent-desc {
+      font-size: 1.15rem;
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(90deg, #d32f2f 0%, #f8f9fa 100%);
+      border-radius: 1rem;
+      padding: 0.7rem 1.2rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      color: #fff;
+    }
+      text-align: left;
+      width: 100%;
+      margin: 0 auto 2rem auto;
+      box-shadow: 0 2px 12px rgba(44,44,44,0.06);
+    }
+    .btn, .btn-next, .btn-outline-danger, .btn-primary, .btn-success, .btn-sm {
+      min-height: 44px;
+      padding-top: 0.6rem;
+      padding-bottom: 0.6rem;
+      font-size: 1.08rem;
+      border-radius: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    .btn-next {
+    .chat-history {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 1.2rem;
+      padding-right: 1rem;
+      background: rgba(255,255,255,0.18);
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.08);
+      padding: 1rem 1rem 1rem 1rem;
+    }
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(211,47,47,0.08);
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    .btn-next:hover {
+      background: #d32f2f;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(211,47,47,0.12);
+      border-radius: 1rem;
+      border: none;
+    }
+    .btn:hover, .btn:focus {
+      box-shadow: 0 2px 8px rgba(44,44,44,0.14);
+      border-radius: 1rem;
+      outline: none;
+    }
+    .chat-msg {
+      margin-bottom: 0.7rem;
+      padding: 0.7rem 1rem;
+      border-radius: 0.9rem;
+      position: relative;
+      max-width: 80%;
+      font-size: 0.98rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.08);
+      word-break: break-word;
+      border: 1.5px solid #e0e0e0;
+      transition: background 0.2s;
+      display: flex;
+      align-items: flex-end;
+      gap: 0.5rem;
+    }
+    .chat-user {
+      background: linear-gradient(90deg, #e3f2fd 0%, #d1e7dd 100%);
+      margin-left: auto;
+      text-align: right;
+      border-top-right-radius: 1.5rem;
+      border-bottom-right-radius: 1.5rem;
+      border-top-left-radius: 0.9rem;
+      border-bottom-left-radius: 0.9rem;
+      border-left: 2px solid #d32f2f;
+      flex-direction: row-reverse;
+    }
+    .chat-assistant {
+      background: linear-gradient(90deg, #f8d7da 0%, #fff3e0 100%);
+      margin-right: auto;
+      text-align: left;
+      border-top-left-radius: 1.5rem;
+      border-bottom-left-radius: 1.5rem;
+      border-top-right-radius: 0.9rem;
+      border-bottom-right-radius: 0.9rem;
+      border-right: 2px solid #d32f2f;
+      flex-direction: row;
+    }
+      /* removed stray lines */
+    .chat-input-row {
+      display: flex;
+      gap: 0.7rem;
+      margin-top: 0.5rem;
+      background: rgba(255,255,255,0.18);
+      border-radius: 1rem;
+      padding: 0.7rem 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.08);
+    }
+    @media (max-width: 991px) {
+      .main-app-container { padding: 16px 4px; }
+      .agent-card { padding: 1.5rem 0.5rem; }
+    }
+    @media (max-width: 767px) {
+      .main-app-container { border-radius: 0.5rem; }
+      .agent-title { font-size: 1.3rem; }
+      .agent-desc { font-size: 1rem; }
+    }
+    .chat-panel {
+      background: #f1f3f4;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-top: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.06);
+    }
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .chat-history {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      padding-right: 1rem;
+    }
+    .chat-msg {
+      margin-bottom: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      position: relative;
+      max-width: 80%;
+    }
+    .chat-user {
+      background: #d1e7dd;
+      margin-left: auto;
+      text-align: right;
+    }
+    .chat-assistant {
+      background: #f8d7da;
+      margin-right: auto;
+      text-align: left;
+    }
+    .chat-input-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header style="background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color: #fff; padding: 1.2rem 0 1rem 0; border-radius: 0 0 1.2rem 1.2rem; box-shadow: 0 4px 32px rgba(44,44,44,0.22); margin-bottom: 2.5rem; position:relative; overflow:hidden; border: 4px solid #fff; min-height:unset;">
+    <div style="position:absolute; top:-40px; right:-60px; opacity:0.12; pointer-events:none;">
+      <i class="bi bi-diagram-3" style="font-size:7rem;"></i>
+    </div>
+    <div class="container d-flex flex-column align-items-center position-relative" style="z-index:2;">
+      <div class="d-flex align-items-center justify-content-center flex-wrap" style="gap:1.1rem; margin-bottom:0.2rem;">
+        <i class="bi bi-cpu" style="font-size:1.7rem;"></i>
+        <i class="bi bi-diagram-3" style="font-size:1.7rem;"></i>
+        <i class="bi bi-lightbulb" style="font-size:1.7rem;"></i>
+        <i class="bi bi-arrow-repeat" style="font-size:1.7rem;"></i>
+        <i class="bi bi-gear" style="font-size:1.7rem;"></i>
+        <span style="font-size:2.3rem; font-weight:900; letter-spacing:0.01em; margin-left:1.1rem; text-shadow:0 2px 8px rgba(44,44,44,0.10); vertical-align:middle; line-height:1;">Function Synthesizer Agent</span>
+      </div>
+      <div style="font-size:1.13rem; font-weight:500; color:#fff; opacity:0.93; max-width:900px; text-align:center; margin-bottom:0.2rem;">
+        <span class="badge bg-warning text-dark me-2" style="font-size:1rem; border-radius:0.7rem; padding:0.5em 1em; vertical-align:middle;"><i class="bi bi-gear me-2"></i>Step 3</span>
+        Analyze user stories and legacy code to synthesize the <b>5-10 most important technical functions</b> for your microservice.<br>
+      </div>
+      <noscript><div class="alert alert-danger mt-2">Bootstrap Icons require JavaScript enabled.</div></noscript>
+      <div id="icon-fallback" style="display:none; color:yellow; font-weight:bold;">[Icons failed to load]</div>
+    </div>
+  </header>
+  <div class="main-app-container d-flex flex-column align-items-stretch justify-content-start" style="gap:2.5rem; width:100%;">
+    <div class="agent-card" style="width:100%; max-width:100%; margin:0; padding:2.5rem 3rem;">
+      <!-- Bootstrap Icons CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Bootstrap Icons fallback check -->
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      var testIcon = document.createElement('i');
+      testIcon.className = 'bi bi-cpu';
+      document.body.appendChild(testIcon);
+      var style = window.getComputedStyle(testIcon, '::before');
+      var content = style.getPropertyValue('content');
+      if (!content || content === 'none' || content === '""') {
+        var fallback = document.getElementById('icon-fallback');
+        if (fallback) fallback.style.display = 'block';
+      }
+      document.body.removeChild(testIcon);
+    });
+  </script>
+      <div class="d-flex justify-content-between w-100" style="width:100%; margin-bottom:0; margin-top:-1.5rem;">
+        <a href="/user-story-decomposer" class="btn px-4 d-flex align-items-center gap-2" style="font-weight:600; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.10); background:#6c757d; border:none; color:#fff; min-width:180px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+            <path d="M8.354 11.354a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L6.707 8H11.5a.5.5 0 0 1 0 1H6.707l1.647 1.646a.5.5 0 0 1 0 .708z"/>
+          </svg>
+          <span style="color:#fff;">Step 2</span>
+        </a>
+  <!-- Removed Synthesize Functions button per requirement -->
+      </div>
+      <div class="row w-100 align-items-start mt-4" style="margin-top:0;">
+        <div class="col-lg-7 col-md-12 d-flex flex-column align-items-stretch justify-content-start order-lg-1 order-1" style="max-width:100%; padding-right:1.5rem;">
+          <div id="result" class="w-100" style="margin-top:0;"></div>
+        </div>
+        <div class="col-lg-5 col-md-12 d-flex flex-column order-lg-2 order-2" style="max-width:600px; margin-left:auto; margin-right:0; padding-left:0;">
+          <div id="selected-user-story-panel" class="p-3" style="background:#f1f3f4; border-radius:1rem; border:2px solid #e0e0e0; box-shadow:0 2px 8px rgba(44,44,44,0.08); min-height:360px;">
+            <div class="d-flex justify-content-between align-items-center flex-wrap mb-2" style="gap:.75rem;">
+              <h5 class="m-0" style="color:#d32f2f; font-weight:700;">User Stories</h5>
+              <div class="d-flex gap-2 flex-wrap">
+                <button id="updateJiraBtn" class="btn btn-sm" style="background:#d32f2f; color:#fff;">Update Selected</button>
+                <button id="updateAllJiraBtn" class="btn btn-sm" style="background:#23272b; color:#fff;">Update All</button>
+              </div>
+            </div>
+            <div class="row g-2">
+              <div class="col-12 mb-2">
+                <div id="storiesListPanel" class="list-group" style="max-height:140px; overflow-y:auto; border:1px solid #e0e0e0; border-radius:.5rem; background:#fff;"></div>
+              </div>
+              <div class="col-12">
+                <div id="selectedStoryMeta" class="text-secondary small mb-2">(Select a story)</div>
+                <div id="selectedStoryContent" style="white-space:pre-wrap; font-size:0.95rem; line-height:1.4; max-height:180px; overflow-y:auto;"></div>
+              </div>
+            </div>
+            <hr/>
+            <div>
+              <h6 style="font-weight:600; color:#d32f2f;">Delta (Legacy Code Only Functions)</h6>
+              <div id="deltaLegacyFunctions" class="small text-secondary">(Will populate from synthesized result)</div>
+            </div>
+            <div id="updateStatus" class="mt-3"></div>
+          </div>
+        </div>
+        <!-- Business Logic below the main row -->
+      </div>
+      <div class="row w-100 align-items-start mt-4" style="margin-top:0;">
+        <div class="col-12">
+          <div id="business-logic-col"></div>
+        </div>
+        </div>
+          <div id="statusMsg" class="mt-3"></div>
+        </div>
+      <textarea class="form-control" id="editArea" style="width:100%; min-height:120px; border-radius:1rem; border:1.5px solid #d32f2f; padding:1rem; font-size:1.08rem; margin-bottom:1rem; display:none;" placeholder="Edit the functional breakdown response here..."></textarea>
+    </div>
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      const resultDiv = document.getElementById('result');
+      const latest = localStorage.getItem('latestSynthesisResult');
+      let responseData = latest ? JSON.parse(latest) : [];
+  // Removed chat panel; maintain only synthesis rendering
+
+      // Render main function response
+      function renderResponse(data) {
+        if (Array.isArray(data)) {
+          const commonFuncs = data.filter(f => f.source === 'both');
+          const uncommonUser = data.filter(f => f.source === 'user_story');
+          const uncommonLegacy = data.filter(f => f.source === 'legacy_code');
+          function renderFuncCard(item, highlight, idx, arrType) {
+            // Add a remove button for each function
+            return `<div class='card mb-3' style='background:#f5f5f5; border:none; box-shadow:0 2px 8px rgba(44,44,44,0.06);'>
+              <div class='card-body p-3 d-flex justify-content-between align-items-center'>
+                <div>
+                  <div class='fw-bold' style='font-size:1.15rem; color:#d32f2f;'>${item.name || ''}</div>
+                  <div class='mb-1' style='color:#23272b;'>${item.description ? item.description.replace(/([^.])$/, '$1.') : ''}</div>
+                  ${item.source ? `<span class='badge bg-dark'>${item.source}</span>` : ''}
+                  ${highlight ? `<span class='badge bg-warning text-dark ms-2'>Delta</span>` : ''}
+                </div>
+                <button class='btn btn-outline-danger btn-sm remove-func-btn' data-arrtype='${arrType}' data-idx='${idx}' title='Remove function'><i class='bi bi-x-lg'></i></button>
+              </div>
+            </div>`;
+          }
+          let mainSection = '';
+          if (commonFuncs.length > 0) {
+            mainSection = `
+              <div class='mb-4'>
+                <div class='p-3 bg-light rounded border mb-2'><b>Common Functions (User Story & Legacy Code)</b></div>
+                <div class='p-3 bg-white rounded border' style='min-height:200px;'>
+                  ${commonFuncs.map((item, idx) => renderFuncCard(item, false, idx, 'common')).join('')}
+                </div>
+              </div>
+            `;
+          }
+            let deltaSection = '';
+            if (uncommonUser.length > 0 || uncommonLegacy.length > 0) {
+            deltaSection = `
+              <div class='row mt-4'>
+              <div class='col-md-6 col-12 mb-4 mb-md-0'>
+              <div class='p-3 bg-light rounded border mb-2'><b>Delta: User Story Only</b></div>
+              <div class='p-3 bg-white rounded border' style='min-height:100px;'>
+              ${uncommonUser.length > 0 ? uncommonUser.map((item, idx) => renderFuncCard(item, true, idx, 'user')).join('') : '<span class="text-secondary">No unique user story functions.</span>'}
+              </div>
+              </div>
+              <div class='col-md-6 col-12'>
+              <div class='p-3 bg-light rounded border mb-2'><b>Delta: Legacy Code Only</b></div>
+              <div class='p-3 bg-white rounded border' style='min-height:100px;'>
+              ${uncommonLegacy.length > 0 ? uncommonLegacy.map((item, idx) => renderFuncCard(item, true, idx, 'legacy')).join('') : '<span class="text-secondary">No unique legacy code functions.</span>'}
+              </div>
+              </div>
+              </div>
+              <div class='mt-3'><b>Note:</b> <span class='badge bg-warning text-dark'>Delta</span> means the function is unique to either User Story or Legacy Code. Only shown if present.</div>
+            `;
+            }
+            pretty = `
+            <div style="background: linear-gradient(120deg, #f8f9fa 60%, #f1f3f4 100%); border-radius: 1.2rem; box-shadow: 0 2px 12px rgba(44,44,44,0.10); padding: 1.2rem 1vw 1.5rem 1vw; margin-bottom: 2.2rem; border: 2.5px solid #f1f3f4; max-width:calc(70vw - 40px); min-width:320px; width:calc(70vw - 30px); margin-left:auto; margin-right:auto;">
+              <div class='alert-modern' style="background: #d32f2f; color: #fff; border-radius: 0.8rem; padding: 0.7rem 1rem; font-size: 1.18rem; font-weight: 700; margin-bottom: 1.2rem; box-shadow: 0 2px 8px rgba(44,44,44,0.10); letter-spacing: 0.01em; min-height: 60px; display: flex; align-items: center;">Most Important Synthesized Functions (5-10):</div>
+              ${mainSection}
+              ${deltaSection}
+            </div>
+            `;
+          // Attach remove button handlers after rendering
+          setTimeout(() => {
+            document.querySelectorAll('.remove-func-btn').forEach(btn => {
+              btn.onclick = function(e) {
+                e.preventDefault();
+                const arrType = btn.getAttribute('data-arrtype');
+                const idx = parseInt(btn.getAttribute('data-idx'));
+                // Remove from the correct array in responseData
+                let arr;
+                if (arrType === 'common') arr = responseData.filter(f => f.source === 'both');
+                else if (arrType === 'user') arr = responseData.filter(f => f.source === 'user_story');
+                else if (arrType === 'legacy') arr = responseData.filter(f => f.source === 'legacy_code');
+                const itemToRemove = arr[idx];
+                // Remove from responseData by name and source
+                responseData = responseData.filter(f => !(f.name === itemToRemove.name && f.source === itemToRemove.source));
+                // Persist to localStorage
+                localStorage.setItem('latestSynthesisResult', JSON.stringify(responseData));
+                // Re-render
+                renderResponse(responseData);
+                // Also refresh the legacy delta panel (Column 3) so removals reflect immediately
+                renderLegacyDelta();
+              };
+            });
+          }, 10);
+        } else {
+          pretty = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+        resultDiv.innerHTML = pretty;
+      }
+      renderResponse(responseData);
+
+      // Populate selected user story from localStorage (saved in Step 2)
+      let __allStories = [];
+      function loadSelectedUserStories() {
+        const raw = localStorage.getItem('selectedUserStories');
+        if (!raw) return;
+        try { __allStories = JSON.parse(raw) || []; } catch(e) { __allStories = []; }
+        renderStoriesList();
+        if (__allStories.length > 0) selectStoryByIndex(0);
+      }
+
+      function renderStoriesList() {
+        const listEl = document.getElementById('storiesListPanel');
+        if (!listEl) return;
+        if (__allStories.length === 0) { listEl.innerHTML = '<div class="text-secondary small p-2">No stories selected in Step 2.</div>'; return; }
+        listEl.innerHTML = __allStories.map((s, i) => `
+          <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start" data-idx="${i}" style="font-size:.8rem;">
+            <div class="me-2" style="text-align:left;">
+              <div style="font-weight:600; color:#d32f2f;">${s.key}</div>
+              <div class="small text-truncate" style="max-width:260px;">${(s.summary||'').replace(/</g,'&lt;')}</div>
+            </div>
+            <span class="badge bg-light text-dark border" style="height:fit-content;">${i+1}</span>
+          </button>`).join('');
+        listEl.querySelectorAll('button').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            selectStoryByIndex(idx);
+          });
+        });
+      }
+
+      function selectStoryByIndex(idx) {
+        if (idx < 0 || idx >= __allStories.length) return;
+        const s = __allStories[idx];
+        window.__selectedStoryKey = s.key;
+        window.__selectedStoryIndex = idx;
+        const metaDiv = document.getElementById('selectedStoryMeta');
+        const contentDiv = document.getElementById('selectedStoryContent');
+        metaDiv.textContent = `${s.key || ''}: ${s.summary || ''}`;
+        contentDiv.textContent = (s.description || '').trim();
+        // Highlight active
+        const listEl = document.getElementById('storiesListPanel');
+        if (listEl) {
+          listEl.querySelectorAll('button').forEach((b,i)=>{
+            if (i===idx) b.classList.add('active'); else b.classList.remove('active');
+          });
+        }
+      }
+
+      loadSelectedUserStories();
+
+      // Extract legacy-only (delta) functions for display and potential JIRA update
+      function computeLegacyDeltaFunctions() {
+        if (!Array.isArray(responseData)) return [];
+        return responseData.filter(f => f.source === 'legacy_code');
+      }
+      function renderLegacyDelta() {
+        const deltaFns = computeLegacyDeltaFunctions();
+        const deltaDiv = document.getElementById('deltaLegacyFunctions');
+        if (deltaFns.length === 0) {
+          deltaDiv.innerHTML = '<span class="text-secondary">No legacy-only functions detected.</span>';
+          return;
+        }
+        deltaDiv.innerHTML = deltaFns.map(f => `<div>- <b>${f.name || ''}</b>: ${(f.description || '').replace(/([^.])$/, '$1.')}</div>`).join('');
+        window.__deltaLegacyFunctions = deltaFns;
+      }
+      renderLegacyDelta();
+
+      // Update JIRA button handler
+      function buildDeltaPayload() {
+        return (window.__deltaLegacyFunctions || []).map(f => ({ name: f.name, description: f.description }));
+      }
+      const JIRA_BROWSE_BASE = 'https://lalluluke.atlassian.net/browse/';
+      async function updateSingleStory(storyKey, statusEl, includeLink=false) {
+        const deltaFns = buildDeltaPayload();
+        if (deltaFns.length === 0) { statusEl.innerHTML = '<div class="text-warning">No legacy-only delta functions to add.</div>'; return; }
+        const res = await fetch('/api/update-jira-user-story', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ story_key: storyKey, delta_functions: deltaFns })
+        });
+        const data = await res.json();
+        if (data.error) return `<div class='text-danger'>${storyKey}: ${data.error}</div>`;
+        if (data.status === 'no_change') return `<div class='text-info'>${storyKey}: ${data.message}</div>`;
+        const link = includeLink ? ` <a href='${JIRA_BROWSE_BASE + storyKey}' target='_blank' rel='noopener' style='text-decoration:underline; color:#0d6efd;'>View in JIRA</a>` : '';
+        return `<div class='text-success'>${storyKey}: Added ${data.added_functions} function(s).${link}</div>`;
+      }
+      const updateBtn = document.getElementById('updateJiraBtn');
+      const updateAllBtn = document.getElementById('updateAllJiraBtn');
+      if (updateBtn) {
+        updateBtn.onclick = async () => {
+          const statusEl = document.getElementById('updateStatus');
+          statusEl.innerHTML = '<div class="text-secondary">Updating selected story...</div>';
+          const storyKey = window.__selectedStoryKey;
+          if (!storyKey) { statusEl.innerHTML = '<div class="text-danger">No story selected.</div>'; return; }
+          try { statusEl.innerHTML = await updateSingleStory(storyKey, statusEl, true); } catch(err){ statusEl.innerHTML = `<div class='text-danger'>${err.message||err}</div>`; }
+        };
+      }
+      if (updateAllBtn) {
+        updateAllBtn.onclick = async () => {
+          const statusEl = document.getElementById('updateStatus');
+            statusEl.innerHTML = '<div class="text-secondary">Updating all selected stories...</div>';
+          if (!Array.isArray(__allStories) || __allStories.length===0) { statusEl.innerHTML = '<div class="text-danger">No stories loaded.</div>'; return; }
+          const deltaFns = buildDeltaPayload();
+          if (deltaFns.length === 0) { statusEl.innerHTML = '<div class="text-warning">No legacy-only delta functions to add.</div>'; return; }
+          const results = [];
+          for (const s of __allStories) {
+            try { results.push(await updateSingleStory(s.key, statusEl)); } catch(err){ results.push(`<div class='text-danger'>${s.key}: ${err.message||err}</div>`); }
+          }
+          statusEl.innerHTML = results.join('');
+        };
+      }
+
+  // (Removed deprecated chat-related logic)
+
+      // Design element click handler (unchanged)
+      document.querySelectorAll('.design-element-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+          const elementName = card.getAttribute('data-element');
+          fetch('/api/design-element-business-logic', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ element: elementName })
+          })
+          .then(res => res.json())
+          .then(data => {
+            const col3 = document.getElementById('business-logic-col');
+            // Defensive: if not array, show JSON
+            if (!Array.isArray(data)) {
+              col3.innerHTML = `<pre style="color:#d32f2f; background:#f8f9fa; border-radius:0.7rem; padding:1rem;">${JSON.stringify(data, null, 2)}</pre>`;
+              return;
+            }
+            if (data.length > 0 && typeof data[0] === 'object' && (data[0].name || data[0].description)) {
+              col3.innerHTML = data.map(item => `<div class="mb-3" style="padding:1rem; border-radius:0.7rem; background:#f8f9fa; box-shadow:0 2px 8px rgba(44,44,44,0.06);">
+                <div style="font-size:1.1rem; font-weight:500; color:#d32f2f;">${item.name || ''}</div>
+                <div style="font-size:0.95rem; color:#23272b;">${item.description || ''}</div>
+              </div>`).join('');
+            } else if (data.length > 0) {
+              // Array but not objects with name/description
+              col3.innerHTML = `<pre style="color:#d32f2f; background:#f8f9fa; border-radius:0.7rem; padding:1rem;">${JSON.stringify(data, null, 2)}</pre>`;
+            } else {
+              col3.innerHTML = '<div style="color:#6c757d; font-size:0.9rem;">No business logic found for this design element.</div>';
+            }
+          })
+          .catch(err => {
+            const col3 = document.getElementById('business-logic-col');
+            col3.innerHTML = `<div style='color:#d32f2f;'>Error: ${err && err.message ? err.message : err}</div>`;
+            console.error(err);
+          });
+        });
+      });
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

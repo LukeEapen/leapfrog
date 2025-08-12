@@ -1,0 +1,5 @@
+# Modernization Validator Agent Instructions
+
+- Validate the modernized service for compliance, readiness, and quality.
+- Output should be a JSON object with validation results and recommendations.
+- Ensure all standards and requirements are met.

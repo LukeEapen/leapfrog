@@ -64,7 +64,7 @@ def safe_import_backend():
 
         # --- PATCH: Speed up OpenAI API calls in backend ---
         # If backend exposes a config or settings object, set fastest model (gpt-4o) and low temperature
-        # Enforce max_tokens <= 2048 to avoid OpenAI context length errors
+        # Enforce max_tokens <= 1024 to avoid OpenAI context length errors
         safe_max_tokens = 1024
         if hasattr(backend, 'set_ai_config'):
             backend.set_ai_config(model="gpt-4o", temperature=0.3, max_tokens=safe_max_tokens, parallel=True)
@@ -90,7 +90,7 @@ def safe_import_backend():
         if not best_model:
             best_model = "gpt-4o"
         # Set lower temperature and max_tokens for speed
-        # Enforce max_tokens <= 2048 for all config
+        # Enforce max_tokens <= 1024 for all config
         safe_max_tokens = 1024
         ai_config = {
             "model": best_model,
@@ -112,6 +112,46 @@ def safe_import_backend():
         if hasattr(backend, 'optimize_epic_generation'):
             backend.optimize_epic_generation()
             logger.info("Called backend.optimize_epic_generation() for parallelism")
+
+        # --- PATCH: Enforce strict context length checks for OpenAI API calls ---
+        # If backend exposes a function to set context length safeguards, call it
+        # Otherwise, monkey-patch backend's OpenAI call to truncate/summarize PRD and message history
+        context_limit = 8192  # gpt-4o context length
+        def truncate_for_context(messages, prd_text, max_tokens=1024):
+            # Simple token estimation: 1 token ≈ 4 chars (for English)
+            def estimate_tokens(text):
+                return max(1, len(text) // 4)
+            # Truncate PRD if too long
+            prd_tokens = estimate_tokens(prd_text)
+            if prd_tokens > context_limit // 2:
+                prd_text = prd_text[:context_limit * 2]
+            # Truncate message history if too long
+            total_message_tokens = sum(estimate_tokens(m.get('content','')) for m in messages)
+            while total_message_tokens + max_tokens > context_limit:
+                if messages:
+                    messages.pop(0)
+                    total_message_tokens = sum(estimate_tokens(m.get('content','')) for m in messages)
+                else:
+                    break
+            return messages, prd_text
+
+        # Monkey-patch backend's OpenAI API call if possible
+        if hasattr(backend, 'call_openai_api'):
+            orig_call = backend.call_openai_api
+            def safe_call_openai_api(messages, prd_text, *args, **kwargs):
+                safe_messages, safe_prd = truncate_for_context(messages, prd_text, max_tokens=safe_max_tokens)
+                return orig_call(safe_messages, safe_prd, *args, **kwargs)
+            backend.call_openai_api = safe_call_openai_api
+            logger.info("Patched backend.call_openai_api for strict context length checks")
+        elif hasattr(backend, 'openai_api_call'):
+            orig_call = backend.openai_api_call
+            def safe_openai_api_call(messages, prd_text, *args, **kwargs):
+                safe_messages, safe_prd = truncate_for_context(messages, prd_text, max_tokens=safe_max_tokens)
+                return orig_call(safe_messages, safe_prd, *args, **kwargs)
+            backend.openai_api_call = safe_openai_api_call
+            logger.info("Patched backend.openai_api_call for strict context length checks")
+        else:
+            logger.warning("No backend OpenAI API call found to patch for context length checks")
 
         logger.info("Tabbed backend module imported successfully")
         return backend

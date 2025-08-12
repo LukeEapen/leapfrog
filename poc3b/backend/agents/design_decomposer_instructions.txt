@@ -1,0 +1,5 @@
+# Design Decomposer Agent Instructions
+
+- Decompose synthesized functions into design elements referencing Open API, Bian, and ISO standards.
+- Output should be a JSON array of design elements with standard references.
+- Ensure compliance with selected standards.

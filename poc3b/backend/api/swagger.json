@@ -1205,29 +1205,6 @@
         "raw": "```json\n[\n    {\n        \"element\": \"Select Coverage Options\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Retrieve list of available coverage options from the insurance provider's API\",\n            \"Display the list of coverage options to the insurance agent\",\n            \"Allow the insurance agent to select one or more coverage options\"\n        ]\n    },\n    {\n        \"element\": \"Select Deductible Options\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Retrieve list of available deductible options from the insurance provider's system\",\n            \"Display the list of deductible options to the insurance agent\",\n            \"Allow the insurance agent to select a deductible option\"\n        ]\n    },\n    {\n        \"element\": \"Customize Insurance Quote\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Calculate the insurance premium based on the selected coverage options and deductible\",\n            \"Apply any discounts or surcharges based on the policyholder's profile\",\n            \"Generate a customized insurance quote for the potential policyholder\"\n        ]\n    }\n]\n```"
       },
       "pseudocode": ""
-    },
-    {
-      "businessLogic": {
-        "design": [
-          {
-            "element": "generateInsuranceQuote",
-            "pseudocode": "1. Retrieve property and risk data from user input\n2. Validate the input data\n3. Calculate insurance quote\n4. Generate quote response\n5. Ensure timely response",
-            "standard": "OpenAPI"
-          },
-          {
-            "element": "validateAndSanitizeInputs",
-            "pseudocode": "1. Validate input data\n2. Sanitize input data\n3. Ensure security",
-            "standard": "ISO"
-          },
-          {
-            "element": "enforceAuthenticationAuthorization",
-            "pseudocode": "1. Authenticate user\n2. Authorize access\n3. Enforce access control",
-            "standard": "BIAN"
-          }
-        ],
-        "raw": "```json\n[\n    {\n        \"element\": \"generateInsuranceQuote\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": \"Retrieve property and risk data from user input\",\n                \"action\": \"Get property details and risk factors from the user\"\n            },\n            {\n                \"step\": \"Validate the input data\",\n                \"action\": \"Check if all required fields are present and in the correct format\"\n            },\n            {\n                \"step\": \"Calculate insurance quote\",\n                \"action\": \"Use the property and risk data to calculate the insurance premium\"\n            },\n            {\n                \"step\": \"Generate quote response\",\n                \"action\": \"Format the calculated premium into a quote response for the user\"\n            },\n            {\n                \"step\": \"Ensure timely response\",\n                \"action\": \"Implement a mechanism to respond within 5 minutes\"\n            }\n        ]\n    },\n    {\n        \"element\": \"validateAndSanitizeInputs\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            {\n                \"step\": \"Validate input data\",\n                \"action\": \"Check for data integrity, format, and completeness\"\n            },\n            {\n                \"step\": \"Sanitize input data\",\n                \"action\": \"Remove any potentially harmful or unnecessary characters\"\n            },\n            {\n                \"step\": \"Ensure security\",\n                \"action\": \"Implement measures to prevent injection attacks and data breaches\"\n            }\n        ]\n    },\n    {\n        \"element\": \"enforceAuthenticationAuthorization\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            {\n                \"step\": \"Authenticate user\",\n                \"action\": \"Verify user identity through credentials or tokens\"\n            },\n            {\n                \"step\": \"Authorize access\",\n                \"action\": \"Check user permissions to ensure access to the system\"\n            },\n            {\n                \"step\": \"Enforce access control\",\n                \"action\": \"Implement role-based access control to restrict unauthorized actions\"\n            }\n        ]\n    }\n]\n```"
-      },
-      "pseudocode": ""
     }
   ]
 }

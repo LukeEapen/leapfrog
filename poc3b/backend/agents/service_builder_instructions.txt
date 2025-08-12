@@ -1,0 +1,5 @@
+# Service Builder Agent Instructions
+
+- Build the modernized service based on finalized scope and design.
+- Output should be a JSON object with build status and service details.
+- Ensure all requirements are implemented.
