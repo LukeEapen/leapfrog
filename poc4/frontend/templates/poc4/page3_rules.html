@@ -44,116 +44,167 @@
   </li>
 </ul>
 
-<!-- 3 Column Layout -->
-<div class="row g-4">
-  <!-- Source Column -->
-  <div class="col-md-4">
-    <div class="card h-100 shadow-sm">
-      <div class="card-header bg-light text-danger fw-bold">Source Fields</div>
-      <div class="card-body">
-        <ul class="list-group">
-          {% for m in mapping %}
-          <li class="list-group-item">
-            <strong>{% if m.source_table %}{{ m.source_table }}.{% endif %}{{ m.source }}</strong>
-            {% if m.target %} <span class="text-muted">→ {% if m.target_table %}{{ m.target_table }}.{% endif %}{{ m.target }}</span>{% endif %}
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
+<style>
+  /* Two-column rules layout */
+  .rules-table th, .rules-table td { vertical-align: middle; }
+  .rules-table td input { font-size: .8rem; padding: .25rem .4rem; }
+  .rule-row { font-size: .75rem; }
+  .rules-wrapper .card-body { max-height: 70vh; overflow: auto; }
+  /* Stacked target field + table name */
+  .field-stack strong { display:block; font-size:.8rem; line-height:1.15; }
+  .field-stack .tbl { display:block; font-size:.55rem; text-transform:uppercase; letter-spacing:.5px; color:#6c757d; line-height:1; margin-top:2px; }
+  .rules-table tbody tr:hover .field-stack strong { color:#b71c1c; }
+  /* Floating chat (like page2) */
+  .chat-float{position:fixed;right:1.25rem;top:6.5rem;z-index:1050;width:340px;box-shadow:0 4px 18px rgba(0,0,0,.15)}
+  .chat-float .card-body{height:300px;overflow-y:auto}
+  @media (max-width:1200px){ .chat-float{top:8rem;width:300px} }
+  @media (max-width:992px){ .chat-float{position:static;width:100%;margin-top:1rem} }
+</style>
+
+<form method="post" id="rules-form">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="form-check form-switch small mb-0">
+      <input class="form-check-input" type="checkbox" id="toggleQualified" checked>
+      <label class="form-check-label" for="toggleQualified">Show table names</label>
+    </div>
+    <div class="d-flex gap-2">
+      <button name="action" value="regenerate" class="btn btn-outline-danger btn-sm" type="submit" formnovalidate title="Rebuild rules from current mapping">Regenerate Rules</button>
     </div>
   </div>
-  <!-- Target Column -->
-  <div class="col-md-4">
-    <div class="card h-100 shadow-sm">
-      <div class="card-header bg-light text-danger fw-bold">Transformation Rules</div>
-      <div class="card-body">
-        <table class="table table-bordered mt-3">
-          <thead>
-            <tr>
-              <th>Target Field</th>
-              <th>Source Field(s)</th>
-              <th>Rule</th>
-              <th>Example</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <form method="post" id="rules-form">
-            {% for rule in rules %}
-            <tr>
-              <td>{{ rule.field_full or rule.field }}</td>
-              <td class="small text-muted">{{ rule.sources_display }}</td>
-              <td>
-                <input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control" />
-              </td>
-              <td class="small">{{ rule.example }}</td>
-              <td>
-                <button type="button" class="btn btn-outline-danger btn-sm edit-rule-btn" data-index="{{ loop.index0 }}">Edit</button>
-              </td>
-            </tr>
-            {% endfor %}
-            </form>
-          </tbody>
-        </table>
-        <form method="post" class="mt-4">
-          <button type="submit" form="rules-form" class="btn btn-danger w-100 mt-3">Validate & Simulate</button>
-        </form>
-      </div>
-    </div>
-  </div>
-  <!-- Chat Column -->
-  <div class="col-md-4">
-    <div class="card h-100 shadow-sm d-flex flex-column">
-      <div class="card-header bg-danger text-white">Chatbot Assistant</div>
-      <div class="card-body flex-grow-1 d-flex flex-column p-0">
-        <div class="flex-grow-1 p-3" style="overflow-y:auto; min-height: 400px;" id="chat-messages">
-          <div class="text-muted small">Ask me about transformation rules and data validation...</div>
+  <div class="row g-4 rules-wrapper">
+    <!-- Column 1: Source ➜ Target Rules -->
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
+          <span>Source ➜ Target Rules</span>
+          <span class="badge bg-danger">SOURCE</span>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm table-striped table-hover mb-0 rules-table">
+            <thead class="table-light">
+              <tr class="small">
+                <th style="min-width:170px">Target Field</th>
+                <th style="min-width:140px">Source Field(s)</th>
+                <th style="min-width:160px">Rule</th>
+                <th style="min-width:150px">Example</th>
+                <th style="width:50px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for rule in rules %}
+                {% if rule.origin == 'source' %}
+                <tr class="rule-row" title="{{ rule.field_full }} :: {{ rule.sources_display }} :: {{ rule.example }}">
+                  <td>
+                    <div class="field-stack" data-field-full="{{ rule.field_full }}" data-field-name="{{ rule.field_name }}">
+                      <strong class="field-label">{{ rule.field_full }}</strong>
+                      {% set _tbl = rule.target_table or (rule.field_full.split('.')[0] if '.' in rule.field_full else '') %}
+                      {% if _tbl %}<span class="tbl">{{ _tbl }}</span>{% endif %}
+                    </div>
+                  </td>
+                  <td class="text-muted">{{ rule.sources_display }}</td>
+                  <td><input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control form-control-sm" /></td>
+                  <td class="text-muted">{{ rule.example }}</td>
+                  <td><button type="button" class="btn btn-outline-danger btn-sm edit-rule-btn" data-index="{{ loop.index0 }}">Edit</button></td>
+                </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="card-footer">
-        <form id="chat-form" onsubmit="return sendMessage(event);">
-          <div class="input-group">
-            <input type="text" class="form-control" id="chat-input" placeholder="Type your question..." required>
-            <button class="btn btn-danger" type="submit">Send</button>
-          </div>
-        </form>
+    </div>
+    <!-- Column 2: Legacy ➜ Target Rules -->
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
+          <span>Legacy ➜ Target Rules</span>
+          <span class="badge bg-dark">LEGACY</span>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm table-striped table-hover mb-0 rules-table">
+            <thead class="table-light">
+              <tr class="small">
+                <th style="min-width:170px">Target Field</th>
+                <th style="min-width:140px">Legacy Field(s)</th>
+                <th style="min-width:160px">Rule</th>
+                <th style="min-width:150px">Example</th>
+                <th style="width:50px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for rule in rules %}
+                {% if rule.origin == 'legacy' %}
+                <tr class="rule-row" title="{{ rule.field_full }} :: {{ rule.sources_display }} :: {{ rule.example }}">
+                  <td>
+                    <div class="field-stack" data-field-full="{{ rule.field_full }}" data-field-name="{{ rule.field_name }}">
+                      <strong class="field-label">{{ rule.field_full }}</strong>
+                      {% set _tbl = rule.target_table or (rule.field_full.split('.')[0] if '.' in rule.field_full else '') %}
+                      {% if _tbl %}<span class="tbl">{{ _tbl }}</span>{% endif %}
+                    </div>
+                  </td>
+                  <td class="text-muted">{{ rule.sources_display }}</td>
+                  <td><input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control form-control-sm" /></td>
+                  <td class="text-muted">{{ rule.example }}</td>
+                  <td><button type="button" class="btn btn-outline-danger btn-sm edit-rule-btn" data-index="{{ loop.index0 }}">Edit</button></td>
+                </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
+  </div>
+  <div class="mt-4 d-flex justify-content-end">
+  <button type="submit" name="action" value="next" class="btn btn-danger px-5">Validate & Simulate</button>
+  </div>
+</form>
+
+<!-- Floating Chat Panel -->
+<div class="card chat-float border-0" id="chat-widget">
+  <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center">
+    <span class="small fw-semibold d-flex align-items-center gap-1"><i class="bi bi-robot"></i> Chatbot Assistant</span>
+    <button class="btn btn-sm btn-light py-0 px-1 d-flex align-items-center justify-content-center" id="chat-min-btn" type="button" aria-label="Minimize chat"><i class="bi bi-chevron-down" id="chat-min-icon"></i></button>
+  </div>
+  <div class="card-body p-2" id="chat-body">
+    <div class="text-muted small" id="chat-messages">Ask about transformation rules, lineage, or validation logic...</div>
+  </div>
+  <div class="card-footer p-2" id="chat-footer">
+    <form id="chat-form" onsubmit="return sendMessage(event);" class="d-flex gap-1">
+      <input type="text" class="form-control form-control-sm" id="chat-input" placeholder="Type question..." required>
+      <button class="btn btn-danger btn-sm" type="submit">Send</button>
+    </form>
   </div>
 </div>
 
 <script>
-  async function sendMessage(e) {
-    e.preventDefault();
-    const input = document.getElementById('chat-input');
-    const msg = input.value;
-    if (!msg) return false;
-    appendMessage('You', msg);
-    input.value = '';
-    const res = await fetch('/poc4/chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: 'message=' + encodeURIComponent(msg)
+  async function sendMessage(e){ e.preventDefault(); const input=document.getElementById('chat-input'); const msg=input.value.trim(); if(!msg) return false; appendMessage('You', msg); input.value=''; try{ const res= await fetch('/poc4/chat',{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'message='+encodeURIComponent(msg)}); const data= await res.json(); appendMessage('Bot', data.response);}catch(err){ appendMessage('Bot','(error)'); } return false; }
+  function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.className='mb-1'; div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
+  function editRule(i){ const inp=document.querySelector(`input[name='rule_${i}']`); if(!inp) return; const val=prompt('Edit rule:', inp.value); if(val!==null){ inp.value=val; } }
+  document.querySelectorAll('.edit-rule-btn').forEach(btn=>{ btn.addEventListener('click', ()=> editRule(parseInt(btn.dataset.index))); });
+  // Minimize chat
+  function toggleChat(){ const body=document.getElementById('chat-body'); const footer=document.getElementById('chat-footer'); const icon=document.getElementById('chat-min-icon'); const hidden=body.style.display==='none'; body.style.display= hidden? 'block':'none'; footer.style.display= hidden? 'block':'none'; icon.classList.toggle('bi-chevron-down', !hidden); icon.classList.toggle('bi-chevron-up', hidden);} 
+  document.getElementById('chat-min-btn').addEventListener('click', toggleChat);
+
+  // Toggle qualified/unqualified
+  const toggle = document.getElementById('toggleQualified');
+  const PREF_KEY = 'poc4_rules_show_qualified';
+  // Load preference
+  const storedPref = localStorage.getItem(PREF_KEY);
+  if(storedPref !== null){ toggle.checked = storedPref === '1'; }
+  function applyQualification(){
+    const showQualified = toggle.checked;
+    document.querySelectorAll('.field-stack').forEach(fs=>{
+      const full = fs.getAttribute('data-field-full');
+      const nameOnly = fs.getAttribute('data-field-name') || full;
+      const labelEl = fs.querySelector('.field-label');
+      if(labelEl){ labelEl.textContent = showQualified ? full : nameOnly.split('.').slice(-1)[0]; }
+      // Always show table line (requirement: display table name along with field)
+      const tblEl = fs.querySelector('.tbl');
+      if(tblEl){ tblEl.style.display = 'block'; }
     });
-    const data = await res.json();
-    appendMessage('Bot', data.response);
-    return false;
   }
-  function appendMessage(sender, text) {
-    const chat = document.getElementById('chat-messages');
-    const div = document.createElement('div');
-    div.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-  }
-  function editRule(i){
-    const inp=document.querySelector(`input[name='rule_${i}']`);
-    if(!inp) return;
-    const val=prompt('Edit rule:', inp.value);
-    if(val!==null){ inp.value=val; }
-  }
-  document.querySelectorAll('.edit-rule-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=> editRule(parseInt(btn.dataset.index)));
-  });
+  toggle.addEventListener('change', ()=>{ localStorage.setItem(PREF_KEY, toggle.checked ? '1':'0'); applyQualification(); });
+  applyQualification();
 </script>
 {% endblock %}

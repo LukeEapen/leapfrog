@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>POC4 DB Browser</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body{background:#f8f9fa;}
+    .card-header.bg-danger.text-white .badge{background:#fff!important;color:#d32f2f!important}
+  </style>
+</head>
+<body>
+<div class="container py-3">
+  <div class="mb-2"><a href="/poc4/page1" class="btn btn-sm btn-outline-danger">&larr; Workflow</a></div>
+<div class="bg-danger text-white py-3 mb-4 rounded shadow-sm text-center">
+  <h2 class="mb-0">POC4 DB Browser</h2>
+  <small>Inspect source / legacy / target SQLite stores</small>
+</div>
+
+<div class="row g-4">
+  {% for db_key, tables in db_tables.items() %}
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center {% if sel_db == db_key %}bg-danger text-white{% else %}bg-light{% endif %}">
+        <span class="fw-semibold text-uppercase small mb-0">{{ db_key }}</span>
+  {% if sel_db == db_key %}<span class="badge bg-light text-danger">ACTIVE</span>{% endif %}
+      </div>
+      <div class="card-body p-2" style="max-height:320px;overflow:auto;">
+        {% if tables %}
+          <ul class="list-unstyled mb-0 small">
+            {% for t in tables %}
+              <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                <a class="text-decoration-none {% if sel_db == db_key and sel_table == t.name %}fw-bold{% endif %}" href="{{ url_for('poc4.db_browser') }}?db={{ db_key }}&table={{ t.name }}">{{ t.name }}</a>
+                <span class="badge bg-secondary">{{ t.count }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="text-muted small">No tables.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<hr class="my-4"/>
+<h5 class="d-flex align-items-center gap-2">Table Preview {% if sel_table %}<span class="badge bg-danger">{{ sel_db }} :: {{ sel_table }}</span>{% endif %}</h5>
+<form class="row gy-2 gx-3 align-items-center mb-3">
+  <input type="hidden" name="db" value="{{ sel_db }}"/>
+  <div class="col-auto">
+    <label class="form-label small mb-0">DB</label>
+    <select name="db" class="form-select form-select-sm" onchange="this.form.submit()">
+      {% for db_key in db_tables.keys() %}
+        <option value="{{ db_key }}"{% if db_key == sel_db %} selected{% endif %}>{{ db_key }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">Table</label>
+    <select name="table" class="form-select form-select-sm" onchange="this.form.submit()">
+      <option value="">-- select --</option>
+      {% for t in db_tables[sel_db] %}
+        <option value="{{ t.name }}"{% if t.name == sel_table %} selected{% endif %}>{{ t.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">Limit</label>
+    <input type="number" name="limit" min="1" max="500" value="{{ limit }}" class="form-control form-control-sm"/>
+  </div>
+  <div class="col-auto align-self-end">
+    <button class="btn btn-danger btn-sm">Refresh</button>
+  </div>
+</form>
+
+{% if error %}
+  <div class="alert alert-danger small">Error: {{ error }}</div>
+{% endif %}
+{% if sel_table and rows %}
+  <div class="table-responsive border rounded">
+    <table class="table table-sm table-striped align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          {% for c in columns %}<th class="small">{{ c }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+          <tr>
+            {% for c in columns %}<td class="small">{{ r[c] }}</td>{% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% elif sel_table %}
+  <div class="text-muted small">No rows returned.</div>
+{% else %}
+  <div class="text-muted small">Select a database and table to preview data.</div>
+{% endif %}
+
+</div>
+</body>
+</html>

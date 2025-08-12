@@ -9,7 +9,8 @@
 <style>
   .nav-pills .nav-link { border-radius:2rem; margin:0 .25rem; font-weight:500; color:#d32f2f; background:#fff; border:1px solid #d32f2f; transition:.2s }
   .nav-pills .nav-link.active,.nav-pills .show>.nav-link{background:linear-gradient(90deg,#d32f2f 60%,#b71c1c);color:#fff !important;font-weight:700;box-shadow:0 2px 8px rgba(211,47,47,.1)}
-  .floating-chat{position:fixed; bottom:20px; right:20px; width:340px; max-height:520px; z-index:1050; box-shadow:0 4px 18px rgba(0,0,0,.15)}
+  /* Reposition chat to top-right to avoid covering form buttons */
+  .floating-chat{position:fixed; top:90px; right:20px; width:340px; max-height:520px; z-index:1050; box-shadow:0 4px 18px rgba(0,0,0,.15)}
   .floating-chat .card-body{overflow-y:auto}
 </style>
 <ul class="nav nav-pills mb-4 justify-content-center" id="poc4Tabs">
@@ -78,15 +79,19 @@
 </form>
 
 <!-- Floating Chat Widget -->
-<div class="card floating-chat">
-  <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center">
-    <span>Assistant</span>
-    <button class="btn btn-sm btn-light" type="button" onclick="toggleChatBody()">▾</button>
+<div class="card floating-chat" id="chat-widget">
+  <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center" style="cursor:move;">
+    <span class="fw-semibold small d-flex align-items-center gap-1"><i class="bi bi-robot"></i> Assistant</span>
+    <div class="d-flex align-items-center gap-1">
+      <button class="btn btn-sm btn-light d-flex align-items-center justify-content-center" id="chat-min-btn" type="button" aria-label="Minimize chat" style="width:26px;height:26px;">
+        <i class="bi bi-chevron-down" id="chat-min-icon"></i>
+      </button>
+    </div>
   </div>
   <div class="card-body p-2" id="chat-body" style="min-height:250px; max-height:360px;">
     <div id="chat-messages" class="small text-muted">Ask about the migration workflow...</div>
   </div>
-  <div class="card-footer p-2">
+  <div class="card-footer p-2" id="chat-footer">
     <form id="chat-form" onsubmit="return sendMessage(event);">
       <div class="input-group input-group-sm">
         <input type="text" class="form-control" id="chat-input" placeholder="Type..." required>
@@ -97,7 +102,17 @@
 </div>
 
 <script>
-function toggleChatBody(){ const el=document.getElementById('chat-body'); el.style.display= el.style.display==='none' ? 'block':'none'; }
+function toggleChatBody(){
+  const body=document.getElementById('chat-body');
+  const footer=document.getElementById('chat-footer');
+  const icon=document.getElementById('chat-min-icon');
+  const hidden = body.style.display==='none';
+  body.style.display = hidden ? 'block':'none';
+  footer.style.display = hidden ? 'block':'none';
+  icon.classList.toggle('bi-chevron-down', hidden===false);
+  icon.classList.toggle('bi-chevron-up', hidden===true);
+}
+document.getElementById('chat-min-btn').addEventListener('click', toggleChatBody);
 async function sendMessage(e){ e.preventDefault(); const input=document.getElementById('chat-input'); const msg=input.value.trim(); if(!msg) return false; appendMessage('You', msg); input.value=''; try{ const res= await fetch('/poc4/chat',{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'message='+encodeURIComponent(msg)}); const data= await res.json(); appendMessage('Bot', data.response);}catch(err){ appendMessage('Bot','(error)'); } return false; }
 function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
 

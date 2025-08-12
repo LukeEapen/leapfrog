@@ -10,12 +10,17 @@
   .nav-pills .nav-link {border-radius:2rem;margin:0 .25rem;font-weight:500;color:#d32f2f;background:#fff;border:1px solid #d32f2f;transition:.2s}
   .nav-pills .nav-link.active,.nav-pills .show>.nav-link{background:linear-gradient(90deg,#d32f2f 60%,#b71c1c);color:#fff !important;font-weight:700;box-shadow:0 2px 8px rgba(211,47,47,.1)}
   .map-row{border-bottom:1px solid #eee;padding:.35rem .5rem;white-space:normal;align-items:flex-start}
-  .map-row strong{flex:0 0 170px}
-  .map-row .target-badge{flex:0 0 220px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .map-header{background:#fafafa;font-weight:600;border-bottom:2px solid #e3e3e3;}
+  /* Allow full source/legacy field names to wrap instead of being cut */
+  .map-row strong{flex:0 0 auto; min-width:170px; max-width:300px; white-space:normal; word-break:break-word}
+  .map-row strong.text-truncate{overflow:visible!important; text-overflow:unset!important; white-space:normal!important}
+  .map-row .target-table{flex:0 0 140px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .map-row .target-badge{flex:0 0 160px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .map-row .justification{flex:1 1 auto;max-width:none;white-space:normal}
   .mapping-section .card-body{max-height:70vh;overflow:auto}
   .map-row .meta{font-size:.65rem;color:#555}
-  .chat-float{position:fixed;right:1.25rem;bottom:1.25rem;z-index:1050;width:340px;box-shadow:0 4px 18px rgba(0,0,0,.15)}
+  /* Reposition chat to top-right to prevent overlap with navigation/Next buttons */
+  .chat-float{position:fixed;right:1.25rem;top:6.5rem;z-index:1050;width:340px;box-shadow:0 4px 18px rgba(0,0,0,.15)}
   .chat-float .card-body{height:300px;overflow-y:auto}
   @media (max-width:1200px){.justification{max-width:260px}}
   @media (max-width:992px){.justification{display:none}}
@@ -34,19 +39,32 @@
     <div class="col-lg-6">
       <div class="card h-100 shadow-sm">
         <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
-          <span>Source ➜ Target (Mapped Only)</span>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-danger collapse-btn" data-target="#source-map-body" aria-label="Collapse Source mappings">−</button>
+            <span>Source ➜ Target (Mapped Only)</span>
+          </div>
           <span class="badge bg-danger origin-badge">SOURCE</span>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body p-0" id="source-map-body">
+          <div class="map-row map-header d-flex gap-2 small">
+            <div style="min-width:170px;max-width:300px;" class="sort-header" data-section="source" data-key="source">Source Field</div>
+            <div style="width:16px"></div>
+            <div class="target-table sort-header" data-section="source" data-key="target_table">Target Table</div>
+            <div class="target-badge sort-header" data-section="source" data-key="target">Target Field</div>
+            <div style="width:70px" class="sort-header" data-section="source" data-key="type">Type</div>
+            <div style="width:55px" class="sort-header" data-section="source" data-key="similarity" title="Similarity %">Sim</div>
+            <div class="flex-fill">Justification</div>
+          </div>
           {% set any_source = false %}
           {% for m in mapping %}
             {% set origin = m.get('origin','source') %}
             {% if origin == 'source' and m.target %}
               {% set any_source = true %}
-              <div class="map-row d-flex gap-2 small" title="{{ m.source }} ➜ {{ m.target }} :: {{ m.get('justification') or m.get('description') }}">
+              <div class="map-row d-flex gap-2 small" data-row="source" data-source="{{ m.source }}" data-target="{{ m.target }}" data-target_table="{{ m.target_table or '' }}" data-type="{{ target_types.get(m.target,'') }}" data-similarity="{{ (m.get('similarity',0)*100)|round(4) }}" title="{{ m.source }} ➜ {{ m.target }} :: {{ m.get('justification') or m.get('description') }}">
                 <strong class="text-truncate">{% if m.source_table %}{{ m.source_table }}.{% endif %}{{ m.source }}</strong>
                 <i class="bi bi-arrow-right text-muted mt-1"></i>
-                <span class="badge bg-secondary target-badge" title="{% if m.target_table %}{{ m.target_table }}.{% endif %}{{ m.target }}">{% if m.target_table %}{{ m.target_table }}.{% endif %}{{ m.target }}</span>
+                <span class="target-table text-muted small" title="{{ m.target_table or '' }}">{{ m.target_table or '' }}</span>
+                <span class="badge bg-secondary target-badge" title="{{ m.target }}">{{ m.target }}{% if m.target_table %}<div class="small text-light opacity-75" style="line-height:1; font-size:.55rem;">{{ m.target_table }}</div>{% endif %}</span>
                 {% if target_types.get(m.target) %}<span class="badge bg-light text-dark border mt-1">{{ target_types.get(m.target) }}</span>{% endif %}
                 {% if m.get('similarity') %}<span class="meta mt-1">{{ (m.get('similarity',0)*100)|round(1) }}%</span>{% endif %}
                 <span class="text-muted justification">— {{ m.get('justification') or m.get('description') or 'Mapping created automatically.' }}</span>
@@ -66,19 +84,32 @@
     <div class="col-lg-6">
       <div class="card h-100 shadow-sm">
         <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
-          <span>Legacy ➜ Target (Mapped Only)</span>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-danger collapse-btn" data-target="#legacy-map-body" aria-label="Collapse Legacy mappings">−</button>
+            <span>Legacy ➜ Target (Mapped Only)</span>
+          </div>
           <span class="badge bg-dark origin-badge">LEGACY</span>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body p-0" id="legacy-map-body">
+          <div class="map-row map-header d-flex gap-2 small">
+            <div style="min-width:170px;max-width:300px;" class="sort-header" data-section="legacy" data-key="source">Legacy Field</div>
+            <div style="width:16px"></div>
+            <div class="target-table sort-header" data-section="legacy" data-key="target_table">Target Table</div>
+            <div class="target-badge sort-header" data-section="legacy" data-key="target">Target Field</div>
+            <div style="width:70px" class="sort-header" data-section="legacy" data-key="type">Type</div>
+            <div style="width:55px" class="sort-header" data-section="legacy" data-key="similarity" title="Similarity %">Sim</div>
+            <div class="flex-fill">Justification</div>
+          </div>
           {% set any_legacy = false %}
           {% for m in mapping %}
             {% set origin = m.get('origin','source') %}
             {% if origin == 'legacy' and m.target %}
               {% set any_legacy = true %}
-              <div class="map-row d-flex gap-2 small" title="{{ m.source }} ➜ {{ m.target }} :: {{ m.get('justification') or m.get('description') }}">
+              <div class="map-row d-flex gap-2 small" data-row="legacy" data-source="{{ m.source }}" data-target="{{ m.target }}" data-target_table="{{ m.target_table or '' }}" data-type="{{ target_types.get(m.target,'') }}" data-similarity="{{ (m.get('similarity',0)*100)|round(4) }}" title="{{ m.source }} ➜ {{ m.target }} :: {{ m.get('justification') or m.get('description') }}">
                 <strong class="text-truncate">{% if m.source_table %}{{ m.source_table }}.{% endif %}{{ m.source }}</strong>
                 <i class="bi bi-arrow-right text-muted mt-1"></i>
-                <span class="badge bg-secondary target-badge" title="{% if m.target_table %}{{ m.target_table }}.{% endif %}{{ m.target }}">{% if m.target_table %}{{ m.target_table }}.{% endif %}{{ m.target }}</span>
+                <span class="target-table text-muted small" title="{{ m.target_table or '' }}">{{ m.target_table or '' }}</span>
+                <span class="badge bg-secondary target-badge" title="{{ m.target }}">{{ m.target }}{% if m.target_table %}<div class="small text-light opacity-75" style="line-height:1; font-size:.55rem;">{{ m.target_table }}</div>{% endif %}</span>
                 {% if target_types.get(m.target) %}<span class="badge bg-light text-dark border mt-1">{{ target_types.get(m.target) }}</span>{% endif %}
                 {% if m.get('similarity') %}<span class="meta mt-1">{{ (m.get('similarity',0)*100)|round(1) }}%</span>{% endif %}
                 <span class="text-muted justification">— {{ m.get('justification') or m.get('description') or 'Mapping created automatically.' }}</span>
@@ -101,15 +132,15 @@
 </form>
 
 <!-- Floating Chat Panel -->
-<div class="card chat-float border-0">
+<div class="card chat-float border-0" id="chat-widget">
   <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center">
-    <span class="small fw-semibold">Chatbot Assistant</span>
-    <button class="btn btn-sm btn-light py-0 px-1" type="button" onclick="document.getElementById('chat-messages').classList.toggle('d-none')"><i class="bi bi-chevron-expand"></i></button>
+    <span class="small fw-semibold d-flex align-items-center gap-1"><i class="bi bi-robot"></i> Chatbot Assistant</span>
+    <button class="btn btn-sm btn-light py-0 px-1 d-flex align-items-center justify-content-center" id="chat-min-btn" type="button" aria-label="Minimize chat"><i class="bi bi-chevron-down" id="chat-min-icon"></i></button>
   </div>
-  <div class="card-body p-2" id="chat-messages">
-    <div class="text-muted small">Ask about mapping decisions, lineage, or transformation logic...</div>
+  <div class="card-body p-2" id="chat-body">
+    <div class="text-muted small" id="chat-messages">Ask about mapping decisions, lineage, or transformation logic...</div>
   </div>
-  <div class="card-footer p-2">
+  <div class="card-footer p-2" id="chat-footer">
     <form onsubmit="return sendMessage(event)" class="d-flex gap-1">
       <input type="text" class="form-control form-control-sm" id="chat-input" placeholder="Type question..." required>
       <button class="btn btn-danger btn-sm" type="submit">Send</button>
@@ -124,5 +155,54 @@ async function sendMessage(e){ e.preventDefault(); const input=document.getEleme
 function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.className='mb-1'; div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
 const regenBtn=document.getElementById('regenerate-btn');
 if(regenBtn){ regenBtn.addEventListener('click', async ()=>{ try{ const res=await fetch('/poc4/auto_mapping'); if(!res.ok){ throw new Error('Failed'); } await res.json(); appendMessage('Bot','Regenerated mapping suggestions. Reload page to view.'); }catch(e){ appendMessage('Bot','Failed to regenerate mapping.'); } }); }
+// Minimize / expand logic
+function toggleChat(){ const body=document.getElementById('chat-body'); const footer=document.getElementById('chat-footer'); const icon=document.getElementById('chat-min-icon'); const hidden=body.style.display==='none'; body.style.display= hidden? 'block':'none'; footer.style.display= hidden? 'block':'none'; icon.classList.toggle('bi-chevron-down', !hidden); icon.classList.toggle('bi-chevron-up', hidden);} 
+document.getElementById('chat-min-btn').addEventListener('click', toggleChat);
+
+// --- Collapse logic for Source / Legacy sections ---
+document.querySelectorAll('.collapse-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const targetSel = btn.getAttribute('data-target');
+    const bodyEl = document.querySelector(targetSel);
+    if(!bodyEl) return;
+    const hidden = bodyEl.style.display==='none';
+    bodyEl.style.display = hidden? 'block':'none';
+    btn.textContent = hidden? '−':'+';
+  });
+});
+
+// --- Sorting logic ---
+const sortState = { source: {}, legacy: {} };
+function sortRows(section, key){
+  const container = section==='source'? document.getElementById('source-map-body') : document.getElementById('legacy-map-body');
+  if(!container) return;
+  const rows = Array.from(container.querySelectorAll(`.map-row[data-row='${section}']`));
+  if(!rows.length) return;
+  const currentDir = sortState[section][key] === 'asc'? 'desc':'asc';
+  sortState[section][key] = currentDir;
+  rows.sort((a,b)=>{
+    let av = a.getAttribute(`data-${key}`)||''; let bv = b.getAttribute(`data-${key}`)||'';
+    // numeric detection for similarity
+    const anum = parseFloat(av); const bnum = parseFloat(bv);
+    if(!isNaN(anum) && !isNaN(bnum)){
+      return currentDir==='asc'? anum - bnum : bnum - anum;
+    }
+    av = av.toLowerCase(); bv = bv.toLowerCase();
+    if(av < bv) return currentDir==='asc'? -1:1;
+    if(av > bv) return currentDir==='asc'? 1:-1;
+    return 0;
+  });
+  // Reinsert after header (first map-header row)
+  const header = container.querySelector('.map-header');
+  rows.forEach(r=> container.appendChild(r));
+  // Visual indicator (optional simple underline)
+  container.querySelectorAll('.sort-header').forEach(h=> h.classList.remove('sorted-asc','sorted-desc'));
+  const activeHeader = container.querySelector(`.sort-header[data-key='${key}']`);
+  if(activeHeader){ activeHeader.classList.add(currentDir==='asc'? 'sorted-asc':'sorted-desc'); }
+}
+document.querySelectorAll('.sort-header').forEach(h=>{
+  h.style.cursor='pointer';
+  h.addEventListener('click', ()=> sortRows(h.getAttribute('data-section'), h.getAttribute('data-key')));
+});
 </script>
 {% endblock %}

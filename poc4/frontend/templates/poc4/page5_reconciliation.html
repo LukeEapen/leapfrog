@@ -65,27 +65,59 @@
       <div class="card-header bg-light text-danger fw-bold">Reconciliation Summary</div>
       <div class="card-body">
         {% if migration_result %}
-          <p class="small text-muted mb-1">Migration Details:</p>
-          <ul class="small">
-            <li>{{ migration_result.summary }}</li>
-            {% if migration_result.preview %}
-              <li>Table Pairs: {{ migration_result.preview.total_table_pairs }}</li>
-              <li>Field Mappings: {{ migration_result.preview.total_field_mappings }}</li>
-              <li>Est. Rows: {{ migration_result.preview.estimated_total_rows }}</li>
-            {% endif %}
-            {% if migration_result.table_counts %}
-              <li>Target Table Counts:
-                <ul>
-                  {% for t,c in migration_result.table_counts.items() %}<li>{{ t }}: {{ c }}</li>{% endfor %}
-                </ul>
-              </li>
-            {% endif %}
-            <li>Unmatched Source-only Fields: {{ migration_result.unmatched_sources }}</li>
-            <li>Unmatched Target-only Fields: {{ migration_result.unmatched_targets }}</li>
-            {% if migration_result.details %}
-              <li>Steps: {{ migration_result.details|length }}</li>
-            {% endif %}
-          </ul>
+          <div class="small text-muted mb-2">High-level metrics</div>
+          <div class="row g-2 small">
+            <div class="col-6">
+              <div class="border rounded p-2 bg-light">Table Pairs<br><strong>{{ migration_result.preview.total_table_pairs if migration_result.preview }}</strong></div>
+            </div>
+            <div class="col-6">
+              <div class="border rounded p-2 bg-light">Field Mappings<br><strong>{{ migration_result.preview.total_field_mappings if migration_result.preview }}</strong></div>
+            </div>
+            <div class="col-6">
+              <div class="border rounded p-2 bg-light">Est. Rows<br><strong>{{ migration_result.preview.estimated_total_rows if migration_result.preview }}</strong></div>
+            </div>
+            <div class="col-6">
+              <div class="border rounded p-2 bg-light">Insert Steps<br><strong>{{ migration_result.details|length if migration_result.details }}</strong></div>
+            </div>
+          </div>
+          <hr class="my-3">
+          {% if migration_result.table_counts %}
+          <h6 class="fw-semibold small">Target Table Row Counts</h6>
+          <table class="table table-sm table-bordered mb-3">
+            <thead class="table-light small"><tr><th>Table</th><th>Rows After Migration</th></tr></thead>
+            <tbody class="small">
+              {% for t,c in migration_result.table_counts.items() %}
+                <tr><td><code>{{ t }}</code></td><td>{{ c }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% endif %}
+          <div class="accordion mb-3" id="migrationDetailAcc">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingSteps">
+                <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#detailSteps" aria-expanded="false" aria-controls="detailSteps">
+                  Detailed Steps ({{ migration_result.details|length if migration_result.details else 0 }})
+                </button>
+              </h2>
+              <div id="detailSteps" class="accordion-collapse collapse" aria-labelledby="headingSteps" data-bs-parent="#migrationDetailAcc">
+                <div class="accordion-body p-2" style="max-height:260px;overflow:auto;">
+                  {% if migration_result.details %}
+                    <ol class="small mb-0">
+                      {% for d in migration_result.details %}
+                        <li class="mb-1">{{ d }}</li>
+                      {% endfor %}
+                    </ol>
+                  {% else %}
+                    <div class="text-muted small">No detail entries recorded.</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="small text-muted">Unmatched Source-only Fields: <strong>{{ migration_result.unmatched_sources }}</strong> | Unmatched Target-only Fields: <strong>{{ migration_result.unmatched_targets }}</strong></div>
+          <div class="mt-3">
+            <a href="/poc4/db" class="btn btn-outline-danger btn-sm">Open DB Browser</a>
+          </div>
         {% else %}
           <p class="text-muted small">No migration result in session.</p>
         {% endif %}

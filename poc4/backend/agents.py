@@ -222,26 +222,32 @@ class TransformationRuleAgent:
     def suggest_rules(self, mapping):
         # For each mapping, if source_type != target_type, add a rule
         rules = []
+        # Group by target to handle multiple sources mapping to one target
+        by_target = {}
         for m in mapping:
-            # Only add rules for valid source-target pairs
-            if m.get('source') and m.get('target'):
-                src_type = m.get('source_type', '').split('(')[0].lower()
-                tgt_type = m.get('target_type', '').split('(')[0].lower()
-                if src_type and tgt_type:
-                    if src_type != tgt_type:
-                        rule = f"Convert {src_type} to {tgt_type}"
-                        example = f"Example: Cast {m['source']} from {src_type} to {tgt_type} for {m['target']}"
-                    else:
-                        rule = "Direct mapping"
-                        example = f"Example: Map {m['source']} to {m['target']}"
+            if m.get('target'):
+                by_target.setdefault(m['target'], []).append(m)
+        for tgt, entries in by_target.items():
+            # Choose first non-empty source for rule example
+            primary = next((e for e in entries if e.get('source')), entries[0])
+            src_type = primary.get('source_type', '').split('(')[0].lower()
+            tgt_type = primary.get('target_type', '').split('(')[0].lower()
+            if src_type and tgt_type:
+                if src_type != tgt_type:
+                    rule_txt = f"Convert {src_type} to {tgt_type}"
+                    example = f"Example: Cast {primary.get('source')} from {src_type} to {tgt_type} for {tgt}"
                 else:
-                    rule = "Manual review required"
-                    example = f"Example: Check mapping for {m['source']} to {m['target']}"
-                rules.append({
-                    'field': f"{m['source']} → {m['target']}",
-                    'rule': rule,
-                    'example': example
-                })
+                    rule_txt = "Direct mapping"
+                    example = f"Example: Map {primary.get('source')} to {tgt}"
+            else:
+                rule_txt = "Manual review required"
+                example = f"Example: Check mapping for {primary.get('source')} to {tgt}"
+            rules.append({
+                'field': tgt,
+                'sources': [e.get('source') for e in entries if e.get('source')],
+                'rule': rule_txt,
+                'example': example
+            })
         return rules
 
 class ValidationAgent:

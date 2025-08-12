@@ -90,12 +90,15 @@ def page2():
     target_schema_file = session.get('target_schema', 'target_schema.json')
     base_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
     def load_schema(fname):
-        with open(os.path.join(base_path, fname)) as f:
-            return json.load(f)
+        try:
+            with open(os.path.join(base_path, fname), 'r') as f:
+                return json.load(f)
+        except Exception:
+            return {'tables': []}
     source_schema = load_schema(source_schema_file)
     legacy_schema = load_schema(legacy_schema_file)
     target_schema = load_schema(target_schema_file)
-    # Helper: field -> table map
+    # Helper: field -> table mapping
     def build_field_table_map(schema):
         m = {}
         for t in schema.get('tables', []):
@@ -200,41 +203,127 @@ def page2():
 @poc4_bp.route('/page3', methods=['GET', 'POST'])
 def page3():
     if request.method == 'POST':
-        # Save transformation rules (future: persist edits)
+        action = request.form.get('action') or 'next'
+        if action == 'regenerate':
+            # Rebuild rules from current mapping then reload page 3
+            mapping_cur = session.get('mapping', [])
+            rebuilt_rules = []
+            existing_rule_lookup = {}
+            rules_existing = session.get('rules', []) or []
+            for r in rules_existing:
+                key = r.get('field') or r.get('field_full')
+                if key and key not in existing_rule_lookup:
+                    existing_rule_lookup[key] = r
+            seen_keys = set()
+            for m in mapping_cur:
+                tgt = m.get('target'); t_tbl = m.get('target_table'); origin = m.get('origin','source')
+                if not (tgt and t_tbl):
+                    continue
+                key = (origin, t_tbl, tgt)
+                if key in seen_keys:
+                    continue
+                seen_keys.add(key)
+                src_entries = [mm for mm in mapping_cur if mm.get('target') == tgt and mm.get('origin','source') == origin]
+                sources_display = ', '.join(
+                    (
+                        f"{se.get('source_table')}.{se.get('source')}" if se.get('source_table') and se.get('source') else (se.get('source') or '')
+                    ) for se in src_entries if se.get('source')
+                )
+                base_rule = existing_rule_lookup.get(tgt) or {}
+                rebuilt_rules.append({
+                    'origin': origin,
+                    'field': tgt,
+                    'field_name': tgt,
+                    'target_table': t_tbl,
+                    'field_full': f"{t_tbl}.{tgt}",
+                    'sources_display': sources_display,
+                    'rule': base_rule.get('rule') or base_rule.get('transformation') or 'Direct mapping',
+                    'example': base_rule.get('example') or base_rule.get('example_output') or ''
+                })
+            session['rules'] = rebuilt_rules
+            session.modified = True
+            return redirect(url_for('poc4.page3'))
+        # default is proceed to next step
         return redirect(url_for('poc4.page4'))
     mapping = session.get('mapping', [])
     rules = session.get('rules', [])
-    # Build helper structures for enrichment
-    target_table_lookup = {}
-    sources_by_target = {}
-    for m in mapping:
-        tgt = m.get('target')
-        if not tgt:
-            continue
-        # target table
-        if m.get('target_table'):
-            target_table_lookup[tgt] = m.get('target_table')
-        sources_by_target.setdefault(tgt, []).append(m)
-    # Enrich each rule with field_full (table.field) and sources_display
+    # Backfill target_table if absent (older sessions) by reloading target schema
+    try:
+        if mapping and any(m.get('target') and not m.get('target_table') for m in mapping):
+            import json
+            target_schema_file = session.get('target_schema', 'target_schema.json')
+            base_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+            with open(os.path.join(base_path, target_schema_file), 'r') as f:
+                tgt_schema = json.load(f)
+            field_to_table = {}
+            for t in tgt_schema.get('tables', []):
+                tname = t.get('name')
+                for fld in t.get('fields', []):
+                    field_to_table[fld.get('name')] = tname
+            for m in mapping:
+                if m.get('target') and not m.get('target_table'):
+                    m['target_table'] = field_to_table.get(m.get('target'))
+            session['mapping'] = mapping
+            session.modified = True
+    except Exception:
+        pass
+    # Rebuild rules list strictly from mapping so each origin is isolated and table prefix guaranteed
+    # Create a lookup for existing rule text/examples by field name
+    existing_rule_lookup = {}
     for r in rules:
-        fld = r.get('field')
-        if fld:
-            tbl = target_table_lookup.get(fld)
-            if tbl:
-                r.setdefault('field_full', f"{tbl}.{fld}")
-            else:
-                r.setdefault('field_full', fld)
-            src_entries = sources_by_target.get(fld, [])
-            if src_entries:
-                r['sources_display'] = ', '.join(
-                    (f"{se.get('source_table')}.{se.get('source')}" if se.get('source_table') else se.get('source'))
-                    for se in src_entries
-                )
-            else:
-                r['sources_display'] = ''
-        else:
-            r.setdefault('field_full', '')
-            r['sources_display'] = ''
+        key = r.get('field') or r.get('field_full')
+        if key and key not in existing_rule_lookup:
+            existing_rule_lookup[key] = r
+    rebuilt_rules = []
+    seen_keys = set()
+    for m in mapping:
+        tgt = m.get('target'); t_tbl = m.get('target_table'); origin = m.get('origin','source')
+        if not (tgt and t_tbl):
+            continue
+        key = (origin, t_tbl, tgt)
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        # Aggregate sources for this origin+target
+        src_entries = [mm for mm in mapping if mm.get('target') == tgt and mm.get('origin','source') == origin]
+        sources_display = ', '.join(
+            (
+                f"{se.get('source_table')}.{se.get('source')}" if se.get('source_table') and se.get('source') else (se.get('source') or '')
+            ) for se in src_entries if se.get('source')
+        )
+        base_rule = existing_rule_lookup.get(tgt) or {}
+        rebuilt_rules.append({
+            'origin': origin,
+            'field': tgt,
+            'field_name': tgt,
+            'target_table': t_tbl,
+            'field_full': f"{t_tbl}.{tgt}",
+            'sources_display': sources_display,
+            'rule': base_rule.get('rule') or base_rule.get('transformation') or 'Direct mapping',
+            'example': base_rule.get('example') or base_rule.get('example_output') or ''
+        })
+    rules = rebuilt_rules
+    # Fallback: if no rules rebuilt but mapping exists, create basic direct mapping rules
+    if not rules and mapping:
+        temp_seen = set()
+        for m in mapping:
+            tgt = m.get('target'); t_tbl = m.get('target_table'); origin = m.get('origin','source')
+            if not (tgt and t_tbl):
+                continue
+            key = (origin, t_tbl, tgt)
+            if key in temp_seen:
+                continue
+            temp_seen.add(key)
+            rules.append({
+                'origin': origin,
+                'field': tgt,
+                'field_name': tgt,
+                'target_table': t_tbl,
+                'field_full': f"{t_tbl}.{tgt}",
+                'sources_display': f"{m.get('source_table')}.{m.get('source')}" if m.get('source_table') and m.get('source') else (m.get('source') or ''),
+                'rule': 'Direct mapping',
+                'example': ''
+            })
     example = "Example transformation: Convert int to uuid for product_id."
     return render_template('poc4/page3_rules.html', mapping=mapping, rules=rules, example=example)
 
@@ -555,4 +644,81 @@ def chat():
     user_message = request.form['message']
     response = chatbot_agent.handle_message(user_message, session)
     return {'response': response}
+
+@poc4_bp.route('/db', methods=['GET'])
+def db_browser():
+    """Unified browser for source, legacy, and target SQLite DBs.
+    Query params:
+      db = source|legacy|target (which database to inspect)
+      table = table name within that DB (optional)
+      limit = row limit (default 50)
+    """
+    import json
+    schemas_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+    db_files = {
+        'source': ('source_schema.json', 'source.db'),
+        'legacy': ('legacy_schema.json', 'legacy.db'),
+        'target': ('target_schema.json', 'target.db')
+    }
+    # Ensure DBs exist (lazy create using schema + SAMPLE_DATA if available)
+    try:
+        from sqlite_data_transfer_demo import create_and_populate_db, SAMPLE_DATA
+    except Exception:
+        create_and_populate_db = None
+        SAMPLE_DATA = None
+    for key, (schema_json, db_name) in db_files.items():
+        db_path = os.path.join(schemas_dir, db_name)
+        if not os.path.exists(db_path) and create_and_populate_db:
+            schema_path = os.path.join(schemas_dir, schema_json)
+            try:
+                create_and_populate_db(schema_path, db_path, SAMPLE_DATA or {})
+            except Exception:
+                pass
+    # Gather table listings + counts
+    db_tables = {}
+    for key, (_schema_json, db_name) in db_files.items():
+        path = os.path.join(schemas_dir, db_name)
+        tables = []
+        if os.path.exists(path):
+            try:
+                with sqlite3.connect(path) as conn:
+                    for (t_name,) in conn.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY 1"):
+                        try:
+                            (cnt,) = conn.execute(f'SELECT COUNT(1) FROM "{t_name}"').fetchone()
+                        except Exception:
+                            cnt = 'err'
+                        tables.append({'name': t_name, 'count': cnt})
+            except Exception:
+                pass
+        db_tables[key] = tables
+    # Selected table view
+    sel_db = request.args.get('db', 'target')
+    if sel_db not in db_files:
+        sel_db = 'target'
+    sel_table = request.args.get('table')
+    limit = min(max(int(request.args.get('limit', '50') or 50), 1), 500)
+    rows = []
+    columns = []
+    error = None
+    if sel_table:
+        db_path = os.path.join(schemas_dir, db_files[sel_db][1])
+        if os.path.exists(db_path):
+            try:
+                with sqlite3.connect(db_path) as conn:
+                    # Basic defensive quoting (no injection due to simple name whitelist)
+                    qtable = sel_table.replace('"', '')
+                    cur = conn.execute(f'SELECT * FROM "{qtable}" LIMIT {limit}')
+                    columns = [d[0] for d in cur.description] if cur.description else []
+                    for r in cur.fetchall():
+                        rows.append(dict(zip(columns, r)))
+            except Exception as e:
+                error = str(e)
+    return render_template('poc4/db_browser.html',
+                           db_tables=db_tables,
+                           sel_db=sel_db,
+                           sel_table=sel_table,
+                           rows=rows,
+                           columns=columns,
+                           limit=limit,
+                           error=error)
 
