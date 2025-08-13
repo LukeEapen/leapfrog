@@ -2,6 +2,8 @@ import argparse
 import sqlite3
 import json
 import os
+import random
+from datetime import datetime, timedelta
 from pathlib import Path
 from flask import Flask, render_template_string, request
 
@@ -263,6 +265,110 @@ def index():
 def create_and_populate_db(schema_path, db_path, sample_data):
     schema = load_schema(schema_path)
     conn = sqlite3.connect(db_path)
+    # Determine desired row multiplier based on schema type
+    schema_lower = os.path.basename(schema_path).lower()
+    if 'source_schema' in schema_lower:
+        desired_count = 10
+    elif 'legacy_schema' in schema_lower:
+        desired_count = 15
+    else:  # target
+        desired_count = 2
+
+    FIRST_NAMES = ["Alice","Bob","Carol","David","Eve","Frank","Grace","Heidi","Ivan","Judy","Mallory","Niaj","Olivia","Peggy","Rupert","Sybil","Trent","Victor","Wendy","Yvonne"]
+    LAST_NAMES = ["Smith","Jones","Brown","Taylor","Wilson","Clark","Hall","Young","Allen","King","Scott","Green","Adams","Baker","Carter","Diaz","Evans","Foster","Gomez","Hayes"]
+    STREETS = ["Main St","Oak Ave","Pine Rd","Maple Ln","Cedar St","Birch Blvd","Sunset Dr","Hillcrest Ave","Riverview Rd","Lakeview Dr"]
+    PRODUCT_NAMES = ["Premium Checking","High Yield Savings","Everyday Checking","Future Saver","Platinum Money Market","Student Checking","Retirement Saver"]
+    PRODUCT_TYPES = ["Checking","Savings","MoneyMarket"]
+    TX_TYPES = ["Deposit","Withdrawal","Transfer","Fee","Interest"]
+
+    def rand_phone():
+        return f"555-{random.randint(2000,9999)}"
+
+    def rand_timestamp(start_year=2021, end_year=2024):
+        start = datetime(start_year,1,1)
+        end = datetime(end_year,12,31,23,59,59)
+        delta = end - start
+        rand_sec = random.randint(0, int(delta.total_seconds()))
+        return (start + timedelta(seconds=rand_sec)).strftime('%Y-%m-%d %H:%M:%S')
+
+    def rand_date(start_year=2020, end_year=2024):
+        start = datetime(start_year,1,1)
+        end = datetime(end_year,12,31)
+        delta = (end - start).days
+        d = start + timedelta(days=random.randint(0,delta))
+        return d.strftime('%Y-%m-%d')
+
+    def expand_rows(base_rows, needed, table_def):
+        if not base_rows or needed <= len(base_rows):
+            return base_rows[:needed]
+        # Identify PK
+        pk_field = None
+        for f in table_def.get('fields', []):
+            if f.get('primary_key'):
+                pk_field = f.get('name'); break
+        if not pk_field:
+            for f in table_def.get('fields', []):
+                nm = f.get('name','')
+                if nm.endswith('_id') or nm.endswith('id'):
+                    pk_field = nm; break
+        if not pk_field:
+            pk_field = list(base_rows[0].keys())[0]
+        # Determine current max
+        max_existing = 0
+        for r in base_rows:
+            try:
+                max_existing = max(max_existing, int(r.get(pk_field, 0)))
+            except Exception:
+                pass
+        out = list(base_rows)
+        next_id = max_existing + 1
+        while len(out) < needed:
+            # Choose a template row for structural reference only
+            template = random.choice(base_rows)
+            new_row = template.copy()
+            new_row[pk_field] = next_id
+            # Field-wise synthesis
+            for k, v in list(new_row.items()):
+                kl = k.lower()
+                if k == pk_field:
+                    continue
+                if 'first_name' in kl or kl.endswith('first_nm'):
+                    new_row[k] = random.choice(FIRST_NAMES)
+                elif 'last_name' in kl or kl.endswith('last_nm'):
+                    new_row[k] = random.choice(LAST_NAMES)
+                elif 'product_name' in kl:
+                    new_row[k] = random.choice(PRODUCT_NAMES)
+                elif 'product_type' in kl:
+                    new_row[k] = random.choice(PRODUCT_TYPES)
+                elif 'account_type' in kl or kl.endswith('type_cd'):
+                    new_row[k] = random.choice(["Checking","Savings","CHK","SAV"])
+                elif 'email' in kl:
+                    fn = new_row.get('first_name') or new_row.get('cust_first_nm') or random.choice(FIRST_NAMES)
+                    ln = new_row.get('last_name') or new_row.get('cust_last_nm') or random.choice(LAST_NAMES)
+                    domain = 'legacy.com' if 'legacy' in table_def.get('name','') or 'cust_' in kl else 'example.com'
+                    new_row[k] = f"{fn.lower()}.{ln.lower()}{next_id}@{domain}"
+                elif 'phone' in kl:
+                    new_row[k] = rand_phone()
+                elif 'address' in kl or 'postal_addr' in kl:
+                    new_row[k] = f"{random.randint(100,999)} {random.choice(STREETS)}"
+                elif kl.endswith('created_at') or kl.endswith('opened_at') or kl.endswith('transaction_date') or kl.endswith('created_ts'):
+                    new_row[k] = rand_timestamp()
+                elif 'date' in kl or kl.endswith('_dt'):
+                    new_row[k] = rand_date()
+                elif 'balance' in kl or 'amount' in kl or 'amt' in kl:
+                    # Keep numeric style
+                    try:
+                        new_row[k] = round(random.uniform(50, 10000), 2)
+                    except Exception:
+                        pass
+                elif 'interest_rate' in kl:
+                    new_row[k] = round(random.uniform(0.1, 3.5), 2)
+                elif isinstance(v, str) and (v.startswith('sample_') or v.endswith('_type')):
+                    new_row[k] = v.replace('sample_', '')
+            out.append(new_row)
+            next_id += 1
+        return out
+
     for table in schema['tables']:
         fields = []
         pk = None
@@ -282,6 +388,9 @@ def create_and_populate_db(schema_path, db_path, sample_data):
         conn.execute(sql)
         # Insert sample data
         rows = sample_data.get(table['name'], [])
+        # Expand or trim rows to desired_count
+        if desired_count and rows:
+            rows = expand_rows(rows, desired_count, table)
         if rows:
             # Deduplicate column list to match CREATE TABLE
             seen_cols = set()

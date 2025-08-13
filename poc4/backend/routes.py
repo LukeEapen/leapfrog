@@ -436,6 +436,18 @@ def page4():
             summary_items = []
             total_fields = 0
             total_rows_est = 0
+            # Load target schema once for holistic coverage
+            import json as _json
+            try:
+                with open(tgt_schema_path, 'r') as _f:
+                    _tgt_schema_obj = _f.read()
+                tgt_schema_json = _json.loads(_tgt_schema_obj)
+            except Exception:
+                tgt_schema_json = {'tables': []}
+            tgt_field_catalog = {t.get('name'): {f.get('name') for f in t.get('fields', [])} for t in tgt_schema_json.get('tables', [])}
+            # Track mapped fields per target table & origin counts
+            mapped_fields_by_table = {}
+            origin_counts_by_table = {}
             with sqlite3.connect(src_db_path) as s_conn, sqlite3.connect(leg_db_path) as l_conn:
                 for (origin, s_tbl, t_tbl), pairs in groups.items():
                     # unique pairs by target col to avoid duplicates
@@ -464,11 +476,31 @@ def page4():
                         'fields': uniq,
                         'row_count': row_count
                     })
+                    # Holistic tracking
+                    mapped_fields_by_table.setdefault(t_tbl, set()).update([u['target_col'] for u in uniq])
+                    origin_counts_by_table.setdefault(t_tbl, {}).setdefault(origin, 0)
+                    origin_counts_by_table[t_tbl][origin] += row_count
+            # Build holistic coverage list
+            holistic = []
+            for t_name, tgt_fields in tgt_field_catalog.items():
+                mapped = mapped_fields_by_table.get(t_name, set())
+                total_target_fields = len(tgt_fields)
+                coverage_pct = round((len(mapped) / total_target_fields)*100, 1) if total_target_fields else 0.0
+                holistic.append({
+                    'target_table': t_name,
+                    'mapped_field_count': len(mapped),
+                    'total_field_count': total_target_fields,
+                    'coverage_pct': coverage_pct,
+                    'origins': origin_counts_by_table.get(t_name, {}),
+                    'mapped_fields': sorted(mapped)
+                })
+            holistic.sort(key=lambda x: (-x['coverage_pct'], x['target_table']))
             migration_preview = {
                 'total_table_pairs': len(summary_items),
                 'total_field_mappings': total_fields,
                 'estimated_total_rows': total_rows_est,
-                'items': summary_items
+                'items': summary_items,
+                'holistic': holistic
             }
             session['migration_preview'] = migration_preview
             session.modified = True
