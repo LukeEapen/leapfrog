@@ -6,6 +6,9 @@
   <small>Modern Data Migration Workflow</small>
 </div>
 
+{% include 'poc4/_subnav.j2' %}
+{% include 'poc4/_steps.j2' %}
+
 <style>
   .nav-pills .nav-link {border-radius:2rem;margin:0 .25rem;font-weight:500;color:#d32f2f;background:#fff;border:1px solid #d32f2f;transition:.2s}
   .nav-pills .nav-link.active,.nav-pills .show>.nav-link{background:linear-gradient(90deg,#d32f2f 60%,#b71c1c);color:#fff !important;font-weight:700;box-shadow:0 2px 8px rgba(211,47,47,.1)}
@@ -25,15 +28,14 @@
   @media (max-width:1200px){.justification{max-width:260px}}
   @media (max-width:992px){.justification{display:none}}
 </style>
-<ul class="nav nav-pills mb-4 justify-content-center" id="poc4Tabs">
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page1') }}">1. Upload</a></li>
-  <li class="nav-item"><a class="nav-link active" href="{{ url_for('poc4.page2') }}">2. Mapping</a></li>
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page3') }}">3. Rules</a></li>
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page4') }}">4. Validation</a></li>
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page5') }}">5. Reconciliation</a></li>
-</ul>
 
 <form method="post" id="mapping-form">
+  <!-- Top action bar just below tabs -->
+  <div class="d-flex justify-content-end align-items-center mb-3">
+    <button type="submit" class="btn btn-danger px-4" id="next-btn">Next</button>
+  </div>
+
+
   <div class="row g-4 mapping-section">
     <!-- Source -> Target Column (takes half width) -->
     <div class="col-lg-6">
@@ -64,11 +66,14 @@
                 <strong class="text-truncate">{% if m.source_table %}{{ m.source_table }}.{% endif %}{{ m.source }}</strong>
                 <i class="bi bi-arrow-right text-muted mt-1"></i>
                 <span class="target-table text-muted small" title="{{ m.target_table or '' }}">{{ m.target_table or '' }}</span>
-                <span class="badge bg-secondary target-badge" title="{{ m.target }}">{{ m.target }}{% if m.target_table %}<div class="small text-light opacity-75" style="line-height:1; font-size:.55rem;">{{ m.target_table }}</div>{% endif %}</span>
+                <select class="form-select form-select-sm target-badge target-select" name="target_{{ loop.index0 }}" aria-label="Select target field" style="max-width:240px;" data-current="{{ m.target }}">
+                  {% for tf in target_fields %}
+                    <option value="{{ tf }}">{{ tf }}</option>
+                  {% endfor %}
+                </select>
                 {% if target_types.get(m.target) %}<span class="badge bg-light text-dark border mt-1">{{ target_types.get(m.target) }}</span>{% endif %}
                 {% if m.get('similarity') %}<span class="meta mt-1">{{ (m.get('similarity',0)*100)|round(1) }}%</span>{% endif %}
                 <span class="text-muted justification">— {{ m.get('justification') or m.get('description') or 'Mapping created automatically.' }}</span>
-                <input type="hidden" name="target_{{ loop.index0 }}" value="{{ m.target }}">
                 <input type="hidden" name="target_type_{{ loop.index0 }}" value="{{ target_types.get(m.target,'') }}">
               </div>
             {% endif %}
@@ -109,11 +114,14 @@
                 <strong class="text-truncate">{% if m.source_table %}{{ m.source_table }}.{% endif %}{{ m.source }}</strong>
                 <i class="bi bi-arrow-right text-muted mt-1"></i>
                 <span class="target-table text-muted small" title="{{ m.target_table or '' }}">{{ m.target_table or '' }}</span>
-                <span class="badge bg-secondary target-badge" title="{{ m.target }}">{{ m.target }}{% if m.target_table %}<div class="small text-light opacity-75" style="line-height:1; font-size:.55rem;">{{ m.target_table }}</div>{% endif %}</span>
+                <select class="form-select form-select-sm target-badge target-select" name="target_{{ loop.index0 }}" aria-label="Select target field" style="max-width:240px;" data-current="{{ m.target }}">
+                  {% for tf in target_fields %}
+                    <option value="{{ tf }}">{{ tf }}</option>
+                  {% endfor %}
+                </select>
                 {% if target_types.get(m.target) %}<span class="badge bg-light text-dark border mt-1">{{ target_types.get(m.target) }}</span>{% endif %}
                 {% if m.get('similarity') %}<span class="meta mt-1">{{ (m.get('similarity',0)*100)|round(1) }}%</span>{% endif %}
                 <span class="text-muted justification">— {{ m.get('justification') or m.get('description') or 'Mapping created automatically.' }}</span>
-                <input type="hidden" name="target_{{ loop.index0 }}" value="{{ m.target }}">
                 <input type="hidden" name="target_type_{{ loop.index0 }}" value="{{ target_types.get(m.target,'') }}">
               </div>
             {% endif %}
@@ -126,9 +134,7 @@
     </div>
   </div>
 
-  <div class="mt-4 d-flex justify-content-end">
-    <button type="submit" class="btn btn-danger px-4">Next</button>
-  </div>
+  
 </form>
 
 <!-- Floating Chat Panel -->
@@ -150,7 +156,13 @@
 </div>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<script id="target-types-json" type="application/json">{{ target_types | tojson | safe }}</script>
 <script>
+// Load target type map for client-side updates
+try {
+  const el = document.getElementById('target-types-json');
+  window.__poc4TargetTypes = el ? JSON.parse(el.textContent) : {};
+} catch(e){ window.__poc4TargetTypes = {}; }
 async function sendMessage(e){ e.preventDefault(); const input=document.getElementById('chat-input'); const msg=input.value.trim(); if(!msg)return false; appendMessage('You',msg); input.value=''; try{ const res=await fetch('/poc4/chat',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'message='+encodeURIComponent(msg)}); const data=await res.json(); appendMessage('Bot',data.response);}catch(err){ appendMessage('Bot','(error)'); } return false; }
 function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.className='mb-1'; div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
 const regenBtn=document.getElementById('regenerate-btn');
@@ -189,6 +201,8 @@ function sortRows(section, key){
     }
     av = av.toLowerCase(); bv = bv.toLowerCase();
     if(av < bv) return currentDir==='asc'? -1:1;
+    // Start minimized
+    toggleChat();
     if(av > bv) return currentDir==='asc'? 1:-1;
     return 0;
   });
@@ -199,10 +213,30 @@ function sortRows(section, key){
   container.querySelectorAll('.sort-header').forEach(h=> h.classList.remove('sorted-asc','sorted-desc'));
   const activeHeader = container.querySelector(`.sort-header[data-key='${key}']`);
   if(activeHeader){ activeHeader.classList.add(currentDir==='asc'? 'sorted-asc':'sorted-desc'); }
+  const lower = msg.toLowerCase();
+  if(lower==='next' || lower==='go next' || lower==='continue'){ document.getElementById('next-btn')?.click(); return false; }
+  if(lower.includes('regenerate')){ document.getElementById('regenerate-btn')?.click(); }
 }
 document.querySelectorAll('.sort-header').forEach(h=>{
   h.style.cursor='pointer';
   h.addEventListener('click', ()=> sortRows(h.getAttribute('data-section'), h.getAttribute('data-key')));
+});
+
+// Initialize target selects and keep hidden type in sync
+document.querySelectorAll('.map-row').forEach(row=>{
+  const sel = row.querySelector('select.target-select');
+  if (!sel) return;
+  const hiddenType = row.querySelector('input[name^="target_type_"]');
+  const current = sel.getAttribute('data-current');
+  if (current) {
+    for (const opt of sel.options){ if (opt.value === current){ opt.selected = true; break; } }
+  }
+  sel.addEventListener('change', ()=>{
+    // Look up type via data map printed server-side in a script tag if present; fallback: clear
+    const typeMap = window.__poc4TargetTypes || {};
+    const t = typeMap[sel.value] || '';
+    if (hiddenType) hiddenType.value = t;
+  });
 });
 </script>
 {% endblock %}

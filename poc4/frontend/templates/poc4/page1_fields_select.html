@@ -4,14 +4,15 @@
   <h2 class="mb-0">Select Critical Fields</h2>
   <small>Choose key fields from Legacy, Source, and Target schemas</small>
 </div>
-<ul class="nav nav-pills mb-4 justify-content-center" id="poc4Tabs">
-  <li class="nav-item"><a class="nav-link active" href="#">1b. Fields</a></li>
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page2') }}">2. Mapping</a></li>
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page3') }}">3. Rules</a></li>
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page4') }}">4. Validation</a></li>
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page5') }}">5. Reconciliation</a></li>
-</ul>
+
+{% include 'poc4/_subnav.j2' %}
+{% include 'poc4/_steps.j2' %}
 <form method="post" id="field-select-form">
+  <!-- Top action bar -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{{ url_for('poc4.page1') }}" class="btn btn-outline-secondary">Back</a>
+  <button type="submit" class="btn btn-danger" id="next-btn">Next</button>
+  </div>
   <div class="row g-4">
     <div class="col-md-4">
       <div class="card h-100 shadow-sm">
@@ -122,11 +123,43 @@
       </div>
     </div>
   </div>
-  <div class="mt-4 d-flex justify-content-between">
-    <a href="{{ url_for('poc4.page1') }}" class="btn btn-outline-secondary">Back</a>
-    <button type="submit" class="btn btn-danger">Next</button>
-  </div>
 </form>
+
+<!-- Floating Chat Widget -->
+<style>
+  .floating-chat{position:fixed; top:90px; right:20px; width:340px; max-height:520px; z-index:1050; box-shadow:0 4px 18px rgba(0,0,0,.15)}
+  .floating-chat .card-body{overflow-y:auto}
+  @media (max-width: 992px){ .floating-chat{position:static; width:100%; max-height:none; margin-top:1rem} }
+  .cmd-hint{font-size:.75rem; color:#6c757d}
+  .cmd-hint code{background:#f8f9fa; padding:0 .2rem; border-radius:.2rem}
+  .chat-min-btn{width:26px; height:26px}
+  .chat-min-btn i{line-height:1}
+  .chat-body-area{min-height:220px; max-height:340px}
+  .small-muted{font-size:.85em; color:#6c757d}
+</style>
+<div class="card floating-chat" id="chat-widget">
+  <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center" style="cursor:move;">
+    <span class="fw-semibold small d-flex align-items-center gap-1"><i class="bi bi-robot"></i> Assistant</span>
+    <div class="d-flex align-items-center gap-1">
+      <button class="btn btn-sm btn-light d-flex align-items-center justify-content-center chat-min-btn" id="chat-min-btn" type="button" aria-label="Minimize chat">
+        <i class="bi bi-chevron-down" id="chat-min-icon"></i>
+      </button>
+    </div>
+  </div>
+  <div class="card-body p-2 chat-body-area" id="chat-body">
+    <div id="chat-messages" class="small-muted">Commands: <code>select all source</code>, <code>deselect all legacy</code>, <code>select all target</code>, <code>next</code></div>
+  </div>
+  <div class="card-footer p-2" id="chat-footer">
+    <form id="chat-form" onsubmit="return sendMessage(event);">
+      <div class="input-group input-group-sm">
+        <input type="text" class="form-control" id="chat-input" placeholder="Type command or question..." required>
+        <button class="btn btn-danger" type="submit">Send</button>
+      </div>
+    </form>
+  </div>
+  <div class="px-2 pb-2 cmd-hint">Try <code>select all source</code> or <code>deselect all target</code></div>
+  
+</div>
 
 <script>
 // Select all handlers
@@ -140,5 +173,53 @@ function bindSelectAll(masterId, boxClass){
 bindSelectAll('select_all_source','source-box');
 bindSelectAll('select_all_legacy','legacy-box');
 bindSelectAll('select_all_target','target-box');
+
+// Chat helpers
+function toggleChatBody(){
+  const body=document.getElementById('chat-body');
+  const footer=document.getElementById('chat-footer');
+  const icon=document.getElementById('chat-min-icon');
+  const hidden = body.style.display==='none';
+  body.style.display = hidden ? 'block':'none';
+  footer.style.display = hidden ? 'block':'none';
+  if(icon){ icon.classList.toggle('bi-chevron-down', hidden===false); icon.classList.toggle('bi-chevron-up', hidden===true); }
+}
+document.getElementById('chat-min-btn')?.addEventListener('click', toggleChatBody);
+// Start minimized
+toggleChatBody();
+
+function setAllByChat(masterId, boxClass, checked){
+  const master=document.getElementById(masterId);
+  if(master){ master.checked = checked; master.dispatchEvent(new Event('change')); }
+  else { document.querySelectorAll('.'+boxClass).forEach(cb=> cb.checked = checked); }
+}
+
+async function sendMessage(e){
+  e.preventDefault();
+  const input=document.getElementById('chat-input');
+  const msg=input.value.trim();
+  if(!msg) return false;
+  appendMessage('You', msg);
+  input.value='';
+  const lower = msg.toLowerCase();
+  // Commands
+  if(lower.includes('select all source')){ setAllByChat('select_all_source','source-box', true); }
+  if(lower.includes('deselect all source') || lower.includes('unselect all source')){ setAllByChat('select_all_source','source-box', false); }
+  if(lower.includes('select all legacy')){ setAllByChat('select_all_legacy','legacy-box', true); }
+  if(lower.includes('deselect all legacy') || lower.includes('unselect all legacy')){ setAllByChat('select_all_legacy','legacy-box', false); }
+  if(lower.includes('select all target')){ setAllByChat('select_all_target','target-box', true); }
+  if(lower.includes('deselect all target') || lower.includes('unselect all target')){ setAllByChat('select_all_target','target-box', false); }
+  if(lower==='next' || lower==='go next' || lower==='continue'){
+    document.getElementById('field-select-form')?.submit();
+    return false;
+  }
+  // Fall back to server-side chat
+  try{
+    const res= await fetch('/poc4/chat',{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'message='+encodeURIComponent(msg)});
+    const data= await res.json(); appendMessage('Bot', data.response);
+  }catch(err){ appendMessage('Bot','(error)'); }
+  return false;
+}
+function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
 </script>
 {% endblock %}

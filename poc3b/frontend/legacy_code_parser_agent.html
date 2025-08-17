@@ -238,6 +238,44 @@
       });
     </script>
     <script>
+        // Extract just the "Section 2: Business Breakdown" portion from plain text (Markdown)
+        function extractBusinessBreakdown(text) {
+          if (!text) return '';
+          // Find the start of Section/Step 2: Business Breakdown (flexible with separators and case)
+          const startRe = /(?:^|\n)\s*(?:Section|Step)\s*2\s*[:.\-–—]\s*Business Breakdown\s*(?:\n|$)/i;
+          const m = startRe.exec(text);
+          if (m) {
+            const startIdx = m.index + m[0].length;
+            const rest = text.slice(startIdx);
+            // Boundary at next Section/Step header, Markdown heading, or ALL-CAPS header
+            const boundaryRe = /(?:^|\n)\s*(?:Section|Step)\s*\d+\s*[:.\-–—]|(?:^|\n)\s*#{1,6}\s+|(?:^|\n)[A-Z][A-Z0-9 \-_]{4,}\s*(?:\n|$)/m;
+            const bm = boundaryRe.exec(rest);
+            const endIdx = bm ? bm.index : rest.length;
+            return rest.slice(0, endIdx).trim();
+          }
+          // Fallback: render to HTML and try to capture content under a header that contains 'Business Breakdown'
+          try {
+            const html = marked.parse(text || '');
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            const headers = tmp.querySelectorAll('h1,h2,h3,h4,h5,h6,.legacy-section-header');
+            let capture = false; let out = [];
+            for (const el of tmp.childNodes) {
+              if (el.nodeType === 1 /* ELEMENT_NODE */) {
+                const isHeader = /H[1-6]/.test(el.tagName) || el.classList?.contains('legacy-section-header');
+                if (isHeader) {
+                  const txt = el.textContent || '';
+                  if (/Business Breakdown/i.test(txt) && /\b(Section|Step)\b\s*2/i.test(txt)) {
+                    capture = true; continue;
+                  }
+                  if (capture) break; // next header stops capture
+                }
+                if (capture) out.push(el.outerHTML || el.textContent || '');
+              }
+            }
+            return out.join('\n').trim();
+          } catch(_) { return ''; }
+        }
         // Beautify and bold section headers in the response
         function beautifyLegacyResponse(text) {
           if (!text) return '';
@@ -359,6 +397,11 @@
             // Save to localStorage for next step
             if (data.response_agent_1) {
               localStorage.setItem('latestLegacyEnglish', data.response_agent_1);
+              // Extract and store just Section 2: Business Breakdown (Markdown slice or HTML snippet)
+              const bb = extractBusinessBreakdown(data.response_agent_1);
+              if (bb) {
+                localStorage.setItem('latestBusinessBreakdown', bb);
+              }
               // Try to extract pseudocode from the response and save it
               let pseudoCode = '';
               // Look for a section header like 'Pseudocode' or 'Pseudo Code' (case-insensitive)
@@ -395,6 +438,12 @@
           // Save current session data to localStorage before navigating
           localStorage.setItem('legacyFileNames', document.getElementById('fileContent').textContent);
           localStorage.setItem('legacyBusinessBreakdown', document.getElementById('agentResponse').innerHTML);
+          // Ensure Business Breakdown section is available for Step 2
+          if (!localStorage.getItem('latestBusinessBreakdown')) {
+            const full = localStorage.getItem('latestLegacyEnglish') || '';
+            const bb = extractBusinessBreakdown(full);
+            if (bb) localStorage.setItem('latestBusinessBreakdown', bb);
+          }
           window.location.href = '/user-story-decomposer';
         });
 

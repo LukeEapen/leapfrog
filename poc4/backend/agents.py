@@ -220,33 +220,85 @@ class TransformationRuleAgent:
         "You are a transformation rule expert. Propose and validate rules for data type conversions, value mappings, and cleansing."
     )
     def suggest_rules(self, mapping):
-        # For each mapping, if source_type != target_type, add a rule
+        """
+        Generate transformation rules with variations and concrete examples.
+        Heuristics:
+        - Multiple sources -> concatenate/compose with separators.
+        - Type mismatch -> cast to target type.
+        - Field-intent hints (email/phone/date/name/address/id/amount/rate) -> normalization rules.
+        - Always include at least one example. Provide optional 'variants'.
+        Note: Groups by target only; the caller may further split by origin.
+        """
+        def base_type(t):
+            return (t or '').split('(')[0].strip().lower()
+        def looks_like(name, token):
+            return token in (name or '').replace('_', ' ').lower()
         rules = []
-        # Group by target to handle multiple sources mapping to one target
         by_target = {}
         for m in mapping:
             if m.get('target'):
                 by_target.setdefault(m['target'], []).append(m)
         for tgt, entries in by_target.items():
-            # Choose first non-empty source for rule example
-            primary = next((e for e in entries if e.get('source')), entries[0])
-            src_type = primary.get('source_type', '').split('(')[0].lower()
-            tgt_type = primary.get('target_type', '').split('(')[0].lower()
-            if src_type and tgt_type:
-                if src_type != tgt_type:
-                    rule_txt = f"Convert {src_type} to {tgt_type}"
-                    example = f"Example: Cast {primary.get('source')} from {src_type} to {tgt_type} for {tgt}"
+            srcs = [e for e in entries if e.get('source')]
+            src_names = [e.get('source') for e in srcs]
+            primary = srcs[0] if srcs else entries[0]
+            src_bt = base_type(primary.get('source_type'))
+            tgt_bt = base_type(primary.get('target_type'))
+            t_name = (tgt or '').lower()
+            rule_txt = 'Direct mapping'
+            example = f"Example: Map {src_names[0]} to {tgt}" if src_names else f"Example: Populate {tgt}"
+            variants = []
+            # Multiple sources -> compose
+            if len(src_names) >= 2:
+                sep = ' '
+                rule_txt = f"Concatenate {', '.join(src_names[:-1])} + '{sep}' + {src_names[-1]}"
+                # Example values
+                if all(looks_like(s, 'name') for s in src_names) or looks_like(t_name, 'name'):
+                    example = "Example: 'John' + ' ' + 'Doe' => 'John Doe'"
+                elif any(looks_like(s, 'address') for s in src_names) or looks_like(t_name, 'address'):
+                    example = "Example: '123 Main St' + ', ' + 'SF' + ' ' + '94107' => '123 Main St, SF 94107'"
                 else:
-                    rule_txt = "Direct mapping"
-                    example = f"Example: Map {primary.get('source')} to {tgt}"
+                    example = "Example: 'A' + ' ' + 'B' => 'A B'"
+                variants.append("Trim and collapse multiple spaces after concatenation")
+            # Type conversion
+            if src_bt and tgt_bt and src_bt != tgt_bt:
+                cast_rule = f"CAST({src_names[0]} AS {tgt_bt.upper()})" if src_names else f"CAST(NULL AS {tgt_bt.upper()})"
+                variants.append(f"Type conversion: {cast_rule}")
+                if not src_names:
+                    example = f"Example: Default to empty {tgt_bt} for {tgt}"
+                else:
+                    example = example or f"Example: Cast {src_names[0]} from {src_bt} to {tgt_bt}"
+            # Intent-specific normalizations
+            if looks_like(t_name, 'email') or any(looks_like(s, 'email') for s in src_names):
+                variants.append("Normalize email: LOWER(TRIM(src))")
+                example = "Example: ' Alice@Example.Com ' => 'alice@example.com'"
+            if looks_like(t_name, 'phone') or any(looks_like(s, 'phone') for s in src_names):
+                variants.append("Normalize phone: keep digits only; format E.164 if possible")
+                example = "Example: '+1 (415) 555-1234' => '14155551234'"
+            if looks_like(t_name, 'date') or looks_like(t_name, 'time'):
+                variants.append("Parse and reformat date: e.g., YYYYMMDD -> YYYY-MM-DD")
+                example = "Example: '20250107' => '2025-01-07'"
+            if looks_like(t_name, 'name') and len(src_names) == 1:
+                variants.append("Title-case the name; strip extra spaces")
+                example = "Example: '  aLiCe  ' => 'Alice'"
+            if looks_like(t_name, 'address'):
+                variants.append("Normalize address abbreviations (St, Ave); remove double spaces")
+            if looks_like(t_name, 'id') or looks_like(t_name, 'uuid'):
+                variants.append("Ensure non-null ID; generate UUID if missing")
+            if looks_like(t_name, 'amount') or looks_like(t_name, 'balance') or looks_like(t_name, 'rate'):
+                variants.append("Round/format numeric precision appropriately (e.g., 2 decimals)")
+            # Null/default handling
+            if src_names:
+                variants.append(f"Default when null: COALESCE({src_names[0]}, '')")
             else:
-                rule_txt = "Manual review required"
-                example = f"Example: Check mapping for {primary.get('source')} to {tgt}"
+                rule_txt = "Default/static value"
+                example = f"Example: Set {tgt} to '' (empty)"
             rules.append({
                 'field': tgt,
-                'sources': [e.get('source') for e in entries if e.get('source')],
+                'sources': src_names,
                 'rule': rule_txt,
-                'example': example
+                'example': example,
+                'variants': variants
             })
         return rules
 

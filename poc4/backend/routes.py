@@ -1,8 +1,10 @@
 # --- Static Schema Preview Route ---
 import os
+import sys
 import sqlite3
 import shutil  # added for backup/rollback
 from flask import send_file, abort
+import uuid
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from .agents import (
     schema_mapping_agent,
@@ -15,6 +17,118 @@ from .agents import (
 
 poc4_bp = Blueprint('poc4', __name__, url_prefix='/poc4')
 
+# Ensure project root is on sys.path so we can import helper modules at repo root
+_BACKEND_DIR = os.path.dirname(__file__)
+_ROOT_DIR = os.path.abspath(os.path.join(_BACKEND_DIR, '..', '..'))
+if _ROOT_DIR not in sys.path:
+    sys.path.insert(0, _ROOT_DIR)
+
+# --- Server-side state store to avoid oversized cookies ---
+_SERVER_STATE: dict[str, dict] = {}
+
+def _ensure_sid():
+    sid = session.get('sid')
+    if not sid:
+        sid = uuid.uuid4().hex
+        session['sid'] = sid
+    return sid
+
+def _state():
+    sid = _ensure_sid()
+    return _SERVER_STATE.setdefault(sid, {})
+
+def get_mapping():
+    return _state().get('mapping', [])
+
+def set_mapping(m):
+    _state()['mapping'] = m
+
+def get_rules():
+    return _state().get('rules', [])
+
+def set_rules(r):
+    _state()['rules'] = r
+
+def get_preview():
+    return _state().get('migration_preview')
+
+def set_preview(p):
+    _state()['migration_preview'] = p
+
+def get_result():
+    return _state().get('migration_result')
+
+def set_result(x):
+    _state()['migration_result'] = x
+
+def clear_state(*keys):
+    st = _state()
+    for k in keys:
+        st.pop(k, None)
+
+# --- Optional demo helpers import with fallbacks ---
+try:
+    from sqlite_data_transfer_demo import create_and_populate_db as _demo_create_db, SAMPLE_DATA as _DEMO_SAMPLE_DATA, reset_all_dbs as _demo_reset
+except Exception:
+    _demo_create_db = None
+    _DEMO_SAMPLE_DATA = None
+    _demo_reset = None
+
+def _fallback_create_and_populate_db(schema_path: str, db_path: str):
+    """Create SQLite DB from a JSON schema with empty tables (minimal fallback)."""
+    import json as _json
+    try:
+        with open(schema_path, 'r') as f:
+            schema = _json.load(f)
+    except Exception:
+        schema = {'tables': []}
+    conn = sqlite3.connect(db_path)
+    for t in schema.get('tables', []):
+        cols = []
+        pk = None
+        seen = set()
+        for fld in t.get('fields', []):
+            name = fld.get('name')
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            typ = (fld.get('type') or 'TEXT').upper()
+            # very rough mapping
+            if typ.startswith('INT'):
+                sqlt = 'INTEGER'
+            elif any(x in typ for x in ('REAL', 'DEC', 'FLOAT')):
+                sqlt = 'REAL'
+            else:
+                sqlt = 'TEXT'
+            cols.append(f'"{name}" {sqlt}')
+            if fld.get('primary_key'):
+                pk = name
+        if pk:
+            cols.append(f'PRIMARY KEY("{pk}")')
+        try:
+            conn.execute(f'DROP TABLE IF EXISTS "{t.get("name")}"')
+            conn.execute(f'CREATE TABLE "{t.get("name")}" ({", ".join(cols)})')
+        except Exception:
+            pass
+    conn.commit(); conn.close()
+    return True
+
+def _fallback_reset_all_dbs(src_schema_path: str, leg_schema_path: str, tgt_schema_path: str):
+    base_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+    src_db = os.path.join(base_dir, 'source.db')
+    leg_db = os.path.join(base_dir, 'legacy.db')
+    tgt_db = os.path.join(base_dir, 'target.db')
+    for p in (src_db, leg_db, tgt_db):
+        try:
+            if os.path.exists(p):
+                os.remove(p)
+        except Exception:
+            pass
+    _fallback_create_and_populate_db(src_schema_path, src_db)
+    _fallback_create_and_populate_db(leg_schema_path, leg_db)
+    _fallback_create_and_populate_db(tgt_schema_path, tgt_db)
+    return {'source': src_db, 'legacy': leg_db, 'target': tgt_db}
+
 @poc4_bp.route('/page1', methods=['GET', 'POST'])
 def page1():
     if request.method == 'POST':
@@ -26,8 +140,9 @@ def page1():
         session['legacy_schema'] = legacy_schema
         session['target_schema'] = target_schema
         # Clear any previous selections
-        for k in ['selected_source_fields', 'selected_legacy_fields', 'selected_target_fields', 'mapping']:
+        for k in ['selected_source_fields', 'selected_legacy_fields', 'selected_target_fields']:
             session.pop(k, None)
+        clear_state('mapping', 'rules', 'migration_preview', 'migration_result', 'target_backup')
         return redirect(url_for('poc4.page1_fields'))
     return render_template('poc4/page1_upload.html')
 
@@ -124,7 +239,7 @@ def page2():
     filtered_source = filter_schema(source_schema, selected_source)
     filtered_legacy = filter_schema(legacy_schema, selected_legacy)
     # Generate mapping for each origin separately (only once if not in session)
-    mapping = session.get('mapping')
+    mapping = get_mapping()
     if not mapping:
         source_mapping = schema_mapping_agent.map_schema(filtered_source, target_schema)
         legacy_mapping = schema_mapping_agent.map_schema(filtered_legacy, target_schema)
@@ -181,8 +296,7 @@ def page2():
                 'justification': m.get('justification'),
                 'description': m.get('description')
             })
-        session['mapping'] = new_mapping
-        from .agents import transformation_rule_agent
+        set_mapping(new_mapping)
         rules = transformation_rule_agent.suggest_rules(new_mapping)
         # Enrich rules with table-qualified field name if possible
         for r in rules:
@@ -193,7 +307,7 @@ def page2():
                 r['field_full'] = f"{mtch.get('target_table')}.{fld}"
             else:
                 r['field_full'] = fld
-        session['rules'] = rules
+        set_rules(rules)
         return redirect(url_for('poc4.page3'))
     # Build target helper structures
     target_fields_list = [f['name'] for t in target_schema.get('tables', []) for f in t.get('fields', [])]
@@ -205,15 +319,60 @@ def page3():
     if request.method == 'POST':
         action = request.form.get('action') or 'next'
         if action == 'regenerate':
-            # Rebuild rules from current mapping then reload page 3
-            mapping_cur = session.get('mapping', [])
+            # Rebuild rules from current mapping then reload page 3 (with variations/examples)
+            mapping_cur = get_mapping()
             rebuilt_rules = []
-            existing_rule_lookup = {}
-            rules_existing = session.get('rules', []) or []
-            for r in rules_existing:
-                key = r.get('field') or r.get('field_full')
-                if key and key not in existing_rule_lookup:
-                    existing_rule_lookup[key] = r
+            rules_existing = get_rules() or []
+            # First, fold in any preferred selections submitted in this request
+            for i, r in enumerate(rules_existing):
+                pref_val = request.form.get(f'preferred_{i}')
+                if pref_val is not None and pref_val != '':
+                    r['preferred'] = pref_val
+            # Helper to compute rule variants and example
+            def compute_rule_examples(target, tgt_type, src_entries):
+                src_names = [se.get('source') for se in src_entries if se.get('source')]
+                tgt_bt = (tgt_type or '').split('(')[0].lower()
+                tname = (target or '').lower()
+                # Start with defaults
+                rule_txt = 'Direct mapping' if src_names else 'Default/static value'
+                example = (f"Example: Map {src_names[0]} to {target}" if src_names else f"Example: Set {target} to '' (empty)")
+                variants = []
+                # Multi-source concat
+                if len(src_names) >= 2:
+                    rule_txt = f"Concatenate {', '.join(src_names[:-1])} + ' ' + {src_names[-1]}"
+                    if any('name' in s.lower() for s in src_names) or 'name' in tname:
+                        example = "Example: 'John' + ' ' + 'Doe' => 'John Doe'"
+                    else:
+                        example = "Example: 'A' + ' ' + 'B' => 'A B'"
+                    variants.append('Trim multiple spaces after concatenation')
+                # Type conversion
+                if src_entries:
+                    src_bt = (src_entries[0].get('source_type') or '').split('(')[0].lower()
+                    if src_bt and tgt_bt and src_bt != tgt_bt:
+                        variants.append(f"Type conversion: CAST({src_names[0]} AS {tgt_bt.upper()})")
+                        if not src_names:
+                            example = f"Example: Default to empty {tgt_bt} for {target}"
+                # Intent-specific
+                if 'email' in tname:
+                    variants.append('Normalize email: LOWER(TRIM(src))')
+                    example = "Example: ' Alice@Example.Com ' => 'alice@example.com'"
+                if 'phone' in tname:
+                    variants.append('Normalize phone: digits only; format E.164')
+                    example = "Example: '+1 (415) 555-1234' => '14155551234'"
+                if 'date' in tname or 'time' in tname:
+                    variants.append('Parse date format YYYYMMDD -> YYYY-MM-DD')
+                    example = "Example: '20250107' => '2025-01-07'"
+                if 'name' in tname and len(src_names) == 1:
+                    variants.append('Title-case and trim name')
+                    example = "Example: '  aLiCe  ' => 'Alice'"
+                if 'address' in tname:
+                    variants.append('Normalize abbreviations (St, Ave); remove double spaces')
+                if any(k in tname for k in ['amount','balance','rate']):
+                    variants.append('Round to 2 decimals')
+                if src_names:
+                    variants.append(f"Default when null: COALESCE({src_names[0]}, '')")
+                return rule_txt, example, variants
+
             seen_keys = set()
             for m in mapping_cur:
                 tgt = m.get('target'); t_tbl = m.get('target_table'); origin = m.get('origin','source')
@@ -229,7 +388,7 @@ def page3():
                         f"{se.get('source_table')}.{se.get('source')}" if se.get('source_table') and se.get('source') else (se.get('source') or '')
                     ) for se in src_entries if se.get('source')
                 )
-                base_rule = existing_rule_lookup.get(tgt) or {}
+                rule_txt, example, variants = compute_rule_examples(tgt, m.get('target_type'), src_entries)
                 rebuilt_rules.append({
                     'origin': origin,
                     'field': tgt,
@@ -237,16 +396,146 @@ def page3():
                     'target_table': t_tbl,
                     'field_full': f"{t_tbl}.{tgt}",
                     'sources_display': sources_display,
-                    'rule': base_rule.get('rule') or base_rule.get('transformation') or 'Direct mapping',
-                    'example': base_rule.get('example') or base_rule.get('example_output') or ''
+                    'rule': rule_txt,
+                    'example': example,
+                    'variants': variants
                 })
-            session['rules'] = rebuilt_rules
-            session.modified = True
+            # Overlay previously selected preferences when possible
+            prev_map = { (r.get('origin','source'), r.get('target_table'), r.get('field')): r for r in rules_existing }
+            for r in rebuilt_rules:
+                k = (r.get('origin','source'), r.get('target_table'), r.get('field'))
+                if k in prev_map:
+                    if prev_map[k].get('preferred'):
+                        r['preferred'] = prev_map[k]['preferred']
+            set_rules(rebuilt_rules)
+            return redirect(url_for('poc4.page3'))
+        elif action in ('apply_all', 'apply_all_source', 'apply_all_legacy'):
+            # Apply preferred (or recommended) variant for every rule (optionally filtered by origin), then stay on Page 3
+            cur_rules = get_rules() or []
+            # Capture any changed preferences from the form first
+            for i, r in enumerate(cur_rules):
+                pref_val = request.form.get(f'preferred_{i}')
+                if pref_val is not None and pref_val != '':
+                    r['preferred'] = pref_val
+            # Heuristic recommender
+            def choose_recommended(rule_obj: dict):
+                # 1) explicit preferred
+                if rule_obj.get('preferred'):
+                    return rule_obj['preferred']
+                variants = rule_obj.get('variants') or []
+                if not variants:
+                    return rule_obj.get('rule')
+                fname = (rule_obj.get('field') or '').lower()
+                # 2) intent-based
+                intent_priority = [
+                    ('email', 'Normalize email'),
+                    ('phone', 'Normalize phone'),
+                    ('date', 'Parse date'),
+                    ('time', 'Parse date'),
+                ]
+                for key, text in intent_priority:
+                    if key in fname:
+                        for v in variants:
+                            if text.lower() in v.lower():
+                                return v
+                # 3) type conversion if present
+                for v in variants:
+                    if 'Type conversion' in v:
+                        return v
+                # 4) default/null handling
+                for v in variants:
+                    if 'Default when null' in v or 'COALESCE' in v:
+                        return v
+                # 5) fallback: first variant
+                return variants[0]
+            # Filter by origin when requested
+            origin_filter = None
+            if action == 'apply_all_source':
+                origin_filter = 'source'
+            elif action == 'apply_all_legacy':
+                origin_filter = 'legacy'
+            for r in cur_rules:
+                if origin_filter and r.get('origin') != origin_filter:
+                    continue
+                chosen = choose_recommended(r)
+                if chosen:
+                    r['rule'] = chosen
+            set_rules(cur_rules)
             return redirect(url_for('poc4.page3'))
         # default is proceed to next step
+        # Persist any edited rule text
+        cur_rules = get_rules() or []
+        for i, r in enumerate(cur_rules):
+            new_txt = request.form.get(f'rule_{i}')
+            if new_txt is not None:
+                r['rule'] = new_txt
+            # Also persist any preferred selections
+            pref_val = request.form.get(f'preferred_{i}')
+            if pref_val is not None and pref_val != '':
+                r['preferred'] = pref_val
+        set_rules(cur_rules)
         return redirect(url_for('poc4.page4'))
-    mapping = session.get('mapping', [])
-    rules = session.get('rules', [])
+    mapping = get_mapping()
+    rules = get_rules()
+    # Fallback: if mapping missing (e.g., cookie too large dropped session), rebuild from schemas
+    if not mapping:
+        try:
+            import json
+            schemas_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+            src_schema_file = session.get('source_schema', 'source_schema.json')
+            leg_schema_file = session.get('legacy_schema', 'legacy_schema.json')
+            tgt_schema_file = session.get('target_schema', 'target_schema.json')
+            def load_schema(fname):
+                p = os.path.join(schemas_dir, fname)
+                try:
+                    with open(p, 'r') as f:
+                        return json.load(f)
+                except Exception:
+                    return {'tables': []}
+            src_schema = load_schema(src_schema_file)
+            leg_schema = load_schema(leg_schema_file)
+            tgt_schema = load_schema(tgt_schema_file)
+            # Apply user-selected field filters if present
+            selected_source = set(session.get('selected_source_fields', []))
+            selected_legacy = set(session.get('selected_legacy_fields', []))
+            def filter_schema(schema, selected):
+                if not selected:
+                    return schema
+                out = {'tables': []}
+                for t in schema.get('tables', []):
+                    flds = [f for f in t.get('fields', []) if f.get('name') in selected]
+                    if flds:
+                        out['tables'].append({'name': t.get('name'), 'fields': flds})
+                return out
+            filtered_source = filter_schema(src_schema, selected_source)
+            filtered_legacy = filter_schema(leg_schema, selected_legacy)
+            # Build helper table maps for annotations
+            def field_to_table(schema):
+                m = {}
+                for t in schema.get('tables', []):
+                    for f in t.get('fields', []):
+                        m[f.get('name')] = t.get('name')
+                return m
+            src_ft = field_to_table(src_schema)
+            leg_ft = field_to_table(leg_schema)
+            tgt_ft = field_to_table(tgt_schema)
+            # Generate mappings via agent
+            src_map = schema_mapping_agent.map_schema(filtered_source, tgt_schema)
+            leg_map = schema_mapping_agent.map_schema(filtered_legacy, tgt_schema)
+            for m in src_map:
+                m['origin'] = 'source'
+                m['source_table'] = src_ft.get(m.get('source'))
+                if m.get('target'):
+                    m['target_table'] = tgt_ft.get(m.get('target'))
+            for m in leg_map:
+                m['origin'] = 'legacy'
+                m['source_table'] = leg_ft.get(m.get('source'))
+                if m.get('target'):
+                    m['target_table'] = tgt_ft.get(m.get('target'))
+            mapping = src_map + leg_map
+            set_mapping(mapping)
+        except Exception:
+            mapping = []
     # Backfill target_table if absent (older sessions) by reloading target schema
     try:
         if mapping and any(m.get('target') and not m.get('target_table') for m in mapping):
@@ -263,19 +552,51 @@ def page3():
             for m in mapping:
                 if m.get('target') and not m.get('target_table'):
                     m['target_table'] = field_to_table.get(m.get('target'))
-            session['mapping'] = mapping
-            session.modified = True
+            set_mapping(mapping)
     except Exception:
         pass
     # Rebuild rules list strictly from mapping so each origin is isolated and table prefix guaranteed
-    # Create a lookup for existing rule text/examples by field name
-    existing_rule_lookup = {}
-    for r in rules:
-        key = r.get('field') or r.get('field_full')
-        if key and key not in existing_rule_lookup:
-            existing_rule_lookup[key] = r
     rebuilt_rules = []
     seen_keys = set()
+    def compute_rule_examples(target, tgt_type, src_entries):
+        src_names = [se.get('source') for se in src_entries if se.get('source')]
+        tgt_bt = (tgt_type or '').split('(')[0].lower()
+        tname = (target or '').lower()
+        rule_txt = 'Direct mapping' if src_names else 'Default/static value'
+        example = (f"Example: Map {src_names[0]} to {target}" if src_names else f"Example: Set {target} to '' (empty)")
+        variants = []
+        if len(src_names) >= 2:
+            rule_txt = f"Concatenate {', '.join(src_names[:-1])} + ' ' + {src_names[-1]}"
+            if any('name' in s.lower() for s in src_names) or 'name' in tname:
+                example = "Example: 'John' + ' ' + 'Doe' => 'John Doe'"
+            else:
+                example = "Example: 'A' + ' ' + 'B' => 'A B'"
+            variants.append('Trim multiple spaces after concatenation')
+        if src_entries:
+            src_bt = (src_entries[0].get('source_type') or '').split('(')[0].lower()
+            if src_bt and tgt_bt and src_bt != tgt_bt:
+                variants.append(f"Type conversion: CAST({src_names[0]} AS {tgt_bt.upper()})")
+                if not src_names:
+                    example = f"Example: Default to empty {tgt_bt} for {target}"
+        if 'email' in tname:
+            variants.append('Normalize email: LOWER(TRIM(src))')
+            example = "Example: ' Alice@Example.Com ' => 'alice@example.com'"
+        if 'phone' in tname:
+            variants.append('Normalize phone: digits only; format E.164')
+            example = "Example: '+1 (415) 555-1234' => '14155551234'"
+        if 'date' in tname or 'time' in tname:
+            variants.append('Parse date format YYYYMMDD -> YYYY-MM-DD')
+            example = "Example: '20250107' => '2025-01-07'"
+        if 'name' in tname and len(src_names) == 1:
+            variants.append('Title-case and trim name')
+            example = "Example: '  aLiCe  ' => 'Alice'"
+        if 'address' in tname:
+            variants.append('Normalize abbreviations (St, Ave); remove double spaces')
+        if any(k in tname for k in ['amount','balance','rate']):
+            variants.append('Round to 2 decimals')
+        if src_names:
+            variants.append(f"Default when null: COALESCE({src_names[0]}, '')")
+        return rule_txt, example, variants
     for m in mapping:
         tgt = m.get('target'); t_tbl = m.get('target_table'); origin = m.get('origin','source')
         if not (tgt and t_tbl):
@@ -284,14 +605,13 @@ def page3():
         if key in seen_keys:
             continue
         seen_keys.add(key)
-        # Aggregate sources for this origin+target
         src_entries = [mm for mm in mapping if mm.get('target') == tgt and mm.get('origin','source') == origin]
         sources_display = ', '.join(
             (
                 f"{se.get('source_table')}.{se.get('source')}" if se.get('source_table') and se.get('source') else (se.get('source') or '')
             ) for se in src_entries if se.get('source')
         )
-        base_rule = existing_rule_lookup.get(tgt) or {}
+        rule_txt, example, variants = compute_rule_examples(tgt, m.get('target_type'), src_entries)
         rebuilt_rules.append({
             'origin': origin,
             'field': tgt,
@@ -299,10 +619,22 @@ def page3():
             'target_table': t_tbl,
             'field_full': f"{t_tbl}.{tgt}",
             'sources_display': sources_display,
-            'rule': base_rule.get('rule') or base_rule.get('transformation') or 'Direct mapping',
-            'example': base_rule.get('example') or base_rule.get('example_output') or ''
+            'rule': rule_txt,
+            'example': example,
+            'variants': variants
         })
+    # Overlay any existing rule text or preferred selections from server-side store
+    existing = get_rules() or []
+    ex_map = { (r.get('origin','source'), r.get('target_table'), r.get('field')): r for r in existing }
+    for r in rebuilt_rules:
+        k = (r.get('origin','source'), r.get('target_table'), r.get('field'))
+        if k in ex_map:
+            if ex_map[k].get('rule'):
+                r['rule'] = ex_map[k]['rule']
+            if ex_map[k].get('preferred'):
+                r['preferred'] = ex_map[k]['preferred']
     rules = rebuilt_rules
+    set_rules(rules)
     # Fallback: if no rules rebuilt but mapping exists, create basic direct mapping rules
     if not rules and mapping:
         temp_seen = set()
@@ -347,17 +679,19 @@ def page4():
     tgt_db_path = os.path.join(schemas_dir, 'target.db')
 
     # Ensure DBs exist (create/populate if missing)
-    try:
-        from sqlite_data_transfer_demo import create_and_populate_db, SAMPLE_DATA
-        for p, sp in [(src_db_path, src_schema_path), (leg_db_path, leg_schema_path), (tgt_db_path, tgt_schema_path)]:
-            if not os.path.exists(p):
-                create_and_populate_db(sp, p, SAMPLE_DATA)
-    except Exception:
-        pass
+    for p, sp in [(src_db_path, src_schema_path), (leg_db_path, leg_schema_path), (tgt_db_path, tgt_schema_path)]:
+        if not os.path.exists(p):
+            if _demo_create_db and _DEMO_SAMPLE_DATA is not None:
+                try:
+                    _demo_create_db(sp, p, _DEMO_SAMPLE_DATA)
+                except Exception:
+                    _fallback_create_and_populate_db(sp, p)
+            else:
+                _fallback_create_and_populate_db(sp, p)
 
     query_result = None
     query_error = None
-    migration_preview = session.get('migration_preview')  # previously generated validation summary
+    migration_preview = get_preview()  # previously generated validation summary
 
     # Query handling
     if request.method == 'POST' and request.form.get('query') is not None:
@@ -390,12 +724,12 @@ def page4():
         # Reset databases
         if action == 'reset':
             try:
-                from sqlite_data_transfer_demo import reset_all_dbs
-                reset_all_dbs(src_schema_path, leg_schema_path, tgt_schema_path)
-                session.pop('migration_preview', None)
-                session.pop('migration_result', None)
+                if _demo_reset:
+                    _demo_reset(src_schema_path, leg_schema_path, tgt_schema_path)
+                else:
+                    _fallback_reset_all_dbs(src_schema_path, leg_schema_path, tgt_schema_path)
+                clear_state('migration_preview', 'migration_result')
                 session.pop('target_backup', None)
-                session.modified = True
                 migration_preview = None
             except Exception as e:
                 query_error = f'Reset failed: {e}'
@@ -409,8 +743,9 @@ def page4():
                                    migration_preview=migration_preview,
                                    query_error=query_error)
 
-        mapping = session.get('mapping', []) or []
-        rules = session.get('rules', []) or []
+        # Load mapping/rules from server-side store
+        mapping = get_mapping() or []
+        rules = get_rules() or []
         if not mapping:
             source_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
             target_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
@@ -502,8 +837,7 @@ def page4():
                 'items': summary_items,
                 'holistic': holistic
             }
-            session['migration_preview'] = migration_preview
-            session.modified = True
+            set_preview(migration_preview)
             source_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
             target_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
             return render_template('poc4/page4_validation.html',
@@ -614,16 +948,15 @@ def page4():
             unmatched_targets = len([m for m in mapping if m.get('source') and not m.get('target')])
             summary_text = (f"Migration complete. Inserted source rows: {total_ins['source']}, "
                             f"legacy rows: {total_ins['legacy']}.")
-            session['migration_result'] = {
+            set_result({
                 'summary': summary_text,
                 'details': details,
                 'preview': migration_preview,
                 'table_counts': table_counts,
                 'unmatched_sources': unmatched_sources,
                 'unmatched_targets': unmatched_targets
-            }
-            session.pop('migration_preview', None)
-            session.modified = True
+            })
+            clear_state('migration_preview')
             return redirect(url_for('poc4.page5'))
 
     # GET render
@@ -650,16 +983,17 @@ def page5():
                     session['reconciliation_result'] = {'status': 'rolled_back', 'message': msg}
                     session.modified = True
                 except Exception as e:
-                    return render_template('poc4/page5_reconciliation.html', error=f'Rollback failed: {e}', migration_result=session.get('migration_result'), reconciliation_result=session.get('reconciliation_result'), target_backup=backup)
-            return render_template('poc4/page5_reconciliation.html', migration_result=session.get('migration_result'), reconciliation_result=session.get('reconciliation_result'), target_backup=backup)
+                    return render_template('poc4/page5_reconciliation.html', error=f'Rollback failed: {e}', migration_result=get_result(), reconciliation_result=session.get('reconciliation_result'), target_backup=backup)
+                # Fall through to render after successful rollback
+                pass
+            return render_template('poc4/page5_reconciliation.html', migration_result=get_result(), reconciliation_result=session.get('reconciliation_result'), target_backup=backup)
         # Approve/export action
         try:
-            result = reconciliation_agent.approve(session.get('migration_result', {}))
+            result = reconciliation_agent.approve(get_result() or {})
             session['reconciliation_result'] = result
-            session.modified = True
         except Exception as e:
-            return render_template('poc4/page5_reconciliation.html', error=str(e), migration_result=session.get('migration_result'), reconciliation_result=session.get('reconciliation_result'), target_backup=session.get('target_backup'))
-    return render_template('poc4/page5_reconciliation.html', migration_result=session.get('migration_result'), reconciliation_result=session.get('reconciliation_result'), target_backup=session.get('target_backup'))
+            return render_template('poc4/page5_reconciliation.html', error=str(e), migration_result=get_result(), reconciliation_result=session.get('reconciliation_result'), target_backup=session.get('target_backup'))
+    return render_template('poc4/page5_reconciliation.html', migration_result=get_result(), reconciliation_result=session.get('reconciliation_result'), target_backup=session.get('target_backup'))
 
 @poc4_bp.route('/static_schema/schemas/<filename>')
 def static_schema(filename):
@@ -700,12 +1034,15 @@ def db_browser():
         SAMPLE_DATA = None
     for key, (schema_json, db_name) in db_files.items():
         db_path = os.path.join(schemas_dir, db_name)
-        if not os.path.exists(db_path) and create_and_populate_db:
+        if not os.path.exists(db_path):
             schema_path = os.path.join(schemas_dir, schema_json)
-            try:
-                create_and_populate_db(schema_path, db_path, SAMPLE_DATA or {})
-            except Exception:
-                pass
+            if create_and_populate_db and SAMPLE_DATA is not None:
+                try:
+                    create_and_populate_db(schema_path, db_path, SAMPLE_DATA or {})
+                except Exception:
+                    _fallback_create_and_populate_db(schema_path, db_path)
+            else:
+                _fallback_create_and_populate_db(schema_path, db_path)
     # Gather table listings + counts
     db_tables = {}
     for key, (_schema_json, db_name) in db_files.items():

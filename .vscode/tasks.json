@@ -12,48 +12,82 @@
 			"label": "POC 1",
 			"type": "shell",
 			"command": "python",
-			"args": ["product_workbench_requirement_definition.py"],
-			"options": { "cwd": "${workspaceFolder}" }
+			"args": [
+				"product_workbench_requirement_definition.py"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
 		},
 		{
 			"label": "POC 2",
 			"type": "shell",
 			"command": "python",
-			"args": ["product_workbench_backlog_management.py"],
-			"options": { "cwd": "${workspaceFolder}" }
+			"args": [
+				"product_workbench_backlog_management.py"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
 		},
 		{
 			"label": "POC 3",
 			"type": "shell",
 			"command": "python",
-			"args": ["app.py"],
-			"options": { "cwd": "${workspaceFolder}/poc3/backend" }
+			"args": [
+				"app.py"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/poc3/backend"
+			}
 		},
 		{
 			"label": "POC 3b",
 			"type": "shell",
 			"command": "python",
-			"args": ["app.py"],
-			"options": { "cwd": "${workspaceFolder}/poc3b/backend" }
+			"args": [
+				"app.py"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/poc3b/backend"
+			},
+			"problemMatcher": [
+				"$eslint-stylish"
+			]
 		},
 		{
 			"label": "POC 4",
 			"type": "shell",
 			"command": "python",
-			"args": ["migration_reconciliation.py"],
-			"options": { "cwd": "${workspaceFolder}/poc4" }
+			"args": [
+				"migration_reconciliation.py"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/poc4"
+			}
 		},
 		{
 			"label": "POC 5",
 			"type": "shell",
 			"command": "python",
-			"args": ["product_architecture_definition.py"],
-			"options": { "cwd": "${workspaceFolder}/poc5" }
+			"args": [
+				"product_architecture_definition.py"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/poc5"
+			}
 		},
 		{
 			"label": "Start All POCs (tabs)",
 			"dependsOrder": "parallel",
-			"dependsOn": ["POC 1", "POC 2", "POC 3", "POC 3b", "POC 4", "POC 5"]
+			"dependsOn": [
+				"POC 1",
+				"POC 2",
+				"POC 3",
+				"POC 3b",
+				"POC 4",
+				"POC 5"
+			]
 		}
 	]
 }

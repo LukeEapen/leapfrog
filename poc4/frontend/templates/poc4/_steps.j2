@@ -1,0 +1,23 @@
+<ul class="nav nav-tabs mb-4 justify-content-center poc4-steps" id="poc4Tabs" role="tablist">
+  {% set path = request.path %}
+  <li class="nav-item">
+  <a class="nav-link {{ 'active' if path == '/poc4/page1' else '' }}" href="{{ url_for('poc4.page1') }}" role="tab">1. Upload</a>
+  </li>
+  {% if '/poc4/page1_fields' in path %}
+  <li class="nav-item">
+  <a class="nav-link active" href="#" role="tab">1b. Fields</a>
+  </li>
+  {% endif %}
+  <li class="nav-item">
+  <a class="nav-link {{ 'active' if path.startswith('/poc4/page2') else '' }}" href="{{ url_for('poc4.page2') }}" role="tab">2. Mapping</a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link {{ 'active' if path.startswith('/poc4/page3') else '' }}" href="{{ url_for('poc4.page3') }}" role="tab">3. Rules</a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link {{ 'active' if path.startswith('/poc4/page4') else '' }}" href="{{ url_for('poc4.page4') }}" role="tab">4. Validation</a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link {{ 'active' if path.startswith('/poc4/page5') else '' }}" href="{{ url_for('poc4.page5') }}" role="tab">5. Reconciliation</a>
+  </li>
+</ul>

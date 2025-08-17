@@ -1228,6 +1228,47 @@
         "raw": "```json\n[\n    {\n        \"element\": \"generateInsuranceQuote\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": \"Retrieve property and risk data from user input\",\n                \"action\": \"Get property details and risk factors from the user\"\n            },\n            {\n                \"step\": \"Validate the input data\",\n                \"action\": \"Check if all required fields are present and in the correct format\"\n            },\n            {\n                \"step\": \"Calculate insurance quote\",\n                \"action\": \"Use the property and risk data to calculate the insurance premium\"\n            },\n            {\n                \"step\": \"Generate quote response\",\n                \"action\": \"Format the calculated premium into a quote response for the user\"\n            },\n            {\n                \"step\": \"Ensure timely response\",\n                \"action\": \"Implement a mechanism to respond within 5 minutes\"\n            }\n        ]\n    },\n    {\n        \"element\": \"validateAndSanitizeInputs\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            {\n                \"step\": \"Validate input data\",\n                \"action\": \"Check for data integrity, format, and completeness\"\n            },\n            {\n                \"step\": \"Sanitize input data\",\n                \"action\": \"Remove any potentially harmful or unnecessary characters\"\n            },\n            {\n                \"step\": \"Ensure security\",\n                \"action\": \"Implement measures to prevent injection attacks and data breaches\"\n            }\n        ]\n    },\n    {\n        \"element\": \"enforceAuthenticationAuthorization\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            {\n                \"step\": \"Authenticate user\",\n                \"action\": \"Verify user identity through credentials or tokens\"\n            },\n            {\n                \"step\": \"Authorize access\",\n                \"action\": \"Check user permissions to ensure access to the system\"\n            },\n            {\n                \"step\": \"Enforce access control\",\n                \"action\": \"Implement role-based access control to restrict unauthorized actions\"\n            }\n        ]\n    }\n]\n```"
       },
       "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Generate Document for Quote",
+            "pseudocode": "1. Retrieve completed quote details\n    - Query database for quote details based on quote ID\n2. Format quote details into a PDF document\n    - Create a new PDF document\n    - Populate the document with quote details such as client information, products/services, pricing, and terms\n    - Add necessary styling and formatting to the document\n3. Make the PDF document downloadable\n    - Generate a unique download link for the PDF document\n    - Provide the link to the user for download",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Generate Document for Quote\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve completed quote details\",\n                \"actions\": [\n                    \"Query database for quote details based on quote ID\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Format quote details into a PDF document\",\n                \"actions\": [\n                    \"Create a new PDF document\",\n                    \"Populate the document with quote details such as client information, products/services, pricing, and terms\",\n                    \"Add necessary styling and formatting to the document\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Make the PDF document downloadable\",\n                \"actions\": [\n                    \"Generate a unique download link for the PDF document\",\n                    \"Provide the link to the user for download\"\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Retrieve Account Data",
+            "pseudocode": "For each customer account in the batch processing data:\n1. Retrieve account information such as account number, balance, and transaction history.\n2. Store the account data in memory for processing.",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Determine Applicable Interest Rates",
+            "pseudocode": "For each account type:\n1. Check the account type to determine the applicable interest rate category.\n2. Retrieve the interest rate based on the category from the interest rate table.",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Compute Monthly Interest",
+            "pseudocode": "For each account in the batch processing data:\n1. Calculate the daily interest rate based on the annual interest rate and number of days in the month.\n2. Compute the monthly interest by multiplying the daily interest rate with the account balance.",
+            "standard": "ISO"
+          },
+          {
+            "element": "Update Account Balances",
+            "pseudocode": "For each account in the batch processing data:\n1. Add the computed monthly interest to the account balance.\n2. Update the account balance in the system with the new balance.",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Retrieve Account Data\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each customer account in the batch processing data:\",\n            \"1. Retrieve account information such as account number, balance, and transaction history.\",\n            \"2. Store the account data in memory for processing.\"\n        ]\n    },\n    {\n        \"element\": \"Determine Applicable Interest Rates\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each account type:\",\n            \"1. Check the account type to determine the applicable interest rate category.\",\n            \"2. Retrieve the interest rate based on the category from the interest rate table.\"\n        ]\n    },\n    {\n        \"element\": \"Compute Monthly Interest\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"For each account in the batch processing data:\",\n            \"1. Calculate the daily interest rate based on the annual interest rate and number of days in the month.\",\n            \"2. Compute the monthly interest by multiplying the daily interest rate with the account balance.\"\n        ]\n    },\n    {\n        \"element\": \"Update Account Balances\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each account in the batch processing data:\",\n            \"1. Add the computed monthly interest to the account balance.\",\n            \"2. Update the account balance in the system with the new balance.\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
     }
   ]
 }

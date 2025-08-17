@@ -6,22 +6,21 @@
   <small>Modern Data Migration Workflow</small>
 </div>
 
+{% include 'poc4/_subnav.j2' %}
+
 <style>
-  .nav-pills .nav-link { border-radius:2rem; margin:0 .25rem; font-weight:500; color:#d32f2f; background:#fff; border:1px solid #d32f2f; transition:.2s }
-  .nav-pills .nav-link.active,.nav-pills .show>.nav-link{background:linear-gradient(90deg,#d32f2f 60%,#b71c1c);color:#fff !important;font-weight:700;box-shadow:0 2px 8px rgba(211,47,47,.1)}
   /* Reposition chat to top-right to avoid covering form buttons */
   .floating-chat{position:fixed; top:90px; right:20px; width:340px; max-height:520px; z-index:1050; box-shadow:0 4px 18px rgba(0,0,0,.15)}
   .floating-chat .card-body{overflow-y:auto}
+  @media (max-width: 992px){ .floating-chat{position:static; width:100%; max-height:none; margin-top:1rem} }
 </style>
-<ul class="nav nav-pills mb-4 justify-content-center" id="poc4Tabs">
-  <li class="nav-item"><a class="nav-link active" href="{{ url_for('poc4.page1') }}">1. Upload</a></li>
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page2') }}">2. Mapping</a></li>
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page3') }}">3. Rules</a></li>
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page4') }}">4. Validation</a></li>
-  <li class="nav-item"><a class="nav-link" href="{{ url_for('poc4.page5') }}">5. Reconciliation</a></li>
-</ul>
+{% include 'poc4/_steps.j2' %}
 
 <form method="post" enctype="multipart/form-data" id="upload-form">
+  <!-- Top action bar just below tabs -->
+  <div class="d-flex justify-content-end align-items-center mb-3">
+    <button type="submit" class="btn btn-danger px-4" id="next-btn">Next</button>
+  </div>
   <div class="row g-4">
     <!-- Source Column -->
     <div class="col-md-4">
@@ -73,9 +72,6 @@
       </div>
     </div>
   </div>
-  <div class="mt-4 text-end">
-    <button type="submit" class="btn btn-danger px-5">Next</button>
-  </div>
 </form>
 
 <!-- Floating Chat Widget -->
@@ -113,7 +109,16 @@ function toggleChatBody(){
   icon.classList.toggle('bi-chevron-up', hidden===true);
 }
 document.getElementById('chat-min-btn').addEventListener('click', toggleChatBody);
-async function sendMessage(e){ e.preventDefault(); const input=document.getElementById('chat-input'); const msg=input.value.trim(); if(!msg) return false; appendMessage('You', msg); input.value=''; try{ const res= await fetch('/poc4/chat',{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'message='+encodeURIComponent(msg)}); const data= await res.json(); appendMessage('Bot', data.response);}catch(err){ appendMessage('Bot','(error)'); } return false; }
+// Start chat minimized on load
+toggleChatBody();
+async function sendMessage(e){ e.preventDefault(); const input=document.getElementById('chat-input'); const msg=input.value.trim(); if(!msg) return false; appendMessage('You', msg); input.value='';
+  // Simple commands
+  const lower = msg.toLowerCase();
+  if(lower==='next' || lower==='go next' || lower==='continue'){
+    document.getElementById('next-btn')?.click();
+    return false;
+  }
+  try{ const res= await fetch('/poc4/chat',{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'message='+encodeURIComponent(msg)}); const data= await res.json(); appendMessage('Bot', data.response);}catch(err){ appendMessage('Bot','(error)'); } return false; }
 function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
 
 async function loadSchema(file,target){ try{ const res= await fetch(`/poc4/static_schema/schemas/${file}`); const schema= await res.json(); renderSchemaFields(schema,target);}catch(e){ document.getElementById(target).innerHTML='<div class="text-danger">Failed to load schema.</div>'; }}

@@ -1,3 +1,4 @@
+<!-- htmlhint doctype-first:false -->
 {% extends 'poc4/base.html' %}
 {% block content %}
 <!-- Banner -->
@@ -6,43 +7,8 @@
   <small>Modern Data Migration Workflow</small>
 </div>
 
-
-<!-- Modern Tabs -->
-<style>
-  .nav-pills .nav-link {
-    border-radius: 2rem;
-    margin: 0 0.25rem;
-    font-weight: 500;
-    color: #d32f2f;
-    background: #fff;
-    border: 1px solid #d32f2f;
-    transition: background 0.2s, color 0.2s;
-  }
-  .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
-    background: linear-gradient(90deg, #d32f2f 60%, #b71c1c 100%);
-    color: #fff !important;
-    font-weight: 700;
-    border: 1px solid #d32f2f;
-    box-shadow: 0 2px 8px rgba(211,47,47,0.10);
-  }
-</style>
-<ul class="nav nav-pills mb-4 justify-content-center" id="poc4Tabs">
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page1') }}">1. Upload</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page2') }}">2. Mapping</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link active" href="{{ url_for('poc4.page3') }}">3. Rules</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page4') }}">4. Validation</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page5') }}">5. Reconciliation</a>
-  </li>
-</ul>
+{% include 'poc4/_subnav.j2' %}
+{% include 'poc4/_steps.j2' %}
 
 <style>
   /* Two-column rules layout */
@@ -68,7 +34,9 @@
       <label class="form-check-label" for="toggleQualified">Show table names</label>
     </div>
     <div class="d-flex gap-2">
-      <button name="action" value="regenerate" class="btn btn-outline-danger btn-sm" type="submit" formnovalidate title="Rebuild rules from current mapping">Regenerate Rules</button>
+      <button name="action" value="apply_all" class="btn btn-danger btn-sm" type="submit" title="Apply recommended variant to all rules">Apply All recommended</button>
+      <button name="action" value="regenerate" class="btn btn-outline-secondary btn-sm" type="submit" formnovalidate title="Rebuild rules from current mapping">Regenerate Rules</button>
+      <button name="action" value="next" class="btn btn-danger btn-sm" id="validate-btn">Validate & Simulate</button>
     </div>
   </div>
   <div class="row g-4 rules-wrapper">
@@ -77,7 +45,10 @@
       <div class="card h-100 shadow-sm">
         <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
           <span>Source ➜ Target Rules</span>
-          <span class="badge bg-danger">SOURCE</span>
+          <div class="d-flex align-items-center gap-2">
+            <button name="action" value="apply_all_source" class="btn btn-outline-danger btn-sm" type="submit" title="Apply recommended to all Source rules">Apply All (Source)</button>
+            <span class="badge bg-danger">SOURCE</span>
+          </div>
         </div>
         <div class="card-body p-0">
           <table class="table table-sm table-striped table-hover mb-0 rules-table">
@@ -85,15 +56,15 @@
               <tr class="small">
                 <th style="min-width:170px">Target Field</th>
                 <th style="min-width:140px">Source Field(s)</th>
-                <th style="min-width:160px">Rule</th>
-                <th style="min-width:150px">Example</th>
+                <th style="min-width:240px">Rule</th>
+                <th style="min-width:260px">Example</th>
                 <th style="width:50px"></th>
               </tr>
             </thead>
             <tbody>
               {% for rule in rules %}
                 {% if rule.origin == 'source' %}
-                <tr class="rule-row" title="{{ rule.field_full }} :: {{ rule.sources_display }} :: {{ rule.example }}">
+        <tr class="rule-row" title="{{ rule.field_full }} :: {{ rule.sources_display }} :: {{ rule.example }}">
                   <td>
                     <div class="field-stack" data-field-full="{{ rule.field_full }}" data-field-name="{{ rule.field_name }}">
                       <strong class="field-label">{{ rule.field_full }}</strong>
@@ -102,8 +73,31 @@
                     </div>
                   </td>
                   <td class="text-muted">{{ rule.sources_display }}</td>
-                  <td><input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control form-control-sm" /></td>
-                  <td class="text-muted">{{ rule.example }}</td>
+                  <td>
+                    <div class="d-flex gap-2 align-items-center">
+                      <input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control form-control-sm" />
+                      {% if rule.variants %}
+            <select class="form-select form-select-sm" name="preferred_{{ loop.index0 }}" title="Preferred variant" data-current="{{ rule.preferred|e if rule.preferred else '' }}">
+                        <option value="">Preferred…</option>
+                        {% for v in rule.variants %}
+              <option value="{{ v }}">{{ v }}</option>
+                        {% endfor %}
+                      </select>
+                      <button type="button" class="btn btn-outline-secondary btn-xs apply-selected" data-index="{{ loop.index0 }}" title="Apply selected variant">Apply</button>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td class="text-muted">
+                    <div>{{ rule.example }}</div>
+                    {% if rule.variants %}
+          {% set _row_index = loop.index0 %}
+                      <div class="small text-secondary mt-1">Variants:
+                        <ul class="mb-0 ps-3 mt-1">
+                          {% for v in rule.variants %}<li>{{ v }}</li>{% endfor %}
+                        </ul>
+                      </div>
+                    {% endif %}
+                  </td>
                   <td><button type="button" class="btn btn-outline-danger btn-sm edit-rule-btn" data-index="{{ loop.index0 }}">Edit</button></td>
                 </tr>
                 {% endif %}
@@ -118,7 +112,10 @@
       <div class="card h-100 shadow-sm">
         <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
           <span>Legacy ➜ Target Rules</span>
-          <span class="badge bg-dark">LEGACY</span>
+          <div class="d-flex align-items-center gap-2">
+            <button name="action" value="apply_all_legacy" class="btn btn-outline-dark btn-sm" type="submit" title="Apply recommended to all Legacy rules">Apply All (Legacy)</button>
+            <span class="badge bg-dark">LEGACY</span>
+          </div>
         </div>
         <div class="card-body p-0">
           <table class="table table-sm table-striped table-hover mb-0 rules-table">
@@ -126,15 +123,15 @@
               <tr class="small">
                 <th style="min-width:170px">Target Field</th>
                 <th style="min-width:140px">Legacy Field(s)</th>
-                <th style="min-width:160px">Rule</th>
-                <th style="min-width:150px">Example</th>
+                <th style="min-width:240px">Rule</th>
+                <th style="min-width:260px">Example</th>
                 <th style="width:50px"></th>
               </tr>
             </thead>
             <tbody>
               {% for rule in rules %}
                 {% if rule.origin == 'legacy' %}
-                <tr class="rule-row" title="{{ rule.field_full }} :: {{ rule.sources_display }} :: {{ rule.example }}">
+        <tr class="rule-row" title="{{ rule.field_full }} :: {{ rule.sources_display }} :: {{ rule.example }}">
                   <td>
                     <div class="field-stack" data-field-full="{{ rule.field_full }}" data-field-name="{{ rule.field_name }}">
                       <strong class="field-label">{{ rule.field_full }}</strong>
@@ -143,8 +140,31 @@
                     </div>
                   </td>
                   <td class="text-muted">{{ rule.sources_display }}</td>
-                  <td><input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control form-control-sm" /></td>
-                  <td class="text-muted">{{ rule.example }}</td>
+                  <td>
+                    <div class="d-flex gap-2 align-items-center">
+                      <input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control form-control-sm" />
+                      {% if rule.variants %}
+            <select class="form-select form-select-sm" name="preferred_{{ loop.index0 }}" title="Preferred variant" data-current="{{ rule.preferred|e if rule.preferred else '' }}">
+                        <option value="">Preferred…</option>
+                        {% for v in rule.variants %}
+              <option value="{{ v }}">{{ v }}</option>
+                        {% endfor %}
+                      </select>
+                      <button type="button" class="btn btn-outline-secondary btn-xs apply-selected" data-index="{{ loop.index0 }}" title="Apply selected variant">Apply</button>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td class="text-muted">
+                    <div>{{ rule.example }}</div>
+                    {% if rule.variants %}
+          {% set _row_index = loop.index0 %}
+                      <div class="small text-secondary mt-1">Variants:
+                        <ul class="mb-0 ps-3 mt-1">
+                          {% for v in rule.variants %}<li>{{ v }}</li>{% endfor %}
+                        </ul>
+                      </div>
+                    {% endif %}
+                  </td>
                   <td><button type="button" class="btn btn-outline-danger btn-sm edit-rule-btn" data-index="{{ loop.index0 }}">Edit</button></td>
                 </tr>
                 {% endif %}
@@ -155,9 +175,7 @@
       </div>
     </div>
   </div>
-  <div class="mt-4 d-flex justify-content-end">
-  <button type="submit" name="action" value="next" class="btn btn-danger px-5">Validate & Simulate</button>
-  </div>
+  
 </form>
 
 <!-- Floating Chat Panel -->
@@ -182,9 +200,22 @@
   function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.className='mb-1'; div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
   function editRule(i){ const inp=document.querySelector(`input[name='rule_${i}']`); if(!inp) return; const val=prompt('Edit rule:', inp.value); if(val!==null){ inp.value=val; } }
   document.querySelectorAll('.edit-rule-btn').forEach(btn=>{ btn.addEventListener('click', ()=> editRule(parseInt(btn.dataset.index))); });
+  // Apply selected variant (single button per row)
+  document.querySelectorAll('.apply-selected').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = parseInt(btn.dataset.index);
+      const sel = document.querySelector(`select[name='preferred_${idx}']`);
+      const inp = document.querySelector(`input[name='rule_${idx}']`);
+      if (!sel || !inp) return;
+      const val = sel.value;
+      if (val) { inp.value = val; inp.focus(); }
+    });
+  });
   // Minimize chat
   function toggleChat(){ const body=document.getElementById('chat-body'); const footer=document.getElementById('chat-footer'); const icon=document.getElementById('chat-min-icon'); const hidden=body.style.display==='none'; body.style.display= hidden? 'block':'none'; footer.style.display= hidden? 'block':'none'; icon.classList.toggle('bi-chevron-down', !hidden); icon.classList.toggle('bi-chevron-up', hidden);} 
   document.getElementById('chat-min-btn').addEventListener('click', toggleChat);
+  // Start minimized
+  toggleChat();
 
   // Toggle qualified/unqualified
   const toggle = document.getElementById('toggleQualified');
@@ -206,5 +237,21 @@
   }
   toggle.addEventListener('change', ()=>{ localStorage.setItem(PREF_KEY, toggle.checked ? '1':'0'); applyQualification(); });
   applyQualification();
+
+  // Initialize preferred dropdowns
+  document.querySelectorAll('select[name^="preferred_"]').forEach(sel => {
+    const cur = sel.getAttribute('data-current');
+    if (cur) {
+      for (const opt of sel.options) {
+        if (opt.value === cur) { opt.selected = true; break; }
+      }
+    }
+  });
+  // Simple chat commands
+  document.getElementById('chat-form')?.addEventListener('submit', (e)=>{
+    // The sendMessage already posts; here we add quick actions before network
+    const val = document.getElementById('chat-input')?.value?.toLowerCase() || '';
+    if(val==='next' || val.includes('validate')){ e.preventDefault(); document.getElementById('validate-btn')?.click(); return false; }
+  }, {capture:true});
 </script>
 {% endblock %}

@@ -6,44 +6,21 @@
   <small>Modern Data Migration Workflow</small>
 </div>
 
+{% include 'poc4/_subnav.j2' %}
+{% include 'poc4/_steps.j2' %}
 
-<!-- Modern Tabs -->
-<style>
-  .nav-pills .nav-link {
-    border-radius: 2rem;
-    margin: 0 0.25rem;
-    font-weight: 500;
-    color: #d32f2f;
-    background: #fff;
-    border: 1px solid #d32f2f;
-    transition: background 0.2s, color 0.2s;
-  }
-  .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
-    background: linear-gradient(90deg, #d32f2f 60%, #b71c1c 100%);
-    color: #fff !important;
-    font-weight: 700;
-    border: 1px solid #d32f2f;
-    box-shadow: 0 2px 8px rgba(211,47,47,0.10);
-  }
-</style>
-<ul class="nav nav-pills mb-4 justify-content-center" id="poc4Tabs">
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page1') }}">1. Upload</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page2') }}">2. Mapping</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page3') }}">3. Rules</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link active" href="{{ url_for('poc4.page4') }}">4. Validation</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page5') }}">5. Reconciliation</a>
-  </li>
-</ul>
-
+<!-- Top action bar just below tabs -->
+<div class="d-flex justify-content-end align-items-center mb-3">
+  <form method="post" class="d-inline me-2">
+    <input type="hidden" name="action" value="validate">
+    <button type="submit" class="btn btn-outline-warning btn-sm">Validate</button>
+  </form>
+  <form method="post" class="d-inline">
+    <input type="hidden" name="action" value="execute">
+    <button type="submit" class="btn btn-danger btn-sm">Execute</button>
+  </form>
+  
+</div>
 <!-- 3 Column Layout -->
 <div class="row g-4">
   <div class="col-md-4">
@@ -62,7 +39,11 @@
             <label class="form-label">Source Database</label>
             <select class="form-select" name="source_db" required>
               {% for db in source_schemas %}
-                <option value="{{ db }}" {% if db==selected_source_db %}selected{% endif %}>{{ db }}</option>
+                {% if db == selected_source_db %}
+                  <option value="{{ db }}" selected>{{ db }}</option>
+                {% else %}
+                  <option value="{{ db }}">{{ db }}</option>
+                {% endif %}
               {% endfor %}
             </select>
           </div>
@@ -70,7 +51,11 @@
             <label class="form-label">Target Database</label>
             <select class="form-select" name="target_db" required>
               {% for db in target_schemas %}
-                <option value="{{ db }}" {% if db==selected_target_db %}selected{% endif %}>{{ db }}</option>
+                {% if db == selected_target_db %}
+                  <option value="{{ db }}" selected>{{ db }}</option>
+                {% else %}
+                  <option value="{{ db }}">{{ db }}</option>
+                {% endif %}
               {% endfor %}
             </select>
           </div>
@@ -199,13 +184,16 @@
   <div class="col-md-4">
     <!-- ...existing code... -->
     <div class="card h-100 shadow-sm d-flex flex-column">
-      <div class="card-header bg-danger text-white">Chatbot Assistant</div>
-      <div class="card-body flex-grow-1 d-flex flex-column p-0">
+      <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center">
+        <span>Chatbot Assistant</span>
+        <button class="btn btn-sm btn-light py-0 px-1 d-flex align-items-center justify-content-center" id="chat-min-btn" type="button" aria-label="Minimize chat"><i class="bi bi-chevron-down" id="chat-min-icon"></i></button>
+      </div>
+      <div class="card-body flex-grow-1 d-flex flex-column p-0" id="chat-body">
         <div class="flex-grow-1 p-3" style="overflow-y:auto; min-height: 400px;" id="chat-messages">
           <div class="text-muted small">Ask me about validation results and data quality checks...</div>
         </div>
       </div>
-      <div class="card-footer">
+      <div class="card-footer" id="chat-footer">
         <form id="chat-form" onsubmit="return sendMessage(event);">
           <div class="input-group">
             <input type="text" class="form-control" id="chat-input" placeholder="Type your question..." required>
@@ -226,5 +214,19 @@
     const data = await res.json(); appendMessage('Bot', data.response); return false;
   }
   function appendMessage(sender, text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
+  // Minimize / expand chat and start minimized
+  function toggleChat(){ const body=document.getElementById('chat-body'); const footer=document.getElementById('chat-footer'); const icon=document.getElementById('chat-min-icon'); const hidden=body.style.display==='none'; body.style.display= hidden? 'block':'none'; footer.style.display= hidden? 'block':'none'; if(icon){ icon.classList.toggle('bi-chevron-down', !hidden); icon.classList.toggle('bi-chevron-up', hidden);} }
+  document.getElementById('chat-min-btn')?.addEventListener('click', toggleChat);
+  // Start minimized
+  toggleChat();
+  // Simple chat commands and start minimized
+  (function(){
+    const valEl = document.getElementById('chat-input');
+    document.getElementById('chat-form')?.addEventListener('submit', (e)=>{
+      const val = valEl?.value?.toLowerCase() || '';
+      if(val.includes('validate')){ e.preventDefault(); document.querySelector('form#migration-form button[type="submit"]')?.click(); return false; }
+      if(val.includes('execute')){ e.preventDefault(); document.querySelector('form input[name="action"][value="execute"]')?.form?.submit(); return false; }
+    }, {capture:true});
+  })();
 </script>
 {% endblock %}

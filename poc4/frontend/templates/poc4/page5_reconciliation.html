@@ -6,6 +6,9 @@
   <small>Modern Data Migration Workflow</small>
 </div>
 
+{% include 'poc4/_subnav.j2' %}
+{% include 'poc4/_steps.j2' %}
+
 {% if migration_result %}
   <div class="alert alert-success shadow-sm">
     <strong>Migration Complete:</strong> {{ migration_result.summary }}
@@ -20,42 +23,6 @@
   <div class="alert alert-danger">{{ error }}</div>
 {% endif %}
 
-<!-- Modern Tabs -->
-<style>
-  .nav-pills .nav-link {
-    border-radius: 2rem;
-    margin: 0 0.25rem;
-    font-weight: 500;
-    color: #d32f2f;
-    background: #fff;
-    border: 1px solid #d32f2f;
-    transition: background 0.2s, color 0.2s;
-  }
-  .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
-    background: linear-gradient(90deg, #d32f2f 60%, #b71c1c 100%);
-    color: #fff !important;
-    font-weight: 700;
-    border: 1px solid #d32f2f;
-    box-shadow: 0 2px 8px rgba(211,47,47,0.10);
-  }
-</style>
-<ul class="nav nav-pills mb-4 justify-content-center" id="poc4Tabs">
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page1') }}">1. Upload</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page2') }}">2. Mapping</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page3') }}">3. Rules</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="{{ url_for('poc4.page4') }}">4. Validation</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link active" href="{{ url_for('poc4.page5') }}">5. Reconciliation</a>
-  </li>
-</ul>
 
 <!-- 3 Column Layout -->
 <div class="row g-4">
@@ -148,8 +115,11 @@
   <!-- Chat Column -->
   <div class="col-md-4">
     <div class="card h-100 shadow-sm d-flex flex-column">
-      <div class="card-header bg-danger text-white">Chatbot Assistant</div>
-      <div class="card-body flex-grow-1 d-flex flex-column p-0">
+      <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center">
+        <span>Chatbot Assistant</span>
+        <button class="btn btn-sm btn-light py-0 px-1 d-flex align-items-center justify-content-center" id="chat-min-btn" type="button" aria-label="Minimize chat"><i class="bi bi-chevron-down" id="chat-min-icon"></i></button>
+      </div>
+      <div class="card-body flex-grow-1 d-flex flex-column p-0" id="chat-body">
         <div class="flex-grow-1 p-3" style="overflow-y:auto; min-height: 400px;" id="chat-messages">
           <div class="text-muted small">Ask me about reconciliation results and data export options...</div>
           {% if migration_result and migration_result.details %}
@@ -162,7 +132,7 @@
           {% endif %}
         </div>
       </div>
-      <div class="card-footer">
+      <div class="card-footer" id="chat-footer">
         <form id="chat-form" onsubmit="return sendMessage(event);">
           <div class="input-group">
             <input type="text" class="form-control" id="chat-input" placeholder="Type your question..." required>
@@ -198,5 +168,32 @@
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
   }
+  // Minimize / expand and start minimized
+  function toggleChat(){ const body=document.getElementById('chat-body'); const footer=document.getElementById('chat-footer'); const icon=document.getElementById('chat-min-icon'); const hidden=body.style.display==='none'; body.style.display= hidden? 'block':'none'; footer.style.display= hidden? 'block':'none'; if(icon){ icon.classList.toggle('bi-chevron-down', !hidden); icon.classList.toggle('bi-chevron-up', hidden);} }
+  document.getElementById('chat-min-btn')?.addEventListener('click', toggleChat);
+  toggleChat();
+  // Simple chat commands
+  (function(){
+    const input = document.getElementById('chat-input');
+    const chatForm = document.getElementById('chat-form');
+    if(!chatForm) return;
+    chatForm.addEventListener('submit', (e)=>{
+      const val = (input?.value || '').toLowerCase();
+      if(val.includes('approve')){
+        e.preventDefault();
+        const el = document.querySelector('form input[name="action"][value="approve"]');
+        const f = el ? el.form : null;
+        if(f) f.submit();
+        return false;
+      }
+      if(val.includes('rollback')){
+        e.preventDefault();
+        const el = document.querySelector('form input[name="action"][value="rollback"]');
+        const f = el ? el.form : null;
+        if(f) f.submit();
+        return false;
+      }
+    }, {capture:true});
+  })();
 </script>
 {% endblock %}

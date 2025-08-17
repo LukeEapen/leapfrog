@@ -38,6 +38,7 @@ markdown==3.5.2
 beautifulsoup4==4.12.3
 lxml>=4.9.3             # Required by beautifulsoup4 for XML processing
 PyPDF2>=3.0.1           # For PDF processing
+pdfminer.six>=20221105  # Better PDF text extraction
 
 # Data Validation & Schema
 marshmallow==3.20.1

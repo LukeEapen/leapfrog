@@ -108,9 +108,7 @@
       color: #23272b;
       font-size: 16px !important;
     }
-    #storiesList * {
-      font-size: 16px !important;
-    }
+    #storiesList * { font-size: 16px !important; }
     #storyDetails {
       min-height: 700px;
       max-height: 700px;
@@ -121,15 +119,18 @@
       color: #23272b;
     }
     #legacySection {
-    #legacyEnglishMarkdown, #legacyEnglishMarkdown * {
-      font-size: 16px !important;
+      min-height: 700px;
+      max-height: 700px;
+      overflow-y: auto;
+      background: #f1f3f4;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.08);
+      color: #23272b;
+      padding: 1rem;
+      margin-top: 0;
     }
-    #storiesList, #storiesList * {
-      font-size: 16px !important;
-    }
-    #beautifiedStoryDetails, #beautifiedStoryDetails * {
-      font-size: 16px !important;
-    }
+    #legacyEnglishMarkdown, #legacyEnglishMarkdown * { font-size: 16px !important; }
+    #beautifiedStoryDetails, #beautifiedStoryDetails * { font-size: 16px !important; }
     #beautifiedStoryDetails h1,
     #beautifiedStoryDetails h2,
     #beautifiedStoryDetails h3,
@@ -141,26 +142,13 @@
       font-weight: 600 !important;
       margin: 0.5em 0 !important;
     }
-      min-height: 700px;
-      max-height: 700px;
-      overflow-y: auto;
-      background: #f1f3f4;
-      border-radius: 1rem;
-      box-shadow: 0 2px 8px rgba(44,44,44,0.08);
-      color: #23272b;
-      padding: 1rem;
-      /* Remove margin-top to align with other sections */
-      margin-top: 0;
-    }
     textarea.form-control {
       background: #f1f3f4;
       border-radius: 0.75rem;
       font-size: 1.05rem;
       color: #23272b;
     }
-    @media (max-width: 1400px) {
-      .main-app-container { max-width: 100vw; }
-    }
+    @media (max-width: 1400px) { .main-app-container { max-width: 100vw; } }
     @media (max-width: 1200px) {
       .main-app-container { max-width: 100vw; }
       .row.g-4.align-sections { flex-direction: column; gap: 1.5rem 0; }
@@ -224,7 +212,7 @@
           </svg>
           <span style="color:#fff;">Step 1</span>
         </button>
-        <button id="synthesizeBtn" class="btn btn-next px-5" style="white-space:nowrap; border-radius:1rem; box-shadow:0 2px 8px rgba(211,47,47,0.10); background:#d32f2f; color:#fff; font-weight:700; font-size:1.2rem;">Synthesize Functions</button>
+  <button id="synthesizeBtn" class="btn btn-next px-5" style="white-space:nowrap; border-radius:1rem; box-shadow:0 2px 8px rgba(211,47,47,0.10); background:#d32f2f; color:#fff; font-weight:700; font-size:1.2rem;">Next: Compare Legacy With User Story</button>
       </div>
       <div id="spinnerTimerContainer" class="d-none my-4 text-center">
         <div class="d-flex flex-column align-items-center justify-content-center">
@@ -240,13 +228,91 @@
       </div>
       <div id="error" class="alert alert-danger d-none" style="font-size:1.1rem; border-radius:0.75rem;"></div>
       <div class="row g-4 align-sections" style="margin-top:0.5rem;">
-        <div class="col-md-4 d-flex flex-column h-100">
+        <!-- Column 1: Legacy Business Requirement (moved from previous Column 3) -->
+        <div class="col-md-4 d-flex flex-column h-100 order-1">
+          <div class="section-heading" style="margin-bottom:0.5rem; font-size:1.3rem; color:#d32f2f;">Legacy Business Requirement</div>
+          <div class="section-card flex-grow-1 d-flex flex-column" id="legacySection" style="height:100%; border:2px solid #e0e0e0;">
+            <div class="flex-grow-1 d-flex flex-column" style="gap:0.5rem;">
+              <!-- Raw Business Breakdown (shown first, as-is) -->
+              <div id="businessBreakdownRaw" class="flex-grow-1" style="background:#fdfdfd; border:1.5px solid #e0e0e0; font-size:16px; color:#23272b; padding:0.75rem; border-radius:0.75rem; min-height:0; height:100%; overflow-y:auto;"></div>
+
+              <!-- Decompose action -->
+              <div class="d-flex justify-content-end">
+                <button id="decomposeBtn" class="btn btn-outline-danger btn-sm" style="border-radius:0.6rem; font-weight:600;">Decompose to Story</button>
+              </div>
+
+              <!-- Decomposed view (checkboxes + metadata). Hidden until 'Decompose to Story' -->
+              <div id="decomposeContainer" class="flex-grow-1 d-flex flex-column" style="display:none; gap:0.5rem;">
+                <div id="legacyRequirementsList" class="flex-grow-1" style="background:#f1f3f4; border:1.5px solid #e0e0e0; font-size:16px; color:#23272b; padding:0.5rem; border-radius:0.75rem; min-height:0; height:100%; overflow-y:auto;"></div>
+                <div class="border rounded p-2" style="background:#fcfcfc; border-color:#e0e0e0 !important;">
+                  <div class="row g-2">
+                    <div class="col-12"><div class="text-secondary small">Optional: Customize Story Template</div></div>
+                    <div class="col-4">
+                      <label class="form-label small mb-1">Role</label>
+                      <input id="storyRole" type="text" class="form-control form-control-sm" placeholder="e.g., customer">
+                    </div>
+                    <div class="col-4">
+                      <label class="form-label small mb-1">Goal</label>
+                      <input id="storyGoal" type="text" class="form-control form-control-sm" placeholder="leave empty to use requirement">
+                    </div>
+                    <div class="col-4">
+                      <label class="form-label small mb-1">Benefit</label>
+                      <input id="storyBenefit" type="text" class="form-control form-control-sm" placeholder="e.g., so that I save time">
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label small mb-1">Labels (comma-separated)</label>
+                      <input id="storyLabels" type="text" class="form-control form-control-sm" placeholder="modernization, legacy, auto">
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label small mb-1">Components (comma-separated)</label>
+                      <input id="storyComponents" type="text" class="form-control form-control-sm" placeholder="payments, onboarding">
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label small mb-1">Epic (optional)</label>
+                      <div class="d-flex gap-2">
+                        <select id="epicSelect" class="form-select form-select-sm" style="min-width: 55%;">
+                          <option value="">-- Select Epic --</option>
+                        </select>
+                        <input id="epicKey" type="text" class="form-control form-control-sm" placeholder="or type epic key e.g., SCRUM-123" style="min-width: 45%;">
+                      </div>
+                      <div class="form-text">Pick an Epic from the list or type a key; the typed key overrides the selection.</div>
+                    </div>
+                    <div class="col-6 d-flex align-items-end">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="autoDerive" checked>
+                        <label class="form-check-label" for="autoDerive">
+                          Auto-derive labels/components from text
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2 d-flex align-items-center justify-content-between flex-wrap" style="gap:.5rem 1rem;">
+                  <div class="d-flex align-items-center" style="gap:.5rem;">
+                    <button id="previewStoriesBtn" class="btn btn-outline-secondary" style="border-radius:0.75rem; font-weight:600;">Preview Stories</button>
+                    <button id="createStoriesBtn" class="btn btn-danger" style="border-radius:0.75rem; font-weight:600;">Create User Stories</button>
+                  </div>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="createTasksSwitch" checked>
+                    <label class="form-check-label" for="createTasksSwitch">Also create tasks under each story</label>
+                  </div>
+                  <div id="createStatus" class="text-secondary small ms-3"></div>
+                </div>
+                <div id="storyPreviewPanel" class="mt-2" style="display:none; background:#fff; border:1px solid #e0e0e0; border-radius:.75rem; padding:.75rem; max-height:260px; overflow-y:auto;"></div>
+              </div>
+              <div class="mt-2" id="legacyEnglishMarkdown" style="display:none;"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Column 2: User Story Summary (middle) -->
+        <div class="col-md-4 d-flex flex-column h-100 order-2">
           <div class="section-heading" style="margin-bottom:0.5rem; font-size:1.3rem; color:#d32f2f;">User Story Summary</div>
           <div class="section-card flex-grow-1 d-flex flex-column" style="background:#f1f3f4; border:2px solid #e0e0e0;">
             <div id="storiesList" class="flex-grow-1"></div>
           </div>
         </div>
-        <div class="col-md-4 d-flex flex-column h-100">
+        <!-- Column 3: User Story Details (right) -->
+        <div class="col-md-4 d-flex flex-column h-100 order-3">
           <div class="section-heading" style="margin-bottom:0.5rem; font-size:1.3rem; color:#d32f2f;">User Story Details</div>
           <div class="section-card flex-grow-1 d-flex flex-column" id="storyDetailsSection" style="border:2px solid #e0e0e0;">
             <div id="storyDetails" class="d-none">
@@ -256,14 +322,6 @@
               <div id="synthResult" class="mt-3"></div>
             </div>
             <div id="storyDetailsPlaceholder" class="text-secondary" style="font-size:1.05rem;">Select a user story to see details here.</div>
-          </div>
-        </div>
-        <div class="col-md-4 d-flex flex-column h-100">
-          <div class="section-heading" style="margin-bottom:0.5rem; font-size:1.3rem; color:#d32f2f;">Legacy Business Requirement</div>
-          <div class="section-card flex-grow-1 d-flex flex-column" id="legacySection" style="height:100%; border:2px solid #e0e0e0;">
-            <div class="flex-grow-1 d-flex flex-column">
-              <div id="legacyEnglishMarkdown" class="flex-grow-1" style="background:#f1f3f4; border:1.5px solid #e0e0e0; font-size:20px; color:#23272b; padding:0.5rem; border-radius:0.75rem; min-height:0; height:100%; overflow-y:auto;"></div>
-            </div>
           </div>
         </div>
       </div>
@@ -344,10 +402,346 @@
 
     // Fetch latest legacy English output from backend (if available)
     async function fetchLegacyEnglish() {
-      // This should be replaced with a real API call if you want to fetch the latest output
-      // For now, try to get from localStorage or set to empty
-      window.latestLegacyEnglish = localStorage.getItem('latestLegacyEnglish') || '';
+      // Get legacy English from localStorage
+  window.latestLegacyEnglish = localStorage.getItem('latestLegacyEnglish') || '';
+  // Prefer Section 2: Business Breakdown if available
+  const businessBreakdown = localStorage.getItem('latestBusinessBreakdown') || '';
+      // Populate raw Business Breakdown (as is)
+      const rawDiv = document.getElementById('businessBreakdownRaw');
+      if (rawDiv) {
+        // If content looks like HTML, render directly; else render as markdown
+        const looksHtml = /<\w+[^>]*>/i.test(businessBreakdown);
+        rawDiv.innerHTML = looksHtml ? businessBreakdown : marked.parse(businessBreakdown || window.latestLegacyEnglish || '');
+      }
+      // Prepare decomposition on demand via button
+      const source = businessBreakdown || window.latestLegacyEnglish;
+      const decomposeBtn = document.getElementById('decomposeBtn');
+      if (decomposeBtn) {
+        decomposeBtn.onclick = function() {
+          // Hide raw view, show decomposed controls
+          const raw = document.getElementById('businessBreakdownRaw');
+          const deco = document.getElementById('decomposeContainer');
+          if (raw) raw.style.display = 'none';
+          if (deco) deco.style.display = 'flex';
+          // Render checkbox breakdown
+          renderLegacyRequirements(source);
+        };
+      }
     }
+
+    function renderLegacyRequirements(md) {
+      const container = document.getElementById('legacyRequirementsList');
+      if (!md || !container) { container.innerHTML = '<div class="text-secondary">No legacy requirements available.</div>'; return; }
+  // Parse headers and group bullets under them (mirror Step 1 principle)
+  const lines = md.split(/\r?\n/);
+  const headerMd = /^\s*#{1,6}\s+(.+)$/;
+  const headerPlain = /^\s*(Section|Step)\s*\d*[:.\-]\s*(.+)?$/i;
+  const headerAllCaps = /^\s*[A-Z][A-Z0-9 \-_]{4,}$/;
+  // Support -, *, 1., 1), •, –, — and optional leading spaces and optional space after bullet
+  const bullet = /^\s*(?:[-*\u2022\u2013\u2014]\s*(.+)|\d+[\.)]\s*(.+))$/;
+      const cleanLine = (t) => {
+        let s = (t||'').trim();
+        // strip checklist markers like [ ] or [x]
+        s = s.replace(/^\s*\[[ xX]\]\s*/,'');
+        // collapse internal whitespace
+        s = s.replace(/\s+/g,' ').trim();
+        // trim trailing separators
+        s = s.replace(/[;,:-]\s*$/,'').trim();
+        // remove leading labels like "Task:", "Step:", "Action -"
+        s = s.replace(/^\s*(Task|Step|Action|Sub-task)\s*[:\-]\s*/i,'');
+        return s;
+      };
+      const sections = [];
+      let current = null;
+      for (let i=0;i<lines.length;i++) {
+        const line = lines[i].trim();
+        let m;
+        if ((m = line.match(headerMd))) {
+          current = { title: m[1].trim(), items: [] };
+          sections.push(current);
+          continue;
+        }
+        if ((m = line.match(headerPlain))) {
+          const t = (m[2] || line).trim();
+          current = { title: t, items: [] };
+          sections.push(current);
+          continue;
+        }
+        if (headerAllCaps.test(line)) {
+          current = { title: line, items: [] };
+          sections.push(current);
+          continue;
+        }
+        const bm = line.match(bullet);
+        if (bm) {
+          const txt = cleanLine(bm[1] || bm[2] || '');
+          if (!txt) continue;
+          if (!current) { current = { title: 'Requirements', items: [] }; sections.push(current); }
+          current.items.push(txt);
+        }
+      }
+      // Keep only sections that have bullet items
+      let groups = sections.filter(s=>Array.isArray(s.items) && s.items.length>0);
+      // Fallback: if none detected, extract first 50 bullets into a single group
+      if (!groups.length) {
+        // First try regex bullets across all lines (more lenient)
+        const bullets = [];
+        for (const l of lines) {
+          const bm = l.match(bullet);
+          if (bm) bullets.push(cleanLine(bm[1]||bm[2]||''));
+        }
+        let items = Array.from(new Set(bullets));
+        // If still too few, try HTML fallback by extracting items from <li>, <p>, and block <div>
+        if (items.length < 2) {
+          try {
+            const tmp = document.createElement('div');
+            // If input already HTML, use as-is; else render markdown to HTML then parse
+            const looksHtml = /<\w+[^>]*>/i.test(md);
+            tmp.innerHTML = looksHtml ? md : marked.parse(md || '');
+            const collect = [];
+            // 1) List items
+            const lis = Array.from(tmp.querySelectorAll('li'));
+            lis.forEach(li => { const t = cleanLine(li.textContent||''); if (t) collect.push(t); });
+            // 2) Paragraphs and simple blocks
+            if (collect.length < 2) {
+              const blocks = Array.from(tmp.querySelectorAll('p,div'));
+              blocks.forEach(b => {
+                const text = (b.textContent||'').trim();
+                if (!text) return;
+                // Split by line breaks inside block
+                const innerLines = text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+                innerLines.forEach(line => {
+                  // Try bullet-like extraction within the line
+                  const m = line.match(bullet) || line.match(/[\-\u2022\u2013\u2014]\s*(.+)$/);
+                  const candidate = (m && (m[1]||m[2])) ? (m[1]||m[2]) : line;
+                  collect.push(cleanLine(candidate));
+                });
+              });
+            }
+            if (collect.length) items = Array.from(new Set(collect));
+          } catch (e) { /* ignore */ }
+        }
+        // Last resort: split the raw text into sentences if still nothing
+        if (!items.length) {
+          const raw = (typeof md === 'string' ? md : '').replace(/\s+/g,' ').trim();
+          if (raw) {
+            const sentences = raw
+              .split(/(?<=[\.!?])\s+|;\s+|\n+/)
+              .map(s=>cleanLine(s))
+              .filter(s=>s.length > 5 && /[a-zA-Z]/.test(s));
+            items = Array.from(new Set(sentences)).slice(0, 50);
+          }
+        }
+        const dedup = items.slice(0, 200);
+        if (!dedup.length) { container.innerHTML = '<div class="text-secondary">No bullet requirements found in legacy output.</div>'; return; }
+        groups = [{ title: 'Requirements', items: dedup }];
+      }
+      // Sort to prioritize Business Requirements if present
+      groups.sort((a,b)=>{
+        const as = a.title.toLowerCase(), bs = b.title.toLowerCase();
+        if (as.includes('business requirement') && !bs.includes('business requirement')) return -1;
+        if (bs.includes('business requirement') && !as.includes('business requirement')) return 1;
+        return 0;
+      });
+      // Render groups with a single checkbox at Story (group) level; items are read-only under each group
+      container.innerHTML = groups.map((g, gi)=>{
+        const groupId = `sec_${gi}`;
+        const header = `
+          <div class='d-flex align-items-center justify-content-between mb-1'>
+            <div class='fw-semibold group-title'>${g.title}</div>
+            <label class='d-flex align-items-center small text-secondary' style='cursor:pointer;'>
+              <input type='checkbox' class='form-check-input me-2' data-group-id='${groupId}' name='legacyGroup'>
+              Select Section (Story)
+            </label>
+          </div>`;
+        const itemsHtml = g.items.map(txt=>{
+          const safe = txt
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/\"/g,'&quot;')
+            .replace(/'/g,'&#39;');
+          return `<div class='d-flex align-items-start mb-1'>
+              <span class='me-2 text-secondary'>•</span>
+              <span class='req-item'>${safe}</span>
+            </div>`;
+        }).join('');
+        return `<div class='mb-2 p-2 border rounded' data-group-card='${groupId}' style='background:#fff;'>${header}<div>${itemsHtml||"<div class='text-secondary small'>No items</div>"}</div></div>`;
+      }).join('');
+      // No per-item checkboxes; selection is at Story (group) level only
+    }
+
+    function decodeHtml(html) {
+      const txt = document.createElement('textarea');
+      txt.innerHTML = html;
+      return txt.value;
+    }
+
+  // Build Story-level Summary, Description and Acceptance Criteria for a single requirement
+    function generateStoryFromRequirement(rawText, roleInput, goalInput, benefitInput) {
+      const raw = (rawText || '').trim();
+      const role = (roleInput || '').trim() || 'user';
+      // Try to extract goal from common phrasing if user didn't supply one
+      let goal = (goalInput || '').trim();
+      if (!goal) {
+        const m = raw.match(/i\s+want\s+to\s+([^,.]+)[,.]?/i) || raw.match(/to\s+([^,.]+)[,.]?/i);
+        goal = m && m[1] ? m[1].trim() : raw;
+      }
+      const benefit = (benefitInput || '').trim() || 'deliver clear business value';
+      const summary = `As a ${role}, I want to ${goal}, so that ${benefit}.`;
+      // Description with context and acceptance criteria (markdown style)
+      const descriptionLines = [
+        'Description:',
+        '',
+        `This story implements the following legacy business requirement:`,
+        '',
+        `- ${raw}`,
+        '',
+        'Acceptance Criteria:',
+        '',
+        `- GIVEN the system is available and the ${role} is authorized, WHEN the user attempts to ${goal}, THEN the action completes successfully and the expected outcome is produced.`,
+        `- GIVEN invalid or edge-case input, WHEN the user attempts to ${goal}, THEN the system responds with clear validation or error messages and no data corruption occurs.`,
+        `- GIVEN audit and persistence needs, WHEN the user completes ${goal}, THEN the result is persisted, auditable, and visible in subsequent flows or reports as appropriate.`,
+      ];
+      const description = descriptionLines.join('\n');
+      return { summary, description };
+    }
+
+    // Build Story-level content for a group (section) of requirements
+    function generateStoryFromGroup(groupTitle, items, roleInput, goalInput, benefitInput) {
+      const title = (groupTitle || '').trim() || 'Business Requirement';
+      const role = (roleInput || '').trim() || 'user';
+      const goal = (goalInput || '').trim() || title;
+      const benefit = (benefitInput || '').trim() || 'deliver clear business value';
+      const summary = `As a ${role}, I want to ${goal}, so that ${benefit}.`;
+      const bullets = (items||[]).map(i=>`- ${i}`).join('\n');
+      const description = [
+        'Description:',
+        '',
+        `This story implements the following legacy requirements under "${title}":`,
+        '',
+        bullets || '- (none)',
+        '',
+        'Acceptance Criteria:',
+        '',
+        `- GIVEN the system is available and the ${role} is authorized, WHEN the user attempts to ${goal}, THEN the action completes successfully and the expected outcome is produced.`,
+        `- GIVEN invalid or edge-case input, WHEN the user attempts to ${goal}, THEN the system responds with clear validation or error messages and no data corruption occurs.`,
+        `- GIVEN audit and persistence needs, WHEN the user completes ${goal}, THEN the result is persisted, auditable, and visible in subsequent flows or reports as appropriate.`,
+      ].join('\n');
+      return { summary, description };
+    }
+
+    async function createUserStories() {
+      const btn = document.getElementById('createStoriesBtn');
+      const status = document.getElementById('createStatus');
+      const selectedGroups = Array.from(document.querySelectorAll('input[name="legacyGroup"]:checked'));
+      if (!selectedGroups.length) {
+        status.innerHTML = '<span class="text-danger">Select at least one section (Story).</span>';
+        return;
+      }
+  btn.disabled = true;
+  status.innerHTML = `Creating ${selectedGroups.length} JIRA stor${selectedGroups.length>1?'ies':'y'}...`;
+  const results = [];
+      // Read template and metadata
+      const role = (document.getElementById('storyRole').value || '').trim();
+      const goal = (document.getElementById('storyGoal').value || '').trim();
+      const benefit = (document.getElementById('storyBenefit').value || '').trim();
+      const labels = (document.getElementById('storyLabels').value || '').split(',').map(s=>s.trim()).filter(Boolean);
+      const components = (document.getElementById('storyComponents').value || '').split(',').map(s=>s.trim()).filter(Boolean);
+  const epic_key = (document.getElementById('epicKey').value || '').trim();
+  const auto_derive = !!document.getElementById('autoDerive').checked;
+      const makeTasksToo = !!document.getElementById('createTasksSwitch')?.checked;
+    try {
+  for (let i=0; i<selectedGroups.length; i++) {
+    const gid = selectedGroups[i].getAttribute('data-group-id');
+    const card = document.querySelector(`[data-group-card='${gid}']`);
+    const groupTitle = (card?.querySelector('.group-title')?.textContent || '').trim();
+    const items = Array.from(card?.querySelectorAll('.req-item') || []).map(el=>decodeHtml(el.textContent||'').trim()).filter(Boolean);
+    const { summary, description } = generateStoryFromGroup(groupTitle, items, role, goal, benefit);
+        try {
+          const res = await fetch('/api/create-jira-story', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ summary, description, issuetype: 'Story', labels, components, epic_key, auto_derive })
+          });
+          const data = await res.json();
+          if (data && !data.error) {
+            const storyKey = data.key;
+            const storyUrl = data.url;
+            const created = { ok: true, key: storyKey, url: storyUrl, tasks: [] };
+            // Optionally create tasks under the story
+            if (makeTasksToo) {
+      // Create one task per requirement item under this group
+      const taskSummaries = items.slice(0, 20); // safety cap
+      for (const itemText of taskSummaries) {
+                try {
+                  const tRes = await fetch('/api/create-jira-subtask', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parent_key: storyKey, summary: itemText.substring(0,255), description: `Task for ${storyKey}: ${itemText}`, labels, components, auto_derive })
+                  });
+                  const tData = await tRes.json();
+                  if (tData && !tData.error) {
+                    created.tasks.push({ ok: true, key: tData.key, url: tData.url });
+                  } else {
+                    created.tasks.push({ ok: false, error: tData.error || 'Unknown error' });
+                  }
+                } catch (te) {
+                  created.tasks.push({ ok: false, error: te.message || String(te) });
+                }
+              }
+            }
+            results.push(created);
+          } else {
+            results.push({ ok: false, error: data.error || 'Unknown error' });
+          }
+        } catch (e) {
+          results.push({ ok: false, error: e.message || String(e) });
+        }
+        // Progressive update
+    const okStories = results.filter(r=>r.ok);
+        const storyBlocks = okStories.map(r=>{
+          const taskList = (r.tasks||[]).map(t=> t.ok ? `<li class='ms-3'><a href='${t.url}' target='_blank' rel='noopener'>${t.key}</a></li>` : `<li class='ms-3 text-danger'>${t.error}</li>`).join('');
+          return `<li><a href='${r.url}' target='_blank' rel='noopener'>${r.key}</a>${taskList?`<ul class='mt-1'>${taskList}</ul>`:''}</li>`;
+        }).join('');
+        const fails = results.filter(r=>!r.ok).map(r=>`<li class='text-danger'>${r.error}</li>`).join('');
+    status.innerHTML = `Created ${okStories.length}/${i+1} stories so far:<ul class='mb-1'>${storyBlocks}</ul>${fails?`<div>Failed:<ul>${fails}</ul></div>`:''}`;
+      }
+      } catch (err) {
+        console.error('Create User Stories failed:', err);
+        status.innerHTML = `<span class='text-danger'>Failed to create stories: ${err?.message || err}</span>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Preview generated stories before creating in JIRA
+    (function wirePreview(){
+      const btn = document.getElementById('previewStoriesBtn');
+      if (!btn) return;
+      btn.addEventListener('click', function(){
+        const panel = document.getElementById('storyPreviewPanel');
+        if (!panel) return;
+        const selectedGroups = Array.from(document.querySelectorAll('input[name="legacyGroup"]:checked'));
+        if (!selectedGroups.length) {
+          panel.style.display = 'block';
+          panel.innerHTML = '<div class="text-danger">Select at least one section (Story) to preview.</div>';
+          return;
+        }
+        const role = (document.getElementById('storyRole').value || '').trim();
+        const goal = (document.getElementById('storyGoal').value || '').trim();
+        const benefit = (document.getElementById('storyBenefit').value || '').trim();
+        const html = selectedGroups.map(gcb => {
+          const gid = gcb.getAttribute('data-group-id');
+          const card = document.querySelector(`[data-group-card='${gid}']`);
+          const groupTitle = (card?.querySelector('.group-title')?.textContent || '').trim();
+          const items = Array.from(card?.querySelectorAll('.req-item') || []).map(el=>decodeHtml(el.textContent||'').trim()).filter(Boolean);
+          const { summary, description } = generateStoryFromGroup(groupTitle, items, role, goal, benefit);
+          const md = `${summary}\n\n${description}`;
+          return `<div class='mb-3 pb-2 border-bottom'>${marked.parse(md)}</div>`;
+        }).join('');
+        panel.innerHTML = html || '<div class="text-secondary">No preview available.</div>';
+        panel.style.display = 'block';
+      });
+    })();
 
     // Synthesize button click
     document.getElementById('synthesizeBtn').onclick = async function() {
@@ -398,8 +792,19 @@
           return;
         }
         // Save to localStorage and redirect to next page
-        if (data.result) {
+        // Persist synthesis for Step 3 (accept both new {functions,...} and legacy 'result' formats)
+        if (data && Array.isArray(data.functions)) {
+          const payload = { functions: data.functions };
+          if (data.coverage) payload.coverage = data.coverage;
+          if (data.raw) payload.raw = data.raw;
+          localStorage.setItem('latestSynthesisResult', JSON.stringify(payload));
+        } else if (data && data.result) {
+          // Legacy backend format
           localStorage.setItem('latestSynthesisResult', data.result);
+        }
+        // Ensure legacy english is also saved under expected key for Step 3
+        if (legacyEnglish) {
+          localStorage.setItem('latestLegacyEnglish', legacyEnglish);
         }
         spinnerContainer.classList.add('d-none');
         clearInterval(timerInterval);
@@ -440,14 +845,44 @@
     });
 
     // Initial load
-    fetchLegacyEnglish();
+  // On load, show Column 1 content (legacy requirements) immediately
+  fetchLegacyEnglish();
     loadUserStories();
+    // Load Epics
+    ;(async function loadEpics(){
+      try {
+        const res = await fetch('/api/jira-epics');
+        const data = await res.json();
+        const select = document.getElementById('epicSelect');
+        if (data && Array.isArray(data.epics)) {
+          const opts = data.epics.map(e => {
+            const text = `${e.key}: ${e.summary || ''}`.trim();
+            const opt = document.createElement('option');
+            opt.value = e.key;
+            opt.textContent = text;
+            return opt;
+          });
+          opts.forEach(o => select.appendChild(o));
+        }
+        // Keep epicKey in sync with dropdown when user selects one
+        select.addEventListener('change', function(){
+          const ek = document.getElementById('epicKey');
+          if (!ek.value) { ek.value = this.value || ''; }
+        });
+      } catch (e) {
+        // Non-fatal; UI can still accept typed Epic Key
+        console.warn('Failed to load epics', e);
+      }
+    })();
     // Hide details section placeholder if a story is already selected (on reload)
     document.addEventListener('DOMContentLoaded', function() {
       if (!document.getElementById('storyDetails').classList.contains('d-none')) {
         document.getElementById('storyDetailsPlaceholder').style.display = 'none';
       }
     });
+  </script>
+  <script>
+    document.getElementById('createStoriesBtn').addEventListener('click', createUserStories);
   </script>
 </body>
 </html>

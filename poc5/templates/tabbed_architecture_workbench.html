@@ -2,108 +2,391 @@
 <html>
 <head>
     <title>POC 5 - Architecture Workbench</title>
+        <!-- Fallback theme variables (in case /static/custom.css isn't loaded yet) -->
+        <style>
+            :root {
+                --primary-red: #dc3545;
+                --primary-red-dark: #c82333;
+                --primary-grey: #343a40;
+                --secondary-grey: #6c757d;
+                --light-grey: #f8f9fa;
+                --gradient-red: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                --gradient-grey: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            }
+        </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/custom.css">
     <style>
-        .banner { font-size: 2em; color: #b71c1c; font-style: italic; text-align: center; margin-bottom: 1em; }
-        .tabs { display: flex; border-bottom: 2px solid #3949ab; margin-bottom: 1em; }
-        .tab { padding: 1em; cursor: pointer; background: #e3e3e3; margin-right: 2px; border-radius: 4px 4px 0 0; }
-        .tab.active { background: #3949ab; color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .section { margin-bottom: 2em; }
-        label { font-weight: bold; }
+        /* Page tweaks to align with POC2 look while using global custom.css */
+        body { 
+            min-height: 100vh; 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            /* Apply POC2 background color scheme */
+            background: var(--gradient-grey, linear-gradient(135deg, #343a40 0%, #495057 100%));
+            background-attachment: fixed;
+        }
+        .section { margin-bottom: 1.25rem; }
+        label { font-weight: 600; color: var(--primary-red, #dc3545); }
+        textarea, input[type="text"], select { width: 100%; padding: .5rem .75rem; border: 1px solid #e0e0e0; border-radius: .5rem; background: #fff; }
+        textarea { min-height: 100px; }
+        /* Tabs styled like POC2: underline with red active indicator */
+        .nav-tabs { border-bottom: 2px solid rgba(220,53,69,.15); }
+        .nav-tabs .nav-link { color: var(--primary-grey, #343a40); font-weight: 600; }
+        .nav-tabs .nav-link:hover { border-color: transparent; color: var(--primary-red, #dc3545); }
+        .nav-tabs .nav-link.active { color: var(--primary-red, #dc3545); border-color: transparent; border-bottom: 3px solid var(--primary-red, #dc3545); background: transparent; }
+        /* Content panes */
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        /* Mermaid preview responsiveness */
+        #mermaidPreview svg { max-width: 100%; height: auto; }
+        #mermaidPreview { overflow: auto; }
     </style>
     <script>
         function showTab(idx) {
-            var tabs = document.querySelectorAll('.tab');
-            var contents = document.querySelectorAll('.tab-content');
+            var tabs = document.querySelectorAll('.nav-tabs .nav-link');
+            var panes = document.querySelectorAll('.tab-pane');
             tabs.forEach((t,i) => t.classList.toggle('active', i===idx));
-            contents.forEach((c,i) => c.classList.toggle('active', i===idx));
+            panes.forEach((p,i) => p.classList.toggle('active', i===idx));
+            if (idx === 1 && typeof window.triggerMermaidPreview === 'function') {
+                setTimeout(window.triggerMermaidPreview, 0);
+            }
         }
-        window.onload = function() { showTab(0); };
+        window.addEventListener('DOMContentLoaded', function(){
+            var initialTab = Number('{{ active_tab|default(0) }}');
+            if (isNaN(initialTab)) initialTab = 0;
+            showTab(initialTab);
+            if (initialTab === 1 && typeof window.triggerMermaidPreview === 'function') {
+                window.triggerMermaidPreview();
+            }
+            // Initialize selects from context values
+            const selectVals = {
+                cloud_provider: '{{ cloud_provider|e }}',
+                region_strategy: '{{ region_strategy|e }}',
+                deployment_model: '{{ deployment_model|e }}',
+                database_family: '{{ database_family|e }}',
+                messaging_backbone: '{{ messaging_backbone|e }}',
+                identity_provider: '{{ identity_provider|e }}',
+                api_style: '{{ api_style|e }}',
+                caching_strategy: '{{ caching_strategy|e }}',
+                observability_stack: '{{ observability_stack|e }}'
+            };
+            Object.entries(selectVals).forEach(([id,val]) => {
+                const el = document.getElementById(id);
+                if (el && val) el.value = val;
+            });
+        });
     </script>
 </head>
 <body>
-    <div class="banner">Implementation specifications</div>
-    <div class="tabs">
-        <div class="tab" onclick="showTab(0)">1. Context & Requirements</div>
-        <div class="tab" onclick="showTab(1)">2. Initial Blueprint</div>
-        <div class="tab" onclick="showTab(2)">3. Key Decisions</div>
-        <div class="tab" onclick="showTab(3)">4. Communication & Integration</div>
-        <div class="tab" onclick="showTab(4)">5. Pros & Cons</div>
-        <div class="tab" onclick="showTab(5)">6. Documentation & Review</div>
-    </div>
-    <form method="post">
-        <!-- Tab 1 -->
-        <div class="tab-content section" id="tab1">
-            <h2>Context & Requirements</h2>
-            <label>Business Goals:</label><br>
-            <textarea name="business_goals"></textarea><br>
-            <label>Legacy System Description:</label><br>
-            <textarea name="legacy_system"></textarea><br>
-            <label>Constraints (tech stack, compliance, etc.):</label><br>
-            <textarea name="constraints"></textarea><br>
-            <label>Desired Architecture Style:</label><br>
-            <select name="architecture_style">
-                <option>Monolith</option>
-                <option>Event Driven</option>
-                <option>Microservices</option>
-                <option>Other</option>
-            </select><br>
-            <label>Additional Requirements:</label><br>
-            <textarea name="additional_requirements"></textarea><br>
+    <!-- Banner (POC2-style) -->
+    <nav class="navbar navbar-dark" style="background: var(--gradient-grey);">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#" onclick="return false;">
+                <img src="/static/processflow.png" alt="logo" width="36" height="36" class="me-2"/>
+                <span>
+                    <div class="fw-bold">Architecture Workbench</div>
+                    <small class="text-light">POC 5 • Decisions → Blueprint</small>
+                </span>
+            </a>
         </div>
-        <!-- Tab 2 -->
-        <div class="tab-content section" id="tab2">
+    </nav>
+
+    <div class="container my-4">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="h5 mb-0">Design & Review</span>
+                        <div class="small text-light-50">Upload PRD and System Mapping, extract decisions, and preview an initial diagram.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-4">
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showTab(0); return false;">1. Context & Requirements</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showTab(1); return false;">2. Initial Blueprint</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showTab(2); return false;">3. Key Decisions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showTab(3); return false;">4. Communication & Integration</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showTab(4); return false;">5. Pros & Cons</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showTab(5); return false;">6. Documentation & Review</a></li>
+                </ul>
+                <form method="post" enctype="multipart/form-data">
+        <!-- Tab 1 -->
+    <div class="tab-pane section" id="tab1">
+            <h2>Context & Requirements</h2>
+                        <div class="section">
+                            <label>Upload PRD Document (PDF/TXT/MD preferred):</label><br>
+                            <input type="file" name="prd_file" accept=".txt,.md,.pdf,.doc,.docx" {% if lock_tab1 %}disabled{% endif %}><br>
+                            {% if prd_file_name %}<small>Uploaded: {{ prd_file_name }}</small>{% endif %}
+                        </div>
+                        <div class="section">
+                            <label>Upload System Mapping (CSV/JSON/TXT):</label><br>
+                            <input type="file" name="system_mapping_file" accept=".csv,.json,.txt" {% if lock_tab1 %}disabled{% endif %}><br>
+                            {% if system_mapping_name %}
+                                <small>Uploaded: {{ system_mapping_name }}</small>
+                                {% if system_mapping_stats %}
+                                    <br><small>Parsed: {{ system_mapping_stats.node_count }} nodes, {{ system_mapping_stats.edge_count }} edges{% if system_mapping_stats.truncated %} (truncated for preview){% endif %}</small>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <hr>
+                        <label>Business Goals:</label><br>
+                        <textarea name="business_goals" {% if lock_tab1 %}readonly{% endif %}>{{ business_goals }}</textarea><br>
+                        <label>Legacy System Description:</label><br>
+                        <textarea name="legacy_system" {% if lock_tab1 %}readonly{% endif %}>{{ legacy_system }}</textarea><br>
+                        <label>Constraints (tech stack, compliance, etc.):</label><br>
+                        <textarea name="constraints" {% if lock_tab1 %}readonly{% endif %}>{{ constraints }}</textarea><br>
+                                    <label>Desired Architecture Style:</label><br>
+                    <select name="architecture_style" id="architecture_style" {% if lock_tab1 %}disabled{% endif %}>
+                        <option value="Monolith">Monolith</option>
+                        <option value="Event Driven">Event Driven</option>
+                        <option value="Microservices">Microservices</option>
+                        <option value="Other">Other</option>
+                    </select><br>
+                                    <script>
+                                        (function(){
+                                            var val = '{{ architecture_style|default("")|e }}';
+                                            var el = document.getElementById('architecture_style');
+                                            if (el && val) el.value = val;
+                                        })();
+                                    </script>
+                        <label>Additional Requirements:</label><br>
+                        <textarea name="additional_requirements" {% if lock_tab1 %}readonly{% endif %}>{{ additional_requirements }}</textarea><br>
+
+                        <hr>
+                        <h3>Guardrails & Platform Selections</h3>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label>Cloud Provider</label>
+                                <select name="cloud_provider" id="cloud_provider" class="form-select form-select-sm" {% if lock_tab1 %}disabled{% endif %}>
+                                    <option value="">-- Select --</option>
+                                    <option value="AWS">AWS</option>
+                                    <option value="Azure">Azure</option>
+                                    <option value="GCP">GCP</option>
+                                    <option value="On-Prem">On-Prem</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Region Strategy</label>
+                                <select name="region_strategy" id="region_strategy" class="form-select form-select-sm" {% if lock_tab1 %}disabled{% endif %}>
+                                    <option value="">-- Select --</option>
+                                    <option value="Single Region">Single Region</option>
+                                    <option value="Multi-Region Active/Active">Multi-Region Active/Active</option>
+                                    <option value="DR Warm Standby">DR Warm Standby</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Deployment Model</label>
+                                <select name="deployment_model" id="deployment_model" class="form-select form-select-sm" {% if lock_tab1 %}disabled{% endif %}>
+                                    <option value="">-- Select --</option>
+                                    <option value="Kubernetes">Kubernetes</option>
+                                    <option value="Serverless">Serverless</option>
+                                    <option value="VMs">VMs</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-4">
+                                <label>Database Family</label>
+                                <select name="database_family" id="database_family" class="form-select form-select-sm" {% if lock_tab1 %}disabled{% endif %}>
+                                    <option value="">-- Select --</option>
+                                    <option value="PostgreSQL">PostgreSQL</option>
+                                    <option value="MySQL">MySQL</option>
+                                    <option value="SQL Server">SQL Server</option>
+                                    <option value="MongoDB">MongoDB</option>
+                                    <option value="DynamoDB">DynamoDB</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Messaging Backbone</label>
+                                <select name="messaging_backbone" id="messaging_backbone" class="form-select form-select-sm" {% if lock_tab1 %}disabled{% endif %}>
+                                    <option value="">-- Select --</option>
+                                    <option value="Kafka">Kafka</option>
+                                    <option value="RabbitMQ">RabbitMQ</option>
+                                    <option value="SQS/SNS">SQS/SNS</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Identity Provider</label>
+                                <select name="identity_provider" id="identity_provider" class="form-select form-select-sm" {% if lock_tab1 %}disabled{% endif %}>
+                                    <option value="">-- Select --</option>
+                                    <option value="Cognito">Cognito</option>
+                                    <option value="Okta">Okta</option>
+                                    <option value="Auth0">Auth0</option>
+                                    <option value="ADFS">ADFS</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-4">
+                                <label>API Style</label>
+                                <select name="api_style" id="api_style" class="form-select form-select-sm" {% if lock_tab1 %}disabled{% endif %}>
+                                    <option value="">-- Select --</option>
+                                    <option value="REST">REST</option>
+                                    <option value="GraphQL">GraphQL</option>
+                                    <option value="gRPC">gRPC</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Caching Strategy</label>
+                                <select name="caching_strategy" id="caching_strategy" class="form-select form-select-sm" {% if lock_tab1 %}disabled{% endif %}>
+                                    <option value="">-- Select --</option>
+                                    <option value="Redis">Redis</option>
+                                    <option value="Memcached">Memcached</option>
+                                    <option value="None">None</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Observability Stack</label>
+                                <select name="observability_stack" id="observability_stack" class="form-select form-select-sm" {% if lock_tab1 %}disabled{% endif %}>
+                                    <option value="">-- Select --</option>
+                                    <option value="ELK">ELK</option>
+                                    <option value="Grafana/Loki/Tempo">Grafana/Loki/Tempo</option>
+                                    <option value="Datadog">Datadog</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-6">
+                                <label>Data Residency</label>
+                                <input type="text" name="data_residency" class="form-control form-control-sm" value="{{ data_residency }}" {% if lock_tab1 %}readonly{% endif %}>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Compliance Standards</label>
+                                <input type="text" name="compliance_standards" class="form-control form-control-sm" value="{{ compliance_standards }}" {% if lock_tab1 %}readonly{% endif %}>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <h3>DecisionExtractorAgent Questions</h3>
+                        <div class="section">
+                            <label>High-Level Architecture Decision Points</label><br>
+                            <textarea name="high_level_decision_points" placeholder="List key decision points here">{{ high_level_decision_points }}</textarea><br>
+                            <label>List of One-way Door Decisions</label><br>
+                            <textarea name="one_way_door_decisions" placeholder="Irreversible or costly-to-reverse decisions">{{ one_way_door_decisions }}</textarea><br>
+                            <small style="display:block; color:#6c757d;">Examples: Primary database family, partitioning strategy, messaging backbone, region/multi-region strategy, identity provider, data residency & compliance posture, cloud provider selection.</small>
+                            <label>Desired Architecture Style</label><br>
+                            <input name="desired_architecture_style" value="{{ architecture_style }}"><br>
+                            <label>Other Relevant Questions</label><br>
+                            <textarea name="other_relevant_questions" placeholder="Capture any other clarifying questions">{{ other_relevant_questions }}</textarea><br>
+                        </div>
+                        <div class="section text-end">
+                            <button type="submit" class="btn btn-outline-danger me-2" name="action" value="extract_decisions" {% if lock_tab1 %}disabled{% endif %}>Extract Decisions</button>
+                            {% if not lock_tab1 %}
+                                <button type="submit" class="btn btn-outline-secondary me-2" name="action" value="lock_tab1">Lock Tab 1</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-outline-secondary me-2" name="action" value="unlock_tab1">Unlock Tab 1</button>
+                            {% endif %}
+                            <button type="submit" class="btn btn-danger" name="action" value="generate_initial_blueprint">Generate Initial Diagram</button>
+                        </div>
+    </div>
+    <!-- Tab 2 -->
+        <div class="tab-pane section" id="tab2">
             <h2>Initial Blueprint</h2>
             <label>High-level Architecture Diagram (Mermaid/PlantUML):</label><br>
-            <textarea name="architecture_diagram"></textarea><br>
+                        <textarea name="architecture_diagram">{{ blueprint }}</textarea><br>
+                        <div class="mb-2">
+                            <button type="button" id="previewMermaidBtn" class="btn btn-sm btn-danger">Preview Diagram</button>
+                        </div>
+                        <div id="mermaidPreview" style="margin-top:1rem; background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; padding:12px;"></div>
             <label>Major Components/Services:</label><br>
-            <textarea name="major_components"></textarea><br>
+                        <textarea name="major_components">{{ major_components }}</textarea><br>
             <label>Interface Definitions:</label><br>
-            <textarea name="interface_definitions"></textarea><br>
+                        <textarea name="interface_definitions">{{ interface_definitions }}</textarea><br>
             <label>Data Schemas:</label><br>
-            <textarea name="data_schemas"></textarea><br>
+                        <textarea name="data_schemas">{{ data_schemas }}</textarea><br>
             <label>Reusable Patterns:</label><br>
-            <textarea name="reusable_patterns"></textarea><br>
-        </div>
-        <!-- Tab 3 -->
-        <div class="tab-content section" id="tab3">
+                        <textarea name="reusable_patterns">{{ reusable_patterns }}</textarea><br>
+    </div>
+    <!-- Tab 3 -->
+        <div class="tab-pane section" id="tab3">
             <h2>Key Decisions Extraction</h2>
             <label>Architectural Decisions:</label><br>
-            <textarea name="architectural_decisions"></textarea><br>
+                        <textarea name="architectural_decisions">{{ decisions }}</textarea><br>
             <label>Rationale & Trade-offs:</label><br>
-            <textarea name="rationale_tradeoffs"></textarea><br>
+                        <textarea name="rationale_tradeoffs">{{ rationale_tradeoffs }}</textarea><br>
             <label>Blueprint References:</label><br>
-            <textarea name="blueprint_references"></textarea><br>
-        </div>
-        <!-- Tab 4 -->
-        <div class="tab-content section" id="tab4">
+                        <textarea name="blueprint_references">{{ blueprint_references }}</textarea><br>
+    </div>
+    <!-- Tab 4 -->
+        <div class="tab-pane section" id="tab4">
             <h2>Communication & Integration Mapping</h2>
             <label>Communication Protocols (gRPC, REST, Kafka, etc.):</label><br>
-            <textarea name="communication_protocols"></textarea><br>
+                        <textarea name="communication_protocols">{{ communication }}</textarea><br>
             <label>Data Flow Diagrams:</label><br>
-            <textarea name="data_flow_diagrams"></textarea><br>
+                        <textarea name="data_flow_diagrams">{{ data_flow_diagrams }}</textarea><br>
             <label>Integration Points:</label><br>
-            <textarea name="integration_points"></textarea><br>
-        </div>
-        <!-- Tab 5 -->
-        <div class="tab-content section" id="tab5">
+                        <textarea name="integration_points">{{ integration_points }}</textarea><br>
+    </div>
+    <!-- Tab 5 -->
+        <div class="tab-pane section" id="tab5">
             <h2>Pros & Cons Analysis</h2>
             <label>SWOT Analysis (Strengths, Weaknesses, Opportunities, Threats):</label><br>
-            <textarea name="swot_analysis"></textarea><br>
+                        <textarea name="swot_analysis">{{ pros_cons }}</textarea><br>
             <label>Risks & Mitigation Strategies:</label><br>
-            <textarea name="risks_mitigation"></textarea><br>
-        </div>
-        <!-- Tab 6 -->
-        <div class="tab-content section" id="tab6">
+                        <textarea name="risks_mitigation">{{ risks_mitigation }}</textarea><br>
+    </div>
+    <!-- Tab 6 -->
+        <div class="tab-pane section" id="tab6">
             <h2>Documentation & Review</h2>
             <label>Compiled Architecture Document:</label><br>
-            <textarea name="compiled_document"></textarea><br>
+                        <textarea name="compiled_document">{{ doc }}</textarea><br>
             <label>Stakeholder Checklist:</label><br>
-            <textarea name="stakeholder_checklist"></textarea><br>
-            <button type="submit">Download/Share</button>
+                        <textarea name="stakeholder_checklist">{{ stakeholder_checklist }}</textarea><br>
+            <button type="submit" class="btn btn-danger">Download/Share</button>
+                </div>
+                </form>
+            </div>
         </div>
-    </form>
-</body>
+    </div>
+
+<!-- Mermaid for diagram preview -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+(function(){
+    let inited = false;
+    function initMermaid(){
+        if (!inited && window.mermaid){
+            try { mermaid.initialize({ startOnLoad:false, theme:'default' }); } catch (e) {}
+            inited = true;
+        }
+    }
+    async function preview(){
+        const ta = document.querySelector('textarea[name=architecture_diagram]');
+        const out = document.getElementById('mermaidPreview');
+        if (!ta || !out || !window.mermaid) return;
+        const code = (ta.value || '').trim();
+        const firstToken = (code.split(/\s+/)[0] || '').toLowerCase();
+        const allowed = new Set(['graph','flowchart','sequenceDiagram'.toLowerCase(),'classDiagram'.toLowerCase(),'erDiagram'.toLowerCase(),'statediagram','statediagram-v2','gantt','pie','journey','mindmap','timeline','gitgraph']);
+        if (!allowed.has(firstToken)){
+            out.innerHTML = '<div class="text-secondary">Enter Mermaid graph (e.g., "graph TD; A-->B;") to preview.</div>';
+            return;
+        }
+        initMermaid();
+        out.innerHTML = '<div class="text-secondary">Rendering…</div>';
+        const id = 'mmd-' + Date.now();
+        try {
+            if (typeof mermaid.render === 'function'){
+                const res = await mermaid.render(id, code);
+                out.innerHTML = res.svg || '';
+                if (res.bindFunctions) { try { res.bindFunctions(out); } catch(e){} }
+            } else if (typeof mermaid.init === 'function'){
+                // Fallback path for older versions
+                out.innerHTML = '<div class="mermaid">'+code.replace(/</g,'&lt;')+'</div>';
+                mermaid.init(undefined, out.querySelectorAll('.mermaid'));
+            } else {
+                out.innerHTML = '<div class="text-danger">Mermaid API not available.</div>';
+            }
+        } catch (e) {
+            out.innerHTML = '<div style="color:#b71c1c">Mermaid error: '+(e && e.message ? e.message : e)+'</div>';
+        }
+    }
+    window.triggerMermaidPreview = preview;
+    window.addEventListener('DOMContentLoaded', function(){
+        const btn = document.getElementById('previewMermaidBtn');
+        if (btn) btn.addEventListener('click', preview);
+    });
+})();
+</script>
+    </body>
 </html>
