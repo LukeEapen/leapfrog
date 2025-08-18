@@ -1269,6 +1269,60 @@
         "raw": "```json\n[\n    {\n        \"element\": \"Retrieve Account Data\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each customer account in the batch processing data:\",\n            \"1. Retrieve account information such as account number, balance, and transaction history.\",\n            \"2. Store the account data in memory for processing.\"\n        ]\n    },\n    {\n        \"element\": \"Determine Applicable Interest Rates\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"For each account type:\",\n            \"1. Check the account type to determine the applicable interest rate category.\",\n            \"2. Retrieve the interest rate based on the category from the interest rate table.\"\n        ]\n    },\n    {\n        \"element\": \"Compute Monthly Interest\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"For each account in the batch processing data:\",\n            \"1. Calculate the daily interest rate based on the annual interest rate and number of days in the month.\",\n            \"2. Compute the monthly interest by multiplying the daily interest rate with the account balance.\"\n        ]\n    },\n    {\n        \"element\": \"Update Account Balances\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"For each account in the batch processing data:\",\n            \"1. Add the computed monthly interest to the account balance.\",\n            \"2. Update the account balance in the system with the new balance.\"\n        ]\n    }\n]\n```"
       },
       "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Adjust Credit Line Business Rule",
+            "pseudocode": "Retrieve customer information including credit score, payment history, and current credit line\nEvaluate predefined rules and criteria for credit line adjustment\nIf customer credit score is above a certain threshold and payment history is good:\n- Increase credit line by a certain percentage\nElse if customer credit score is below a certain threshold or payment history is poor:\n- Decrease credit line by a certain percentage\nUpdate customer's credit line in the system\nLog the credit line adjustment with timestamp and reason",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Real-Time Credit Line Update Flow",
+            "pseudocode": "Listen for market changes and customer needs triggers\nWhen triggered, call adjustCreditLine function with customer ID\nAdjust Credit Line Business Rule is executed\nCustomer's credit line is dynamically updated\nSend notification to customer about the credit line change",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Adjust Credit Line Business Rule\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Retrieve customer information including credit score, payment history, and current credit line\",\n            \"Evaluate predefined rules and criteria for credit line adjustment\",\n            \"If customer credit score is above a certain threshold and payment history is good:\",\n            \"   - Increase credit line by a certain percentage\",\n            \"Else if customer credit score is below a certain threshold or payment history is poor:\",\n            \"   - Decrease credit line by a certain percentage\",\n            \"Update customer's credit line in the system\",\n            \"Log the credit line adjustment with timestamp and reason\"\n        ]\n    },\n    {\n        \"element\": \"Real-Time Credit Line Update Flow\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Listen for market changes and customer needs triggers\",\n            \"When triggered, call adjustCreditLine function with customer ID\",\n            \"Adjust Credit Line Business Rule is executed\",\n            \"Customer's credit line is dynamically updated\",\n            \"Send notification to customer about the credit line change\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "parseCsvInput",
+            "pseudocode": "1. Read the CSV file provided as input\n    - Open the CSV file\n    - Read the contents line by line\n2. Parse each line to extract structured fields\n    - Split each line based on the CSV delimiter\n    - Map each field to its corresponding data structure\n3. Validate the extracted fields\n    - Check for required fields\n    - Validate data format and integrity\n4. Organize the parsed data for further processing\n    - Create a structured data object\n    - Store the parsed fields in the appropriate data structures",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"parseCsvInput\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Read the CSV file provided as input\",\n                \"actions\": [\n                    \"Open the CSV file\",\n                    \"Read the contents line by line\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Parse each line to extract structured fields\",\n                \"actions\": [\n                    \"Split each line based on the CSV delimiter\",\n                    \"Map each field to its corresponding data structure\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Validate the extracted fields\",\n                \"actions\": [\n                    \"Check for required fields\",\n                    \"Validate data format and integrity\"\n                ]\n            },\n            {\n                \"step\": 4,\n                \"description\": \"Organize the parsed data for further processing\",\n                \"actions\": [\n                    \"Create a structured data object\",\n                    \"Store the parsed fields in the appropriate data structures\"\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Data Model",
+            "pseudocode": "Define the data structure for a completed insurance quote including fields like customer information, policy details, coverage options, premium amount, etc.",
+            "standard": "ISO"
+          },
+          {
+            "element": "API Endpoint",
+            "pseudocode": "Create an API endpoint '/generateQuoteDocument' that accepts a POST request with the completed quote data as input\nValidate the input data to ensure it meets the required format and contains all necessary information\nGenerate a unique identifier for the quote document to be created",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "PDF Generation",
+            "pseudocode": "Retrieve the quote details from the input data\nFormat the quote details into a structured PDF document template\nInclude the necessary styling and branding elements in the PDF document\nAdd the quote details to the PDF document content\nGenerate a downloadable link for the PDF document",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Data Model\",\n        \"standard\": \"ISO 25024:2015\",\n        \"pseudocode\": [\n            \"Define the data structure for a completed insurance quote including fields like customer information, policy details, coverage options, premium amount, etc.\"\n        ]\n    },\n    {\n        \"element\": \"API Endpoint\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Create an API endpoint '/generateQuoteDocument' that accepts a POST request with the completed quote data as input\",\n            \"Validate the input data to ensure it meets the required format and contains all necessary information\",\n            \"Generate a unique identifier for the quote document to be created\"\n        ]\n    },\n    {\n        \"element\": \"PDF Generation\",\n        \"standard\": \"ISO 32000-1:2008\",\n        \"pseudocode\": [\n            \"Retrieve the quote details from the input data\",\n            \"Format the quote details into a structured PDF document template\",\n            \"Include the necessary styling and branding elements in the PDF document\",\n            \"Add the quote details to the PDF document content\",\n            \"Generate a downloadable link for the PDF document\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
     }
   ]
 }

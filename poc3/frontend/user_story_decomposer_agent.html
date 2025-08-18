@@ -243,6 +243,14 @@
         <div class="col-md-4 d-flex flex-column h-100">
           <div class="section-heading" style="margin-bottom:0.5rem; font-size:1.3rem; color:#d32f2f;">User Story Summary</div>
           <div class="section-card flex-grow-1 d-flex flex-column" style="background:#f1f3f4; border:2px solid #e0e0e0;">
+            <div class="d-flex align-items-center justify-content-between mb-2" style="gap:.5rem;">
+              <div class="text-secondary small">Showing latest stories. Use dropdown to load older pages.</div>
+              <div class="d-flex align-items-center" style="gap:.5rem;">
+                <label for="storyPageSelect" class="form-label small mb-0">Older page:</label>
+                <select id="storyPageSelect" class="form-select form-select-sm" style="width:auto; min-width:120px;"></select>
+                <button id="loadPageBtn" class="btn btn-sm btn-outline-secondary">Load</button>
+              </div>
+            </div>
             <div id="storiesList" class="flex-grow-1"></div>
           </div>
         </div>
@@ -270,8 +278,26 @@
     </div>
   </main>
   <script>
-    // Fetch user stories from backend
-    async function loadUserStories() {
+    // Fetch user stories from backend with simple pagination
+    let pagingState = { total: 0, startAt: 0, maxResults: 20 };
+    function buildPageOptions(total, pageSize) {
+      const pages = Math.max(1, Math.ceil(total / pageSize));
+      const sel = document.getElementById('storyPageSelect');
+      if (!sel) return;
+      const currentIndex = Math.floor((pagingState.startAt||0) / pageSize);
+      sel.innerHTML = '';
+      for (let i=0;i<pages;i++) {
+        const start = i*pageSize;
+        const end = Math.min(total, start + pageSize);
+        const opt = document.createElement('option');
+        opt.value = String(start);
+        opt.textContent = `Items ${start+1}-${end}`;
+        if (i === currentIndex) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    }
+
+    async function loadUserStories(startAt = 0) {
       const spinnerContainer = document.getElementById('jiraSpinnerTimerContainer');
       spinnerContainer.classList.remove('d-none');
       document.getElementById('error').classList.add('d-none');
@@ -282,7 +308,8 @@
         document.getElementById('jiraTimer').textContent = seconds;
       }, 1000);
       try {
-        const res = await fetch('/api/jira-user-stories');
+        const params = new URLSearchParams({ startAt: String(startAt), maxResults: String(pagingState.maxResults||20) });
+        const res = await fetch('/api/jira-user-stories?' + params.toString());
         const data = await res.json();
         spinnerContainer.classList.add('d-none');
         clearInterval(timerInterval);
@@ -292,6 +319,11 @@
           return;
         }
         const stories = data.stories || [];
+        // Update paging state and page dropdown
+        pagingState.total = data.total || stories.length;
+        pagingState.startAt = data.startAt || 0;
+        pagingState.maxResults = data.maxResults || 20;
+        buildPageOptions(pagingState.total, pagingState.maxResults);
         const storiesList = document.getElementById('storiesList');
         if (stories.length === 0) {
           storiesList.innerHTML = '<div class="text-secondary">No user stories found in JIRA.</div>';
@@ -313,6 +345,24 @@
         document.getElementById('error').classList.remove('d-none');
       }
     }
+
+    // Wire page selector and load button
+    document.addEventListener('DOMContentLoaded', function(){
+      const sel = document.getElementById('storyPageSelect');
+      const btn = document.getElementById('loadPageBtn');
+      if (btn) {
+        btn.addEventListener('click', function(){
+          const start = parseInt(sel.value || '0', 10) || 0;
+          loadUserStories(start);
+        });
+      }
+      if (sel) {
+        sel.addEventListener('change', function(){
+          const start = parseInt(this.value || '0', 10) || 0;
+          loadUserStories(start);
+        });
+      }
+    });
 
     // Story selection handler for checkboxes
     window.selectStoryCheckbox = function(checkbox) {
@@ -440,8 +490,8 @@
     });
 
     // Initial load
-    fetchLegacyEnglish();
-    loadUserStories();
+  fetchLegacyEnglish();
+  loadUserStories(0);
     // Hide details section placeholder if a story is already selected (on reload)
     document.addEventListener('DOMContentLoaded', function() {
       if (!document.getElementById('storyDetails').classList.contains('d-none')) {

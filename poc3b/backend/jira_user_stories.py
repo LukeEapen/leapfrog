@@ -10,19 +10,31 @@ def get_jira_connection():
     jira = JIRA(server=JIRA_SERVER, basic_auth=(EMAIL, API_TOKEN))
     return jira
 
-def fetch_user_stories(project_key='SCRUM'):
+def fetch_user_stories(project_key: str = 'SCRUM', startAt: int = 0, maxResults: int = 20):
+    """Fetch user stories with simple pagination.
+
+    Returns a dict containing stories plus paging metadata (total/startAt/maxResults).
+    """
     jira = get_jira_connection()
     # JQL for user stories in the project
     jql = f"project={project_key} AND issuetype=Story ORDER BY created DESC"
-    issues = jira.search_issues(jql, maxResults=20)
+    # Support pagination
+    issues = jira.search_issues(jql, startAt=startAt, maxResults=maxResults)
     user_stories = []
     for issue in issues:
         user_stories.append({
             'key': issue.key,
-            'summary': issue.fields.summary,
+            'summary': getattr(issue.fields, 'summary', ''),
             'description': getattr(issue.fields, 'description', ''),
         })
-    return user_stories
+    # JIRA's ResultList exposes total
+    total = getattr(issues, 'total', len(user_stories))
+    return {
+        'stories': user_stories,
+        'total': int(total) if isinstance(total, (int, float)) else len(user_stories),
+        'startAt': int(startAt) if isinstance(startAt, (int, float)) else 0,
+        'maxResults': int(maxResults) if isinstance(maxResults, (int, float)) else 20,
+    }
 
 if __name__ == '__main__':
     stories = fetch_user_stories()

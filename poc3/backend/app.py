@@ -1304,8 +1304,16 @@ from jira_user_stories import fetch_user_stories
 def api_jira_user_stories():
     try:
         project_key = request.args.get('project_key', 'SCRUM')
-        stories = fetch_user_stories(project_key)
-        return jsonify({'stories': stories})
+        try:
+            startAt = int(request.args.get('startAt', '0'))
+        except Exception:
+            startAt = 0
+        try:
+            maxResults = int(request.args.get('maxResults', '20'))
+        except Exception:
+            maxResults = 20
+        result = fetch_user_stories(project_key, startAt=startAt, maxResults=maxResults)
+        return jsonify(result)
     except Exception as e:
         logging.error(f"Error fetching user stories from JIRA: {str(e)}")
         return jsonify({'error': str(e)}), 500

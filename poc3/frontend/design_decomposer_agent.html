@@ -214,7 +214,11 @@
             <span style="display:inline-flex; align-items:center; gap:0.5em;"><svg width="18" height="18" fill="#fbc02d" style="margin-right:2px;" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="4"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="#23272b">ISO</text></svg>ISO</span>
           </a>
         </div>
-       
+        <!-- Right action buttons aligned with Back -->
+        <div class="d-flex align-items-center" style="gap:.75rem;">
+          <button type="button" id="runDesignSynthesisBtn" class="btn btn-next" style="margin-top:0;">Run Design Synthesis</button>
+          <button id="approveGenerateBtn" class="btn btn-success" style="min-width:180px; font-weight:600; font-size:1.12rem; display:none;">Approve&amp;Generate API</button>
+        </div>
       </div>
       <hr style="border: none; border-top: 1.5px solid #bdbdbd; margin: 0 0 1.5rem 0; height:1.5px; width:100%;" />
       <div class="row w-100" style="margin:0;">
@@ -224,9 +228,7 @@
               <label class="form-label">Select Functions for Design Decomposition</label>
               <div id="functionsList" class="mb-2"></div>
             </div>
-            <div style="flex:0 0 auto; margin-top:auto; padding-bottom:1.5rem;">
-              <button type="submit" class="btn btn-next" id="runDesignSynthesisBtn">Run Design Synthesis</button>
-            </div>
+            <div style="flex:0 0 auto; margin-top:auto; padding-bottom:1.5rem;"></div>
           </form>
         </div>
         <div class="col-lg-4 col-md-12 mt-3 mt-lg-0 d-flex flex-column align-items-center justify-content-start" style="border-right:1.5px solid #f1f3f4; min-height:500px;">
@@ -234,12 +236,20 @@
         </div>
         <div class="col-lg-4 col-md-12 mt-3 mt-lg-0 d-flex flex-column align-items-center justify-content-start" style="min-height:500px;">
           <div id="businessLogicCol" class="w-100"></div>
-          <button id="approveGenerateBtn" class="btn btn-success mt-3" style="min-width:180px; font-weight:600; font-size:1.12rem; display:none;">Approve&amp;Generate API</button>
         </div>
       </div>
     </div>
   </div>
   <script>
+    // Wire header Run button to submit the form
+    (function(){
+      const runBtn = document.getElementById('runDesignSynthesisBtn');
+      const form = document.getElementById('designForm');
+      if(runBtn && form){
+        runBtn.addEventListener('click', function(e){ e.preventDefault(); if(form.requestSubmit){ form.requestSubmit(); } else { form.submit(); } });
+      }
+    })();
+
     // Load functions from previous synthesis (localStorage)
     function loadFunctionsList() {
       const container = document.getElementById('functionsList');
