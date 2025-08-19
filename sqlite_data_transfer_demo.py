@@ -51,13 +51,15 @@ SAMPLE_DATA = {
             'customer_id': 21, 'first_name': 'Eve', 'last_name': 'Adams', 'email': 'eve.adams@targetbank.com', 'phone': '555-2222', 'address': '222 Cedar St', 'created_at': '2023-04-15 10:05:00',
             'account_id': 901, 'account_type': 'Checking', 'balance': 2450.10, 'opened_at': '2023-04-16 09:00:00',
             'transaction_id': 9001, 'amount': 500.00, 'transaction_type': 'Deposit', 'transaction_date': '2023-04-20 12:00:00',
-            'product_id': 801, 'product_name': 'Everyday Checking', 'product_type': 'Checking', 'interest_rate': 0.2
+            'product_id': 801, 'product_name': 'Everyday Checking', 'product_type': 'Checking', 'interest_rate': 0.2,
+            'data_origin': 'existing'
         },
         {
             'customer_id': 22, 'first_name': 'Frank', 'last_name': 'Brown', 'email': 'frank.brown@targetbank.com', 'phone': '555-3333', 'address': '333 Birch Blvd', 'created_at': '2023-05-10 15:45:00',
             'account_id': 902, 'account_type': 'Savings', 'balance': 7800.75, 'opened_at': '2023-05-11 10:30:00',
             'transaction_id': 9002, 'amount': 125.25, 'transaction_type': 'Withdrawal', 'transaction_date': '2023-05-18 08:20:00',
-            'product_id': 802, 'product_name': 'Future Saver', 'product_type': 'Savings', 'interest_rate': 1.8
+            'product_id': 802, 'product_name': 'Future Saver', 'product_type': 'Savings', 'interest_rate': 1.8,
+            'data_origin': 'existing'
         }
     ]
 }
@@ -263,6 +265,11 @@ def index():
 
 # --- Create and populate DBs ---
 def create_and_populate_db(schema_path, db_path, sample_data):
+    # Ensure target directory exists
+    try:
+        os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
+    except Exception:
+        pass
     schema = load_schema(schema_path)
     conn = sqlite3.connect(db_path)
     # Determine desired row multiplier based on schema type
@@ -369,6 +376,92 @@ def create_and_populate_db(schema_path, db_path, sample_data):
             next_id += 1
         return out
 
+    # Build relational sample sets when possible
+    rows_by_table = {}
+    if 'source_schema' in schema_lower:
+        # Expand customers to desired_count
+        cust_table = next((t for t in schema['tables'] if t['name'] == 'customer'), None)
+        base_customers = sample_data.get('customer', [])
+        customers = expand_rows(base_customers, desired_count, cust_table) if cust_table else []
+        rows_by_table['customer'] = customers
+        # Create 1 account per customer
+        acct_table = next((t for t in schema['tables'] if t['name'] == 'account'), None)
+        accounts = []
+        if acct_table:
+            next_acct_id = 1000
+            for c in customers:
+                accounts.append({
+                    'account_id': next_acct_id,
+                    'customer_id': c.get('customer_id'),
+                    'account_type': random.choice(['Checking','Savings']),
+                    'balance': round(random.uniform(100, 10000), 2),
+                    'opened_at': rand_timestamp()
+                })
+                next_acct_id += 1
+        rows_by_table['account'] = accounts
+        # Create 1 transaction per account
+        txn_table = next((t for t in schema['tables'] if t['name'] == 'transaction'), None)
+        txns = []
+        if txn_table:
+            next_txn_id = 5000
+            for a in accounts:
+                txns.append({
+                    'transaction_id': next_txn_id,
+                    'account_id': a.get('account_id'),
+                    'amount': round(random.uniform(10, 1000), 2),
+                    'transaction_type': random.choice(TX_TYPES),
+                    'transaction_date': rand_timestamp()
+                })
+                next_txn_id += 1
+        rows_by_table['transaction'] = txns
+        # Products from base (unchanged)
+        rows_by_table['product'] = sample_data.get('product', [])
+    elif 'legacy_schema' in schema_lower:
+        # Expand legacy customers to desired_count
+        lc_table = next((t for t in schema['tables'] if t['name'] == 'legacy_customer'), None)
+        base_legacy_customers = sample_data.get('legacy_customer', [])
+        legacy_customers = expand_rows(base_legacy_customers, desired_count, lc_table) if lc_table else []
+        rows_by_table['legacy_customer'] = legacy_customers
+        # Create 1 legacy account per legacy customer
+        la_table = next((t for t in schema['tables'] if t['name'] == 'legacy_account'), None)
+        legacy_accounts = []
+        if la_table:
+            next_lacct_id = 4000
+            for c in legacy_customers:
+                legacy_accounts.append({
+                    'acct_id': next_lacct_id,
+                    'cust_id': c.get('cust_id'),
+                    'acct_type_cd': random.choice(['CHK','SAV']),
+                    'acct_status_cd': 'A',
+                    'acct_open_dt': rand_date(),
+                    'acct_close_dt': None,
+                    'acct_curr_bal_amt': round(random.uniform(100, 10000), 2),
+                    'acct_avail_bal_amt': round(random.uniform(100, 10000), 2)
+                })
+                next_lacct_id += 1
+        rows_by_table['legacy_account'] = legacy_accounts
+        # Create 1 legacy ledger entry per legacy account
+        ll_table = next((t for t in schema['tables'] if t['name'] == 'legacy_ledger'), None)
+        legacy_ledgers = []
+        if ll_table:
+            next_led_id = 7000
+            for a in legacy_accounts:
+                legacy_ledgers.append({
+                    'ledger_entry_id': next_led_id,
+                    'acct_id': a.get('acct_id'),
+                    'entry_ts': rand_date(),
+                    'dr_cr_ind': random.choice(['D','C']),
+                    'txn_amt': round(random.uniform(10, 1000), 2),
+                    'currency_cd': 'USD',
+                    'txn_type_cd': random.choice(['Deposit','Withdrawal','Transfer']),
+                    'ref_txn_id': None,
+                    'batch_id': random.randint(1, 10),
+                    'created_by': 'legacy_user',
+                    'created_ts': rand_date()
+                })
+                next_led_id += 1
+        rows_by_table['legacy_ledger'] = legacy_ledgers
+
     for table in schema['tables']:
         fields = []
         pk = None
@@ -386,11 +479,13 @@ def create_and_populate_db(schema_path, db_path, sample_data):
         conn.execute(f'DROP TABLE IF EXISTS "{table["name"]}"')
         sql = f"CREATE TABLE \"{table['name']}\" ({', '.join(fields)})"
         conn.execute(sql)
-        # Insert sample data
-        rows = sample_data.get(table['name'], [])
-        # Expand or trim rows to desired_count
-        if desired_count and rows:
-            rows = expand_rows(rows, desired_count, table)
+        # Insert sample data (use relational sets when present)
+        rows = rows_by_table.get(table['name'])
+        if rows is None:
+            rows = sample_data.get(table['name'], [])
+            # Expand or trim rows to desired_count
+            if desired_count and rows:
+                rows = expand_rows(rows, desired_count, table)
         if rows:
             # Deduplicate column list to match CREATE TABLE
             seen_cols = set()
@@ -411,7 +506,13 @@ def create_and_populate_db(schema_path, db_path, sample_data):
 
 # --- Reset utility: delete DB files and recreate from SAMPLE_DATA ---
 def reset_all_dbs(src_schema_path: str = SRC_SCHEMA_PATH, leg_schema_path: str = LEG_SCHEMA_PATH, tgt_schema_path: str = TGT_SCHEMA_PATH):
-    base_dir = os.path.join('poc4', 'frontend', 'static', 'schemas')
+    # Use the directory of the provided schema paths to determine the DB base dir
+    # This avoids issues when the working directory is different.
+    base_dir = os.path.dirname(os.path.abspath(src_schema_path))
+    try:
+        os.makedirs(base_dir, exist_ok=True)
+    except Exception:
+        pass
     src_db = os.path.join(base_dir, 'source.db')
     leg_db = os.path.join(base_dir, 'legacy.db')
     tgt_db = os.path.join(base_dir, 'target.db')
@@ -421,9 +522,24 @@ def reset_all_dbs(src_schema_path: str = SRC_SCHEMA_PATH, leg_schema_path: str =
                 os.remove(p)
         except Exception:
             pass
-    create_and_populate_db(src_schema_path, src_db, SAMPLE_DATA)
-    create_and_populate_db(leg_schema_path, leg_db, SAMPLE_DATA)
-    create_and_populate_db(tgt_schema_path, tgt_db, SAMPLE_DATA)
+    # Create and explicitly close connections to avoid file locks on Windows
+    try:
+        conn1 = create_and_populate_db(src_schema_path, src_db, SAMPLE_DATA)
+        conn2 = create_and_populate_db(leg_schema_path, leg_db, SAMPLE_DATA)
+        conn3 = create_and_populate_db(tgt_schema_path, tgt_db, SAMPLE_DATA)
+    finally:
+        try:
+            conn1.close()
+        except Exception:
+            pass
+        try:
+            conn2.close()
+        except Exception:
+            pass
+        try:
+            conn3.close()
+        except Exception:
+            pass
     return {'source': src_db, 'legacy': leg_db, 'target': tgt_db}
 
 @app.route('/reset', methods=['POST'])

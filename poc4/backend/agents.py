@@ -313,16 +313,455 @@ class ValidationAgent:
         # Implement validation logic here
         return {"issues": ["Missing field: signup_date", "Type mismatch: total"]}
 
+import os, sqlite3, json, re, difflib
+from typing import Dict, List, Tuple, Any, Optional
+
 class MigrationExecutionAgent:
     """
     Handles actual data transfer, monitors progress, and manages rollbacks.
+    Adds entity-based merging to keep data integrity across tables: the same logical
+    record found in multiple origin tables (source/legacy) is merged and inserted once
+    into the target, avoiding duplicates. Child tables reuse the same parent/entity key.
     """
     SYSTEM_PROMPT = (
-        "You are a migration execution expert. Transfer data, monitor progress, and handle rollbacks if needed."
+        "You are a migration execution expert. Transfer data, monitor progress, enforce entity-level deduplication across source and legacy, and handle rollbacks if needed."
     )
-    def run(self, mapping):
-        # Implement migration logic here
-        return {"status": "Migration completed", "logs": ["Transferred 1000 records"]}
+
+    def _schemas_dir(self) -> str:
+        return os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+
+    def _open_dbs(self) -> Tuple[sqlite3.Connection, sqlite3.Connection, sqlite3.Connection]:
+        base = self._schemas_dir()
+        src = sqlite3.connect(os.path.join(base, 'source.db'))
+        leg = sqlite3.connect(os.path.join(base, 'legacy.db'))
+        tgt = sqlite3.connect(os.path.join(base, 'target.db'))
+        # Row factory for dict-like access
+        src.row_factory = sqlite3.Row
+        leg.row_factory = sqlite3.Row
+        tgt.row_factory = sqlite3.Row
+        return src, leg, tgt
+
+    def _group_mapping_by_target_table(self, mapping: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+        by_tbl: Dict[str, List[Dict[str, Any]]] = {}
+        for m in mapping or []:
+            tgt_tbl = (m.get('target_table') or '').strip()
+            tgt_col = (m.get('target') or '').strip()
+            src_tbl = (m.get('source_table') or '').strip()
+            src_col = (m.get('source') or '').strip()
+            if not tgt_tbl or not tgt_col:
+                # skip incomplete mapping rows
+                continue
+            by_tbl.setdefault(tgt_tbl, []).append({
+                'origin': (m.get('origin') or 'source').lower(),
+                'source_table': src_tbl,
+                'source': src_col,
+                'target_table': tgt_tbl,
+                'target': tgt_col,
+                'target_type': m.get('target_type')
+            })
+        return by_tbl
+
+    def _choose_entity_keys(self, target_table: str, target_columns: List[str]) -> List[str]:
+        """Pick a stable business/entity key for deduplication.
+        Preference order: explicit id columns, common domain keys, else all mapped target columns.
+        """
+        # Prefer customer-level identity over account/transaction IDs for flat target tables
+        cand = [
+            'email', 'customer_id', f'{target_table}_id', 'reference', 'external_id', 'uuid',
+            'account_id', 'transaction_id', 'id'
+        ]
+        tl = [c.lower() for c in target_columns]
+        for k in cand:
+            if k.lower() in tl:
+                return [k]
+        # Composite: prefer name+date style if present
+        composites = [
+            ['first_name', 'last_name', 'date_of_birth'],
+            ['name', 'created_at'],
+            ['email'],
+        ]
+        for comp in composites:
+            if all(c in tl for c in comp):
+                return comp
+        # Fallback: all columns (will hash to produce a key)
+        return target_columns[:]
+
+    def _entity_key_value(self, row: Dict[str, Any], keys: List[str]) -> str:
+        vals = []
+        for k in keys:
+            v = row.get(k)
+            if v is None:
+                v = ''
+            vals.append(str(v).strip().lower())
+        return '|'.join(vals)
+
+    def _origin_business_key(self, o_row: Dict[str, Any]) -> Optional[str]:
+        """Derive a stable business key from an origin row when target key cols are missing.
+        Priority order:
+          1) customer_id-like (customer_id, cust_id, customerid, custid)
+          2) email-like (email, cust_email_addr, email_address)
+          3) composite name (first_name/cust_first_nm + last_name/cust_last_nm)
+        Returns a normalized string or None if no candidate.
+        """
+        # Normalize keys for case-insensitive lookup
+        lower_map = {k.lower(): k for k in o_row.keys()}
+
+        def first_present(names: List[str]) -> Optional[str]:
+            for nm in names:
+                k = lower_map.get(nm)
+                if k and o_row.get(k) not in (None, ''):
+                    return str(o_row.get(k)).strip().lower()
+            return None
+
+        # 1) Customer ID like (avoid generic 'id' which could be account/transaction id)
+        id_val = first_present(['customer_id', 'cust_id', 'customerid', 'custid'])
+        if id_val:
+            return f"cust:{id_val}"
+        # 2) Email like
+        email_val = first_present(['email', 'cust_email_addr', 'email_address'])
+        if email_val:
+            return f"email:{email_val}"
+        # 3) Composite name
+        first = first_present(['first_name', 'cust_first_nm'])
+        last = first_present(['last_name', 'cust_last_nm'])
+        if first or last:
+            return f"name:{(first or '').strip()}_{(last or '').strip()}"
+        return None
+
+    def _fetch_all_rows(self, conn: sqlite3.Connection, table: str, columns: List[str]) -> List[Dict[str, Any]]:
+        if not table:
+            return []
+        # Only select distinct needed columns
+        cols = ', '.join([f'"{c}"' for c in set(columns) if c]) or '*'
+        try:
+            cur = conn.execute(f'SELECT {cols} FROM "{table}"')
+            return [dict(r) for r in cur.fetchall()]
+        except Exception:
+            return []
+
+    def _ensure_table_columns(self, conn: sqlite3.Connection, table: str) -> List[str]:
+        try:
+            cur = conn.execute(f'PRAGMA table_info("{table}")')
+            cols = [r[1] for r in cur.fetchall()]
+            return cols
+        except Exception:
+            return []
+
+    def _insert_or_update(self, tgt: sqlite3.Connection, table: str, row: Dict[str, Any], key_cols: List[str]) -> int:
+        """Upsert-like behavior based on key cols. Returns the rowid/primary key if available."""
+        # Try to find existing row by keys
+        where = ' AND '.join([f'"{k}" = ?' for k in key_cols])
+        params = [row.get(k) for k in key_cols]
+        try:
+            cur = tgt.execute(f'SELECT rowid FROM "{table}" WHERE {where} LIMIT 1', params)
+            hit = cur.fetchone()
+        except Exception:
+            hit = None
+        if hit:
+            # Update changed columns (best-effort)
+            set_cols = [k for k in row.keys() if k not in key_cols]
+            if set_cols:
+                set_sql = ', '.join([f'"{c}"=?' for c in set_cols])
+                args = [row.get(c) for c in set_cols] + params
+                try:
+                    tgt.execute(f'UPDATE "{table}" SET {set_sql} WHERE {where}', args)
+                except Exception:
+                    pass
+            return int(hit[0])
+        # Insert
+        cols = list(row.keys())
+        placeholders = ', '.join(['?']*len(cols))
+        col_sql = ', '.join([f'"{c}"' for c in cols])
+        try:
+            tgt.execute(f'INSERT INTO "{table}" ({col_sql}) VALUES ({placeholders})', [row.get(c) for c in cols])
+            return int(tgt.execute('SELECT last_insert_rowid()').fetchone()[0])
+        except Exception:
+            return -1
+
+    def _build_flat_entities(self, src: sqlite3.Connection, leg: sqlite3.Connection, target_cols: List[str]) -> Dict[str, Dict[str, Any]]:
+        """Build entity rows for 'banking_olap_flat_exact' by joining tables with proper keys.
+        Produces at most one row per customer across both source and legacy.
+        """
+        def only_cols(row: Dict[str, Any]) -> Dict[str, Any]:
+            return {k: row.get(k) for k in target_cols}
+
+        entities: Dict[str, Dict[str, Any]] = {}
+
+        # Helper: fill product from account_type, using source product table if available
+        def enrich_with_product(conn: sqlite3.Connection, t_row: Dict[str, Any]):
+            acc_type = (t_row.get('account_type') or '').strip()
+            if not acc_type:
+                return
+            try:
+                cur = conn.execute('SELECT * FROM "product" WHERE LOWER(product_type)=LOWER(?) LIMIT 1', (acc_type,))
+                pr = cur.fetchone()
+                if pr:
+                    prd = dict(pr)
+                    for fld in ('product_id','product_name','product_type','interest_rate'):
+                        if fld in target_cols and prd.get(fld) is not None and t_row.get(fld) in (None, ''):
+                            t_row[fld] = prd.get(fld)
+            except Exception:
+                pass
+
+        # 1) SOURCE customers
+        try:
+            for c in self._fetch_all_rows(src, 'customer', ['customer_id','first_name','last_name','email','phone','address','created_at']):
+                t_row = {k: None for k in target_cols}
+                # Customer fields
+                for m_k, s_k in (
+                    ('customer_id','customer_id'),('first_name','first_name'),('last_name','last_name'),
+                    ('email','email'),('phone','phone'),('address','address'),('created_at','created_at')
+                ):
+                    if m_k in target_cols:
+                        t_row[m_k] = c.get(s_k)
+                # One account for this customer
+                acc = None
+                try:
+                    cur = src.execute('SELECT * FROM "account" WHERE customer_id=? ORDER BY opened_at LIMIT 1', (c.get('customer_id'),))
+                    acc = cur.fetchone()
+                except Exception:
+                    acc = None
+                if acc:
+                    accd = dict(acc)
+                    for m_k, s_k in (
+                        ('account_id','account_id'),('account_type','account_type'),('balance','balance'),('opened_at','opened_at')
+                    ):
+                        if m_k in target_cols and accd.get(s_k) is not None:
+                            t_row[m_k] = accd.get(s_k)
+                    # One transaction for this account
+                    try:
+                        cur = src.execute('SELECT * FROM "transaction" WHERE account_id=? ORDER BY transaction_date LIMIT 1', (accd.get('account_id'),))
+                        txn = cur.fetchone()
+                    except Exception:
+                        txn = None
+                    if txn:
+                        txd = dict(txn)
+                        for m_k, s_k in (
+                            ('transaction_id','transaction_id'),('amount','amount'),('transaction_type','transaction_type'),('transaction_date','transaction_date')
+                        ):
+                            if m_k in target_cols and txd.get(s_k) is not None:
+                                t_row[m_k] = txd.get(s_k)
+                # Product enrichment from product_type
+                enrich_with_product(src, t_row)
+                # Mark origin
+                if 'data_origin' in target_cols:
+                    t_row['data_origin'] = 'source'
+                ek = None
+                if c.get('email'):
+                    ek = f"email:{str(c.get('email')).strip().lower()}"
+                elif c.get('customer_id') is not None:
+                    ek = f"cust:{str(c.get('customer_id')).strip().lower()}"
+                if ek:
+                    entities[ek] = t_row
+        except Exception:
+            pass
+
+        # 2) LEGACY customers
+        try:
+            for c in self._fetch_all_rows(leg, 'legacy_customer', ['cust_id','cust_first_nm','cust_last_nm','cust_email_addr','cust_phone_num','cust_postal_addr','cust_created_ts']):
+                t_row = {k: None for k in target_cols}
+                # Customer fields mapping
+                mapping_pairs = (
+                    ('customer_id','cust_id'),('first_name','cust_first_nm'),('last_name','cust_last_nm'),
+                    ('email','cust_email_addr'),('phone','cust_phone_num'),('address','cust_postal_addr'),('created_at','cust_created_ts')
+                )
+                for m_k, s_k in mapping_pairs:
+                    if m_k in target_cols and c.get(s_k) is not None:
+                        t_row[m_k] = c.get(s_k)
+                # One legacy account
+                acc = None
+                try:
+                    cur = leg.execute('SELECT * FROM "legacy_account" WHERE cust_id=? ORDER BY acct_open_dt LIMIT 1', (c.get('cust_id'),))
+                    acc = cur.fetchone()
+                except Exception:
+                    acc = None
+                if acc:
+                    accd = dict(acc)
+                    # Map account_type codes
+                    acct_type_cd = accd.get('acct_type_cd')
+                    acct_type = None
+                    if isinstance(acct_type_cd, str):
+                        if acct_type_cd.upper() == 'CHK':
+                            acct_type = 'Checking'
+                        elif acct_type_cd.upper() == 'SAV':
+                            acct_type = 'Savings'
+                    for m_k, val in (
+                        ('account_id', accd.get('acct_id')),
+                        ('account_type', acct_type),
+                        ('balance', accd.get('acct_curr_bal_amt')),
+                        ('opened_at', accd.get('acct_open_dt')),
+                    ):
+                        if m_k in target_cols and val is not None:
+                            t_row[m_k] = val
+                    # One ledger entry (transaction) for this account
+                    try:
+                        cur = leg.execute('SELECT * FROM "legacy_ledger" WHERE acct_id=? ORDER BY entry_ts LIMIT 1', (accd.get('acct_id'),))
+                        txn = cur.fetchone()
+                    except Exception:
+                        txn = None
+                    if txn:
+                        txd = dict(txn)
+                        # Choose a human-readable transaction_type if present
+                        txn_type = txd.get('txn_type_cd') or txd.get('dr_cr_ind')
+                        for m_k, val in (
+                            ('transaction_id', txd.get('ledger_entry_id')),
+                            ('amount', txd.get('txn_amt')),
+                            ('transaction_type', txn_type),
+                            ('transaction_date', txd.get('entry_ts')),
+                        ):
+                            if m_k in target_cols and val is not None:
+                                t_row[m_k] = val
+                # Product enrichment via mapped account_type
+                enrich_with_product(src, t_row)
+                # Mark origin
+                if 'data_origin' in target_cols:
+                    t_row['data_origin'] = 'legacy'
+                ek = None
+                if c.get('cust_email_addr'):
+                    ek = f"email:{str(c.get('cust_email_addr')).strip().lower()}"
+                elif c.get('cust_id') is not None:
+                    ek = f"cust:{str(c.get('cust_id')).strip().lower()}"
+                if ek:
+                    # If same key exists from source, only fill missing fields
+                    if ek in entities:
+                        base = entities[ek]
+                        for k, v in t_row.items():
+                            if base.get(k) in (None, '') and v not in (None, ''):
+                                base[k] = v
+                    else:
+                        entities[ek] = t_row
+        except Exception:
+            pass
+
+        # Ensure only target_cols are present
+        for k in list(entities.keys()):
+            entities[k] = only_cols(entities[k])
+        return entities
+
+    def run(self, mapping: List[Dict[str, Any]], key_config: Optional[Dict[str, List[str]]] = None) -> Dict[str, Any]:
+        """
+        Perform a best-effort migration using the provided mapping with entity-based merging.
+        - Groups source/legacy rows by a stable business key per target table
+        - Inserts/updates once per entity to avoid duplicates
+        - Executes within a single transaction for integrity
+        Returns a summary with per-table counters and basic logs.
+        """
+        logs: List[str] = []
+        summary: Dict[str, Dict[str, int]] = {}
+        src, leg, tgt = self._open_dbs()
+        try:
+            tgt.execute('BEGIN')
+            grouped = self._group_mapping_by_target_table(mapping)
+            global_entities = set()
+            for tgt_table, rows in grouped.items():
+                # Determine involved columns
+                target_cols = sorted({r['target'] for r in rows if r['target']})
+                # Entity key selection
+                key_cols = (key_config or {}).get(tgt_table) or self._choose_entity_keys(tgt_table, target_cols)
+                # Special-case: flat OLAP table assembled via joins
+                if tgt_table == 'banking_olap_flat_exact':
+                    entity_map = self._build_flat_entities(src, leg, target_cols)
+                    ins = 0
+                    for ek, t_row in entity_map.items():
+                        rowid = self._insert_or_update(tgt, tgt_table, t_row, key_cols)
+                        if rowid == -1:
+                            logs.append(f"[{tgt_table}] FAILED upsert for key={ek}")
+                        else:
+                            ins += 1
+                        if ek:
+                            global_entities.add(ek)
+                    summary[tgt_table] = {'entities': len(entity_map), 'inserted_or_updated': ins, 'key_cols': len(key_cols)}
+                    logs.append(f"[{tgt_table}] joined entities={len(entity_map)} using keys={key_cols}")
+                    continue
+                # Build origin-select columns mapping
+                src_needed: Dict[str, List[str]] = {}
+                leg_needed: Dict[str, List[str]] = {}
+                for r in rows:
+                    if r['origin'] == 'legacy':
+                        if r['source_table'] and r['source']:
+                            leg_needed.setdefault(r['source_table'], []).append(r['source'])
+                    else:
+                        if r['source_table'] and r['source']:
+                            src_needed.setdefault(r['source_table'], []).append(r['source'])
+                # Fetch rows per origin table
+                origin_rows: List[Tuple[str, Dict[str, Any]]] = []  # (origin, row)
+                for tbl, cols in src_needed.items():
+                    for row in self._fetch_all_rows(src, tbl, cols):
+                        origin_rows.append(('source', {**row}))
+                for tbl, cols in leg_needed.items():
+                    for row in self._fetch_all_rows(leg, tbl, cols):
+                        origin_rows.append(('legacy', {**row}))
+                # Merge rows into target shape keyed by entity key
+                entity_map: Dict[str, Dict[str, Any]] = {}
+                for origin, o_row in origin_rows:
+                    # Build a target-shaped row from mapping for this origin row
+                    t_row: Dict[str, Any] = {c: None for c in target_cols}
+                    for r in rows:
+                        if r['origin'] != origin:
+                            continue
+                        src_tbl = r['source_table']; src_col = r['source']; tgt_col = r['target']
+                        if not src_tbl or not src_col or not tgt_col:
+                            continue
+                        # Copy value if present
+                        val = o_row.get(src_col)
+                        if val is not None:
+                            t_row[tgt_col] = val
+                    # Mark origin if requested
+                    if 'data_origin' in target_cols:
+                        t_row['data_origin'] = 'source' if origin == 'source' else 'legacy'
+                    # Compute entity key
+                    ek = self._entity_key_value(t_row, key_cols)
+                    # If target key columns unavailable or empty, derive from origin business key
+                    if not any((t_row.get(k) not in (None, '')) for k in key_cols):
+                        obk = self._origin_business_key(o_row)
+                        if obk:
+                            ek = obk
+                    # If still no entity key, skip this row (prevents product-only rows from creating entities)
+                    if not ek.strip('|'):
+                        continue
+                    # Merge (source takes precedence over legacy by default)
+                    if ek in entity_map:
+                        base = entity_map[ek]
+                        # Fill missing fields only
+                        for c, v in t_row.items():
+                            if (base.get(c) in (None, '')) and (v not in (None, '')):
+                                base[c] = v
+                        # Preserve data_origin preference: existing > source > legacy
+                        if 'data_origin' in base and base.get('data_origin') != 'existing':
+                            # Upgrade to source if current is legacy and this row is source
+                            if origin == 'source' and base.get('data_origin') == 'legacy':
+                                base['data_origin'] = 'source'
+                    else:
+                        entity_map[ek] = t_row
+                # Upsert to target
+                ins = upd = 0
+                for ek, t_row in entity_map.items():
+                    rowid = self._insert_or_update(tgt, tgt_table, t_row, key_cols)
+                    if rowid == -1:
+                        logs.append(f"[{tgt_table}] FAILED upsert for key={ek}")
+                    else:
+                        # Heuristic: treat as insert if key-only lookup returned none (we can't perfectly know without extra query)
+                        # For simplicity, count as insert if any key part was newly seen in this run
+                        ins += 1
+                    if ek:
+                        global_entities.add(ek)
+                summary[tgt_table] = {'entities': len(entity_map), 'inserted_or_updated': ins, 'key_cols': len(key_cols)}
+                logs.append(f"[{tgt_table}] merged entities={len(entity_map)} using keys={key_cols}")
+            tgt.commit()
+            return {"status": "Migration completed", "summary": summary, "logs": logs, "global_unique_entities": len(global_entities)}
+        except Exception as e:
+            try:
+                tgt.rollback()
+            except Exception:
+                pass
+            return {"status": "error", "error": str(e), "logs": logs}
+        finally:
+            try: src.close()
+            except Exception: pass
+            try: leg.close()
+            except Exception: pass
+            try: tgt.close()
+            except Exception: pass
 
 class ReconciliationAgent:
     """

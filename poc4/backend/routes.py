@@ -77,6 +77,11 @@ except Exception:
 def _fallback_create_and_populate_db(schema_path: str, db_path: str):
     """Create SQLite DB from a JSON schema with empty tables (minimal fallback)."""
     import json as _json
+    # Ensure the target directory exists to avoid 'unable to open database file'
+    try:
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    except Exception:
+        pass
     try:
         with open(schema_path, 'r') as f:
             schema = _json.load(f)
@@ -115,6 +120,11 @@ def _fallback_create_and_populate_db(schema_path: str, db_path: str):
 
 def _fallback_reset_all_dbs(src_schema_path: str, leg_schema_path: str, tgt_schema_path: str):
     base_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+    # Ensure base directory exists
+    try:
+        os.makedirs(base_dir, exist_ok=True)
+    except Exception:
+        pass
     src_db = os.path.join(base_dir, 'source.db')
     leg_db = os.path.join(base_dir, 'legacy.db')
     tgt_db = os.path.join(base_dir, 'target.db')
@@ -668,6 +678,11 @@ def page4():
     Also supports running a SELECT query against target DB and provides reset.
     """
     schemas_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+    # Ensure schemas dir exists before any DB file operations
+    try:
+        os.makedirs(schemas_dir, exist_ok=True)
+    except Exception:
+        pass
     src_schema_file = session.get('source_schema', 'source_schema.json')
     leg_schema_file = session.get('legacy_schema', 'legacy_schema.json')
     tgt_schema_file = session.get('target_schema', 'target_schema.json')
@@ -724,8 +739,17 @@ def page4():
         # Reset databases
         if action == 'reset':
             try:
+                # Ensure the schemas directory exists first
+                try:
+                    os.makedirs(schemas_dir, exist_ok=True)
+                except Exception:
+                    pass
                 if _demo_reset:
-                    _demo_reset(src_schema_path, leg_schema_path, tgt_schema_path)
+                    try:
+                        _demo_reset(src_schema_path, leg_schema_path, tgt_schema_path)
+                    except Exception:
+                        # Fall back if demo reset fails (e.g., path/CWD issues)
+                        _fallback_reset_all_dbs(src_schema_path, leg_schema_path, tgt_schema_path)
                 else:
                     _fallback_reset_all_dbs(src_schema_path, leg_schema_path, tgt_schema_path)
                 clear_state('migration_preview', 'migration_result')
@@ -856,105 +880,48 @@ def page4():
                 session['target_backup'] = backup_path
             except Exception:
                 pass
-            tgt_conn = sqlite3.connect(tgt_db_path)
-            src_conn = sqlite3.connect(src_db_path)
-            leg_conn = sqlite3.connect(leg_db_path)
-            total_ins = {'source': 0, 'legacy': 0}
+            # Run entity-based deduplicating migration
+            agent_res = migration_execution_agent.run(mapping)
             details = []
-            # Build simple transformation map (target_col -> (source_col, cast_sql or None))
-            transform_info = {}
-            for m in mapping:
-                s_col = m.get('source'); t_col = m.get('target')
-                if not (s_col and t_col):
-                    continue
-                src_type = (m.get('source_type') or '').lower()
-                tgt_type = (m.get('target_type') or '').lower()
-                cast_sql = None
-                if src_type and tgt_type and src_type.split('(')[0] != tgt_type.split('(')[0]:
-                    # Simplistic cast mapping to TEXT/INTEGER/REAL
-                    if 'int' in tgt_type:
-                        cast_sql = f'CAST("{s_col}" AS INTEGER)'
-                    elif any(x in tgt_type for x in ['real', 'dec', 'float']):
-                        cast_sql = f'CAST("{s_col}" AS REAL)'
-                    else:
-                        cast_sql = f'CAST("{s_col}" AS TEXT)'
-                transform_info[(m.get('origin','source'), m.get('source_table'), m.get('target_table'), s_col, t_col)] = cast_sql
-
-            def migrate_from(origin: str, o_conn: sqlite3.Connection):
-                groups = {}
-                for m in mapping:
-                    if m.get('origin', 'source') != origin:
-                        continue
-                    s_tbl = m.get('source_table')
-                    t_tbl = m.get('target_table')
-                    s_col = m.get('source')
-                    t_col = m.get('target')
-                    if not (s_tbl and t_tbl and s_col and t_col):
-                        continue
-                    groups.setdefault((s_tbl, t_tbl), []).append((s_col, t_col))
-                inserted = 0
-                for (s_tbl, t_tbl), pairs in groups.items():
-                    used_targets = set()
-                    select_exprs = []
-                    tgt_cols = []
-                    for s_col, t_col in pairs:
-                        if t_col in used_targets:
-                            continue
-                        used_targets.add(t_col)
-                        cast_sql = transform_info.get((origin, s_tbl, t_tbl, s_col, t_col))
-                        if cast_sql:
-                            select_exprs.append(f'{cast_sql} AS "{t_col}"')
-                        else:
-                            select_exprs.append(f'"{s_col}" AS "{t_col}"')
-                        tgt_cols.append(t_col)
-                    if not select_exprs:
-                        continue
-                    select_sql = ', '.join(select_exprs)
-                    try:
-                        src_rows = list(o_conn.execute(f'SELECT {select_sql} FROM "{s_tbl}"'))
-                    except Exception as e:
-                        details.append(f'{origin}: Failed reading {s_tbl}: {e}')
-                        continue
-                    qtgt_cols = ', '.join([f'"{c}"' for c in tgt_cols])
-                    placeholders = ', '.join(['?' for _ in tgt_cols])
-                    for row in src_rows:
-                        try:
-                            tgt_conn.execute(f'INSERT OR IGNORE INTO "{t_tbl}" ({qtgt_cols}) VALUES ({placeholders})', row)
-                            inserted += 1
-                        except Exception as e:
-                            details.append(f'{origin}: Insert into {t_tbl} failed: {e}')
-                    tgt_conn.commit()
-                    details.append(f'{origin}: {len(src_rows)} rows processed from {s_tbl} -> {t_tbl} ({len(tgt_cols)} fields; transforms applied: {sum(1 for s_col, t_col in pairs if transform_info.get((origin, s_tbl, t_tbl, s_col, t_col)))})')
-                return inserted
-            try:
-                total_ins['source'] = migrate_from('source', src_conn)
-                total_ins['legacy'] = migrate_from('legacy', leg_conn)
-            finally:
-                src_conn.close(); leg_conn.close(); tgt_conn.close()
-            # Re-open target for metrics
             table_counts = {}
+            # Post-migration metrics: count rows per impacted target table
             try:
                 with sqlite3.connect(tgt_db_path) as c:
-                    tgt_tables = {m.get('target_table') for m in mapping if m.get('target_table')}
+                    tgt_tables = sorted({m.get('target_table') for m in mapping if m.get('target_table')})
                     for t in tgt_tables:
                         try:
                             cur = c.execute(f'SELECT COUNT(1) FROM "{t}"')
                             table_counts[t] = cur.fetchone()[0]
-                        except Exception:
-                            table_counts[t] = 'err'
+                        except Exception as e:
+                            table_counts[t] = f'err: {e}'
             except Exception:
                 pass
+            # Build summary and details from agent logs
+            if agent_res.get('status') == 'error':
+                summary_text = f"Migration error: {agent_res.get('error')}"
+            else:
+                # Compute total merged entities across tables if available
+                if agent_res.get('global_unique_entities') is not None:
+                    total_entities = int(agent_res.get('global_unique_entities') or 0)
+                else:
+                    total_entities = 0
+                    try:
+                        for _t, info in (agent_res.get('summary') or {}).items():
+                            total_entities += int(info.get('entities') or 0)
+                    except Exception:
+                        pass
+                summary_text = f"Migration complete with entity-based merge. Global unique entities: {total_entities}."
+            details.extend(agent_res.get('logs') or [])
             unmatched_sources = len([m for m in mapping if m.get('target') and not m.get('source')])
             unmatched_targets = len([m for m in mapping if m.get('source') and not m.get('target')])
-            summary_text = (f"Migration complete. Inserted source rows: {total_ins['source']}, "
-                            f"legacy rows: {total_ins['legacy']}.")
             set_result({
                 'summary': summary_text,
                 'details': details,
                 'preview': migration_preview,
                 'table_counts': table_counts,
                 'unmatched_sources': unmatched_sources,
-                'unmatched_targets': unmatched_targets
+                'unmatched_targets': unmatched_targets,
+                'agent_result': agent_res
             })
             clear_state('migration_preview')
             return redirect(url_for('poc4.page5'))
@@ -1021,6 +988,11 @@ def db_browser():
     """
     import json
     schemas_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+    # Ensure schemas dir exists
+    try:
+        os.makedirs(schemas_dir, exist_ok=True)
+    except Exception:
+        pass
     db_files = {
         'source': ('source_schema.json', 'source.db'),
         'legacy': ('legacy_schema.json', 'legacy.db'),

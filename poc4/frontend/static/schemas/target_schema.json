@@ -23,7 +23,8 @@
         {"name": "product_id", "type": "int"},
         {"name": "product_name", "type": "string"},
         {"name": "product_type", "type": "string"},
-        {"name": "interest_rate", "type": "float"}
+  {"name": "interest_rate", "type": "float"},
+  {"name": "data_origin", "type": "string"}
       ]
     }
   ]

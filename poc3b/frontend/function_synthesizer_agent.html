@@ -286,8 +286,8 @@
         </a>
   <!-- Removed Synthesize Functions button per requirement -->
       </div>
-      <div class="row w-100 align-items-start mt-4" style="margin-top:0;">
-        <div class="col-lg-7 col-md-12 d-flex flex-column align-items-stretch justify-content-start order-lg-1 order-1" style="max-width:100%; padding-right:1.5rem;">
+  <div class="row w-100 align-items-start mt-4" style="margin-top:0; flex-wrap:wrap; --bs-gutter-x: .25rem;">
+  <div class="col-lg-8 col-md-12 d-flex flex-column align-items-stretch justify-content-start order-lg-1 order-1" style="max-width:100%; padding-right:.5rem; overflow:hidden;">
           <div class="d-flex justify-content-between align-items-center flex-wrap mb-3" style="gap:.75rem;">
             <div class="btn-group" role="group" aria-label="Actions" style="flex-wrap:wrap; gap:.5rem;">
               <button id="regenerateBtn" class="btn btn-sm" style="background:#d32f2f; color:#fff; min-width:180px;">Regenerate (Practical)</button>
@@ -304,18 +304,24 @@
           <div id="coverageSummary" class="mb-3"></div>
           <div id="result" class="w-100" style="margin-top:0;"></div>
         </div>
-        <div class="col-lg-5 col-md-12 d-flex flex-column order-lg-2 order-2" style="max-width:600px; margin-left:auto; margin-right:0; padding-left:0;">
-          <div id="selected-user-story-panel" class="p-3" style="background:#f1f3f4; border-radius:1rem; border:2px solid #e0e0e0; box-shadow:0 2px 8px rgba(44,44,44,0.08); min-height:360px;">
-            <div class="d-flex justify-content-between align-items-center flex-wrap mb-2" style="gap:.75rem;">
-              <h5 class="m-0" style="color:#d32f2f; font-weight:700;">User Stories</h5>
-              <div class="d-flex gap-2 flex-wrap">
+  <div class="col-lg-4 col-md-12 d-flex flex-column order-lg-2 order-2" style="margin-left:0; margin-right:0; padding-left:.25rem;">
+          <div id="selected-user-story-panel" class="p-3" style="background:#f1f3f4; border-radius:1rem; border:2px solid #e0e0e0; box-shadow:0 2px 8px rgba(44,44,44,0.08); min-height:360px; max-width:100%;">
+            <div class="d-flex justify-content-between align-items-center flex-wrap mb-2" style="gap:.5rem .75rem;">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h5 class="m-0" style="color:#d32f2f; font-weight:700;">User Stories</h5>
+                <span id="selectedCount" class="text-secondary small">Selected: 0</span>
+              </div>
+              <div class="d-flex gap-2 flex-wrap align-items-center">
+                <button id="selectAllStoriesBtn" class="btn btn-sm btn-outline-secondary">Select All</button>
+                <button id="clearSelectedStoriesBtn" class="btn btn-sm btn-outline-secondary">Clear</button>
                 <button id="updateJiraBtn" class="btn btn-sm" style="background:#d32f2f; color:#fff;">Update Selected</button>
                 <button id="updateAllJiraBtn" class="btn btn-sm" style="background:#23272b; color:#fff;">Update All</button>
               </div>
             </div>
+            <div id="updateStatus" class="mt-2" role="status" aria-live="polite"></div>
             <div class="row g-2">
               <div class="col-12 mb-2">
-                <div id="storiesListPanel" class="list-group" style="max-height:140px; overflow-y:auto; border:1px solid #e0e0e0; border-radius:.5rem; background:#fff;"></div>
+                <select id="storiesDropdown" class="form-select" multiple size="8" style="max-height:160px; overflow-y:auto; border:1px solid #e0e0e0; border-radius:.5rem; background:#fff; max-width:100%;"></select>
               </div>
               <div class="col-12">
                 <div id="selectedStoryMeta" class="text-secondary small mb-2">(Select a story)</div>
@@ -327,7 +333,6 @@
               <h6 style="font-weight:600; color:#d32f2f;">Delta (Legacy Code Only Functions)</h6>
               <div id="deltaLegacyFunctions" class="small text-secondary">(Will populate from synthesized result)</div>
             </div>
-            <div id="updateStatus" class="mt-3"></div>
           </div>
         </div>
         <!-- Business Logic below the main row -->
@@ -517,7 +522,7 @@
             `;
             }
             pretty = `
-            <div style="background: linear-gradient(120deg, #f8f9fa 60%, #f1f3f4 100%); border-radius: 1.2rem; box-shadow: 0 2px 12px rgba(44,44,44,0.10); padding: 1.2rem 1vw 1.5rem 1vw; margin-bottom: 2.2rem; border: 2.5px solid #f1f3f4; max-width:calc(70vw - 40px); min-width:320px; width:calc(70vw - 30px); margin-left:auto; margin-right:auto;">
+            <div style="background: linear-gradient(120deg, #f8f9fa 60%, #f1f3f4 100%); border-radius: 1.2rem; box-shadow: 0 2px 12px rgba(44,44,44,0.10); padding: 1.2rem 1vw 1.5rem 1vw; margin-bottom: 2.2rem; border: 2.5px solid #f1f3f4; width:100%; max-width:100%; margin-left:auto; margin-right:auto;">
               <div class='alert-modern' style="background: #d32f2f; color: #fff; border-radius: 0.8rem; padding: 0.7rem 1rem; font-size: 1.18rem; font-weight: 700; margin-bottom: 1.2rem; box-shadow: 0 2px 8px rgba(44,44,44,0.10); letter-spacing: 0.01em; min-height: 60px; display: flex; align-items: center;">Most Important Synthesized Functions (5-10):</div>
               ${mainSection}
               ${deltaSection}
@@ -625,42 +630,54 @@
       }
 
       // Populate selected user story from localStorage (saved in Step 2)
-      let __allStories = [];
+  let __allStories = [];
+  let __selectedStoryIndices = new Set(); // multi-select support
       function loadSelectedUserStories() {
         const raw = localStorage.getItem('selectedUserStories');
         if (!raw) return;
         try { __allStories = JSON.parse(raw) || []; } catch(e) { __allStories = []; }
-        renderStoriesList();
-        if (__allStories.length > 0) selectStoryByIndex(0);
+        if (__allStories.length > 0 && __selectedStoryIndices.size === 0) { __selectedStoryIndices.add(0); }
+        renderStoriesDropdown();
+        if (__allStories.length > 0) selectStoryByIndex(Array.from(__selectedStoryIndices)[0] ?? 0);
+        const dd = document.getElementById('storiesDropdown');
+        if (dd) {
+          dd.addEventListener('change', () => {
+            __selectedStoryIndices.clear();
+            Array.from(dd.selectedOptions).forEach(opt => { const i = parseInt(opt.value); if (!isNaN(i)) __selectedStoryIndices.add(i); });
+            updateSelectedCount();
+            const first = Array.from(__selectedStoryIndices)[0];
+            if (typeof first === 'number') selectStoryByIndex(first, {highlightOnly:true});
+            else {
+              const metaDiv = document.getElementById('selectedStoryMeta');
+              const contentDiv = document.getElementById('selectedStoryContent');
+              if (metaDiv) metaDiv.textContent = '(Select a story)';
+              if (contentDiv) contentDiv.textContent = '';
+            }
+          });
+        }
       }
 
-      function renderStoriesList() {
-        const listEl = document.getElementById('storiesListPanel');
-        if (!listEl) return;
-        if (__allStories.length === 0) { listEl.innerHTML = '<div class="stories-empty">No stories selected in Step 2.</div>'; return; }
-        listEl.innerHTML = __allStories.map((s,i)=>{
-          const summary = (s.summary || '').replace(/</g,'&lt;');
-          const desc = (s.description || '').replace(/</g,'&lt;');
-          return `
-            <div class="story-item" data-idx="${i}" aria-expanded="false" tabindex="0">
-              <div class="story-header">
-                <div class="story-key">${s.key}</div>
-                <div class="story-summary text-truncate" title="${summary}">${summary}</div>
-                <div class="toggle-icon">▶</div>
-              </div>
-              <div class="story-item-details">${desc || '<em>No full description provided.</em>'}</div>
-            </div>`; }).join('');
-        // Event delegation for expand/collapse
-        listEl.querySelectorAll('.story-item').forEach(item => {
-          const idx = parseInt(item.getAttribute('data-idx'));
-          function toggleExpand() {
-            const expanded = item.classList.toggle('expanded');
-            item.setAttribute('aria-expanded', expanded ? 'true':'false');
-            selectStoryByIndex(idx, {highlightOnly:true});
-          }
-            item.addEventListener('click', toggleExpand);
-            item.addEventListener('keypress', (e)=>{ if (e.key==='Enter' || e.key===' ') { e.preventDefault(); toggleExpand(); }});
+      function renderStoriesDropdown() {
+        const dd = document.getElementById('storiesDropdown');
+        if (!dd) return;
+        dd.innerHTML = '';
+        if (__allStories.length === 0) {
+          const opt = document.createElement('option');
+          opt.disabled = true; opt.textContent = 'No stories selected in Step 2.';
+          dd.appendChild(opt);
+          return;
+        }
+        __allStories.forEach((s,i)=>{
+          const summary = (s.summary || '').replace(/\s+/g,' ').trim();
+          const text = `${s.key} — ${summary}`;
+          const opt = document.createElement('option');
+          opt.value = String(i);
+          opt.textContent = text;
+          opt.title = summary;
+          opt.selected = __selectedStoryIndices.has(i);
+          dd.appendChild(opt);
         });
+        updateSelectedCount();
       }
 
       function selectStoryByIndex(idx, opts={}) {
@@ -670,21 +687,15 @@
         window.__selectedStoryIndex = idx;
         const metaDiv = document.getElementById('selectedStoryMeta');
         const contentDiv = document.getElementById('selectedStoryContent');
-        metaDiv.textContent = `${s.key || ''}: ${s.summary || ''}`;
-        contentDiv.textContent = (s.description || '').trim();
-        if (!opts.highlightOnly) {
-          // expand selected if not already
-          const listEl = document.getElementById('storiesListPanel');
-          const items = listEl ? listEl.querySelectorAll('.story-item') : [];
-          items.forEach((itm,i)=>{
-            if (i===idx) {
-              itm.classList.add('expanded','active');
-              itm.setAttribute('aria-expanded','true');
-            } else {
-              itm.classList.remove('active');
-            }
-          });
+        // If multiple are selected, show count; otherwise show focused story
+        if (__selectedStoryIndices.size > 1) {
+          const keys = Array.from(__selectedStoryIndices).slice(0,3).map(i=>__allStories[i]?.key).filter(Boolean);
+          metaDiv.textContent = `Selected: ${__selectedStoryIndices.size}${keys.length?` (${keys.join(', ')}${__selectedStoryIndices.size>3?', …':''})`:''}`;
+        } else {
+          metaDiv.textContent = `${s.key || ''}: ${s.summary || ''}`;
         }
+        contentDiv.textContent = (s.description || '').trim();
+  // no expand/collapse in dropdown mode
       }
 
       loadSelectedUserStories();
@@ -706,6 +717,19 @@
       }
       renderLegacyDelta();
 
+      function updateSelectedCount(){
+        const el = document.getElementById('selectedCount');
+        if (el) el.textContent = `Selected: ${__selectedStoryIndices.size}`;
+      }
+      function updateSelectionUI(){
+        const dd = document.getElementById('storiesDropdown');
+        if (!dd) return;
+        Array.from(dd.options).forEach(opt => {
+          const idx = parseInt(opt.value);
+          opt.selected = __selectedStoryIndices.has(idx);
+        });
+      }
+
       // Update JIRA button handler
       function buildDeltaPayload() {
         return (window.__deltaLegacyFunctions || []).map(f => ({ name: f.name, description: f.description }));
@@ -725,13 +749,25 @@
       }
       const updateBtn = document.getElementById('updateJiraBtn');
       const updateAllBtn = document.getElementById('updateAllJiraBtn');
+      const selectAllBtn = document.getElementById('selectAllStoriesBtn');
+      const clearSelectedBtn = document.getElementById('clearSelectedStoriesBtn');
       if (updateBtn) {
         updateBtn.onclick = async () => {
           const statusEl = document.getElementById('updateStatus');
-          statusEl.innerHTML = '<div class="text-secondary">Updating selected story...</div>';
-          const storyKey = window.__selectedStoryKey;
-          if (!storyKey) { statusEl.innerHTML = '<div class="text-danger">No story selected.</div>'; return; }
-          try { statusEl.innerHTML = await updateSingleStory(storyKey, statusEl, true); } catch(err){ statusEl.innerHTML = `<div class='text-danger'>${err.message||err}</div>`; }
+          statusEl.innerHTML = '<div class="text-secondary">Updating selected...</div>';
+          let targets = [];
+          if (__selectedStoryIndices.size > 0) {
+            targets = Array.from(__selectedStoryIndices).map(i => __allStories[i]).filter(Boolean);
+          } else if (typeof window.__selectedStoryIndex === 'number') {
+            targets = [__allStories[window.__selectedStoryIndex]].filter(Boolean);
+          }
+          if (targets.length === 0) { statusEl.innerHTML = '<div class="text-danger">No stories selected.</div>'; return; }
+          const results = [];
+          for (let i=0;i<targets.length;i++) {
+            const st = targets[i];
+            try { results.push(await updateSingleStory(st.key, statusEl, i===0)); } catch(err){ results.push(`<div class='text-danger'>${st.key}: ${err.message||err}</div>`); }
+          }
+          statusEl.innerHTML = results.join('');
         };
       }
       if (updateAllBtn) {
@@ -746,6 +782,25 @@
             try { results.push(await updateSingleStory(s.key, statusEl)); } catch(err){ results.push(`<div class='text-danger'>${s.key}: ${err.message||err}</div>`); }
           }
           statusEl.innerHTML = results.join('');
+        };
+      }
+
+      if (selectAllBtn) {
+        selectAllBtn.onclick = () => {
+          __selectedStoryIndices = new Set(Array.from({length: __allStories.length}, (_,i)=>i));
+          updateSelectionUI();
+          updateSelectedCount();
+        };
+      }
+      if (clearSelectedBtn) {
+        clearSelectedBtn.onclick = () => {
+          __selectedStoryIndices.clear();
+          updateSelectionUI();
+          updateSelectedCount();
+          const metaDiv = document.getElementById('selectedStoryMeta');
+          const contentDiv = document.getElementById('selectedStoryContent');
+          if (metaDiv) metaDiv.textContent = '(Select a story)';
+          if (contentDiv) contentDiv.textContent = '';
         };
       }
 

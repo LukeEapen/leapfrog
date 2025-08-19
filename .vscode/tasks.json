@@ -88,6 +88,15 @@
 				"POC 4",
 				"POC 5"
 			]
+		},
+		{
+			"label": "Run dev harness POC4",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"dev_run_agent_poc4.py"
+			],
+			"group": "build"
 		}
 	]
 }

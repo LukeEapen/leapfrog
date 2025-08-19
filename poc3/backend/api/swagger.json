@@ -1323,6 +1323,148 @@
         "raw": "```json\n[\n    {\n        \"element\": \"Data Model\",\n        \"standard\": \"ISO 25024:2015\",\n        \"pseudocode\": [\n            \"Define the data structure for a completed insurance quote including fields like customer information, policy details, coverage options, premium amount, etc.\"\n        ]\n    },\n    {\n        \"element\": \"API Endpoint\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Create an API endpoint '/generateQuoteDocument' that accepts a POST request with the completed quote data as input\",\n            \"Validate the input data to ensure it meets the required format and contains all necessary information\",\n            \"Generate a unique identifier for the quote document to be created\"\n        ]\n    },\n    {\n        \"element\": \"PDF Generation\",\n        \"standard\": \"ISO 32000-1:2008\",\n        \"pseudocode\": [\n            \"Retrieve the quote details from the input data\",\n            \"Format the quote details into a structured PDF document template\",\n            \"Include the necessary styling and branding elements in the PDF document\",\n            \"Add the quote details to the PDF document content\",\n            \"Generate a downloadable link for the PDF document\"\n        ]\n    }\n]\n```"
       },
       "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "integrateWithManufacturingPartner",
+            "pseudocode": "Step 1: Retrieve finalized card details from the system.\nStep 2: Check customer approval status for the card production process.\nStep 3: If approved, initiate the process of sending card details to the manufacturing partner.\nStep 4: Generate a request to the manufacturing partner for immediate production and dispatch.\nStep 5: Monitor the production and delivery process in real-time.\nStep 6: Notify the customer once the card is dispatched for quick receipt.",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "authenticateAuthorization",
+            "pseudocode": "Step 1: Receive a request to send card details to the manufacturing partner.\nStep 2: Verify the user's authentication credentials for access to the system.\nStep 3: Authenticate the user's authorization level for sending card details.\nStep 4: Check if the user has the necessary permissions to proceed.\nStep 5: If authorized, proceed with sending card details to the manufacturing partner.",
+            "standard": "ISO"
+          },
+          {
+            "element": "validateSanitizeInputs",
+            "pseudocode": "Step 1: Receive input data related to card details for production.\nStep 2: Validate the input data format, length, and required fields.\nStep 3: Sanitize the input data to remove any potentially harmful characters or scripts.\nStep 4: Ensure data integrity by checking for any anomalies or discrepancies.\nStep 5: Prepare the sanitized input data for sending to the manufacturing partner.",
+            "standard": "BIAN"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"integrateWithManufacturingPartner\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Step 1: Retrieve finalized card details from the system.\",\n            \"Step 2: Check customer approval status for the card production process.\",\n            \"Step 3: If approved, initiate the process of sending card details to the manufacturing partner.\",\n            \"Step 4: Generate a request to the manufacturing partner for immediate production and dispatch.\",\n            \"Step 5: Monitor the production and delivery process in real-time.\",\n            \"Step 6: Notify the customer once the card is dispatched for quick receipt.\"\n        ]\n    },\n    {\n        \"element\": \"authenticateAuthorization\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Step 1: Receive a request to send card details to the manufacturing partner.\",\n            \"Step 2: Verify the user's authentication credentials for access to the system.\",\n            \"Step 3: Authenticate the user's authorization level for sending card details.\",\n            \"Step 4: Check if the user has the necessary permissions to proceed.\",\n            \"Step 5: If authorized, proceed with sending card details to the manufacturing partner.\"\n        ]\n    },\n    {\n        \"element\": \"validateSanitizeInputs\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Step 1: Receive input data related to card details for production.\",\n            \"Step 2: Validate the input data format, length, and required fields.\",\n            \"Step 3: Sanitize the input data to remove any potentially harmful characters or scripts.\",\n            \"Step 4: Ensure data integrity by checking for any anomalies or discrepancies.\",\n            \"Step 5: Prepare the sanitized input data for sending to the manufacturing partner.\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Read input fields from CSV file",
+            "pseudocode": "Open the CSV file for reading\nLoop through each row in the CSV file\nExtract relevant input fields such as customer information, property details, and policy options",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Parse protective device info",
+            "pseudocode": "Check if protective device information is provided in the input data\nIf provided, parse the details such as type, installation date, and functionality\nMap the parsed information to corresponding fields for further processing",
+            "standard": "ISO"
+          },
+          {
+            "element": "Prefill missing data for underwriting",
+            "pseudocode": "Identify missing data fields required for underwriting\nRetrieve relevant data from external sources or default values\nFill in the missing data fields in the input dataset",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Underwrite based on Wisconsin rules",
+            "pseudocode": "Retrieve underwriting guidelines specific to Wisconsin\nEvaluate the input data against the rules and criteria\nDetermine the eligibility and risk factors for the policy",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Rate policy using various factors",
+            "pseudocode": "Define rating factors such as location, coverage type, and deductible\nCalculate the base rate and apply adjustments based on the factors\nDetermine the final rate for the policy",
+            "standard": "ISO"
+          },
+          {
+            "element": "Calculate premium",
+            "pseudocode": "Combine the base rate with additional fees and discounts\nCalculate the total premium amount for the policy",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Generate quote with premium details",
+            "pseudocode": "Format the quote with detailed information including coverage, premium, and terms\nInclude breakdown of premium components such as base rate, fees, and discounts\nGenerate a structured JSON output for the quote",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Apply discounts",
+            "pseudocode": "Check for eligibility of various discount types such as bundling, safety features, or loyalty\nApply applicable discounts to the premium calculation\nAdjust the final premium amount based on the discounts",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Read input fields from CSV file\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Open the CSV file for reading\",\n            \"Loop through each row in the CSV file\",\n            \"Extract relevant input fields such as customer information, property details, and policy options\"\n        ]\n    },\n    {\n        \"element\": \"Parse protective device info\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Check if protective device information is provided in the input data\",\n            \"If provided, parse the details such as type, installation date, and functionality\",\n            \"Map the parsed information to corresponding fields for further processing\"\n        ]\n    },\n    {\n        \"element\": \"Prefill missing data for underwriting\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Identify missing data fields required for underwriting\",\n            \"Retrieve relevant data from external sources or default values\",\n            \"Fill in the missing data fields in the input dataset\"\n        ]\n    },\n    {\n        \"element\": \"Underwrite based on Wisconsin rules\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Retrieve underwriting guidelines specific to Wisconsin\",\n            \"Evaluate the input data against the rules and criteria\",\n            \"Determine the eligibility and risk factors for the policy\"\n        ]\n    },\n    {\n        \"element\": \"Rate policy using various factors\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Define rating factors such as location, coverage type, and deductible\",\n            \"Calculate the base rate and apply adjustments based on the factors\",\n            \"Determine the final rate for the policy\"\n        ]\n    },\n    {\n        \"element\": \"Calculate premium\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Combine the base rate with additional fees and discounts\",\n            \"Calculate the total premium amount for the policy\"\n        ]\n    },\n    {\n        \"element\": \"Generate quote with premium details\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Format the quote with detailed information including coverage, premium, and terms\",\n            \"Include breakdown of premium components such as base rate, fees, and discounts\",\n            \"Generate a structured JSON output for the quote\"\n        ]\n    },\n    {\n        \"element\": \"Apply discounts\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Check for eligibility of various discount types such as bundling, safety features, or loyalty\",\n            \"Apply applicable discounts to the premium calculation\",\n            \"Adjust the final premium amount based on the discounts\"\n        ]\n    }\n]\n```  "
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Read input fields from CSV file",
+            "pseudocode": "Open the CSV file for reading\nLoop through each row in the CSV file\nExtract relevant input fields such as customer information, property details, and policy options",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Parse protective device info",
+            "pseudocode": "Check if protective device information is provided in the input data\nIf provided, parse the details such as type, installation date, and functionality\nMap the parsed information to corresponding fields for further processing",
+            "standard": "ISO"
+          },
+          {
+            "element": "Prefill missing data for underwriting",
+            "pseudocode": "Identify missing data fields required for underwriting\nRetrieve relevant data from external sources or default values\nFill in the missing data fields in the input dataset",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Underwrite based on Wisconsin rules",
+            "pseudocode": "Retrieve underwriting guidelines specific to Wisconsin\nEvaluate the input data against the rules and criteria\nDetermine the eligibility and risk factors for the policy",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Rate policy using various factors",
+            "pseudocode": "Define rating factors such as location, coverage type, and deductible\nCalculate the base rate and apply adjustments based on the factors\nDetermine the final rate for the policy",
+            "standard": "ISO"
+          },
+          {
+            "element": "Calculate premium",
+            "pseudocode": "Combine the base rate with additional fees and discounts\nCalculate the total premium amount for the policy",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Generate quote with premium details",
+            "pseudocode": "Format the quote with detailed information including coverage, premium, and terms\nInclude breakdown of premium components such as base rate, fees, and discounts\nGenerate a structured JSON output for the quote",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Apply discounts",
+            "pseudocode": "Check for eligibility of various discount types such as bundling, safety features, or loyalty\nApply applicable discounts to the premium calculation\nAdjust the final premium amount based on the discounts",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Read input fields from CSV file\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Open the CSV file for reading\",\n            \"Loop through each row in the CSV file\",\n            \"Extract relevant input fields such as customer information, property details, and policy options\"\n        ]\n    },\n    {\n        \"element\": \"Parse protective device info\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Check if protective device information is provided in the input data\",\n            \"If provided, parse the details such as type, installation date, and functionality\",\n            \"Map the parsed information to corresponding fields for further processing\"\n        ]\n    },\n    {\n        \"element\": \"Prefill missing data for underwriting\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Identify missing data fields required for underwriting\",\n            \"Retrieve relevant data from external sources or default values\",\n            \"Fill in the missing data fields in the input dataset\"\n        ]\n    },\n    {\n        \"element\": \"Underwrite based on Wisconsin rules\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Retrieve underwriting guidelines specific to Wisconsin\",\n            \"Evaluate the input data against the rules and criteria\",\n            \"Determine the eligibility and risk factors for the policy\"\n        ]\n    },\n    {\n        \"element\": \"Rate policy using various factors\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Define rating factors such as location, coverage type, and deductible\",\n            \"Calculate the base rate and apply adjustments based on the factors\",\n            \"Determine the final rate for the policy\"\n        ]\n    },\n    {\n        \"element\": \"Calculate premium\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Combine the base rate with additional fees and discounts\",\n            \"Calculate the total premium amount for the policy\"\n        ]\n    },\n    {\n        \"element\": \"Generate quote with premium details\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Format the quote with detailed information including coverage, premium, and terms\",\n            \"Include breakdown of premium components such as base rate, fees, and discounts\",\n            \"Generate a structured JSON output for the quote\"\n        ]\n    },\n    {\n        \"element\": \"Apply discounts\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Check for eligibility of various discount types such as bundling, safety features, or loyalty\",\n            \"Apply applicable discounts to the premium calculation\",\n            \"Adjust the final premium amount based on the discounts\"\n        ]\n    }\n]\n```  "
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "Integrate with Credit Decision Engine",
+            "pseudocode": "Step 1: Retrieve flagged account information from the charged-off account management system.\nStep 2: Send the account information to the credit decision engine for risk assessment.\nStep 3: Receive risk assessment and decision from the credit decision engine.\nStep 4: Update the system with the risk assessment and decision for the flagged account.",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "Flag Account for Potential Charge-Off",
+            "pseudocode": "Step 1: Identify accounts that meet the criteria for potential charge-off.\nStep 2: Flag the account for potential charge-off in the system.",
+            "standard": "BIAN"
+          },
+          {
+            "element": "Evaluate Account with Credit Decision Engine",
+            "pseudocode": "Step 1: Retrieve account information for evaluation.\nStep 2: Perform risk assessment using credit decision engine.\nStep 3: Determine the decision based on the risk assessment.\nStep 4: Return the decision for the account.",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"Integrate with Credit Decision Engine\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Step 1: Retrieve flagged account information from the charged-off account management system.\",\n            \"Step 2: Send the account information to the credit decision engine for risk assessment.\",\n            \"Step 3: Receive risk assessment and decision from the credit decision engine.\",\n            \"Step 4: Update the system with the risk assessment and decision for the flagged account.\"\n        ]\n    },\n    {\n        \"element\": \"Flag Account for Potential Charge-Off\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Step 1: Identify accounts that meet the criteria for potential charge-off.\",\n            \"Step 2: Flag the account for potential charge-off in the system.\"\n        ]\n    },\n    {\n        \"element\": \"Evaluate Account with Credit Decision Engine\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Step 1: Retrieve account information for evaluation.\",\n            \"Step 2: Perform risk assessment using credit decision engine.\",\n            \"Step 3: Determine the decision based on the risk assessment.\",\n            \"Step 4: Return the decision for the account.\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
     }
   ]
 }
