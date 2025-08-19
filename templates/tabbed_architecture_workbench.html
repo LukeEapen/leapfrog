@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POC5 Architecture Workbench</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    header { margin-bottom: 16px; }
+    fieldset { margin-bottom: 20px; }
+    textarea, select, input[type="text"] { width: 100%; box-sizing: border-box; }
+    textarea { min-height: 100px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    pre { background: #f6f8fa; padding: 12px; overflow: auto; }
+    small.muted { color: #666; }
+    .pill { display: inline-block; padding: 2px 8px; margin-left: 6px; border-radius: 999px; background: #eef; color: #223; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>Architecture Workbench (POC5)</h2>
+    {% if prd_file_name %}<span class="pill">PRD: {{ prd_file_name }}</span>{% endif %}
+    {% if system_mapping_name %}<span class="pill">Mapping: {{ system_mapping_name }}</span>{% endif %}
+    {% if lock_tab1 %}<span class="pill">Tab 1 Locked</span>{% endif %}
+  </header>
+
+  <form method="post" enctype="multipart/form-data">
+    <fieldset>
+      <legend>Uploads</legend>
+      <div class="row">
+        <div>
+          <label>PRD Document</label>
+          <input type="file" name="prd_file" {% if lock_tab1 %}disabled{% endif %} />
+          <small class="muted">Accepted: txt, md, json, docx, pdf</small>
+        </div>
+        <div>
+          <label>System Mapping</label>
+          <input type="file" name="system_mapping_file" {% if lock_tab1 %}disabled{% endif %} />
+          <small class="muted">Accepted: csv (source,target,label), json (nodes,edges), txt (A-&gt;B)</small>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:8px;">
+        <button name="action" value="save">Save</button>
+        <button name="action" value="extract_decisions">Extract Decisions</button>
+        <button name="action" value="generate_initial_blueprint">Generate Blueprint</button>
+        {% if lock_tab1 %}
+          <button name="action" value="unlock_tab1">Unlock Tab 1</button>
+        {% else %}
+          <button name="action" value="lock_tab1">Lock Tab 1</button>
+        {% endif %}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Narrative Inputs</legend>
+      <div class="row">
+        <div>
+          <label>Business Goals</label>
+          <textarea name="business_goals">{{ business_goals }}</textarea>
+        </div>
+        <div>
+          <label>Constraints / NFRs</label>
+          <textarea name="constraints">{{ constraints }}</textarea>
+        </div>
+      </div>
+      <div>
+        <label>Legacy System Context</label>
+        <textarea name="legacy_system">{{ legacy_system }}</textarea>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Architecture Selections</legend>
+      <div class="row-3">
+        <div>
+          <label>Architecture Style</label>
+          <input type="text" name="architecture_style" value="{{ architecture_style }}" />
+        </div>
+        <div>
+          <label>Desired Architecture Style (from extraction)</label>
+          <input type="text" name="desired_architecture_style" value="{{ desired_architecture_style }}" />
+        </div>
+        <div>
+          <label>API Style</label>
+          <select name="api_style">
+            {% set api_opts = ['REST','GraphQL','gRPC','SOAP/XML'] %}
+            {% for opt in api_opts %}
+              <option value="{{ opt }}" {% if api_style == opt %}selected="selected"{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="row-3" style="margin-top:12px;">
+        <div>
+          <label>Cloud Provider</label>
+          {% set clouds = ['AWS','Azure','GCP','Oracle Cloud','On-Premises'] %}
+          <select name="cloud_provider">
+            {% for opt in clouds %}
+              <option value="{{ opt }}" {% if cloud_provider == opt %}selected="selected"{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Region Strategy</label>
+          {% set regions = ['Single Region','Active-Passive with DR','Multi-Region / Active-Active'] %}
+          <select name="region_strategy">
+            {% for opt in regions %}
+              <option value="{{ opt }}" {% if region_strategy == opt %}selected="selected"{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Deployment Model</label>
+          {% set deploys = ['Serverless','Kubernetes','ECS/Fargate','VMs'] %}
+          <select name="deployment_model">
+            {% for opt in deploys %}
+              <option value="{{ opt }}" {% if deployment_model == opt %}selected="selected"{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="row-3" style="margin-top:12px;">
+        <div>
+          <label>Database Family</label>
+          {% set dbs = ['Relational','NoSQL','Warehouse'] %}
+          <select name="database_family">
+            {% for opt in dbs %}
+              <option value="{{ opt }}" {% if database_family == opt %}selected="selected"{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Messaging Backbone</label>
+          {% set msgs = ['Kafka','RabbitMQ','AWS Messaging','Pub/Sub'] %}
+          <select name="messaging_backbone">
+            {% for opt in msgs %}
+              <option value="{{ opt }}" {% if messaging_backbone == opt %}selected="selected"{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Identity Provider</label>
+          {% set idps = ['Okta','Auth0','Azure AD','Amazon Cognito','Keycloak'] %}
+          <select name="identity_provider">
+            {% for opt in idps %}
+              <option value="{{ opt }}" {% if identity_provider == opt %}selected="selected"{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="row-3" style="margin-top:12px;">
+        <div>
+          <label>Caching Strategy</label>
+          {% set caches = ['Cache-Aside / Redis','CDN','None'] %}
+          <select name="caching_strategy">
+            {% for opt in caches %}
+              <option value="{{ opt }}" {% if caching_strategy == opt %}selected="selected"{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Observability Stack</label>
+          {% set obss = ['Prometheus/Grafana + OpenTelemetry','ELK Stack','APM (Datadog/New Relic/Splunk)'] %}
+          <select name="observability_stack">
+            {% for opt in obss %}
+              <option value="{{ opt }}" {% if observability_stack == opt %}selected="selected"{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Data Residency</label>
+          {% set resid = ['US','EU / GDPR','India'] %}
+          <select name="data_residency">
+            {% for opt in resid %}
+              <option value="{{ opt }}" {% if data_residency == opt %}selected="selected"{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label>Compliance Standards</label>
+          <input type="text" name="compliance_standards" value="{{ compliance_standards }}" />
+        </div>
+        <div>
+          <label>Additional Requirements</label>
+          <input type="text" name="additional_requirements" value="{{ additional_requirements }}" />
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Derived Content</legend>
+      <div class="row">
+        <div>
+          <label>High-Level Decision Points</label>
+          <textarea name="high_level_decision_points">{{ high_level_decision_points }}</textarea>
+        </div>
+        <div>
+          <label>One-way Door Decisions</label>
+          <textarea name="one_way_door_decisions">{{ one_way_door_decisions }}</textarea>
+        </div>
+      </div>
+      <div>
+        <label>Other Relevant Questions</label>
+        <textarea name="other_relevant_questions">{{ other_relevant_questions }}</textarea>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label>Major Components</label>
+          <textarea name="major_components">{{ major_components }}</textarea>
+        </div>
+        <div>
+          <label>Interface Definitions</label>
+          <textarea name="interface_definitions">{{ interface_definitions }}</textarea>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label>Data Schemas</label>
+          <textarea name="data_schemas">{{ data_schemas }}</textarea>
+        </div>
+        <div>
+          <label>Reusable Patterns</label>
+          <textarea name="reusable_patterns">{{ reusable_patterns }}</textarea>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label>Decisions (raw)</label>
+          <textarea name="architectural_decisions">{{ decisions }}</textarea>
+        </div>
+        <div>
+          <label>Rationale / Tradeoffs</label>
+          <textarea name="rationale_tradeoffs">{{ rationale_tradeoffs }}</textarea>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label>Blueprint References</label>
+          <textarea name="blueprint_references">{{ blueprint_references }}</textarea>
+        </div>
+        <div>
+          <label>Communication Protocols</label>
+          <textarea name="communication_protocols">{{ communication }}</textarea>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label>Data Flow Diagrams</label>
+          <textarea name="data_flow_diagrams">{{ data_flow_diagrams }}</textarea>
+        </div>
+        <div>
+          <label>Integration Points</label>
+          <textarea name="integration_points">{{ integration_points }}</textarea>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label>Pros & Cons (SWOT)</label>
+          <textarea name="swot_analysis">{{ pros_cons }}</textarea>
+        </div>
+        <div>
+          <label>Risks & Mitigation</label>
+          <textarea name="risks_mitigation">{{ risks_mitigation }}</textarea>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label>Compiled Document</label>
+          <textarea name="compiled_document">{{ doc }}</textarea>
+        </div>
+        <div>
+          <label>Stakeholder Checklist</label>
+          <textarea name="stakeholder_checklist">{{ stakeholder_checklist }}</textarea>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Generated Blueprint</legend>
+      {% if system_mapping_stats %}
+        <div><small class="muted">Mapping: {{ system_mapping_stats.node_count }} nodes, {{ system_mapping_stats.edge_count }} edges{% if system_mapping_stats.truncated %} (truncated){% endif %}</small></div>
+      {% endif %}
+      <pre>{{ blueprint }}</pre>
+    </fieldset>
+
+    <div class="actions">
+      <button name="action" value="save">Save</button>
+      <button name="action" value="generate_initial_blueprint">Regenerate Blueprint</button>
+    </div>
+  </form>
+</body>
+</html>
