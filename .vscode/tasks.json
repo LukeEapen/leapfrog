@@ -97,6 +97,26 @@
 				"dev_run_agent_poc4.py"
 			],
 			"group": "build"
+		},
+		{
+			"label": "Run POC5 (verify)",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"product_architecture_definition.py"
+			],
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Run POC5 (verify)",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"product_architecture_definition.py"
+			],
+			"isBackground": true,
+			"group": "build"
 		}
 	]
 }
