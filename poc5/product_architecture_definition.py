@@ -3252,6 +3252,15 @@ def tabbed_workbench():
                 action = 'save'
         except Exception:
             action = request.form.get('action', 'save')
+        # Map deprecated "Generate ..." actions to Approve for a single-path UX
+        if action in (
+            'generate_initial_blueprint',
+            'generate_arch_context',
+            'generate_context',
+            'generate_context_doc',
+            'generate_context_agent_5_6'
+        ):
+            action = 'approve_and_next'
         # Client-provided start timestamp (ms) to compute elapsed time
         try:
             client_start_ts = int(request.form.get('client_start_ts', '0') or 0)

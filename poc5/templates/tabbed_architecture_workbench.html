@@ -222,18 +222,15 @@
                         <span id="action_spinner" class="spinner-border spinner-border-sm text-danger d-none" role="status" aria-hidden="true"></span>
                         <span id="action_timer" class="text-danger small d-none" style="min-width:3em;display:inline-block;"></span>
                         <span id="action_status" class="text-muted small d-none"></span>
-                        <button type="submit" class="btn btn-outline-danger action-btn" name="action" value="extract_decisions" title="Parse PRD + System Mapping, fill all fields across tabs, and use educated guesses for anything missing." {% if lock_tab1 %}disabled{% endif %}>Extract Decisions</button>
+                        <button type="submit" class="btn btn-danger action-btn" name="action" value="extract_decisions" title="Parse PRD + System Mapping, fill all fields across tabs, and use educated guesses for anything missing." {% if lock_tab1 %}disabled{% endif %}>Extract Decisions</button>
                         {% if not lock_tab1 %}
                             <button type="submit" class="btn btn-outline-secondary action-btn" name="action" value="lock_tab1" title="Lock editing of Context & Requirements inputs (Tab 1).">Lock Tab 1</button>
                         {% else %}
                             <button type="submit" class="btn btn-outline-secondary action-btn" name="action" value="unlock_tab1" title="Unlock editing of Context & Requirements inputs (Tab 1).">Unlock Tab 1</button>
                         {% endif %}
-                        <button type="submit" class="btn btn-outline-danger action-btn" name="action" value="generate_initial_blueprint" title="Rebuild the Mermaid blueprint from current selections and go to Initial Blueprint.">Generate Initial Diagram</button>
-                        <button type="submit" class="btn btn-outline-secondary action-btn" name="action" value="generate_arch_context" title="Generate a comprehensive Context Doc (Tab 7) from PRD + selections + mapping and switch to Context Doc.">Generate Context Doc</button>
-                        <button type="submit" class="btn btn-outline-danger action-btn" name="action" value="generate_arch_context" title="Generate the Architecture Context document using Agent 5_6 and go to Context Doc.">Generate Context (Agent 5_6)</button>
-                        <button type="submit" class="btn btn-outline-secondary action-btn" name="action" value="approve_and_next" title="Mark this tab as approved and advance along the flow (0 → 6 → 1 → 2 → 3 → 4 → 5).">Approve & Next Phase</button>
+                        <button type="submit" class="btn btn-success action-btn" name="action" value="approve_and_next" title="Mark this tab as approved and advance along the flow (0 → 6 → 1 → 2 → 3 → 4 → 5).">Approve & Next Phase</button>
                         <!-- Download full Word export of all tabs -->
-                        <button type="submit" class="btn btn-outline-dark action-btn" name="action" value="download_share" title="Download a Word document containing all tabs">Download/Share</button>
+                        <button type="submit" class="btn btn-warning action-btn" name="action" value="download_share" title="Download a Word document containing all tabs">Download/Share</button>
                     </div>
         <!-- Tab 1 -->
     <div class="tab-pane section" id="tab1">
@@ -620,10 +617,7 @@
     <!-- Tab 7: Architecture Context Doc -->
         <div class="tab-pane section" id="tab7">
             <h2>Architecture Context (Generated)</h2>
-            <div class="mb-2">
-                <button type="submit" class="btn btn-sm btn-outline-danger action-btn" name="action" value="generate_arch_context" title="Regenerate Context Doc using PRD + selections + mapping and stay on this tab.">Regenerate Context Doc</button>
-            </div>
-            <!-- Generate Context moved to global action bar; use the action bar button above -->
+            <!-- Regenerate Context Doc button removed; Approve covers generation/refresh -->
             <label>Context Markdown:</label>
             <div class="mb-2 d-flex gap-2">
                 <button type="button" id="copyContextBtn" class="btn btn-sm btn-outline-secondary" title="Copy markdown to clipboard">Copy</button>
