@@ -54,12 +54,15 @@ AGENT_PROMPTS = {
     "agent_5_6": "agents/agent_5_6.txt",
 }
 
-# Tab index mapping for chat/approval navigation (nav order): 0->6->1->2->3->4->5
-TAB_NAV_ORDER = [0, 6, 1, 2, 3, 4, 5]
+# Tab index mapping for chat/approval navigation (nav order):
+# Default flow now: 0 (Context) → 6 (Context Doc) → 1 (Initial) → 7 (DB Design) → 8 (Service Design) → 2 (Key Decisions) → 3 (Comm & Integration) → 4 (Pros & Cons) → 5 (Docs)
+TAB_NAV_ORDER = [0, 6, 1, 7, 8, 2, 3, 4, 5]
 AGENT_BY_TAB = {
     0: 'agent_5_1',  # Context & Requirements
     6: 'agent_5_6',  # Context Doc (use a distinct agent)
     1: 'agent_mermaid',  # Initial Blueprint (diagram-focused)
+    7: 'agent_mermaid',  # Database Solution Design (ER/data schemas)
+    8: 'agent_mermaid',  # Service Solution Design (service decomposition/interfaces)
     2: 'agent_5_2',  # Key Decisions
     3: 'agent_5_3',  # Communication & Integration
     4: 'agent_5_4',  # Pros & Cons
@@ -80,6 +83,14 @@ TAB_ALLOWED_FIELDS: dict[int, list[str]] = {
         'high_level_decision_points','one_way_door_decisions','other_relevant_questions'
     ],
     1: ['architecture_diagram','system_interaction_diagram','data_model_diagram','service_decomposition_diagram','major_components','interface_definitions','data_schemas','reusable_patterns'],
+    7: [
+        # Database Solution Design
+        'data_model_diagram','data_schemas','database_family'
+    ],
+    8: [
+        # Service Solution Design
+        'service_decomposition_diagram','major_components','interface_definitions','reusable_patterns','api_style','caching_strategy'
+    ],
     2: ['architectural_decisions','rationale_tradeoffs','blueprint_references','high_level_decision_points','one_way_door_decisions','other_relevant_questions'],
     3: ['communication_protocols','data_flow_diagrams','integration_points'],
     4: ['swot_analysis','risks_mitigation','risks'],
@@ -225,7 +236,6 @@ def _apply_agent_updates(idx: int, updates: dict):
                 pass
         if idx == 6 and 'architecture_context' not in sets:
             session['architecture_context'] = generate_architecture_context()
-        diagram_fields = {'architecture_diagram','system_interaction_diagram','data_model_diagram','service_decomposition_diagram'}
     except Exception:
         pass
 
@@ -494,6 +504,11 @@ def _extract_features(prd_text: str) -> list[str]:
         if m_us:
             want = m_us.group(1).strip()
             if want:
+                # Trim trailing purpose clause like 'so that I can ...'
+                want = re.split(r"\s+so\s+that\s+i\s+can\s+", want, flags=re.I)[0].strip()
+                # Keep a concise capability phrase (<= 120 chars)
+                if len(want) > 120:
+                    want = want[:117] + '...'
                 features.append(want)
             continue
     # Clean up: strip trailing punctuation and dedupe
@@ -553,16 +568,24 @@ def _fold_features_into_terms(terms: set[str], features: list[str]) -> set[str]:
 
 
 def _services_from_features(features: list[str]) -> list[str]:
-    out = []
+    """Infer sensible service names from feature text.
+    Strategy:
+    - Extract canonical domain terms from each feature using existing PRD term extractor.
+    - Map those terms to service names via _derive_services_from_terms.
+    - Avoid naive conversion of long user-story sentences into a single "... Service".
+    - If nothing is detected, return an empty list so callers can fall back to PRD-wide term derivation.
+    """
+    if not features:
+        return []
+    detected_terms: set[str] = set()
     for f in features:
-        base = re.sub(r"[^A-Za-z0-9 ]","", f).strip()
-        if not base:
+        try:
+            detected_terms |= _extract_domain_terms(f or '')
+        except Exception:
             continue
-        name = re.sub(r"\s+"," ", base).title()
-        svc = f"{name} Service" if not name.lower().endswith('service') else name
-        if svc not in out:
-            out.append(svc)
-    return out
+    services = _derive_services_from_terms(detected_terms)
+    # As a conservative fallback, do NOT create a service from a long sentence; leave empty to allow caller fallback
+    return services or []
 
 
 def _strip_mermaid_fence(text: str) -> str:
@@ -1137,6 +1160,7 @@ def _compute_prd_decomposition(prd_text: str) -> dict:
     """Compute PRD-only decomposition inputs used for diagram generation."""
     features = _extract_features(prd_text)
     terms = _fold_features_into_terms(_extract_domain_terms(prd_text), features)
+    # Prefer feature-derived services; if none, use PRD-wide domain terms
     services = _services_from_features(features) or _derive_services_from_terms(terms)
     simple = _extract_simple_fields_from_prd(prd_text)
     return {
@@ -1304,10 +1328,10 @@ def generate_blueprint_from_session(strict_prd_only: bool = False) -> str:
     mermaid_lines.append("end")
 
     mermaid_lines.append("subgraph External")
+    # Always include a stable placeholder so mapping integration can expand reliably
+    mermaid_lines.append("EXT_PLACEHOLDER[External Systems]:::ext")
     if 'Payment' in terms:
         mermaid_lines.append("PAYGW[Payment Gateway]:::ext")
-    else:
-        mermaid_lines.append("EXT_PLACEHOLDER[External Systems]:::ext")
     mermaid_lines.append("end")
 
     # Core flows
@@ -1351,67 +1375,65 @@ def generate_blueprint_from_session(strict_prd_only: bool = False) -> str:
 
     mermaid = "\n".join(mermaid_lines)
 
-    # Integrate mapping nodes/edges
-    if not strict_prd_only:
-        # Integrate mapping nodes/edges only in non-strict mode
-        try:
-            mapping = json.loads(session.get('system_mapping', '{}'))
-        except Exception:
-            mapping = {}
-        nodes = mapping.get('nodes') or []
-        edges = mapping.get('edges') or []
-        if nodes or edges:
-            mermaid += "\n%% System Mapping"
+    # Integrate mapping nodes/edges (always append if available; core remains PRD-driven)
+    try:
+        mapping = json.loads(session.get('system_mapping', '{}'))
+    except Exception:
+        mapping = {}
+    nodes = mapping.get('nodes') or []
+    edges = mapping.get('edges') or []
+    if nodes or edges:
+        mermaid += "\n%% System Mapping"
 
-        alias_map: dict[str, str] = {}
-        shown_nodes_limit = 40
-        shown_edges_limit = 40
+    alias_map: dict[str, str] = {}
+    shown_nodes_limit = 40
+    shown_edges_limit = 40
 
-        def get_alias(name: str) -> str:
-            if name in alias_map:
-                return alias_map[name]
-            alias = f"N{len(alias_map)+1}"
-            alias_map[name] = alias
-            return alias
+    def get_alias(name: str) -> str:
+        if name in alias_map:
+            return alias_map[name]
+        alias = f"N{len(alias_map)+1}"
+        alias_map[name] = alias
+        return alias
 
-        def sanitize_label(text: str) -> str:
-            if not text:
-                return ""
-            t = str(text)
-            t = t.replace('|', '/')
-            if len(t) > 80:
-                t = t[:77] + '...'
-            return t
+    def sanitize_label(text: str) -> str:
+        if not text:
+            return ""
+        t = str(text)
+        t = t.replace('|', '/')
+        if len(t) > 80:
+            t = t[:77] + '...'
+        return t
 
-        ext_nodes = nodes[:shown_nodes_limit]
-        if ext_nodes:
-            extra = []
-            for n in ext_nodes:
-                alias = get_alias(n)
-                extra.append(f"\n{alias}[{sanitize_node_label(n)}]:::ext")
-            mermaid = mermaid.replace(
-                "EXT_PLACEHOLDER[External Systems]:::ext",
-                "EXT_SUMMARY[External Systems]:::ext" + "".join(extra)
-            )
+    ext_nodes = nodes[:shown_nodes_limit]
+    if ext_nodes:
+        extra = []
+        for n in ext_nodes:
+            alias = get_alias(n)
+            extra.append(f"\n{alias}[{sanitize_node_label(n)}]:::ext")
+        mermaid = mermaid.replace(
+            "EXT_PLACEHOLDER[External Systems]:::ext",
+            "EXT_SUMMARY[External Systems]:::ext" + "".join(extra)
+        )
 
-        for e in edges[:shown_edges_limit]:
-            s = e[0] if len(e) > 0 else None
-            t = e[1] if len(e) > 1 else None
-            lbl = e[2] if len(e) > 2 else None
-            if not s or not t:
-                continue
-            sa = get_alias(s)
-            ta = get_alias(t)
-            label = sanitize_label(lbl)
-            label_part = f"|{label}|" if label else ""
-            mermaid += f"\n{sa}-->{label_part}{ta}"
+    for e in edges[:shown_edges_limit]:
+        s = e[0] if len(e) > 0 else None
+        t = e[1] if len(e) > 1 else None
+        lbl = e[2] if len(e) > 2 else None
+        if not s or not t:
+            continue
+        sa = get_alias(s)
+        ta = get_alias(t)
+        label = sanitize_label(lbl)
+        label_part = f"|{label}|" if label else ""
+        mermaid += f"\n{sa}-->{label_part}{ta}"
 
-        if alias_map:
-            mermaid += "\nIL[Integration Layer]:::svc"
-            for orig, alias in list(alias_map.items())[:min(len(alias_map), 10)]:
-                mermaid += f"\n{alias}-->IL"
-            for i in range(1, len(svc_names)+1):
-                mermaid += f"\nIL-->|adapters|S{i}"
+    if alias_map:
+        mermaid += "\nIL[Integration Layer]:::svc"
+        for orig, alias in list(alias_map.items())[:min(len(alias_map), 10)]:
+            mermaid += f"\n{alias}-->IL"
+        for i in range(1, len(svc_names)+1):
+            mermaid += f"\nIL-->|adapters|S{i}"
 
     mermaid += "\n%% Auto-generated initial blueprint\n%% Style: {}".format(style or 'unspecified')
     return mermaid
@@ -1768,6 +1790,13 @@ def _auto_populate_from_sources():
                 "- What are the disaster recovery and backup requirements?"
             )
 
+        # 4. Desired Architecture Style (single line) — persist if extracted
+        if sections.get('style'):
+            style = (sections.get('style') or '').strip()
+            if style and style.lower() not in ('tbd','n/a','na'):
+                # Prefer setting desired style if explicit
+                session['desired_architecture_style'] = style
+
         for k, v in _extract_simple_fields_from_prd(prd_text).items():
             _safe_set_session(k, v)
         core = _extract_core_sections_from_prd(prd_text)
@@ -1823,17 +1852,18 @@ def _auto_populate_from_sources():
         patt += ['- Cache-Aside']
     _safe_set_session('reusable_patterns', '\n'.join(patt) or '- Layered Architecture')
 
-    _safe_set_session('architectural_decisions', session.get('high_level_decision_points',''))
+    # Consolidated Architectural Decisions with actual resolved values
+    session['architectural_decisions'] = _build_architectural_decisions_markdown()
     style = session.get('architecture_style') or session.get('desired_architecture_style') or 'Unspecified'
     dbfam = session.get('database_family') or 'Relational/NoSQL'
     _safe_set_session('rationale_tradeoffs', f"Chose {style} with {dbfam} storage based on PRD goals and constraints.")
     _safe_set_session('blueprint_references', f"PRD: {session.get('prd_file_name','')} | Mapping: {session.get('system_mapping_name','')}")
     api_style_upper = (session.get('api_style') or '').upper()
     comm = 'HTTP/REST + JSON' if api_style_upper == 'REST' else ('gRPC' if api_style_upper == 'GRPC' else ('GraphQL' if api_style_upper == 'GRAPHQL' else 'HTTP APIs'))
-    _safe_set_session('communication_protocols', comm)
+    _safe_set_session('communication_protocols', _humanize_if_json(comm))
     _safe_set_session('data_flow_diagrams', 'See generated Blueprint; flows inferred from Mapping edges.')
     if mapping:
-        _safe_set_session('integration_points', '\n'.join([f"- {n}" for n in (mapping.get('nodes') or [])[:10]]) or 'Derived from Mapping')
+        _safe_set_session('integration_points', _humanize_if_json('\n'.join([f"- {n}" for n in (mapping.get('nodes') or [])[:10]]) or 'Derived from Mapping'))
     # Ensure Initial Blueprint core fields are populated with technical content even without mapping
     svc_names = _top_services_from_decisions(session.get('high_level_decision_points','')) or ['CoreServiceA', 'CoreServiceB', 'CoreServiceC']
     if not session.get('major_components'):
@@ -1868,7 +1898,10 @@ def _auto_populate_from_sources():
         reply_53 = call_agent('agent_5_3', payload_53)
         refined = _parse_comm_integration(reply_53)
         for k, v in refined.items():
-            _safe_set_session(k, v)
+            if k in ('communication_protocols','integration_points','data_flow_diagrams'):
+                _safe_set_session(k, _humanize_if_json(v))
+            else:
+                _safe_set_session(k, v)
     except Exception:
         pass
 
@@ -1878,14 +1911,13 @@ def _auto_populate_from_sources():
         reply_55 = call_agent('agent_5_5', payload_55)
         doc_fields = _parse_documentation(reply_55)
         if doc_fields:
-            for k, v in doc_fields.items():
-                _safe_set_session(k, v)
+            # Keep checklist if provided; compiled doc will be built from session instead of agent text
+            if 'stakeholder_checklist' in doc_fields:
+                _safe_set_session('stakeholder_checklist', _humanize_if_json(doc_fields['stakeholder_checklist']))
     except Exception:
         pass
-    if not session.get('compiled_document'):
-        if prd_text:
-            excerpt = (prd_text or '')[:500]
-            _safe_set_session('compiled_document', f"Auto-extracted from PRD and Mapping.\n\nExcerpt:\n{excerpt}")
+    # Always (re)build a clean, sectioned compiled document, never JSON
+    session['compiled_document'] = _build_compiled_document_markdown()
     if not session.get('stakeholder_checklist'):
         _safe_set_session('stakeholder_checklist', '\n'.join([
             '- Security sign-off', '- Compliance sign-off', '- SRE runbooks', '- Architecture review'
@@ -1896,8 +1928,13 @@ def _auto_populate_from_sources():
         payload_54 = json.dumps({'decisions': session.get('architectural_decisions','')}, ensure_ascii=False)
         reply_54 = call_agent('agent_5_4', payload_54)
         pc = _parse_pros_cons(reply_54)
-        for k, v in pc.items():
-            _safe_set_session(k, v)
+        # Normalize SWOT to ensure all four sections are present; avoid raw JSON in UI
+        swot_src = pc.get('swot_analysis') or reply_54 or ''
+        if swot_src:
+            _safe_set_session('swot_analysis', _build_swot_markdown(swot_src))
+        # Humanize risks/mitigations if JSON-like
+        if pc.get('risks_mitigation'):
+            _safe_set_session('risks_mitigation', _humanize_if_json(pc['risks_mitigation']))
     except Exception:
         pass
 
@@ -1925,11 +1962,11 @@ def _auto_populate_from_sources():
             'mapping_stats': (mapping or {}).get('stats', {}),
         }, ensure_ascii=False)
         reply_51 = call_agent('agent_5_1', payload_51)
-        if reply_51 and len(reply_51.strip()) > 50:
-            session['architecture_context'] = reply_51
-        else:
-            session['architecture_context'] = generate_architecture_context()
+        # Always use our generator to avoid agent prompt/JSON leakage in Context Doc
+        session['architecture_context'] = generate_architecture_context()
+        _normalize_context_doc(force=True)
     except Exception:
+        # Fallback if agent call or generation fails
         session['architecture_context'] = generate_architecture_context()
     _ensure_default_dropdowns()
 
@@ -2494,6 +2531,259 @@ def _parse_pros_cons(md: str) -> dict:
     return out
 
 
+def _humanize_if_json(text: str) -> str:
+    """If text looks like JSON, convert to human-readable bullets; else return as-is."""
+    if not text:
+        return ''
+    t = str(text).strip()
+    if not (t.startswith('{') or t.startswith('[')):
+        return t
+    try:
+        data = json.loads(t)
+    except Exception:
+        return t
+    lines: list[str] = []
+    def emit(prefix: str, val):
+        if isinstance(val, dict):
+            lines.append(f"- {prefix}:")
+            for k, v in val.items():
+                emit(f"  {k}", v)
+        elif isinstance(val, list):
+            lines.append(f"- {prefix}:")
+            for i, item in enumerate(val, 1):
+                emit(f"  {i}", item)
+        else:
+            sval = str(val)
+            lines.append(f"- {prefix}: {sval}")
+    if isinstance(data, dict):
+        for k, v in data.items():
+            emit(str(k), v)
+    elif isinstance(data, list):
+        for i, item in enumerate(data, 1):
+            emit(str(i), item)
+    return "\n".join(lines)
+
+
+def _build_swot_markdown(raw: str | None) -> str:
+    """Normalize any given text (or empty) into a clear SWOT markdown with all four sections."""
+    s_lines: list[str] = []
+    w_lines: list[str] = []
+    o_lines: list[str] = []
+    t_lines: list[str] = []
+    text = (raw or '').strip()
+    if text:
+        # Try to parse simple headings or prefixes
+        cur = None
+        for line in text.splitlines():
+            l = line.strip()
+            if not l:
+                continue
+            if re.search(r"strengths", l, re.I):
+                cur = 'S'; continue
+            if re.search(r"weaknesses", l, re.I):
+                cur = 'W'; continue
+            if re.search(r"opportunities", l, re.I):
+                cur = 'O'; continue
+            if re.search(r"threats", l, re.I):
+                cur = 'T'; continue
+            m = re.match(r"^[-*]\s*(.+)$", l)
+            if m:
+                item = m.group(1).strip()
+                if cur == 'S': s_lines.append(item)
+                elif cur == 'W': w_lines.append(item)
+                elif cur == 'O': o_lines.append(item)
+                elif cur == 'T': t_lines.append(item)
+                else:
+                    # Distribute uncategorized bullets heuristically
+                    if len(s_lines) <= len(w_lines) and len(s_lines) <= len(o_lines):
+                        s_lines.append(item)
+                    elif len(w_lines) <= len(o_lines):
+                        w_lines.append(item)
+                    else:
+                        o_lines.append(item)
+    # Provide sensible defaults if any section is empty
+    if not s_lines:
+        s_lines = ['Clear service boundaries', 'Horizontal scalability', 'Tech stack flexibility']
+    if not w_lines:
+        w_lines = ['Operational complexity', 'Distributed tracing and debugging', 'Increased infra footprint']
+    if not o_lines:
+        o_lines = ['Faster feature delivery via independent deployments', 'Improved resilience via isolation', 'Observability-driven optimization']
+    if not t_lines:
+        t_lines = ['Compliance/regulatory risk', 'Vendor lock-in', 'Integration fragility with legacy systems']
+    parts = [
+        '# Strengths',
+        *[f"- {x}" for x in s_lines],
+        '',
+        '# Weaknesses',
+        *[f"- {x}" for x in w_lines],
+        '',
+        '# Opportunities',
+        *[f"- {x}" for x in o_lines],
+        '',
+        '# Threats',
+        *[f"- {x}" for x in t_lines],
+    ]
+    return "\n".join(parts)
+
+
+def _build_compiled_document_markdown() -> str:
+    """Compose a detailed, sectioned Architecture Document in markdown from current session.
+    Always returns human-readable markdown (no JSON).
+    """
+    def val(key: str, default: str = 'TBD') -> str:
+        v = (session.get(key) or '').strip()
+        return v if v else default
+
+    def bullets(text: str) -> list[str]:
+        out = []
+        for line in (text or '').splitlines():
+            l = line.strip()
+            if not l:
+                continue
+            l = re.sub(r"^[-*]\s*", '', l)
+            out.append(l)
+        return out
+
+    # Guardrails list
+    guardrails = [
+        ("Architecture Style", val('architecture_style', val('desired_architecture_style','TBD'))),
+        ("Cloud Provider", val('cloud_provider','TBD')),
+        ("Region Strategy", val('region_strategy','TBD')),
+        ("Deployment Model", val('deployment_model','TBD')),
+        ("Database Family", val('database_family','TBD')),
+        ("Messaging Backbone", val('messaging_backbone','TBD')),
+        ("Identity Provider", val('identity_provider','TBD')),
+        ("API Style", val('api_style','TBD')),
+        ("Caching Strategy", val('caching_strategy','TBD')),
+        ("Observability Stack", val('observability_stack','TBD')),
+        ("Compliance Standards", val('compliance_standards','TBD')),
+        ("Data Residency", val('data_residency','TBD')),
+    ]
+
+    # Decisions content
+    decisions_md = session.get('architectural_decisions','')
+    one_way_md = session.get('one_way_door_decisions','')
+    other_q_md = session.get('other_relevant_questions','')
+    # Communication & Integration (humanize JSON if needed)
+    comm = _humanize_if_json(session.get('communication_protocols',''))
+    integ = _humanize_if_json(session.get('integration_points',''))
+    flows = session.get('data_flow_diagrams','')
+
+    parts: list[str] = []
+    parts += [
+        '# Compiled Architecture Document',
+        '',
+        '## 1. Overview',
+        f"Desired Style: {val('architecture_style', val('desired_architecture_style','TBD'))}",
+        f"Cloud / Region / Deploy: {val('cloud_provider','TBD')} / {val('region_strategy','TBD')} / {val('deployment_model','TBD')}",
+    ]
+    parts += [
+        '',
+        '## 2. Business Context',
+        '### 2.1 Goals',
+        val('business_goals','TBD'),
+        '',
+        '### 2.2 Legacy System Context',
+        val('legacy_system','TBD'),
+        '',
+        '### 2.3 Constraints & Guardrails',
+        *[f"- {k}: {v}" for k, v in guardrails],
+    ]
+    parts += [
+        '',
+        '## 3. Architecture Overview',
+        'See Initial Blueprint, System Interaction, Data Model, and Service Decomposition diagrams in their respective tabs. Key selections are listed above.',
+    ]
+    parts += [
+        '',
+        '## 4. Key Decisions',
+        '### 4.1 High-Level Architecture Decision Points',
+        *(f"- {x}" for x in bullets(decisions_md) or ['TBD']),
+        '',
+        '### 4.2 One-way Door Decisions',
+        *(f"- {x}" for x in bullets(one_way_md) or ['TBD']),
+        '',
+        '### 4.3 Desired Architecture Style',
+        val('architecture_style', val('desired_architecture_style','TBD')),
+        '',
+        '### 4.4 Other Relevant Questions',
+        *(f"- {x}" for x in bullets(other_q_md) or ['TBD']),
+    ]
+    parts += [
+        '',
+        '## 5. Communication & Integration',
+        '### 5.1 Communication Protocols',
+        comm or 'TBD',
+        '',
+        '### 5.2 Integration Points',
+        integ or 'TBD',
+        '',
+        '### 5.3 Data Flows',
+        flows or 'TBD',
+    ]
+    parts += [
+        '',
+        '## 6. Non-Functional Requirements',
+        f"- Availability/SLA: {val('availability_sla','TBD')}",
+        f"- RPO/RTO: {val('rpo_rto','TBD')}",
+        f"- Performance Targets: {val('performance_targets','TBD')}",
+        f"- Throughput: {val('throughput','TBD')}",
+        f"- Peak Concurrency: {val('peak_concurrency','TBD')}",
+        f"- Data Volume & Retention: {val('data_volume_retention','TBD')}",
+        f"- Security Posture: {val('security_posture','TBD')}",
+    ]
+    parts += [
+        '',
+        '## 7. Risks & Mitigations',
+        _humanize_if_json(session.get('risks','')) or '- TBD',
+        '',
+        '### 7.1 Mitigation Strategies',
+        _humanize_if_json(session.get('risks_mitigation','')) or '- TBD',
+    ]
+    parts += [
+        '',
+        '## 8. Environments & Release',
+        f"- Environments: {val('environments','TBD')}",
+        f"- Release Strategy: {val('release_strategy','TBD')}",
+        '',
+        '## 9. Observability',
+        val('observability_requirements','- TBD'),
+        '',
+        '## 10. Migration Strategy',
+        val('migration_strategy','TBD'),
+        '',
+        '## 11. Open Questions',
+        val('open_questions','- TBD'),
+        '',
+        '## 12. References',
+        f"PRD: {val('prd_file_name','n/a')} | Mapping: {val('system_mapping_name','n/a')}",
+    ]
+    return "\n".join(str(p) for p in parts)
+
+
+def _normalize_context_doc(force: bool = False):
+    """Ensure Context Doc is human-readable markdown (not JSON or agent prompt). Rebuild when needed."""
+    try:
+        cur = (session.get('architecture_context') or '').strip()
+        bad = False
+        if force:
+            bad = True
+        if not bad and cur:
+            # JSON-like block at start
+            if cur.startswith('{') or cur.startswith('['):
+                bad = True
+            # Agent prompt content or embedded JSON payload
+            if not bad and re.search(r"\bYou are an?\b|Return sections|^\{\s*\"selections\"\s*:|\"decisions\"\s*:\s*\[", cur, re.I | re.M):
+                bad = True
+        if bad:
+            session['architecture_context'] = generate_architecture_context()
+    except Exception:
+        try:
+            session['architecture_context'] = generate_architecture_context()
+        except Exception:
+            pass
+
+
 def _parse_documentation(md: str) -> dict:
     """Split compiled document vs stakeholder checklist if headings are present."""
     if not md:
@@ -2527,6 +2817,98 @@ def _trim_chat(idx: int, max_chars: int = 4000):
         tail = txt[-max_chars:]
         cut = tail.find("\n\n")
         session[key] = tail[cut+2:] if cut != -1 else tail
+
+
+def _build_architectural_decisions_markdown() -> str:
+    """Compose a single Architectural Decisions markdown with actual resolved values.
+    Sections:
+    - High-Level Architecture Decision Points (bulleted) including resolved guardrail selections
+    - One-way Door Decisions (bulleted)
+    - Desired Architecture Style (single line)
+    - Other Relevant Questions (bulleted)
+    Never returns empty placeholders; uses existing session defaults/guesses where needed.
+    """
+    def _val(key: str, default: str = 'TBD') -> str:
+        v = (session.get(key) or '').strip()
+        return v if v else default
+
+    def _bullets(text: str) -> list[str]:
+        out: list[str] = []
+        for line in (text or '').splitlines():
+            l = line.strip()
+            if not l:
+                continue
+            out.append(re.sub(r"^[-*]\s*", '', l))
+        return out
+
+    # Core resolved selections we want to surface as actual decisions
+    resolved_pairs = [
+        ('Architecture Style', _val('architecture_style', _val('desired_architecture_style','TBD'))),
+        ('Cloud Provider', _val('cloud_provider','TBD')),
+        ('Region Strategy', _val('region_strategy','TBD')),
+        ('Deployment Model', _val('deployment_model','TBD')),
+        ('Database Family', _val('database_family','TBD')),
+        ('Messaging Backbone', _val('messaging_backbone','TBD')),
+        ('Identity Provider', _val('identity_provider','TBD')),
+        ('API Style', _val('api_style','TBD')),
+        ('Caching Strategy', _val('caching_strategy','TBD')),
+        ('Observability Stack', _val('observability_stack','TBD')),
+        ('Compliance Standards', _val('compliance_standards','TBD')),
+        ('Data Residency', _val('data_residency','TBD')),
+    ]
+
+    high_level_src = session.get('high_level_decision_points','')
+    one_way_src = session.get('one_way_door_decisions','')
+    other_q_src = session.get('other_relevant_questions','')
+    style_val = _val('architecture_style', _val('desired_architecture_style','TBD'))
+
+    high_level_bullets = [f"{k}: {v}" for k, v in resolved_pairs]
+    # Add explicit pattern/trade-off bullets derived from selections
+    style = style_val
+    deploy = _val('deployment_model','TBD')
+    dbfam = _val('database_family','TBD')
+    msg = _val('messaging_backbone','TBD')
+    if style != 'TBD':
+        high_level_bullets.append(f"Pattern: {style} — trade-off of agility vs. operational complexity")
+    if deploy != 'TBD':
+        high_level_bullets.append(f"Deployment: {deploy} — trade-off of cost vs. control")
+    if dbfam != 'TBD':
+        high_level_bullets.append(f"Data: {dbfam} — trade-off of consistency, scalability, and operational overhead")
+    if msg != 'TBD':
+        high_level_bullets.append(f"Integration: {msg} — trade-off of latency vs. decoupling and reliability")
+    # Append any user/agent extracted bullets (dedup)
+    seen = set(b.lower() for b in high_level_bullets)
+    for b in _bullets(high_level_src):
+        if b and b.lower() not in seen:
+            high_level_bullets.append(b)
+            seen.add(b.lower())
+
+    one_way_bullets = _bullets(one_way_src) or [
+        'Commit to cloud provider and region (data residency, DR topology)',
+        'Select primary database family (migration is costly)',
+        'Pick messaging backbone (ecosystem and semantics impact)',
+        'Choose deployment model (Serverless vs. K8s/VMs)'
+    ]
+    other_q_bullets = _bullets(other_q_src) or [
+        'Clarify compliance scope (GDPR/HIPAA/PCI) and data boundaries',
+        'Confirm SLOs (p95 latency, throughput) and capacity planning',
+        'Define DR targets and multi-region requirements',
+        'List legacy integration constraints and migration cutover plan'
+    ]
+
+    parts: list[str] = []
+    parts.append('# High-Level Architecture Decision Points')
+    parts += [f"- {x}" for x in high_level_bullets]
+    parts.append('')
+    parts.append('# One-way Door Decisions')
+    parts += [f"- {x}" for x in one_way_bullets]
+    parts.append('')
+    parts.append('# Desired Architecture Style')
+    parts.append(style_val)
+    parts.append('')
+    parts.append('# Other Relevant Questions')
+    parts += [f"- {x}" for x in other_q_bullets]
+    return "\n".join(parts).strip()
 
 
 def _get_tab_context_payload(idx: int) -> dict:
@@ -2590,9 +2972,12 @@ def _get_tab_context_payload(idx: int) -> dict:
 
 
 def generate_architecture_context() -> str:
-    """Build an exhaustive Architecture Context markdown using session + mapping + Agent 5_1 guidance."""
+    """Build a comprehensive Architecture Context markdown using PRD + session + mapping.
+    Includes product overview, features, decisions summary, constraints/guardrails, exhaustive assumptions,
+    NFRs, integration/data landscape, environments, risks/mitigations, open questions, and references.
+    """
     prd_text = session.get('prd_text', '')
-    # Mapping
+    # Mapping snapshot
     try:
         mapping = json.loads(session.get('system_mapping', '{}'))
     except Exception:
@@ -2607,6 +2992,71 @@ def generate_architecture_context() -> str:
     def val(key: str, default: str = 'TBD') -> str:
         return (session.get(key) or '').strip() or default
 
+    # PRD-derived features and domain terms
+    features = _extract_features(prd_text)
+    terms = sorted(list(_fold_features_into_terms(_extract_domain_terms(prd_text), features)))
+
+    # Product overview from Business Goals or PRD intro
+    product_overview = (session.get('business_goals') or '').strip()
+    if not product_overview and prd_text:
+        # Use the first 2-3 sentences as a coarse overview
+        snippet = re.split(r"(?<=[.!?])\s+", prd_text.strip())[:3]
+        product_overview = ' '.join(snippet).strip()[:600]
+
+    # Decisions summary bullets
+    high_level = (session.get('high_level_decision_points') or '').strip()
+    one_way = (session.get('one_way_door_decisions') or '').strip()
+    decision_bullets: list[str] = []
+    def split_bullets(text: str) -> list[str]:
+        out = []
+        for line in (text or '').splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            line = re.sub(r"^[-*]\s*", '', line)
+            out.append(line)
+        return out
+    decision_bullets += split_bullets(high_level)
+    # Mark one-way doors clearly
+    decision_bullets += [f"[One-way] {x}" for x in split_bullets(one_way)]
+    # Add key guardrails as explicit decisions
+    guardrail_pairs = [
+        ('Architecture Style', val('architecture_style', val('desired_architecture_style','TBD'))),
+        ('Cloud Provider', val('cloud_provider','TBD')),
+        ('Region Strategy', val('region_strategy','TBD')),
+        ('Deployment Model', val('deployment_model','TBD')),
+        ('Database Family', val('database_family','TBD')),
+        ('Messaging Backbone', val('messaging_backbone','TBD')),
+        ('Identity Provider', val('identity_provider','TBD')),
+        ('API Style', val('api_style','TBD')),
+        ('Caching Strategy', val('caching_strategy','TBD')),
+        ('Observability Stack', val('observability_stack','TBD')),
+    ]
+    decision_bullets += [f"{k}: {v}" for k, v in guardrail_pairs]
+
+    # Build exhaustive assumptions list
+    base_assumptions = split_bullets(val('assumptions',''))
+    extra_assumptions = [
+        'Cloud accounts and required subscriptions are provisioned with baseline guardrails',
+        'CI/CD is available (e.g., GitHub Actions) with infrastructure-as-code (Terraform) pipelines',
+        'Security controls: least-privilege IAM, TLS 1.2+, encryption at rest; secrets managed in a KMS-backed store',
+        'Environments exist (dev, test, stage, prod) with promotion and change control',
+        'SLA/SLOs are monitored with alerting; on-call is staffed',
+        'Data classification and residency requirements are identified and enforceable',
+        'Disaster Recovery targets (RPO/RTO) are feasible given chosen region strategy',
+        'Access to legacy systems and external integrations is available for migration and testing',
+    ]
+    # Include specific selections as assumptions if not already captured
+    for k, label in [
+        ('cloud_provider','Cloud'),('region_strategy','Region Strategy'),('deployment_model','Deployment'),
+        ('database_family','Database'),('messaging_backbone','Messaging'),('identity_provider','Identity'),
+        ('api_style','API'),('caching_strategy','Caching'),('observability_stack','Observability')
+    ]:
+        v = val(k, '')
+        if v and all(v not in a for a in base_assumptions):
+            extra_assumptions.append(f"Selection confirmed: {label} = {v}")
+    assumptions_md = '\n'.join([f"- {a}" for a in (base_assumptions + extra_assumptions)]) or '- TBD'
+
     # Read Agent 5_1 guidance (optional)
     guidance = _read_agent_prompt('agent_5_1')
 
@@ -2614,23 +3064,60 @@ def generate_architecture_context() -> str:
     lines.append('# Architecture Context')
     if guidance:
         lines.append(f"> Guidance: {guidance.strip()}")
+    # Overview
     lines += [
         '',
         '## Overview',
         f"Desired Style: {val('architecture_style', val('desired_architecture_style', 'TBD'))}",
         f"Cloud/Region/Deploy: {val('cloud_provider','TBD')} / {val('region_strategy','TBD')} / {val('deployment_model','TBD')}",
+    ]
+    # Product overview
+    lines += [
+        '',
+        '## Product Overview',
+        product_overview or 'TBD',
+    ]
+    # Features
+    lines += ['','## Features & Capabilities']
+    if features:
+        lines += [f"- {f}" for f in features]
+    else:
+        lines += ['- TBD']
+    # Decisions
+    lines += ['','## Summary of Main Decisions']
+    if decision_bullets:
+        lines += [f"- {b}" for b in decision_bullets]
+    else:
+        lines += ['- TBD']
+    # Business context and legacy
+    lines += [
         '',
         '## Business Context & Objectives',
         val('business_goals', 'TBD'),
         '',
         '## Legacy System Context',
         val('legacy_system', 'TBD'),
+    ]
+    # Constraints & Guardrails (explicit list)
+    lines += [
         '',
         '## Constraints & Guardrails',
-        val('constraints', 'TBD'),
-        '',
-        '## Assumptions',
-        val('assumptions', '- TBD'),
+        f"- Architecture Style: {val('architecture_style', val('desired_architecture_style','TBD'))}",
+        f"- Cloud Provider: {val('cloud_provider','TBD')}",
+        f"- Region Strategy: {val('region_strategy','TBD')}",
+        f"- Deployment Model: {val('deployment_model','TBD')}",
+        f"- Database Family: {val('database_family','TBD')}",
+        f"- Messaging Backbone: {val('messaging_backbone','TBD')}",
+        f"- Identity Provider: {val('identity_provider','TBD')}",
+        f"- API Style: {val('api_style','TBD')}",
+        f"- Caching Strategy: {val('caching_strategy','TBD')}",
+        f"- Observability Stack: {val('observability_stack','TBD')}",
+        f"- Compliance & Data Residency: {val('compliance_standards','TBD')} / {val('data_residency','TBD')}",
+    ]
+    # Assumptions
+    lines += ['', '## Assumptions', assumptions_md]
+    # Stakeholders and scope
+    lines += [
         '',
         '## Stakeholders',
         (val('stakeholders', '- Product\n- Engineering\n- Security\n- Compliance\n- SRE/Operations')),
@@ -2640,29 +3127,36 @@ def generate_architecture_context() -> str:
         val('in_scope', '- TBD'),
         '### Out of Scope',
         val('out_of_scope', '- TBD'),
+    ]
+    # NFRs
+    lines += [
         '',
         '## Non-Functional Requirements',
-        f"- Availability/SLA: {val('availability_sla','99.9% (default)')}",
-        f"- RPO/RTO: {val('rpo_rto','RPO 15m, RTO 1h (default)')}",
+        f"- Availability/SLA: {val('availability_sla','99.9% (assumed)')}",
+        f"- RPO/RTO: {val('rpo_rto','RPO 15m, RTO 1h (assumed)')}",
         f"- Performance Targets: {val('performance_targets','p95 latency, throughput targets TBD')}",
+        f"- Throughput: {val('throughput','TBD')}",
+        f"- Peak Concurrency: {val('peak_concurrency','TBD')}",
+        f"- Data Volume & Retention: {val('data_volume_retention','TBD')}",
         f"- Security Posture: {val('security_posture','Least privilege, encryption in transit/at rest')}",
-        f"- Compliance & Data Residency: {val('compliance_standards','TBD')} / {val('data_residency','TBD')}",
-        '',
-        '## Workloads & Traffic Profiles',
-        val('workloads', f"~{node_count} components, ~{edge_count} integrations; peak/off-peak patterns TBD"),
+    ]
+    # Workloads
+    lines += ['', '## Workloads & Traffic Profiles', val('workloads', f"~{node_count} components, ~{edge_count} integrations; peak/off-peak patterns TBD")]
+    # Data & Integration
+    lines += [
         '',
         '## Data Landscape',
         f"- Database Family: {val('database_family','TBD')}",
-        f"- Data Volume & Retention: {val('data_volume_retention','TBD')}",
+        f"- Notable Entities: {', '.join(terms) if terms else 'TBD'}",
+    ]
+    lines += [
         '',
         '## Integration Landscape',
         '*Components (sample):* ' + (', '.join(sample_nodes) if sample_nodes else 'TBD'),
         '*Edges (sample):*',
     ]
-    if sample_edges:
-        lines += [f"- {edge}" for edge in sample_edges]
-    else:
-        lines += ['- TBD']
+    lines += ([f"- {edge}" for edge in sample_edges] or ['- TBD'])
+    # Platform choices
     lines += [
         '',
         '## Platform & Technology Choices',
@@ -2671,13 +3165,19 @@ def generate_architecture_context() -> str:
         f"- API Style: {val('api_style','TBD')}",
         f"- Caching: {val('caching_strategy','TBD')}",
         f"- Observability: {val('observability_stack','TBD')}",
+    ]
+    # Environments & release
+    lines += [
         '',
         '## Environments & Release Strategy',
-        f"- Environments: {val('environments','dev/test/stage/prod (default)')}",
+        f"- Environments: {val('environments','dev/test/stage/prod (assumed)')}",
         f"- Release Strategy: {val('release_strategy','Blue/Green or Canary (TBD)')}",
         '',
         '## Deployment Topology & Tenancy',
-        f"- Topology: {val('deployment_topology','TBD')}\n- Tenancy Model: {val('tenancy_model','Single-tenant (default)')}",
+        f"- Topology: {val('deployment_topology','TBD')}\n- Tenancy Model: {val('tenancy_model','Single-tenant (assumed)')}",
+    ]
+    # Observability, cost/capacity, migration
+    lines += [
         '',
         '## Observability Requirements',
         val('observability_requirements', '- Metrics, Logs, Traces; SLOs & alerting policy TBD'),
@@ -2687,9 +3187,19 @@ def generate_architecture_context() -> str:
         '',
         '## Migration Strategy',
         val('migration_strategy', 'TBD'),
-        '',
-        '## Risks & Mitigations',
-        val('risks', '- Compliance\n- Operational complexity\n- Data migration'),
+    ]
+    # Risks & mitigations
+    risk_lines = split_bullets(val('risks',''))
+    mit_lines = split_bullets(val('risks_mitigation',''))
+    lines += ['','## Risks & Mitigations']
+    if risk_lines:
+        lines += [f"- {r}" for r in risk_lines]
+    else:
+        lines += ['- Compliance, Operational complexity, Data migration risks']
+    if mit_lines:
+        lines += ['','### Mitigations'] + [f"- {m}" for m in mit_lines]
+    # Open questions & refs
+    lines += [
         '',
         '## Open Questions',
         val('open_questions', '- TBD'),
@@ -2903,12 +3413,12 @@ def tabbed_workbench():
                     'prd_excerpt': (session.get('prd_text','') or '')[:1500]
                 }, ensure_ascii=False)
                 reply_56 = call_agent('agent_5_6', payload_56)
-                if reply_56 and len(reply_56.strip()) > 50:
-                    session['architecture_context'] = reply_56
-                else:
-                    session['architecture_context'] = generate_architecture_context()
+                # Always present generated context (not raw agent text)
+                session['architecture_context'] = generate_architecture_context()
+                _normalize_context_doc(force=True)
             except Exception:
                 session['architecture_context'] = generate_architecture_context()
+                _normalize_context_doc(force=True)
             active_tab = 6
         elif action == 'download_share':
             # Generate Word document export of all tabs
@@ -2954,6 +3464,16 @@ def tabbed_workbench():
                         'current': session.get(session.get('chat_target_tab1','architecture_diagram'), ''),
                         'kind': 'sequence' if session.get('chat_target_tab1') == 'system_interaction_diagram' else ('er' if session.get('chat_target_tab1') == 'data_model_diagram' else 'flowchart')
                     }
+                # Route Database/Service Design tabs to Mermaid agent with dedicated target/kind
+                elif idx in (7, 8):
+                    agent_key = 'agent_mermaid'
+                    tgt = 'data_model_diagram' if idx == 7 else 'service_decomposition_diagram'
+                    kind = 'er' if idx == 7 else 'flowchart'
+                    ctx = {
+                        'target': tgt,
+                        'current': session.get(tgt, ''),
+                        'kind': kind
+                    }
                 else:
                     agent_key = AGENT_BY_TAB.get(idx, 'agent_5_1')
                 try:
@@ -2972,6 +3492,15 @@ def tabbed_workbench():
                         first = ''
                     if first.startswith(('graph','flowchart','sequencediagram','erdiagram','classdiagram','statediagram','gantt','pie','journey','mindmap','timeline','gitgraph')):
                         tgt = session.get('chat_target_tab1','architecture_diagram')
+                        parsed_updates = {'set': {tgt: reply.strip()}}
+                # If on tabs 7/8 and no JSON updates, but reply looks like Mermaid, wrap it with the tab's target
+                if idx in (7, 8) and not parsed_updates:
+                    try:
+                        first = (reply or '').strip().splitlines()[0].strip().lower() if reply else ''
+                    except Exception:
+                        first = ''
+                    if first.startswith(('graph','flowchart','sequencediagram','erdiagram','classdiagram','statediagram','gantt','pie','journey','mindmap','timeline','gitgraph')):
+                        tgt = 'data_model_diagram' if idx == 7 else 'service_decomposition_diagram'
                         parsed_updates = {'set': {tgt: reply.strip()}}
                 # Auto-apply on Tab 1 to behave like Mermaid AI Use
                 if idx == 1:
@@ -3008,6 +3537,35 @@ def tabbed_workbench():
                         applied = True
                     # Clear pending since we applied immediately
                     session[f'pending_updates_tab{idx}'] = ''
+                # Auto-apply on Tabs 7 and 8 similar to tab 1
+                elif idx in (7, 8):
+                    tgt = 'data_model_diagram' if idx == 7 else 'service_decomposition_diagram'
+                    kind = 'er' if idx == 7 else 'flowchart'
+                    applied = False
+                    if parsed_updates and isinstance(parsed_updates.get('set'), dict):
+                        sets = parsed_updates['set']
+                        diagram_keys = {'architecture_diagram','system_interaction_diagram','data_model_diagram','service_decomposition_diagram'}
+                        targets_present = [k for k in sets.keys() if k in diagram_keys]
+                        if targets_present:
+                            for dk in targets_present:
+                                _push_diagram_history(dk)
+                                session[dk] = str(sets[dk])
+                            applied = True
+                        else:
+                            if len(sets) == 1:
+                                only_key = next(iter(sets.keys()))
+                                _push_diagram_history(tgt)
+                                session[tgt] = str(sets[only_key])
+                                applied = True
+                    if not applied and parsed_updates and isinstance(parsed_updates.get('set'), dict) and tgt in parsed_updates['set']:
+                        _push_diagram_history(tgt)
+                        session[tgt] = str(parsed_updates['set'][tgt])
+                        applied = True
+                    if not applied:
+                        _push_diagram_history(tgt)
+                        _apply_prompt_to_mermaid(tgt, kind, msg)
+                        applied = True
+                    session[f'pending_updates_tab{idx}'] = ''
                 else:
                     # For non-diagram tabs, require explicit Apply
                     session[f'pending_updates_tab{idx}'] = json.dumps(parsed_updates) if parsed_updates else ''
@@ -3042,20 +3600,16 @@ def tabbed_workbench():
                 if last_user:
                     updates = _heuristic_updates_from_user(idx, last_user)
             if updates:
-                # If on tab 1 and updates are not specifying which diagram, coerce to current target if it's mermaid text
-                if idx == 1 and isinstance(updates, dict) and not (updates.get('set') and any(k in updates['set'] for k in ('architecture_diagram','system_interaction_diagram','data_model_diagram','service_decomposition_diagram'))):
-                    # Treat as raw mermaid replacement for target
-                    tgt = session.get('chat_target_tab1','architecture_diagram')
+                # For diagram-centric tabs (1,7,8), if updates don't target diagram fields, coerce to the tab's target
+                if idx in (1, 7, 8) and isinstance(updates, dict) and not (updates.get('set') and any(k in updates['set'] for k in ('architecture_diagram','system_interaction_diagram','data_model_diagram','service_decomposition_diagram'))):
+                    tgt = session.get('chat_target_tab1','architecture_diagram') if idx == 1 else ('data_model_diagram' if idx == 7 else 'service_decomposition_diagram')
                     if 'set' in updates and isinstance(updates['set'], dict) and len(updates['set']) == 1:
-                        # Replace unknown single set key with target
                         only_key = next(iter(updates['set'].keys()))
                         val = updates['set'][only_key]
                         updates = {'set': {tgt: val}}
                     elif isinstance(updates.get('set'), dict):
-                        # Leave as-is if it already targets diagram fields
                         pass
                     else:
-                        # As a fallback, convert to set for the target if updates is a plain string
                         if isinstance(updates, str):
                             updates = {'set': {tgt: updates}}
                 # Push diagram history if diagrams are being set
@@ -3068,6 +3622,16 @@ def tabbed_workbench():
                 except Exception:
                     pass
                 _apply_agent_updates(idx, updates)
+                # After applying updates, refresh compiled document to keep Tab 7 human-readable
+                try:
+                    session['compiled_document'] = _build_compiled_document_markdown()
+                except Exception:
+                    pass
+                # Also keep Context Doc normalized if it was affected
+                try:
+                    _normalize_context_doc()
+                except Exception:
+                    pass
                 session[f'pending_updates_tab{idx}'] = ''
             active_tab = idx
         elif action == 'chat_clear':
@@ -3141,6 +3705,8 @@ def tabbed_workbench():
     chat_tab4=session.get('chat_tab4',''),
     chat_tab5=session.get('chat_tab5',''),
     chat_tab6=session.get('chat_tab6',''),
+    chat_tab7=session.get('chat_tab7',''),
+    chat_tab8=session.get('chat_tab8',''),
     # approved flags per tab index
     approved_tab0=session.get('approved_tab0',''),
     approved_tab1=session.get('approved_tab1',''),
@@ -3149,6 +3715,8 @@ def tabbed_workbench():
     approved_tab4=session.get('approved_tab4',''),
     approved_tab5=session.get('approved_tab5',''),
     approved_tab6=session.get('approved_tab6',''),
+    approved_tab7=session.get('approved_tab7',''),
+    approved_tab8=session.get('approved_tab8',''),
     # pending apply flags per tab index
     pending_tab0=bool(session.get('pending_updates_tab0')),
     pending_tab1=bool(session.get('pending_updates_tab1')),
@@ -3157,6 +3725,8 @@ def tabbed_workbench():
     pending_tab4=bool(session.get('pending_updates_tab4')),
     pending_tab5=bool(session.get('pending_updates_tab5')),
     pending_tab6=bool(session.get('pending_updates_tab6')),
+    pending_tab7=bool(session.get('pending_updates_tab7')),
+    pending_tab8=bool(session.get('pending_updates_tab8')),
         business_goals=session.get('business_goals',''),
         legacy_system=session.get('legacy_system',''),
         constraints=session.get('constraints',''),
