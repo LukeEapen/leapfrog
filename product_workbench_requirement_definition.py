@@ -788,8 +788,13 @@ def page3():
             logging.info(f"[PAGE3] user_inputs: {user_inputs}")
         except UnicodeEncodeError:
             logging.info(f"[PAGE3] user_inputs: {str(user_inputs).encode('ascii', 'replace').decode('ascii')}")
+
         feature_overview = data.get("feature_overview", "")
         product_overview = data.get("product_overview", "")
+        legacy_desc_full = data.get("legacy_business_description", "") or user_inputs.get("legacy_business_description", "")
+        # Trim legacy description to control token size for performance
+        legacy_desc = (legacy_desc_full or "")[:2000]
+
         combined_input = f"""
         # Original User Inputs
         Industry: {user_inputs.get('industry', '')}
@@ -803,11 +808,21 @@ def page3():
 
         # Feature Overview (Agent 2 Analysis)
         {feature_overview}
+
+        # Legacy Business Description (from Legacy Code)
+        {legacy_desc}
+
+        # Incorporation Guidelines
+        - Use insights from the Legacy Business Description to inform and refine Functional, Non-Functional, Data, and Legal/Compliance requirements when relevant.
+        - When a requirement or statement is directly derived from legacy artifacts, add a trailing citation line: "Source: Legacy Code" or "Reference: Legacy Code" (one line per item where applicable).
+        - Do not over-cite; include a citation only when the point is supported by the legacy artifacts.
         """
+
         try:
             logging.info(f"[PAGE3] Combined input for agents: {combined_input}")
         except UnicodeEncodeError:
             logging.info(f"[PAGE3] Combined input for agents: {combined_input.encode('ascii', 'replace').decode('ascii')}")
+
         import threading, psutil, gc
         loop = None
         try:
@@ -815,24 +830,35 @@ def page3():
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
+
         keys = [k for k in ASSISTANTS if k.startswith("agent_4_")]
-        results = loop.run_until_complete(call_agents_parallel([
-            (ASSISTANTS[k], combined_input) for k in keys
-        ]))
+        # Light guidance to 4.x agents: leverage and cite legacy-derived insights
+        agent_inputs = []
+        for k in keys:
+            guidance = (
+                "When applicable, incorporate insights from 'Legacy Business Description' into this section. "
+                "Add 'Source: Legacy Code' on lines that are directly supported by legacy artifacts."
+            )
+            agent_inputs.append((ASSISTANTS[k], combined_input + "\n\n[Agent Guidance]\n" + guidance))
+
+        results = loop.run_until_complete(call_agents_parallel(agent_inputs))
         outputs = dict(zip(keys, results))
         data['combined_outputs'] = outputs
         session['combined_outputs'] = outputs
+
         if USING_REDIS:
             redis_client.setex(session['data_key'], 3600, json.dumps(data))
         else:
             with open(os.path.join(TEMP_DIR, f'prd_session_{session["data_key"]}.json'), 'w') as f:
                 json.dump(data, f)
+
         try:
             logging.info(f"[RESOURCE] Thread count: {threading.active_count()}")
             logging.info(f"[RESOURCE] Memory usage: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB")
             gc.collect()
         except Exception as e:
             logging.warning(f"Resource logging failed: {e}")
+
         return redirect('/page4')
 
     return render_template('page3_prompt_picker.html', highest_order=data.get('highest_order', ''))
@@ -1010,8 +1036,14 @@ def generate_word_doc():
         doc = Document()
         initialize_document_styles(doc)
 
+        # Prepare legacy section with explicit source note
+        legacy_section = data.get("legacy_business_description", "")
+        if legacy_section and "Legacy Code" not in legacy_section:
+            legacy_section = legacy_section + "\n\nSource: Legacy Code"
+
         # Map all sections
         sections = {
+            "Legacy Business Description (from Legacy Code)": legacy_section,
             "Product Overview": data.get("product_overview", ""),
             "Feature Overview": data.get("feature_overview", ""),
          #   "Product Requirements": data.get("combined_outputs", {}).get("agent_4_1", ""),
