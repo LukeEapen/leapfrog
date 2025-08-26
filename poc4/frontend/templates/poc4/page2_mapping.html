@@ -36,12 +36,12 @@
       <span class="small text-muted">Filter origins:</span>
       <div class="form-check form-check-inline align-items-center d-flex gap-1">
         <input class="form-check-input" type="checkbox" id="filter-source">
-        <label class="form-check-label" for="filter-source"><span class="badge bg-danger">DATA SOURCE 1</span></label>
+  <label class="form-check-label" for="filter-source"><span class="badge bg-danger">SOURCE</span></label>
         <button class="btn btn-xs btn-outline-secondary minimize-origin" type="button" data-origin="source" title="Minimize DS1 rows">–</button>
       </div>
       <div class="form-check form-check-inline align-items-center d-flex gap-1">
         <input class="form-check-input" type="checkbox" id="filter-legacy">
-        <label class="form-check-label" for="filter-legacy"><span class="badge bg-dark">DATA SOURCE 2</span></label>
+  <label class="form-check-label" for="filter-legacy"><span class="badge bg-dark">LEGACY</span></label>
         <button class="btn btn-xs btn-outline-secondary minimize-origin" type="button" data-origin="legacy" title="Minimize DS2 rows">–</button>
       </div>
       <!-- Dynamic DS3+ chips -->
@@ -96,9 +96,9 @@
               <div class="map-row d-flex gap-2 small" data-origin="{{ origin }}" data-source="{{ m.source }}" data-target="{{ m.target }}" data-target_table="{{ m.target_table or '' }}" data-type="{{ target_types.get(m.target,'') }}" data-similarity="{{ (m.get('similarity',0)*100)|round(4) }}" title="{{ m.source }} ➜ {{ m.target }} :: {{ m.get('justification') or m.get('description') }}" style="display:none;">
                 <span style="width:90px">
                   {% if origin=='source' %}
-                    <span class="badge bg-danger">DATA SOURCE 1</span>
+                    <span class="badge bg-danger">SOURCE</span>
                   {% elif origin=='legacy' %}
-                    <span class="badge bg-dark">DATA SOURCE 2</span>
+                    <span class="badge bg-dark">LEGACY</span>
                   {% elif origin[:2]|lower == 'ds' %}
                     <span class="badge bg-secondary">DATA SOURCE {{ origin[2:]|int }}</span>
                   {% else %}

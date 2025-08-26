@@ -32,11 +32,8 @@
     <div class="card h-100 shadow-sm">
       <div class="card-header bg-light text-danger fw-bold">Draft Preview</div>
       <div class="card-body">
-        {% if not target_model_draft %}
-          <div class="alert alert-info">Click Generate Draft to produce a target model from your selected sources.</div>
-        {% elif target_model_draft.error %}
-          <div class="alert alert-danger">{{ target_model_draft.error }}</div>
-        {% else %}
+        {# Bring ER diagram and Standards alignment to the top #}
+        {% if target_model_draft and not target_model_draft.error %}
           {% if target_model_draft.er_diagram_mermaid %}
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center">
@@ -69,6 +66,14 @@
             </div>
           </div>
           {% endif %}
+        {% endif %}
+
+        
+  {% if not target_model_draft %}
+          <div class="alert alert-info">Click Generate Draft to produce a target model from your selected sources.</div>
+        {% elif target_model_draft.error %}
+          <div class="alert alert-danger">{{ target_model_draft.error }}</div>
+        {% else %}
           <div class="accordion" id="tmodelAccordion">
             {% for t in target_model_draft.tables %}
             <div class="accordion-item">
@@ -96,6 +101,77 @@
             <pre class="small mb-0">{{ target_model_draft | tojson(indent=2) }}</pre>
           </div>
         {% endif %}
+
+        <!-- Mapping section moved to bottom; still renders without a draft -->
+        <div class="mb-3 mt-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small text-muted">Field Mapping (Source ➜ Target)</span>
+            <span class="badge bg-light text-dark border">Mapping</span>
+          </div>
+          {% if target_model_draft and target_model_draft.tables %}
+          <div class="small text-muted mt-2">Target tables</div>
+          <div class="d-flex flex-wrap gap-2 mb-2">
+            {% for t in target_model_draft.tables %}
+              <span class="badge bg-light text-dark border">
+                {{ t.name }} <span class="text-muted">{{ t.fields|length }} fields</span>
+              </span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if mapping_mermaid %}
+          <div class="border rounded p-2 bg-white mb-2">
+            <div class="mermaid" style="max-height: 260px; overflow:auto;">
+{{ mapping_mermaid }}
+            </div>
+          </div>
+          {% endif %}
+          <style>
+            .badge.origin-badge.origin-source { background-color: #E8F0FF; }
+            .badge.origin-badge.origin-legacy { background-color: #FFF3E0; }
+            .badge.origin-badge.origin-ds { background-color: #E8F5E9; }
+            .badge.origin-badge.origin-other { background-color: #F5F5F5; }
+          </style>
+          <div class="table-responsive border rounded">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 12rem;">Target Table</th>
+                  <th style="width: 12rem;">Target Field</th>
+                  <th style="width: 12rem;">Source Origin</th>
+                  <th style="width: 16rem;">Source Table</th>
+                  <th>Source Field</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if mapping_pairs %}
+                  {% set last_tbl = None %}
+                  {% for r in mapping_pairs %}
+                  <tr>
+                    <td>
+                      {% if last_tbl != r.target_table %}
+                        <code>{{ r.target_table or '—' }}</code>
+                        {% set last_tbl = r.target_table %}
+                      {% endif %}
+                    </td>
+                    <td><code>{{ r.target }}</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border {% if r.origin=='source' %}origin-source{% elif r.origin=='legacy' %}origin-legacy{% elif r.origin.startswith('ds') %}origin-ds{% else %}origin-other{% endif %}">
+                        {{ r.origin|upper }}
+                      </span>
+                    </td>
+                    <td><code>{{ r.source_table or '—' }}</code></td>
+                    <td><code>{{ r.source }}</code></td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="5" class="text-muted small">No mappings found. Define mappings on Page 2 to populate this view.</td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -104,6 +104,235 @@ def target_model():
         except Exception:
             return {"tables": []}
 
+    # Build a temporary mapping for display if none exists in session
+    def _ephemeral_mapping():
+        mapping = get_mapping() or []
+        if mapping:
+            return mapping
+        try:
+            # Load schemas
+            src_doc = _load_json(os.path.join(schemas_dir, src_schema_file)) if src_schema_file else {"tables": []}
+            leg_doc = _load_json(os.path.join(schemas_dir, leg_schema_file)) if leg_schema_file else {"tables": []}
+            tgt_doc = _load_json(os.path.join(schemas_dir, tgt_schema_file)) if tgt_schema_file else {"tables": []}
+            extras_docs = []
+            for ef in (extras_files or []):
+                if ef:
+                    extras_docs.append((ef, _load_json(os.path.join(schemas_dir, ef))))
+            # Helpers
+            def _build_ft_map(doc):
+                ft = {}
+                for t in (doc.get('tables') or []):
+                    for f in (t.get('fields') or []):
+                        nm = f.get('name')
+                        if nm:
+                            ft[nm] = t.get('name')
+                return ft
+            src_ft = _build_ft_map(src_doc)
+            leg_ft = _build_ft_map(leg_doc)
+            tgt_ft = _build_ft_map(tgt_doc)
+            # Run mappers
+            src_map = schema_mapping_agent.map_schema(src_doc, tgt_doc) if src_doc else []
+            leg_map = schema_mapping_agent.map_schema(leg_doc, tgt_doc) if leg_doc else []
+            ext_maps = []
+            for i, (fn, edoc) in enumerate(extras_docs):
+                try:
+                    m = schema_mapping_agent.map_schema(edoc, tgt_doc)
+                except Exception:
+                    m = []
+                for mm in m:
+                    mm['origin'] = f'ds{i+3}'
+                    # backfill source_table
+                    # build once per extra
+                    eft = _build_ft_map(edoc)
+                    mm['source_table'] = eft.get(mm.get('source'))
+                    if mm.get('target'):
+                        mm['target_table'] = tgt_ft.get(mm.get('target'))
+                ext_maps.extend(m)
+            # Backfill core maps
+            for m in src_map:
+                m['origin'] = 'source'
+                m['source_table'] = src_ft.get(m.get('source'))
+                if m.get('target'):
+                    m['target_table'] = tgt_ft.get(m.get('target'))
+            for m in leg_map:
+                m['origin'] = 'legacy'
+                m['source_table'] = leg_ft.get(m.get('source'))
+                if m.get('target'):
+                    m['target_table'] = tgt_ft.get(m.get('target'))
+            return src_map + leg_map + ext_maps
+        except Exception:
+            return []
+
+    # Build a Mermaid graph for current mapping (source -> target field edges)
+    def _build_mapping_mermaid():
+        """Build a Mermaid flowchart for Source ➜ Target mapping with:
+        - Color-coding by origin (source/legacy/dsN) for left-side nodes and edge strokes.
+        - Grouping of target fields into subgraphs per target table.
+        - A compact legend showing only the origins present.
+        """
+        import re
+        mapping = get_mapping() or _ephemeral_mapping() or []
+        # Build a target field->table map from the selected Target schema
+        tgt_schema_path = os.path.join(schemas_dir, tgt_schema_file)
+        tgt_doc = _load_json(tgt_schema_path)
+        tgt_ft = {}
+        try:
+            for t in (tgt_doc.get('tables') or []):
+                for f in (t.get('fields') or []):
+                    nm = f.get('name')
+                    if nm:
+                        tgt_ft[nm] = t.get('name')
+        except Exception:
+            pass
+        # Collect nodes and edges with origin context
+        edges: list[tuple[str, str, str]] = []  # (left_id, right_id, origin)
+        left_nodes: dict[str, tuple[str, str]] = {}  # id -> (label, origin)
+        # Right nodes grouped by target table
+        right_groups: dict[str, dict[str, str]] = {}  # table -> {id: label}
+
+        def sid(s: str) -> str:
+            return re.sub(r'[^a-zA-Z0-9_]', '_', s or '')[:80] or 'x'
+
+        for m in mapping:
+            s_tbl = m.get('source_table') or ''
+            s_col = m.get('source') or ''
+            t_tbl = m.get('target_table') or tgt_ft.get((m.get('target') or '')) or ''
+            t_col = m.get('target') or ''
+            origin = (m.get('origin') or 'source').lower()
+            if not (s_col and t_col):
+                continue
+            origin_cap = 'Source' if origin == 'source' else ('Legacy' if origin == 'legacy' else origin.upper())
+            l_label = f"{origin_cap}:{s_tbl}.{s_col}" if s_tbl else f"{origin_cap}:{s_col}"
+            r_label = f"{t_tbl}.{t_col}" if t_tbl else f"{t_col}"
+            l_id = f"L_{sid(origin)}_{sid(s_tbl)}_{sid(s_col)}"
+            r_id = f"R_{sid(t_tbl)}_{sid(t_col)}"
+            left_nodes[l_id] = (l_label, origin)
+            group = t_tbl or 'UNASSIGNED'
+            right_groups.setdefault(group, {})[r_id] = r_label
+            edges.append((l_id, r_id, origin))
+
+        if not edges:
+            return ''
+
+        # Color palette per origin (nodes + edge strokes)
+        def _colors_for_origin(o: str):
+            base = {
+                'source': ('#E8F0FF', '#3A7BDA', '#0B3A79'),  # fill, stroke, text
+                'legacy': ('#FFF3E0', '#FB8C00', '#4A2A00'),
+                'ds3':   ('#E8F5E9', '#43A047', '#1B5E20'),
+                'ds4':   ('#F3E5F5', '#8E24AA', '#4A148C'),
+                'ds5':   ('#E0F7FA', '#00838F', '#004D40'),
+            }
+            # Any dsN beyond predefined gets a rotating set
+            if o in base:
+                return base[o]
+            if o.startswith('ds'):
+                # derive a color deterministically from the number
+                try:
+                    n = int(o[2:])
+                except Exception:
+                    n = 6
+                palette = [
+                    ('#FFFDE7', '#FBC02D', '#5F3700'),  # amber
+                    ('#EDE7F6', '#5E35B1', '#311B92'),  # deep purple
+                    ('#E1F5FE', '#039BE5', '#01579B'),  # light blue
+                    ('#FCE4EC', '#D81B60', '#880E4F'),  # pink
+                ]
+                return palette[(n - 3) % len(palette)]
+            # default gray
+            return ('#F5F5F5', '#9E9E9E', '#424242')
+
+        origins_present = sorted({o for _, _, o in edges})
+
+        lines = ["flowchart LR"]
+
+        # Define classes per origin
+        for o in origins_present:
+            fill, stroke, text = _colors_for_origin(o)
+            lines.append(f"  classDef {sid(o)} fill:{fill},stroke:{stroke},stroke-width:1px,color:{text};")
+
+        # Origins cluster with class applied per node
+        lines.append("  subgraph Source")
+        lines.append("  direction TB")
+        for nid, (lbl, o) in sorted(left_nodes.items()):
+            ocls = sid(o)
+            lines.append(f"  {nid}[\"{lbl}\"]")
+            lines.append(f"  class {nid} {ocls};")
+        lines.append("  end")
+
+        # Target cluster grouped by table
+        lines.append("  subgraph Target")
+        lines.append("  direction TB")
+        for tbl in sorted(right_groups.keys()):
+            sub_name = sid(f"TBL_{tbl}")
+            pretty = tbl if tbl != 'UNASSIGNED' else 'Other/Unassigned'
+            lines.append(f"  subgraph {sub_name}[\"{pretty}\"]")
+            lines.append("  direction TB")
+            for nid, lbl in sorted(right_groups[tbl].items()):
+                lines.append(f"  {nid}[\"{lbl}\"]")
+            lines.append("  end")
+        lines.append("  end")
+
+        # Edges and per-edge styles matching origin color
+        for l, r, _ in edges:
+            lines.append(f"  {l} --> {r}")
+        # linkStyle indices are in the order edges are declared in the diagram
+        for idx, (_, _, o) in enumerate(edges):
+            _, stroke, _ = _colors_for_origin(o)
+            lines.append(f"  linkStyle {idx} stroke:{stroke},stroke-width:2px,opacity:0.9;")
+
+        # Legend showing origins present
+        if origins_present:
+            lines.append("  subgraph LEGEND")
+            lines.append("  direction LR")
+            for o in origins_present:
+                lid = f"LEG_{sid(o)}"
+                lines.append(f"  {lid}[\"{o.title()}\"]")
+                lines.append(f"  class {lid} {sid(o)};")
+            lines.append("  end")
+
+        return "\n".join(lines)
+
+    # Build a simple table-friendly list of mapping pairs
+    def _build_mapping_pairs():
+        mapping = get_mapping() or _ephemeral_mapping() or []
+        # Build field->table map from selected Target schema for backfill
+        tgt_schema_path = os.path.join(schemas_dir, tgt_schema_file)
+        tgt_doc = _load_json(tgt_schema_path)
+        tgt_ft = {}
+        try:
+            for t in (tgt_doc.get('tables') or []):
+                for f in (t.get('fields') or []):
+                    nm = f.get('name')
+                    if nm:
+                        tgt_ft[nm] = t.get('name')
+        except Exception:
+            pass
+        rows = []
+        for m in mapping:
+            s_tbl = m.get('source_table') or ''
+            s_col = m.get('source') or ''
+            t_tbl = m.get('target_table') or tgt_ft.get((m.get('target') or '')) or ''
+            t_col = m.get('target') or ''
+            if not (s_col and t_col):
+                continue
+            origin = (m.get('origin') or 'source').lower()
+            rows.append({
+                'origin': origin,
+                'source_table': s_tbl,
+                'source': s_col,
+                'target_table': t_tbl,
+                'target': t_col,
+            })
+        rows.sort(key=lambda r: (
+            r.get('target_table') or '',
+            r.get('target') or '',
+            r.get('origin') or '',
+            r.get('source_table') or '',
+            r.get('source') or ''
+        ))
+        return rows
+
     # Actions
     if request.method == 'POST':
         action = request.form.get('action') or 'design_target_model'
@@ -132,13 +361,10 @@ def target_model():
             draft = get_target_model_draft()
             if draft:
                 set_target_model_final(draft)
-        # Render after POST
-        return render_template('poc4/page_target_model.html',
-                               target_model_draft=get_target_model_draft(),
-                               target_model_final=get_target_model_final())
+        # After POST, fall through to a single render below
 
     # GET: optionally auto-generate when ?auto=1 is present
-    if request.args.get('auto') == '1':
+    if request.method == 'GET' and request.args.get('auto') == '1':
         docs = []
         for f in (src_schema_file, leg_schema_file):
             if not f:
@@ -159,9 +385,15 @@ def target_model():
             set_target_model_draft(draft)
         except Exception as e:
             set_target_model_draft({"error": str(e)})
-    return render_template('poc4/page_target_model.html',
-                           target_model_draft=get_target_model_draft(),
-                           target_model_final=get_target_model_final())
+
+    # Single render for both GET/POST
+    return render_template(
+        'poc4/page_target_model.html',
+        target_model_draft=get_target_model_draft(),
+        target_model_final=get_target_model_final(),
+        mapping_mermaid=_build_mapping_mermaid(),
+        mapping_pairs=_build_mapping_pairs()
+    )
 
 # --- Schema metadata helpers (categorization: source|legacy|target) ---
 def _schemas_dir():

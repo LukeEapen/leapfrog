@@ -19,17 +19,17 @@
         <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-3">
             <span>Origin Fields</span>
-            <span class="badge bg-light text-dark border">Data Source 1: {{ source_schema_file }}</span>
-            <span class="badge bg-light text-dark border">Data Source 2: {{ legacy_schema_file }}</span>
+            <span class="badge bg-light text-dark border">Source: {{ source_schema_file }}</span>
+            <span class="badge bg-light text-dark border">Legacy: {{ legacy_schema_file }}</span>
           </div>
           <div class="d-flex align-items-center gap-3">
             <div class="form-check form-check-inline m-0 small">
               <input class="form-check-input" type="checkbox" id="filter-source">
-              <label class="form-check-label" for="filter-source"><span class="badge bg-danger">DATA SOURCE 1</span></label>
+              <label class="form-check-label" for="filter-source"><span class="badge bg-danger">SOURCE</span></label>
             </div>
             <div class="form-check form-check-inline m-0 small">
               <input class="form-check-input" type="checkbox" id="filter-legacy">
-              <label class="form-check-label" for="filter-legacy"><span class="badge bg-dark">DATA SOURCE 2</span></label>
+              <label class="form-check-label" for="filter-legacy"><span class="badge bg-dark">LEGACY</span></label>
             </div>
           </div>
         </div>
@@ -37,7 +37,7 @@
           <!-- Source section -->
       <div id="source-section" style="display:none;">
             <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="fw-semibold text-danger">Data Source 1 ({{ source_schema_file }})</span>
+  <span class="fw-semibold text-danger">Source ({{ source_schema_file }})</span>
               <div class="d-flex align-items-center gap-2">
                 <button class="btn btn-outline-secondary btn-sm" id="p1b-min-source" type="button">Minimize</button>
                 <div class="form-check m-0 small">
@@ -53,14 +53,14 @@
               <label class="form-check-label" for="src_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
             </div>
             {% endfor %}
-            {% if not source_fields %}<div class="text-muted small">No Data Source 1 schema selected on Page 1.</div>{% endif %}
+            {% if not source_fields %}<div class="text-muted small">No Source schema selected on Page 1.</div>{% endif %}
             <hr>
             </div>
           </div>
           <!-- Legacy section -->
       <div id="legacy-section" style="display:none;">
             <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="fw-semibold text-dark">Data Source 2 ({{ legacy_schema_file }})</span>
+  <span class="fw-semibold text-dark">Legacy ({{ legacy_schema_file }})</span>
               <div class="d-flex align-items-center gap-2">
                 <button class="btn btn-outline-secondary btn-sm" id="p1b-min-legacy" type="button">Minimize</button>
                 <div class="form-check m-0 small">
@@ -76,7 +76,7 @@
               <label class="form-check-label" for="leg_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
             </div>
             {% endfor %}
-            {% if not legacy_fields %}<div class="text-muted small">No Data Source 2 schema selected on Page 1.</div>{% endif %}
+            {% if not legacy_fields %}<div class="text-muted small">No Legacy schema selected on Page 1.</div>{% endif %}
             </div>
           </div>
 
