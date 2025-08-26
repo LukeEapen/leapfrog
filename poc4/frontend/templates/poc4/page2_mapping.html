@@ -94,7 +94,7 @@
             {# Only render rows when both target and source (Field column) are present #}
             {% if m.target and m.source %}
               {% set any_any = true %}
-              <div class="map-row d-flex gap-2 small" data-origin="{{ origin }}" data-source="{{ m.source }}" data-target="{{ m.target }}" data-target_table="{{ m.target_table or '' }}" data-type="{{ target_types.get(m.target,'') }}" data-similarity="{{ (m.get('similarity',0)*100)|round(4) }}" title="{{ m.source }} ➜ {{ m.target }} :: {{ m.get('justification') or m.get('description') }}" style="display:none;">
+              <div class="map-row d-flex gap-2 small" data-origin="{{ origin }}" data-source="{{ m.source }}" data-target="{{ m.target }}" data-target_table="{{ m.target_table or '' }}" data-type="{{ target_types.get(m.target,'') }}" data-similarity="{{ (m.get('similarity',0)*100)|round(4) }}" title="{{ m.source }} ➜ {{ m.target }} :: {{ m.get('justification') or m.get('description') }}">
                 <span style="width:90px">
                   {% if origin=='source' %}
                     <span class="badge bg-danger">SOURCE</span>
@@ -229,7 +229,22 @@ function applyFilters(){
 filterSource?.addEventListener('change', applyFilters);
 filterLegacy?.addEventListener('change', applyFilters);
 extraFilters.forEach(cb=> cb.addEventListener('change', applyFilters));
+// Ensure at least one filter is ON to avoid an empty view on first load
+function ensureSomeFiltersOn(){
+  const anyOn = (
+    (filterSource && filterSource.checked) ||
+    (filterLegacy && filterLegacy.checked) ||
+    extraFilters.some(cb => cb.checked)
+  );
+  if(!anyOn){
+    if(filterSource) filterSource.checked = true;
+    if(filterLegacy) filterLegacy.checked = true;
+    extraFilters.forEach(cb => cb.checked = true);
+    saveFilterPrefs(currentFilterState());
+  }
+}
 applyStoredPrefs();
+ensureSomeFiltersOn();
 applyFilters();
 
 // --- Minimize per origin (collapse rows but keep filter state) ---

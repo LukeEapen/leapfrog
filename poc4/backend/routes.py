@@ -594,6 +594,14 @@ def page1_fields():
     source_schema_file = session.get('source_schema')
     legacy_schema_file = session.get('legacy_schema')
     extra_sources_files = session.get('extra_sources', [])
+    # Ensure DS3 single-pick is treated as an extra source if set
+    ds3_schema_file = session.get('ds3_schema')
+    if ds3_schema_file:
+        try:
+            if ds3_schema_file not in (extra_sources_files or []):
+                extra_sources_files = (extra_sources_files or []) + [ds3_schema_file]
+        except Exception:
+            extra_sources_files = [ds3_schema_file]
     target_schema_file = session.get('target_schema', 'target_schema.json')
     source_schema = load_schema(source_schema_file) if source_schema_file else {"tables": []}
     legacy_schema = load_schema(legacy_schema_file) if legacy_schema_file else {"tables": []}
@@ -655,6 +663,14 @@ def page2():
     source_schema_file = session.get('source_schema')
     legacy_schema_file = session.get('legacy_schema')
     extra_sources_files = session.get('extra_sources', [])
+    # Ensure DS3 single-pick is treated as an extra source if set
+    ds3_schema_file = session.get('ds3_schema')
+    if ds3_schema_file:
+        try:
+            if ds3_schema_file not in (extra_sources_files or []):
+                extra_sources_files = (extra_sources_files or []) + [ds3_schema_file]
+        except Exception:
+            extra_sources_files = [ds3_schema_file]
     target_schema_file = session.get('target_schema', 'target_schema.json')
     base_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
     def load_schema(fname):
@@ -756,6 +772,37 @@ def page2():
                     mm['justification'] = f"Auto-mapped {mm.get('source')} to {mm.get('target')} based on heuristic"
         mapping = source_mapping + legacy_mapping + extra_mappings
     else:
+        # If a previous mapping exists, append mappings for any new extras (e.g., DS3)
+        existing_origins = { (mm.get('origin') or 'source').lower() for mm in mapping }
+        appended = False
+        for idx, (fn, sch) in enumerate(filtered_extras):
+            origin_name = f'ds{idx+3}'
+            if origin_name in existing_origins:
+                continue
+            try:
+                mnew = schema_mapping_agent.map_schema(sch, target_schema)
+            except Exception:
+                mnew = []
+            for mm in mnew:
+                mm['origin'] = origin_name
+                # annotate tables
+                try:
+                    ftm = build_field_table_map(sch)
+                    mm['source_table'] = ftm.get(mm.get('source'))
+                except Exception:
+                    pass
+                if mm.get('target'):
+                    mm['target_table'] = target_field_table_map.get(mm.get('target'))
+                # justification
+                if mm.get('target') and not mm.get('justification'):
+                    sim = mm.get('similarity')
+                    if isinstance(sim, (int, float)):
+                        mm['justification'] = f"Auto-mapped by name similarity {round(sim*100,1)}% between {mm.get('source')} and {mm.get('target')}"
+                    else:
+                        mm['justification'] = f"Auto-mapped {mm.get('source')} to {mm.get('target')} based on heuristic"
+            if mnew:
+                mapping.extend(mnew)
+                appended = True
         # Backfill justification if previously stored mapping lacks it
         for m in mapping:
             if m.get('target') and not m.get('justification'):
@@ -764,6 +811,8 @@ def page2():
                     m['justification'] = f"Auto-mapped by name similarity {round(sim*100,1)}% between {m.get('source')} and {m.get('target')}"
                 else:
                     m['justification'] = f"Auto-mapped {m.get('source')} to {m.get('target')} based on heuristic"
+        if appended:
+            set_mapping(mapping)
     # POST updates mapping
     if request.method == 'POST':
         new_mapping = []
