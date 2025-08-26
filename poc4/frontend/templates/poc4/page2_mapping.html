@@ -91,7 +91,8 @@
           {% set any_any = false %}
           {% for m in mapping %}
             {% set origin = m.get('origin','source') %}
-            {% if m.target %}
+            {# Only render rows when both target and source (Field column) are present #}
+            {% if m.target and m.source %}
               {% set any_any = true %}
               <div class="map-row d-flex gap-2 small" data-origin="{{ origin }}" data-source="{{ m.source }}" data-target="{{ m.target }}" data-target_table="{{ m.target_table or '' }}" data-type="{{ target_types.get(m.target,'') }}" data-similarity="{{ (m.get('similarity',0)*100)|round(4) }}" title="{{ m.source }} ➜ {{ m.target }} :: {{ m.get('justification') or m.get('description') }}" style="display:none;">
                 <span style="width:90px">
