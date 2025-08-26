@@ -372,6 +372,32 @@
               </div>
             </div>
 
+            <!-- Legacy Upload Row (COBOL/JCL) -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label">
+                  <i class="bi bi-file-earmark-code me-2"></i>Legacy COBOL/JCL File
+                </label>
+                <input type="file" class="form-control" id="legacyFileInput" name="legacy_files[]" accept=".cob,.cbl,.cpy,.jcl,.txt">
+                <small class="text-muted">Upload a single COBOL/JCL file (optional)</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">
+                  <i class="bi bi-folder2-open me-2"></i>Legacy Folder (multiple files)
+                </label>
+                <input type="file" class="form-control" id="legacyFolderInput" name="legacy_files[]" webkitdirectory directory multiple>
+                <small class="text-muted">Select a folder containing COBOL/JCL files (optional)</small>
+              </div>
+              <div class="col-12 d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-light border" id="extractLegacyBtn">
+                  Extract Legacy Business Description
+                </button>
+                <span class="small text-muted" id="legacyStatus"></span>
+              </div>
+              <!-- Hidden field to carry the extracted description with the main form submit -->
+              <input type="hidden" name="legacy_business_description" id="legacyBusinessHidden">
+            </div>
+
             <div class="mb-4">
               <label class="form-label">What is the product / platform that you are trying to build?</label>
               <textarea name="intent" class="form-control" rows="4"
@@ -474,6 +500,80 @@
       }
     });
   </script>
+  
+  <!-- Toast container for legacy extraction notifications -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="legacyToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="legacyToastBody">Legacy description extracted ✓</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Handle Legacy extraction using a backend API, store in hidden field + localStorage
+    (function () {
+      const btn = document.getElementById('extractLegacyBtn');
+      if (!btn) return;
+      const statusEl = document.getElementById('legacyStatus');
+      const fileInput = document.getElementById('legacyFileInput');
+      const folderInput = document.getElementById('legacyFolderInput');
+      const hidden = document.getElementById('legacyBusinessHidden');
+
+      function showToast(message, variant = 'success') {
+        const toastEl = document.getElementById('legacyToast');
+        const bodyEl = document.getElementById('legacyToastBody');
+        if (!toastEl || !bodyEl) return;
+        bodyEl.textContent = message;
+        toastEl.classList.remove('text-bg-success', 'text-bg-danger');
+        toastEl.classList.add(variant === 'success' ? 'text-bg-success' : 'text-bg-danger');
+        const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
+        toast.show();
+      }
+
+      function setStatus(msg, isError = false) {
+        if (!statusEl) return;
+        statusEl.textContent = msg;
+        statusEl.classList.toggle('text-danger', !!isError);
+        statusEl.classList.toggle('text-success', !isError);
+      }
+
+      btn.addEventListener('click', async () => {
+        try {
+          const files = [];
+          if (fileInput?.files?.length) files.push(fileInput.files[0]);
+          if (folderInput?.files?.length) files.push(...folderInput.files);
+
+          if (!files.length) {
+            setStatus('Please select a legacy file or folder first.', true);
+            return;
+          }
+
+          const fd = new FormData();
+          for (const f of files) fd.append('legacy_files[]', f, f.name);
+
+          setStatus('Extracting from legacy files…');
+          const resp = await fetch('/api/legacy-business-description', { method: 'POST', body: fd });
+          if (!resp.ok) throw new Error('Extraction failed');
+          const data = await resp.json();
+          const desc = (data && (data.description || data.legacy_description)) || '';
+          if (!desc) throw new Error('No description returned');
+
+          // Persist for Page 2 and include in main form submit
+          localStorage.setItem('legacyBusinessDescription', desc);
+    if (hidden) hidden.value = desc;
+          setStatus('Legacy description extracted ✓');
+    showToast('Legacy description extracted ✓', 'success');
+        } catch (e) {
+          console.error(e);
+          setStatus('Failed to extract legacy description', true);
+    showToast('Failed to extract legacy description', 'danger');
+        }
+      });
+    })();
+  </script>
+  <!-- Bootstrap JS bundle for toast functionality -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='js/global.js') }}"></script>
 </body>
 

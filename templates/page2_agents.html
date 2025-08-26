@@ -398,6 +398,18 @@
 
         <form method="post">
           <div class="mb-4">
+            <!-- New: Legacy Business Description section -->
+            <div class="card mb-4 shadow-sm">
+              <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <span>Legacy Business Description</span>
+              </div>
+              <div class="card-body">
+                <div id="legacyBusinessRender" class="formatted-content"></div>
+                {% if legacy_business_description %}
+                <input type="hidden" id="legacyBusinessInput" value="{{ legacy_business_description | tojson | safe }}" data-raw="{{ legacy_business_description | e }}">
+                {% endif %}
+              </div>
+            </div>
             <div class="card mb-4 shadow-sm">
               <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                 <span>Product Overview</span>
@@ -484,6 +496,18 @@
       // Render both overviews
       renderMarkdownContent('productOverviewInput', 'productOverviewRender');
       renderMarkdownContent('featureOverviewInput', 'featureOverviewRender');
+
+      // Fallback for legacy section if not provided by backend: pull from localStorage
+      const legacyRender = document.getElementById('legacyBusinessRender');
+      if (legacyRender) {
+        const legacyInput = document.getElementById('legacyBusinessInput');
+        if (legacyInput) {
+          renderMarkdownContent('legacyBusinessInput', 'legacyBusinessRender');
+        } else {
+          const ls = localStorage.getItem('legacyBusinessDescription') || '';
+          legacyRender.innerHTML = ls ? marked.parse(ls) : '<p class="text-muted">No legacy description available</p>';
+        }
+      }
     });
 
     function handleSubmit(event) {

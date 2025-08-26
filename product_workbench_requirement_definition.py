@@ -174,6 +174,9 @@ ASSISTANTS = {
     'agent_4_6': 'asst_JOtY81FnKEkrhgcJmuJSDyip'
 }
 
+# Dedicated Legacy Business Description agent (optional). Set LEGACY_AGENT_ID env var.
+LEGACY_AGENT_ID = os.getenv('LEGACY_AGENT_ID') or ASSISTANTS.get('agent_3')
+
 ########################
 # LOGGING CONFIGURATION
 ########################
@@ -226,6 +229,105 @@ def store_data(data):
         with open(os.path.join(TEMP_DIR, f'prd_session_{session_id}.json'), 'w') as f:
             json.dump(data, f)
     return session_id
+
+# -------------------------------
+# Legacy description extraction
+# -------------------------------
+def _extract_text_from_file_storage(fs):
+    """Read uploaded file (COBOL/JCL/TXT/DOCX) into text."""
+    name = (fs.filename or '').lower()
+    try:
+        if name.endswith('.docx'):
+            d = docx.Document(fs)
+            return "\n".join(p.text for p in d.paragraphs)
+        else:
+            # Try utf-8, fallback latin-1
+            data = fs.read()
+            try:
+                return data.decode('utf-8', errors='ignore')
+            except Exception:
+                return data.decode('latin-1', errors='ignore')
+    except Exception as e:
+        logging.warning(f"Failed to read file {fs.filename}: {e}")
+        return ""
+
+def extract_legacy_business_description(file_texts):
+    """
+    Heuristic extractor: pull comments and descriptive lines from COBOL/JCL/TXT.
+    file_texts: list of tuples (filename, text)
+    Returns a concise markdown description.
+    """
+    highlights = []
+    for fname, text in file_texts:
+        if not text:
+            continue
+        lines = text.splitlines()
+        picked = []
+        for ln in lines[:2000]:  # scan first 2k lines per file
+            s = ln.strip()
+            if not s:
+                continue
+            # Capture typical comment lines and key markers
+            if s.startswith(('*', '*>', '//*', '/*', '*/', '//')):
+                picked.append(s.lstrip('*/ '))
+                continue
+            upper = s.upper()
+            if any(k in upper for k in (
+                'IDENTIFICATION DIVISION', 'PROGRAM-ID', 'AUTHOR', 'REMARK', 'REMARKS', 'PURPOSE', 'DESC', 'DESCRIPTION',
+                'JOB', 'EXEC PGM=', 'PROC', 'STEP', 'FUNCTION', 'BUSINESS'
+            )):
+                picked.append(s)
+        picked = [p for p in picked if len(p) > 4]
+        if picked:
+            fn_disp = os.path.basename(fname)
+            highlights.append(f"### {fn_disp}\n" + "\n".join(f"- {p}" for p in picked[:25]))
+    if not highlights:
+        return ""
+    header = "## Legacy Business Description\nThe following summary was extracted from uploaded legacy artifacts (COBOL/JCL):\n"
+    return header + "\n\n" + "\n\n".join(highlights)
+
+def _summarize_with_agent(file_texts):
+    """Use an agent to craft a concise Legacy Business Description from legacy code artifacts."""
+    try:
+        parts = []
+        for fname, txt in file_texts[:5]:
+            snippet = (txt or '')[:6000]
+            parts.append(f"File: {os.path.basename(fname)}\n---\n{snippet}")
+        corpus = "\n\n".join(parts)
+        prompt = (
+            "You are a Legacy Code Business Analyst. Read the following COBOL/JCL/text artifacts and produce a concise, "
+            "business-facing 'Legacy Business Description' in markdown. Focus on purpose, key business rules, inputs, outputs, "
+            "and major processing steps, avoiding code syntax. Use short paragraphs and bullet points; keep it under 300 words.\n\n"
+            f"Artifacts:\n{corpus}"
+        )
+        resp = call_agent(LEGACY_AGENT_ID, prompt)
+        return resp or ""
+    except Exception as e:
+        logging.warning(f"Agent summarization failed: {e}")
+        return ""
+
+@app.route('/api/legacy-business-description', methods=['POST'])
+def api_legacy_business_description():
+    if not session.get('logged_in'):
+        return jsonify({'error': 'Not authenticated'}), 401
+    try:
+        files = request.files.getlist('legacy_files[]') or []
+        if not files:
+            return jsonify({'error': 'No files provided'}), 400
+        texts = []
+        for fs in files:
+            fs.stream.seek(0)
+            txt = _extract_text_from_file_storage(fs)
+            texts.append((fs.filename, txt))
+        # First try the agent summarizer
+        desc = _summarize_with_agent(texts)
+        if not desc:
+            # Fallback to heuristic extraction
+            desc = extract_legacy_business_description(texts)
+        return jsonify({'description': desc})
+    except Exception as e:
+        logging.error(f"Legacy extraction failed: {e}")
+        return jsonify({'error': str(e)}), 500
 
 def get_data(session_id):
     if USING_REDIS:
@@ -430,6 +532,27 @@ def page1():
                         logging.error(f"File upload error: {str(e)}")
                         return "Error processing file upload", 400
 
+        # Legacy business description via hidden field or derive from uploaded files
+        legacy_desc = request.form.get('legacy_business_description', '').strip()
+        if not legacy_desc:
+            legacy_files = request.files.getlist('legacy_files[]') or []
+            if legacy_files:
+                texts = []
+                for fs in legacy_files:
+                    fs.stream.seek(0)
+                    txt = _extract_text_from_file_storage(fs)
+                    if txt:
+                        texts.append((fs.filename, txt))
+                if texts:
+                    try:
+                        # Prefer agent summarization, fallback to heuristic
+                        legacy_desc = _summarize_with_agent(texts) or extract_legacy_business_description(texts)
+                    except Exception as e:
+                        logging.warning(f"Legacy extraction failed: {e}")
+                        # no-op fallback; legacy_desc remains empty
+        if legacy_desc:
+            inputs['legacy_business_description'] = legacy_desc
+
         session.update(inputs)
 
        # Update context to include file content
@@ -442,6 +565,7 @@ def page1():
         context = "\n".join(context_parts)
         session_id = store_data({
             "inputs": inputs,
+            "legacy_business_description": inputs.get('legacy_business_description', ''),
             "status": "processing"
         })
         session['data_key'] = session_id
@@ -481,6 +605,7 @@ def page1():
                     "product_overview": a11,
                     "feature_overview": a2,
                     "highest_order": a3,
+                    "legacy_business_description": inputs.get('legacy_business_description', ''),
                     "status": "complete"
                 }
                 if USING_REDIS:
@@ -564,7 +689,8 @@ def page2():
 
     return render_template("page2_agents.html",
         agent11_output=data.get('product_overview', ''),
-        agent2_output=data.get('feature_overview', '')
+        agent2_output=data.get('feature_overview', ''),
+        legacy_business_description=data.get('legacy_business_description', '') or data.get('inputs', {}).get('legacy_business_description', '')
     )
 
 @app.route('/update_content', methods=['POST'])
