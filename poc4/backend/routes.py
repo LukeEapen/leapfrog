@@ -5,14 +5,16 @@ import sqlite3
 import shutil  # added for backup/rollback
 from flask import send_file, abort
 import uuid
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
+from werkzeug.utils import secure_filename
 from .agents import (
     schema_mapping_agent,
     transformation_rule_agent,
     validation_agent,
     migration_execution_agent,
     reconciliation_agent,
-    chatbot_agent
+    chatbot_agent,
+    TargetModelDesignAgent
 )
 
 poc4_bp = Blueprint('poc4', __name__, url_prefix='/poc4')
@@ -66,13 +68,149 @@ def clear_state(*keys):
     for k in keys:
         st.pop(k, None)
 
+def get_target_model_draft():
+    return _state().get('target_model_draft')
+
+def set_target_model_draft(doc):
+    _state()['target_model_draft'] = doc
+
+def get_target_model_final():
+    return _state().get('target_model_final')
+
+def set_target_model_final(doc):
+    _state()['target_model_final'] = doc
+
+@poc4_bp.route('/target_model', methods=['GET', 'POST'])
+def target_model():
+    """Dedicated page to design, preview, approve, and download the Target Model."""
+    # Common locations
+    schemas_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+    try:
+        os.makedirs(schemas_dir, exist_ok=True)
+    except Exception:
+        pass
+    # Resolve selected schema files from Page 1 (Origin Systems) only.
+    # Do NOT fall back to defaults here; use only explicit selections to honor user intent.
+    src_schema_file = session.get('source_schema')
+    leg_schema_file = session.get('legacy_schema')
+    extras_files = session.get('extra_sources', []) or []
+    tgt_schema_file = session.get('target_schema', 'target_schema.json')  # for display/download context only
+
+    def _load_json(path):
+        import json as _json
+        try:
+            with open(path, 'r', encoding='utf-8') as fh:
+                return _json.load(fh)
+        except Exception:
+            return {"tables": []}
+
+    # Actions
+    if request.method == 'POST':
+        action = request.form.get('action') or 'design_target_model'
+        if action == 'design_target_model':
+            docs = []
+            for f in (src_schema_file, leg_schema_file):
+                if not f:
+                    continue
+                p = os.path.join(schemas_dir, f)
+                if os.path.exists(p):
+                    docs.append(_load_json(p))
+            # Include any explicitly selected extra data sources from Page 1
+            for ef in extras_files:
+                if not ef:
+                    continue
+                p = os.path.join(schemas_dir, ef)
+                if os.path.exists(p):
+                    docs.append(_load_json(p))
+            try:
+                agent = TargetModelDesignAgent()
+                draft = agent.design(docs)
+                set_target_model_draft(draft)
+            except Exception as e:
+                set_target_model_draft({"error": str(e)})
+        elif action == 'approve_target_model':
+            draft = get_target_model_draft()
+            if draft:
+                set_target_model_final(draft)
+        # Render after POST
+        return render_template('poc4/page_target_model.html',
+                               target_model_draft=get_target_model_draft(),
+                               target_model_final=get_target_model_final())
+
+    # GET: optionally auto-generate when ?auto=1 is present
+    if request.args.get('auto') == '1':
+        docs = []
+        for f in (src_schema_file, leg_schema_file):
+            if not f:
+                continue
+            p = os.path.join(schemas_dir, f)
+            if os.path.exists(p):
+                docs.append(_load_json(p))
+        # Include any explicitly selected extra data sources from Page 1
+        for ef in extras_files:
+            if not ef:
+                continue
+            p = os.path.join(schemas_dir, ef)
+            if os.path.exists(p):
+                docs.append(_load_json(p))
+        try:
+            agent = TargetModelDesignAgent()
+            draft = agent.design(docs)
+            set_target_model_draft(draft)
+        except Exception as e:
+            set_target_model_draft({"error": str(e)})
+    return render_template('poc4/page_target_model.html',
+                           target_model_draft=get_target_model_draft(),
+                           target_model_final=get_target_model_final())
+
+# --- Schema metadata helpers (categorization: source|legacy|target) ---
+def _schemas_dir():
+    return os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+
+def _meta_path():
+    return os.path.join(_schemas_dir(), 'schemas_meta.json')
+
+def _load_meta():
+    import json as _json
+    try:
+        os.makedirs(_schemas_dir(), exist_ok=True)
+    except Exception:
+        pass
+    p = _meta_path()
+    try:
+        with open(p, 'r', encoding='utf-8') as f:
+            data = _json.load(f)
+            if isinstance(data, dict):
+                return data
+    except Exception:
+        pass
+    return {}
+
+def _save_meta(meta: dict):
+    import json as _json
+    try:
+        os.makedirs(_schemas_dir(), exist_ok=True)
+    except Exception:
+        pass
+    try:
+        with open(_meta_path(), 'w', encoding='utf-8') as f:
+            _json.dump(meta or {}, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
 # --- Optional demo helpers import with fallbacks ---
 try:
-    from sqlite_data_transfer_demo import create_and_populate_db as _demo_create_db, SAMPLE_DATA as _DEMO_SAMPLE_DATA, reset_all_dbs as _demo_reset
+    from sqlite_data_transfer_demo import (
+        create_and_populate_db as _demo_create_db,
+        SAMPLE_DATA as _DEMO_SAMPLE_DATA,
+        reset_all_dbs as _demo_reset,
+        create_and_populate_cards_ds3_db as _demo_create_ds3
+    )
 except Exception:
     _demo_create_db = None
     _DEMO_SAMPLE_DATA = None
     _demo_reset = None
+    _demo_create_ds3 = None
 
 def _fallback_create_and_populate_db(schema_path: str, db_path: str):
     """Create SQLite DB from a JSON schema with empty tables (minimal fallback)."""
@@ -142,19 +280,73 @@ def _fallback_reset_all_dbs(src_schema_path: str, leg_schema_path: str, tgt_sche
 @poc4_bp.route('/page1', methods=['GET', 'POST'])
 def page1():
     if request.method == 'POST':
-        # Capture schema selections including legacy
-        source_schema = request.form.get('source_schema') or 'source_schema.json'
-        legacy_schema = request.form.get('legacy_schema') or 'legacy_schema.json'
+        # Capture schema selections with explicit opt-in for Source/Legacy (no defaults)
+        enable_source = request.form.get('enable_source') is not None
+        enable_legacy = request.form.get('enable_legacy') is not None
+        source_schema = request.form.get('source_schema')
+        legacy_schema = request.form.get('legacy_schema')
+        ds3_schema = request.form.get('ds3_schema')
         target_schema = request.form.get('target_schema') or 'target_schema.json'
-        session['source_schema'] = source_schema
-        session['legacy_schema'] = legacy_schema
+        # Extra data sources (DS3, DS4, ...). Each select uses the same name 'extra_sources'.
+        extra_sources = [x for x in request.form.getlist('extra_sources') if x]
+        if enable_source and source_schema:
+            session['source_schema'] = source_schema
+        else:
+            session.pop('source_schema', None)
+        if enable_legacy and legacy_schema:
+            session['legacy_schema'] = legacy_schema
+        else:
+            session.pop('legacy_schema', None)
+        if ds3_schema:
+            session['ds3_schema'] = ds3_schema
         session['target_schema'] = target_schema
+        # Persist extra sources list (may be empty)
+        if extra_sources:
+            session['extra_sources'] = extra_sources
+        else:
+            session.pop('extra_sources', None)
         # Clear any previous selections
         for k in ['selected_source_fields', 'selected_legacy_fields', 'selected_target_fields']:
             session.pop(k, None)
         clear_state('mapping', 'rules', 'migration_preview', 'migration_result', 'target_backup')
         return redirect(url_for('poc4.page1_fields'))
-    return render_template('poc4/page1_upload.html')
+    return render_template('poc4/page1_upload.html', extra_sources=session.get('extra_sources', []))
+
+@poc4_bp.route('/page1/save_selections', methods=['POST'])
+def page1_save_selections():
+    """Lightweight endpoint to persist Page 1 selections without navigating away.
+    Used by the "Design Target Model" quick action on Page 1 to pre-save choices
+    before redirecting to Page 4 for auto-design.
+    """
+    try:
+        enable_source = request.form.get('enable_source') in ('true', '1', 'on') or (request.form.get('enable_source') is not None)
+        enable_legacy = request.form.get('enable_legacy') in ('true', '1', 'on') or (request.form.get('enable_legacy') is not None)
+        source_schema = request.form.get('source_schema')
+        legacy_schema = request.form.get('legacy_schema')
+        target_schema = request.form.get('target_schema')
+        ds3_schema = request.form.get('ds3_schema')
+        # Persist if explicitly enabled/selected
+        if enable_source and source_schema:
+            session['source_schema'] = source_schema
+        if not enable_source:
+            session.pop('source_schema', None)
+        if enable_legacy and legacy_schema:
+            session['legacy_schema'] = legacy_schema
+        if not enable_legacy:
+            session.pop('legacy_schema', None)
+        if target_schema:
+            session['target_schema'] = target_schema
+        if ds3_schema:
+            session['ds3_schema'] = ds3_schema
+        # Also accept any extra sources passed by the client (optional)
+        extra_sources = [x for x in request.form.getlist('extra_sources') if x]
+        if extra_sources:
+            session['extra_sources'] = extra_sources
+        # Note: extra sources/DS3 can be saved via the main Page 1 POST; quick save focuses on core picks
+        session.modified = True
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
 
 @poc4_bp.route('/page1_fields', methods=['GET', 'POST'])
 def page1_fields():
@@ -167,20 +359,28 @@ def page1_fields():
                 return json.load(f)
         except Exception:
             return {"tables": []}
-    source_schema_file = session.get('source_schema', 'source_schema.json')
-    legacy_schema_file = session.get('legacy_schema', 'legacy_schema.json')
+    source_schema_file = session.get('source_schema')
+    legacy_schema_file = session.get('legacy_schema')
+    extra_sources_files = session.get('extra_sources', [])
     target_schema_file = session.get('target_schema', 'target_schema.json')
-    source_schema = load_schema(source_schema_file)
-    legacy_schema = load_schema(legacy_schema_file)
+    source_schema = load_schema(source_schema_file) if source_schema_file else {"tables": []}
+    legacy_schema = load_schema(legacy_schema_file) if legacy_schema_file else {"tables": []}
     target_schema = load_schema(target_schema_file)
     if request.method == 'POST':
         # Collect selected fields
         selected_source = request.form.getlist('source_field')
         selected_legacy = request.form.getlist('legacy_field')
         selected_target = request.form.getlist('target_field')
+        # Extras are submitted with name pattern extra_field::<index>
+        selected_extras = {}
+        for i, fname in enumerate(extra_sources_files or []):
+            vals = request.form.getlist(f'extra_field::{i}')
+            if vals:
+                selected_extras[fname] = vals
         session['selected_source_fields'] = selected_source
         session['selected_legacy_fields'] = selected_legacy
         session['selected_target_fields'] = selected_target
+        session['selected_extra_fields'] = selected_extras
         session.modified = True
         return redirect(url_for('poc4.page2'))
     # Provide flattened field lists
@@ -195,6 +395,14 @@ def page1_fields():
                     'id': f"{prefix_key}::{t.get('name')}::{f.get('name')}"
                 })
         return rows
+    # Build extras flattened fields list
+    extras_flat = []  # list of dicts { index, file, fields: [ {table,name,type,id} ] }
+    for i, f in enumerate(extra_sources_files or []):
+        extras_flat.append({
+            'index': i,
+            'file': f,
+            'fields': flatten(load_schema(f), f'DS{i+3}') if f else []
+        })
     return render_template(
         'poc4/page1_fields_select.html',
         source_fields=flatten(source_schema, 'SRC'),
@@ -202,7 +410,9 @@ def page1_fields():
         target_fields=flatten(target_schema, 'TGT'),
         source_schema_file=source_schema_file,
         legacy_schema_file=legacy_schema_file,
-        target_schema_file=target_schema_file
+        target_schema_file=target_schema_file,
+        extra_sources=extra_sources_files,
+        extra_sources_fields=extras_flat
     )
 
 @poc4_bp.route('/page2', methods=['GET', 'POST'])
@@ -210,8 +420,9 @@ def page2():
     import json
     from .agents import schema_mapping_agent
     # Load schemas
-    source_schema_file = session.get('source_schema', 'source_schema.json')
-    legacy_schema_file = session.get('legacy_schema', 'legacy_schema.json')
+    source_schema_file = session.get('source_schema')
+    legacy_schema_file = session.get('legacy_schema')
+    extra_sources_files = session.get('extra_sources', [])
     target_schema_file = session.get('target_schema', 'target_schema.json')
     base_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
     def load_schema(fname):
@@ -220,8 +431,9 @@ def page2():
                 return json.load(f)
         except Exception:
             return {'tables': []}
-    source_schema = load_schema(source_schema_file)
-    legacy_schema = load_schema(legacy_schema_file)
+    source_schema = load_schema(source_schema_file) if source_schema_file else {'tables': []}
+    legacy_schema = load_schema(legacy_schema_file) if legacy_schema_file else {'tables': []}
+    extra_schemas = [(fn, load_schema(fn)) for fn in (extra_sources_files or [])]
     target_schema = load_schema(target_schema_file)
     # Helper: field -> table mapping
     def build_field_table_map(schema):
@@ -236,6 +448,7 @@ def page2():
     # Filter fields if user selected critical subset
     selected_source = set(session.get('selected_source_fields', []))
     selected_legacy = set(session.get('selected_legacy_fields', []))
+    selected_extra = session.get('selected_extra_fields', {})  # map filename -> [fields]
     # Build filtered schemas
     def filter_schema(schema, selected):
         if not selected:
@@ -248,11 +461,21 @@ def page2():
         return {'tables': filtered_tables}
     filtered_source = filter_schema(source_schema, selected_source)
     filtered_legacy = filter_schema(legacy_schema, selected_legacy)
+    filtered_extras = [(fn, filter_schema(schema, set(selected_extra.get(fn, [])))) for fn, schema in extra_schemas]
     # Generate mapping for each origin separately (only once if not in session)
     mapping = get_mapping()
     if not mapping:
         source_mapping = schema_mapping_agent.map_schema(filtered_source, target_schema)
         legacy_mapping = schema_mapping_agent.map_schema(filtered_legacy, target_schema)
+        extra_mappings = []
+        for idx, (fn, sch) in enumerate(filtered_extras):
+            try:
+                m = schema_mapping_agent.map_schema(sch, target_schema)
+            except Exception:
+                m = []
+            for mm in m:
+                mm['origin'] = f'ds{idx+3}'
+            extra_mappings.extend(m)
         # Annotate origin and table names
         for m in source_mapping:
             m['origin'] = 'source'
@@ -277,7 +500,29 @@ def page2():
                     m['justification'] = f"Auto-mapped by name similarity {round(sim*100,1)}% between {m.get('source')} and {m.get('target')}"
                 else:
                     m['justification'] = f"Auto-mapped {m.get('source')} to {m.get('target')} based on heuristic"
-        mapping = source_mapping + legacy_mapping
+        # Annotate extras with source_table/target_table
+        for mm in extra_mappings:
+            # For extra schemas, build a map for this schema
+            fn = None
+            try:
+                # Find its index from origin name
+                if mm.get('origin', '').startswith('ds'):
+                    idx = int(mm['origin'][2:]) - 3
+                    if 0 <= idx < len(extra_schemas):
+                        fn, sch = extra_schemas[idx]
+                        ftm = build_field_table_map(sch)
+                        mm['source_table'] = ftm.get(mm.get('source'))
+            except Exception:
+                pass
+            if mm.get('target'):
+                mm['target_table'] = target_field_table_map.get(mm.get('target'))
+            if mm.get('target') and not mm.get('justification'):
+                sim = mm.get('similarity')
+                if isinstance(sim, (int, float)):
+                    mm['justification'] = f"Auto-mapped by name similarity {round(sim*100,1)}% between {mm.get('source')} and {mm.get('target')}"
+                else:
+                    mm['justification'] = f"Auto-mapped {mm.get('source')} to {mm.get('target')} based on heuristic"
+        mapping = source_mapping + legacy_mapping + extra_mappings
     else:
         # Backfill justification if previously stored mapping lacks it
         for m in mapping:
@@ -686,12 +931,15 @@ def page4():
     src_schema_file = session.get('source_schema', 'source_schema.json')
     leg_schema_file = session.get('legacy_schema', 'legacy_schema.json')
     tgt_schema_file = session.get('target_schema', 'target_schema.json')
+    # DS3 (cards) schema/db paths (make schema selectable/persistent)
+    ds3_schema_file = session.get('ds3_schema', 'source_cards_schema_ds3.json')
     src_schema_path = os.path.join(schemas_dir, src_schema_file)
     leg_schema_path = os.path.join(schemas_dir, leg_schema_file)
     tgt_schema_path = os.path.join(schemas_dir, tgt_schema_file)
     src_db_path = os.path.join(schemas_dir, 'source.db')
     leg_db_path = os.path.join(schemas_dir, 'legacy.db')
     tgt_db_path = os.path.join(schemas_dir, 'target.db')
+    ds3_db_path = os.path.join(schemas_dir, 'cards_ds3.db')
 
     # Ensure DBs exist (create/populate if missing)
     for p, sp in [(src_db_path, src_schema_path), (leg_db_path, leg_schema_path), (tgt_db_path, tgt_schema_path)]:
@@ -703,10 +951,64 @@ def page4():
                     _fallback_create_and_populate_db(sp, p)
             else:
                 _fallback_create_and_populate_db(sp, p)
+    # Ensure DS3 DB exists (specialized creator when available)
+    try:
+        ds3_schema_path = os.path.join(schemas_dir, ds3_schema_file)
+        if not os.path.exists(ds3_db_path):
+            if 'source_cards_schema_ds3.json' and os.path.exists(ds3_schema_path) and (_demo_create_ds3 is not None):
+                try:
+                    _demo_create_ds3(ds3_schema_path, ds3_db_path, rows_per_table=20)
+                except Exception:
+                    _fallback_create_and_populate_db(ds3_schema_path, ds3_db_path)
+            else:
+                _fallback_create_and_populate_db(ds3_schema_path, ds3_db_path)
+    except Exception:
+        pass
 
     query_result = None
     query_error = None
     migration_preview = get_preview()  # previously generated validation summary
+
+    # Helper: list schemas for dropdowns
+    def _list_schema_files():
+        files = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
+        return files
+
+    # Persist DB selection (Apply button) without triggering validate/execute
+    if request.method == 'POST' and (request.form.get('action') is None) and any(k in request.form for k in ('source_db','legacy_db','ds3_db','target_db')) and (request.form.get('query') is None):
+        src_sel = request.form.get('source_db')
+        leg_sel = request.form.get('legacy_db')
+        ds3_sel = request.form.get('ds3_db')
+        tgt_sel = request.form.get('target_db')
+        if src_sel:
+            session['source_schema'] = src_sel
+        if leg_sel:
+            session['legacy_schema'] = leg_sel
+        if ds3_sel:
+            session['ds3_schema'] = ds3_sel
+        if tgt_sel:
+            session['target_schema'] = tgt_sel
+        # Refresh local variables from session
+        src_schema_file = session.get('source_schema', 'source_schema.json')
+        leg_schema_file = session.get('legacy_schema', 'legacy_schema.json')
+        tgt_schema_file = session.get('target_schema', 'target_schema.json')
+        ds3_schema_file = session.get('ds3_schema', 'source_cards_schema_ds3.json')
+        source_schemas = _list_schema_files()
+        legacy_schemas = list(source_schemas)
+        ds3_schemas = list(source_schemas)
+        target_schemas = _list_schema_files()
+        return render_template('poc4/page4_validation.html',
+                               source_schemas=source_schemas,
+                               legacy_schemas=legacy_schemas,
+                               ds3_schemas=ds3_schemas,
+                               target_schemas=target_schemas,
+                               selected_source_db=src_schema_file,
+                               selected_legacy_db=leg_schema_file,
+                               selected_ds3_db=ds3_schema_file,
+                               selected_target_db=tgt_schema_file,
+                               migration_preview=migration_preview,
+                               target_model_draft=get_target_model_draft(),
+                               target_model_final=get_target_model_final())
 
     # Query handling
     if request.method == 'POST' and request.form.get('query') is not None:
@@ -722,20 +1024,86 @@ def page4():
                 query_result = {'columns': cols, 'rows': [dict(zip(cols, r)) for r in rows]}
             except Exception as e:
                 query_error = str(e)
-        source_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
-        target_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
+        source_schemas = _list_schema_files()
+        legacy_schemas = list(source_schemas)
+        ds3_schemas = list(source_schemas)
+        target_schemas = _list_schema_files()
         return render_template('poc4/page4_validation.html',
                                source_schemas=source_schemas,
+                               legacy_schemas=legacy_schemas,
+                               ds3_schemas=ds3_schemas,
                                target_schemas=target_schemas,
                                selected_source_db=src_schema_file,
+                               selected_legacy_db=leg_schema_file,
+                               selected_ds3_db=ds3_schema_file,
                                selected_target_db=tgt_schema_file,
                                query_result=query_result,
                                query_error=query_error,
-                               migration_preview=migration_preview)
+                               migration_preview=migration_preview,
+                               target_model_draft=get_target_model_draft(),
+                               target_model_final=get_target_model_final())
 
     # Migration / reset actions
     if request.method == 'POST':
         action = request.form.get('action') or 'validate'
+        # Design target model from selected source schemas
+        if action == 'design_target_model':
+            import json as _json
+            docs = []
+            for f in [src_schema_path, leg_schema_path]:
+                try:
+                    with open(f, 'r', encoding='utf-8') as fh:
+                        docs.append(_json.load(fh))
+                except Exception:
+                    pass
+            # Include DS3 schema if selected
+            try:
+                with open(os.path.join(schemas_dir, ds3_schema_file), 'r', encoding='utf-8') as fh:
+                    docs.append(_json.load(fh))
+            except Exception:
+                pass
+            try:
+                agent = TargetModelDesignAgent()
+                draft = agent.design(docs)
+                set_target_model_draft(draft)
+            except Exception as e:
+                set_target_model_draft({"error": str(e)})
+            source_schemas = _list_schema_files()
+            legacy_schemas = list(source_schemas)
+            ds3_schemas = list(source_schemas)
+            target_schemas = _list_schema_files()
+            return render_template('poc4/page4_validation.html',
+                                   source_schemas=source_schemas,
+                                   legacy_schemas=legacy_schemas,
+                                   ds3_schemas=ds3_schemas,
+                                   target_schemas=target_schemas,
+                                   selected_source_db=src_schema_file,
+                                   selected_legacy_db=leg_schema_file,
+                                   selected_ds3_db=ds3_schema_file,
+                                   selected_target_db=tgt_schema_file,
+                                   migration_preview=migration_preview,
+                                   target_model_draft=get_target_model_draft())
+        if action == 'approve_target_model':
+            # Persist draft as final and offer download link
+            draft = get_target_model_draft()
+            if draft:
+                set_target_model_final(draft)
+            source_schemas = _list_schema_files()
+            legacy_schemas = list(source_schemas)
+            ds3_schemas = list(source_schemas)
+            target_schemas = _list_schema_files()
+            return render_template('poc4/page4_validation.html',
+                                   source_schemas=source_schemas,
+                                   legacy_schemas=legacy_schemas,
+                                   ds3_schemas=ds3_schemas,
+                                   target_schemas=target_schemas,
+                                   selected_source_db=src_schema_file,
+                                   selected_legacy_db=leg_schema_file,
+                                   selected_ds3_db=ds3_schema_file,
+                                   selected_target_db=tgt_schema_file,
+                                   migration_preview=migration_preview,
+                                   target_model_draft=get_target_model_draft(),
+                                   target_model_final=get_target_model_final())
         # Reset databases
         if action == 'reset':
             try:
@@ -757,28 +1125,44 @@ def page4():
                 migration_preview = None
             except Exception as e:
                 query_error = f'Reset failed: {e}'
-            source_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
-            target_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
+            source_schemas = _list_schema_files()
+            legacy_schemas = list(source_schemas)
+            ds3_schemas = list(source_schemas)
+            target_schemas = _list_schema_files()
             return render_template('poc4/page4_validation.html',
                                    source_schemas=source_schemas,
+                                   legacy_schemas=legacy_schemas,
+                                   ds3_schemas=ds3_schemas,
                                    target_schemas=target_schemas,
                                    selected_source_db=src_schema_file,
+                                   selected_legacy_db=leg_schema_file,
+                                   selected_ds3_db=ds3_schema_file,
                                    selected_target_db=tgt_schema_file,
                                    migration_preview=migration_preview,
-                                   query_error=query_error)
+                                   query_error=query_error,
+                                   target_model_draft=get_target_model_draft(),
+                                   target_model_final=get_target_model_final())
 
         # Load mapping/rules from server-side store
         mapping = get_mapping() or []
         rules = get_rules() or []
         if not mapping:
-            source_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
-            target_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
+            source_schemas = _list_schema_files()
+            legacy_schemas = list(source_schemas)
+            ds3_schemas = list(source_schemas)
+            target_schemas = _list_schema_files()
             return render_template('poc4/page4_validation.html',
                                    source_schemas=source_schemas,
+                                   legacy_schemas=legacy_schemas,
+                                   ds3_schemas=ds3_schemas,
                                    target_schemas=target_schemas,
                                    selected_source_db=src_schema_file,
+                                   selected_legacy_db=leg_schema_file,
+                                   selected_ds3_db=ds3_schema_file,
                                    selected_target_db=tgt_schema_file,
-                                   query_error='No mapping available. Please complete mapping on Page 2.')
+                                   query_error='No mapping available. Please complete mapping on Page 2.',
+                                   target_model_draft=get_target_model_draft(),
+                                   target_model_final=get_target_model_final())
 
         # Build preview summary if validating
         if action == 'validate':
@@ -794,7 +1178,9 @@ def page4():
                 groups.setdefault((origin, s_tbl, t_tbl), []).append((s_col, t_col))
             summary_items = []
             total_fields = 0
-            total_rows_est = 0
+            # Track totals separately: non-DS3 sum and DS3 aggregated per target table (unique entities)
+            total_rows_non_ds3 = 0
+            ds3_max_by_target = {}
             # Load target schema once for holistic coverage
             import json as _json
             try:
@@ -807,7 +1193,7 @@ def page4():
             # Track mapped fields per target table & origin counts
             mapped_fields_by_table = {}
             origin_counts_by_table = {}
-            with sqlite3.connect(src_db_path) as s_conn, sqlite3.connect(leg_db_path) as l_conn:
+            with sqlite3.connect(src_db_path) as s_conn, sqlite3.connect(leg_db_path) as l_conn, sqlite3.connect(ds3_db_path) as d3_conn:
                 for (origin, s_tbl, t_tbl), pairs in groups.items():
                     # unique pairs by target col to avoid duplicates
                     seen = set()
@@ -818,13 +1204,66 @@ def page4():
                         seen.add((s_col, t_col))
                         uniq.append({'source_col': s_col, 'target_col': t_col})
                     total_fields += len(uniq)
-                    # Row count estimate
+                    # Row count estimate; for DS3, count unique cardholders linked to the source table
                     row_count = 0
                     try:
-                        conn_tmp = s_conn if origin == 'source' else l_conn
-                        cur_tmp = conn_tmp.execute(f'SELECT COUNT(1) FROM "{s_tbl}"')
-                        row_count = cur_tmp.fetchone()[0]
-                        total_rows_est += row_count
+                        # Route row count by origin; support ds3 specifically
+                        if origin == 'source':
+                            conn_tmp = s_conn
+                        elif origin == 'legacy':
+                            conn_tmp = l_conn
+                        elif origin.startswith('ds'):
+                            # DS3: compute unique entity count instead of raw rows
+                            # Use table-aware distinct anchors
+                            if s_tbl == 'cardholder':
+                                cur_tmp = d3_conn.execute('SELECT COUNT(DISTINCT cardholder_id) FROM "cardholder"')
+                                row_count = cur_tmp.fetchone()[0]
+                                conn_tmp = None
+                            elif s_tbl == 'card_account':
+                                cur_tmp = d3_conn.execute('SELECT COUNT(DISTINCT cardholder_id) FROM "card_account" ca JOIN cardholder ch ON ch.cardholder_id = ca.cardholder_id')
+                                row_count = cur_tmp.fetchone()[0]
+                                conn_tmp = None
+                            elif s_tbl == 'card':
+                                cur_tmp = d3_conn.execute('SELECT COUNT(DISTINCT ca.cardholder_id) FROM "card" c JOIN card_account ca ON ca.card_account_id = c.card_account_id')
+                                row_count = cur_tmp.fetchone()[0]
+                                conn_tmp = None
+                            elif s_tbl == 'card_auth':
+                                cur_tmp = d3_conn.execute('SELECT COUNT(DISTINCT ca.cardholder_id) FROM card_auth a JOIN card c ON c.card_id = a.card_id JOIN card_account ca ON ca.card_account_id = c.card_account_id')
+                                row_count = cur_tmp.fetchone()[0]
+                                conn_tmp = None
+                            elif s_tbl == 'card_txn':
+                                cur_tmp = d3_conn.execute('SELECT COUNT(DISTINCT ca.cardholder_id) FROM card_txn t JOIN card c ON c.card_id = t.card_id JOIN card_account ca ON ca.card_account_id = c.card_account_id')
+                                row_count = cur_tmp.fetchone()[0]
+                                conn_tmp = None
+                            elif s_tbl == 'dispute_case':
+                                cur_tmp = d3_conn.execute('SELECT COUNT(DISTINCT ca.cardholder_id) FROM dispute_case dc JOIN card_txn t ON t.txn_id = dc.txn_id JOIN card c ON c.card_id = t.card_id JOIN card_account ca ON ca.card_account_id = c.card_account_id')
+                                row_count = cur_tmp.fetchone()[0]
+                                conn_tmp = None
+                            elif s_tbl == 'merchant':
+                                # Count distinct cardholders who have transactions with the merchant
+                                cur_tmp = d3_conn.execute('SELECT COUNT(DISTINCT ca.cardholder_id) FROM merchant m JOIN card_txn t ON t.merchant_id = m.merchant_id JOIN card c ON c.card_id = t.card_id JOIN card_account ca ON ca.card_account_id = c.card_account_id')
+                                row_count = cur_tmp.fetchone()[0]
+                                conn_tmp = None
+                            else:
+                                conn_tmp = d3_conn
+                        else:
+                            conn_tmp = l_conn
+                        if conn_tmp is not None:
+                            cur_tmp = conn_tmp.execute(f'SELECT COUNT(1) FROM "{s_tbl}"')
+                            row_count = cur_tmp.fetchone()[0]
+                        # Aggregate totals: DS3 counts are unique entities, so only count once per target table (take max)
+                        if origin.startswith('ds'):
+                            # Use max to approximate union of holders across DS3 tables
+                            try:
+                                prev = ds3_max_by_target.get(t_tbl, 0)
+                                if isinstance(row_count, int):
+                                    ds3_max_by_target[t_tbl] = max(prev, row_count)
+                                else:
+                                    ds3_max_by_target[t_tbl] = prev
+                            except Exception:
+                                pass
+                        else:
+                            total_rows_non_ds3 += row_count
                     except Exception:
                         pass
                     summary_items.append({
@@ -854,6 +1293,8 @@ def page4():
                     'mapped_fields': sorted(mapped)
                 })
             holistic.sort(key=lambda x: (-x['coverage_pct'], x['target_table']))
+            # Compute final estimated total rows with DS3 aggregated by target table
+            total_rows_est = total_rows_non_ds3 + sum(v for v in ds3_max_by_target.values())
             migration_preview = {
                 'total_table_pairs': len(summary_items),
                 'total_field_mappings': total_fields,
@@ -862,14 +1303,22 @@ def page4():
                 'holistic': holistic
             }
             set_preview(migration_preview)
-            source_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
-            target_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
+            source_schemas = _list_schema_files()
+            legacy_schemas = list(source_schemas)
+            ds3_schemas = list(source_schemas)
+            target_schemas = _list_schema_files()
             return render_template('poc4/page4_validation.html',
                                    source_schemas=source_schemas,
+                                   legacy_schemas=legacy_schemas,
+                                   ds3_schemas=ds3_schemas,
                                    target_schemas=target_schemas,
                                    selected_source_db=src_schema_file,
+                                   selected_legacy_db=leg_schema_file,
+                                   selected_ds3_db=ds3_schema_file,
                                    selected_target_db=tgt_schema_file,
-                                   migration_preview=migration_preview)
+                                   migration_preview=migration_preview,
+                                   target_model_draft=get_target_model_draft(),
+                                   target_model_final=get_target_model_final())
 
         # Execute migration when approved
         if action == 'execute':
@@ -927,14 +1376,22 @@ def page4():
             return redirect(url_for('poc4.page5'))
 
     # GET render
-    source_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
-    target_schemas = [f for f in os.listdir(schemas_dir) if f.endswith('.json')]
+    source_schemas = _list_schema_files()
+    legacy_schemas = list(source_schemas)
+    ds3_schemas = list(source_schemas)
+    target_schemas = _list_schema_files()
     return render_template('poc4/page4_validation.html',
                            source_schemas=source_schemas,
+                           legacy_schemas=legacy_schemas,
+                           ds3_schemas=ds3_schemas,
                            target_schemas=target_schemas,
                            selected_source_db=src_schema_file,
+                           selected_legacy_db=leg_schema_file,
+                           selected_ds3_db=ds3_schema_file,
                            selected_target_db=tgt_schema_file,
-                           migration_preview=migration_preview)
+                           migration_preview=migration_preview,
+                           target_model_draft=get_target_model_draft(),
+                           target_model_final=get_target_model_final())
 
 @poc4_bp.route('/page5', methods=['GET', 'POST'])
 def page5():
@@ -996,7 +1453,9 @@ def db_browser():
     db_files = {
         'source': ('source_schema.json', 'source.db'),
         'legacy': ('legacy_schema.json', 'legacy.db'),
-        'target': ('target_schema.json', 'target.db')
+        'target': ('target_schema.json', 'target.db'),
+        # Third data source (cards dataset)
+        'ds3': ('source_cards_schema_ds3.json', 'cards_ds3.db')
     }
     # Ensure DBs exist (lazy create using schema + SAMPLE_DATA if available)
     try:
@@ -1008,13 +1467,20 @@ def db_browser():
         db_path = os.path.join(schemas_dir, db_name)
         if not os.path.exists(db_path):
             schema_path = os.path.join(schemas_dir, schema_json)
-            if create_and_populate_db and SAMPLE_DATA is not None:
+            # Use specialized DS3 creator when appropriate, else fall back to generic/demo
+            if key == 'ds3' and _demo_create_ds3 is not None:
                 try:
-                    create_and_populate_db(schema_path, db_path, SAMPLE_DATA or {})
+                    _demo_create_ds3(schema_path, db_path, rows_per_table=20)
                 except Exception:
                     _fallback_create_and_populate_db(schema_path, db_path)
             else:
-                _fallback_create_and_populate_db(schema_path, db_path)
+                if create_and_populate_db and SAMPLE_DATA is not None:
+                    try:
+                        create_and_populate_db(schema_path, db_path, SAMPLE_DATA or {})
+                    except Exception:
+                        _fallback_create_and_populate_db(schema_path, db_path)
+                else:
+                    _fallback_create_and_populate_db(schema_path, db_path)
     # Gather table listings + counts
     db_tables = {}
     for key, (_schema_json, db_name) in db_files.items():
@@ -1038,18 +1504,44 @@ def db_browser():
         sel_db = 'target'
     sel_table = request.args.get('table')
     limit = min(max(int(request.args.get('limit', '50') or 50), 1), 500)
+    # Column selection: support repeated cols params (?cols=a&cols=b) or comma-separated (?cols=a,b)
+    raw_cols = request.args.getlist('cols') or []
+    if not raw_cols:
+        csv = (request.args.get('cols') or '').strip()
+        if csv:
+            raw_cols = [c.strip() for c in csv.split(',') if c.strip()]
+    selected_cols = [c for c in raw_cols if c]
     rows = []
     columns = []
     error = None
+    available_columns = []
     if sel_table:
         db_path = os.path.join(schemas_dir, db_files[sel_db][1])
         if os.path.exists(db_path):
             try:
                 with sqlite3.connect(db_path) as conn:
-                    # Basic defensive quoting (no injection due to simple name whitelist)
                     qtable = sel_table.replace('"', '')
-                    cur = conn.execute(f'SELECT * FROM "{qtable}" LIMIT {limit}')
-                    columns = [d[0] for d in cur.description] if cur.description else []
+                    # Fetch available columns via PRAGMA
+                    try:
+                        ac = conn.execute(f'PRAGMA table_info("{qtable}")').fetchall()
+                        available_columns = [a[1] for a in ac]
+                    except Exception:
+                        available_columns = []
+                    # Build safe column list
+                    if selected_cols:
+                        # Whitelist against available_columns
+                        safe_cols = [c for c in selected_cols if c in available_columns]
+                        if not safe_cols:
+                            safe_cols = available_columns[:]
+                    else:
+                        safe_cols = []  # empty => select all
+                    if safe_cols:
+                        col_sql = ', '.join([f'"{c}"' for c in safe_cols])
+                        cur = conn.execute(f'SELECT {col_sql} FROM "{qtable}" LIMIT {limit}')
+                        columns = [d[0] for d in cur.description] if cur.description else safe_cols
+                    else:
+                        cur = conn.execute(f'SELECT * FROM "{qtable}" LIMIT {limit}')
+                        columns = [d[0] for d in cur.description] if cur.description else []
                     for r in cur.fetchall():
                         rows.append(dict(zip(columns, r)))
             except Exception as e:
@@ -1061,5 +1553,169 @@ def db_browser():
                            rows=rows,
                            columns=columns,
                            limit=limit,
-                           error=error)
+                           error=error,
+                           available_columns=available_columns,
+                           selected_cols=selected_cols)
+
+@poc4_bp.route('/download/target_model.json')
+def download_target_model():
+    import json as _json
+    doc = get_target_model_final() or get_target_model_draft()
+    if not doc:
+        abort(404)
+    try:
+        tmp_path = os.path.join(_schemas_dir(), f"target_model_{uuid.uuid4().hex[:8]}.json")
+        with open(tmp_path, 'w', encoding='utf-8') as f:
+            _json.dump(doc, f, ensure_ascii=False, indent=2)
+        return send_file(tmp_path, as_attachment=True, download_name='target_model.json', mimetype='application/json')
+    except Exception:
+        abort(500)
+
+@poc4_bp.route('/upload_schema', methods=['POST'])
+def upload_schema():
+    """Upload a schema JSON file into the static schemas directory and return its filename.
+    Frontend uses this to "Add more" schemas into the dropdown on Page 1.
+    """
+    try:
+        file = request.files.get('schemaFile')
+        if not file:
+            return {"ok": False, "error": "No file provided."}, 400
+        # Basic validation: ensure JSON by attempting to parse
+        import json as _json
+        try:
+            data = _json.loads(file.read().decode('utf-8'))
+            # Simple structure check
+            if not isinstance(data, dict) or 'tables' not in data:
+                # Still allow, but enforce a dict with tables
+                data = {"tables": data if isinstance(data, list) else []}
+        except Exception:
+            return {"ok": False, "error": "Invalid JSON."}, 400
+        # Reset file stream (we'll re-dump JSON to ensure normalized content)
+        file.stream.seek(0)
+        # Compute a safe filename
+        raw_name = request.form.get('name') or file.filename or 'schema.json'
+        safe = secure_filename(raw_name)
+        if not safe.lower().endswith('.json'):
+            safe += '.json'
+        # Ensure uniqueness
+        base_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+        try:
+            os.makedirs(base_dir, exist_ok=True)
+        except Exception:
+            pass
+        dest_path = os.path.join(base_dir, safe)
+        if os.path.exists(dest_path):
+            name, ext = os.path.splitext(safe)
+            safe = f"{name}_{uuid.uuid4().hex[:6]}{ext}"
+            dest_path = os.path.join(base_dir, safe)
+        # Persist normalized JSON
+        try:
+            with open(dest_path, 'w', encoding='utf-8') as f:
+                _json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            return {"ok": False, "error": f"Save failed: {e}"}, 500
+        # Optional categorize
+        kind = (request.form.get('kind') or '').strip().lower()
+        if kind in ('source','legacy','target'):
+            meta = _load_meta()
+            meta[safe] = {'kind': kind}
+            _save_meta(meta)
+        return {"ok": True, "filename": safe}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}, 500
+
+@poc4_bp.route('/rename_schema', methods=['POST'])
+def rename_schema():
+    """Rename an existing schema JSON file in the static schemas directory.
+    Expects form fields: oldName, newName. Returns the finalized new filename.
+    """
+    try:
+        old_name = (request.form.get('oldName') or '').strip()
+        new_name = (request.form.get('newName') or '').strip()
+        if not old_name or not new_name:
+            return {"ok": False, "error": "oldName and newName are required."}, 400
+        base_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+        old_safe = secure_filename(old_name)
+        new_safe = secure_filename(new_name)
+        if not new_safe.lower().endswith('.json'):
+            new_safe += '.json'
+        old_path = os.path.join(base_dir, old_safe)
+        if not os.path.exists(old_path):
+            return {"ok": False, "error": "Original file not found."}, 404
+        new_path = os.path.join(base_dir, new_safe)
+        if os.path.exists(new_path):
+            name, ext = os.path.splitext(new_safe)
+            new_safe = f"{name}_{uuid.uuid4().hex[:6]}{ext}"
+            new_path = os.path.join(base_dir, new_safe)
+        os.rename(old_path, new_path)
+        # Update meta mapping
+        meta = _load_meta()
+        if old_safe in meta:
+            meta[new_safe] = meta.pop(old_safe)
+            _save_meta(meta)
+        return {"ok": True, "filename": new_safe}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}, 500
+
+@poc4_bp.route('/list_schemas', methods=['GET'])
+def list_schemas():
+    """Return a categorized list of schema JSON filenames.
+    Response: { ok: true, filesByKind: { source:[], legacy:[], target:[], uncategorized:[] }, files:[all] }
+    """
+    try:
+        base_dir = _schemas_dir()
+        try:
+            os.makedirs(base_dir, exist_ok=True)
+        except Exception:
+            pass
+        files = sorted([f for f in os.listdir(base_dir) if f.lower().endswith('.json')])
+        by = {'source': [], 'legacy': [], 'target': [], 'uncategorized': []}
+        meta = _load_meta()
+        for f in files:
+            # Skip meta file itself
+            if f == 'schemas_meta.json':
+                continue
+            kind = (meta.get(f) or {}).get('kind')
+            if kind in by:
+                by[kind].append(f)
+            else:
+                # Heuristic
+                name = f.lower()
+                if 'legacy' in name or 'mainframe' in name or 'ds2' in name:
+                    by['legacy'].append(f)
+                elif 'target' in name:
+                    by['target'].append(f)
+                elif 'source' in name or 'relational' in name or 'ds1' in name:
+                    by['source'].append(f)
+                else:
+                    by['uncategorized'].append(f)
+        # Ensure defaults appear even if missing in dir
+        return {"ok": True, "filesByKind": by, "files": files}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}, 500
+
+@poc4_bp.route('/delete_schema', methods=['POST'])
+def delete_schema():
+    """Delete a schema JSON from the static schemas directory, with safeguards for default demo files."""
+    try:
+        name = (request.form.get('name') or '').strip()
+        if not name:
+            return {"ok": False, "error": "name is required."}, 400
+        protected = { 'source_schema.json', 'legacy_schema.json', 'target_schema.json' }
+        safe = secure_filename(name)
+        if safe in protected:
+            return {"ok": False, "error": "Deletion of protected demo schema is not allowed."}, 403
+        base_dir = _schemas_dir()
+        path = os.path.join(base_dir, safe)
+        if not os.path.exists(path):
+            return {"ok": False, "error": "File not found."}, 404
+        os.remove(path)
+        # Remove from meta
+        meta = _load_meta()
+        if safe in meta:
+            meta.pop(safe, None)
+            _save_meta(meta)
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}, 500
 

@@ -58,6 +58,38 @@
               {% endfor %}
             </tbody>
           </table>
+          {% if migration_result.agent_result and migration_result.agent_result.summary %}
+          <h6 class="fw-semibold small">Per-Origin Contributions</h6>
+          <table class="table table-sm table-bordered mb-3">
+            <thead class="table-light small"><tr><th>Target Table</th><th>Source</th><th>Legacy</th><th>DS3</th></tr></thead>
+            <tbody class="small">
+              {% for t, info in migration_result.agent_result.summary.items() %}
+                {% set oc = info.origin_counts or {} %}
+                <tr>
+                  <td><code>{{ t }}</code></td>
+                  <td>{{ oc.get('source', 0) }}</td>
+                  <td>{{ oc.get('legacy', 0) }}</td>
+                  <td>{{ oc.get('ds3', 0) }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <h6 class="fw-semibold small">Inputs Processed (for reference)</h6>
+          <table class="table table-sm table-bordered mb-3">
+            <thead class="table-light small"><tr><th>Target Table</th><th>Source inputs</th><th>Legacy inputs</th><th>DS3 entities</th></tr></thead>
+            <tbody class="small">
+              {% for t, info in migration_result.agent_result.summary.items() %}
+                {% set p = info.processed_by_origin or {} %}
+                <tr>
+                  <td><code>{{ t }}</code></td>
+                  <td>{{ p.get('source', 0) }}</td>
+                  <td>{{ p.get('legacy', 0) }}</td>
+                  <td>{{ p.get('ds3', 0) }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% endif %}
           {% endif %}
           <div class="accordion mb-3" id="migrationDetailAcc">
             <div class="accordion-item">

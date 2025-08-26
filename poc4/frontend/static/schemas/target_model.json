@@ -1,0 +1,456 @@
+{
+  "metadata": {
+    "designed_by": "TargetModelDesignAgent",
+    "standards_hint": [
+      "BIAN",
+      "ISO20022"
+    ],
+    "version": 1
+  },
+  "tables": [
+    {
+      "name": "customer",
+      "fields": [
+        {
+          "name": "address",
+          "type": "varchar(200)"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime"
+        },
+        {
+          "name": "created_ts",
+          "type": "DATE"
+        },
+        {
+          "name": "customer_id",
+          "type": "int",
+          "primary_key": true
+        },
+        {
+          "name": "email",
+          "type": "varchar(100)"
+        },
+        {
+          "name": "email_addr",
+          "type": "VARCHAR2(120)"
+        },
+        {
+          "name": "first_name",
+          "type": "varchar(50)"
+        },
+        {
+          "name": "last_name",
+          "type": "varchar(50)"
+        },
+        {
+          "name": "phone",
+          "type": "varchar(20)"
+        },
+        {
+          "name": "phone_num",
+          "type": "VARCHAR2(25)"
+        },
+        {
+          "name": "postal_addr",
+          "type": "VARCHAR2(255)"
+        }
+      ]
+    },
+    {
+      "name": "account",
+      "fields": [
+        {
+          "name": "account_id",
+          "type": "int",
+          "primary_key": true
+        },
+        {
+          "name": "account_status_cd",
+          "type": "CHAR(1)"
+        },
+        {
+          "name": "account_type",
+          "type": "varchar(20)"
+        },
+        {
+          "name": "acct_avail_bal_amt",
+          "type": "NUMBER(18,2)"
+        },
+        {
+          "name": "acct_close_dt",
+          "type": "DATE"
+        },
+        {
+          "name": "acct_status_cd",
+          "type": "CHAR(1)"
+        },
+        {
+          "name": "avail_credit_amt",
+          "type": "NUMBER(18,2)"
+        },
+        {
+          "name": "balance",
+          "type": "decimal(15,2)"
+        },
+        {
+          "name": "close_dt",
+          "type": "DATE"
+        },
+        {
+          "name": "credit_limit_amt",
+          "type": "NUMBER(18,2)"
+        },
+        {
+          "name": "current_bal_amt",
+          "type": "NUMBER(18,2)"
+        },
+        {
+          "name": "customer_id",
+          "type": "int"
+        },
+        {
+          "name": "open_dt",
+          "type": "DATE"
+        },
+        {
+          "name": "opened_at",
+          "type": "datetime"
+        },
+        {
+          "name": "product_cd",
+          "type": "VARCHAR2(10)"
+        }
+      ]
+    },
+    {
+      "name": "transaction",
+      "fields": [
+        {
+          "name": "account_id",
+          "type": "int"
+        },
+        {
+          "name": "amount",
+          "type": "decimal(15,2)"
+        },
+        {
+          "name": "auth_id",
+          "type": "NUMBER"
+        },
+        {
+          "name": "batch_id",
+          "type": "NUMBER"
+        },
+        {
+          "name": "card_id",
+          "type": "NUMBER"
+        },
+        {
+          "name": "created_by",
+          "type": "VARCHAR2(50)"
+        },
+        {
+          "name": "created_ts",
+          "type": "DATE"
+        },
+        {
+          "name": "currency_cd",
+          "type": "CHAR(3)"
+        },
+        {
+          "name": "merchant_id",
+          "type": "NUMBER"
+        },
+        {
+          "name": "network_ref_id",
+          "type": "VARCHAR2(40)"
+        },
+        {
+          "name": "post_ts",
+          "type": "DATE"
+        },
+        {
+          "name": "ref_txn_id",
+          "type": "NUMBER"
+        },
+        {
+          "name": "transaction_date",
+          "type": "datetime"
+        },
+        {
+          "name": "transaction_id",
+          "type": "int",
+          "primary_key": true
+        },
+        {
+          "name": "transaction_type",
+          "type": "varchar(20)"
+        }
+      ]
+    },
+    {
+      "name": "product",
+      "fields": [
+        {
+          "name": "interest_rate",
+          "type": "decimal(5,2)"
+        },
+        {
+          "name": "product_id",
+          "type": "int",
+          "primary_key": true
+        },
+        {
+          "name": "product_name",
+          "type": "varchar(100)"
+        },
+        {
+          "name": "product_type",
+          "type": "varchar(50)"
+        }
+      ]
+    },
+    {
+      "name": "card",
+      "fields": [
+        {
+          "name": "account_id",
+          "type": "NUMBER"
+        },
+        {
+          "name": "bin",
+          "type": "CHAR(6)"
+        },
+        {
+          "name": "block_dt",
+          "type": "DATE"
+        },
+        {
+          "name": "card_id",
+          "type": "NUMBER",
+          "primary_key": true
+        },
+        {
+          "name": "card_status",
+          "type": "CHAR(1)"
+        },
+        {
+          "name": "embossed_name",
+          "type": "VARCHAR2(26)"
+        },
+        {
+          "name": "exp_month",
+          "type": "CHAR(2)"
+        },
+        {
+          "name": "exp_year",
+          "type": "CHAR(2)"
+        },
+        {
+          "name": "issue_dt",
+          "type": "DATE"
+        },
+        {
+          "name": "last4",
+          "type": "CHAR(4)"
+        },
+        {
+          "name": "pan_token",
+          "type": "VARCHAR2(64)"
+        }
+      ]
+    },
+    {
+      "name": "card_auth",
+      "fields": [
+        {
+          "name": "amount",
+          "type": "NUMBER(18,2)"
+        },
+        {
+          "name": "auth_code",
+          "type": "VARCHAR2(12)"
+        },
+        {
+          "name": "auth_id",
+          "type": "NUMBER",
+          "primary_key": true
+        },
+        {
+          "name": "auth_ts",
+          "type": "DATE"
+        },
+        {
+          "name": "card_id",
+          "type": "NUMBER"
+        },
+        {
+          "name": "currency_cd",
+          "type": "CHAR(3)"
+        },
+        {
+          "name": "merchant_id",
+          "type": "NUMBER"
+        },
+        {
+          "name": "response_cd",
+          "type": "CHAR(2)"
+        }
+      ]
+    },
+    {
+      "name": "dispute_case",
+      "fields": [
+        {
+          "name": "case_id",
+          "type": "NUMBER",
+          "primary_key": true
+        },
+        {
+          "name": "case_open_ts",
+          "type": "DATE"
+        },
+        {
+          "name": "reason_cd",
+          "type": "VARCHAR2(10)"
+        },
+        {
+          "name": "resolved_ts",
+          "type": "DATE"
+        },
+        {
+          "name": "status_cd",
+          "type": "CHAR(1)"
+        },
+        {
+          "name": "transaction_id",
+          "type": "NUMBER"
+        }
+      ]
+    },
+    {
+      "name": "merchant",
+      "fields": [
+        {
+          "name": "country_cd",
+          "type": "CHAR(2)"
+        },
+        {
+          "name": "mcc",
+          "type": "CHAR(4)"
+        },
+        {
+          "name": "merchant_id",
+          "type": "NUMBER",
+          "primary_key": true
+        },
+        {
+          "name": "merchant_name",
+          "type": "VARCHAR2(120)"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from_table": "account",
+      "from_field": "customer_id",
+      "to_table": "customer",
+      "to_field": "customer_id",
+      "kind": "many_to_one"
+    },
+    {
+      "from_table": "transaction",
+      "from_field": "account_id",
+      "to_table": "account",
+      "to_field": "account_id",
+      "kind": "many_to_one"
+    },
+    {
+      "from_table": "transaction",
+      "from_field": "auth_id",
+      "to_table": "card_auth",
+      "to_field": "auth_id",
+      "kind": "many_to_one"
+    },
+    {
+      "from_table": "transaction",
+      "from_field": "card_id",
+      "to_table": "card",
+      "to_field": "card_id",
+      "kind": "many_to_one"
+    },
+    {
+      "from_table": "transaction",
+      "from_field": "merchant_id",
+      "to_table": "merchant",
+      "to_field": "merchant_id",
+      "kind": "many_to_one"
+    },
+    {
+      "from_table": "card",
+      "from_field": "account_id",
+      "to_table": "account",
+      "to_field": "account_id",
+      "kind": "many_to_one"
+    },
+    {
+      "from_table": "card_auth",
+      "from_field": "card_id",
+      "to_table": "card",
+      "to_field": "card_id",
+      "kind": "many_to_one"
+    },
+    {
+      "from_table": "card_auth",
+      "from_field": "merchant_id",
+      "to_table": "merchant",
+      "to_field": "merchant_id",
+      "kind": "many_to_one"
+    },
+    {
+      "from_table": "dispute_case",
+      "from_field": "transaction_id",
+      "to_table": "transaction",
+      "to_field": "transaction_id",
+      "kind": "many_to_one"
+    }
+  ],
+  "er_diagram_mermaid": "erDiagram\n    CUSTOMER ||--o{ ACCOUNT : customer_id\n    ACCOUNT ||--o{ TRANSACTION : account_id\n    CARD_AUTH ||--o{ TRANSACTION : auth_id\n    CARD ||--o{ TRANSACTION : card_id\n    MERCHANT ||--o{ TRANSACTION : merchant_id\n    ACCOUNT ||--o{ CARD : account_id\n    CARD ||--o{ CARD_AUTH : card_id\n    MERCHANT ||--o{ CARD_AUTH : merchant_id\n    TRANSACTION ||--o{ DISPUTE_CASE : transaction_id",
+  "alignment": {
+    "customer": {
+      "BIAN": "Party",
+      "ISO20022": "Party"
+    },
+    "account": {
+      "BIAN": "CurrentAccount/ProductArrangement",
+      "ISO20022": "CashAccount"
+    },
+    "transaction": {
+      "BIAN": "FinancialTransaction",
+      "ISO20022": "Entry/Tx"
+    },
+    "product": {
+      "BIAN": "Product",
+      "ISO20022": "Product"
+    },
+    "card": {
+      "BIAN": "Card",
+      "ISO20022": "Card"
+    },
+    "card_auth": {
+      "BIAN": "Authorization",
+      "ISO20022": "Authorization"
+    },
+    "dispute_case": {
+      "BIAN": "Case",
+      "ISO20022": "InvestigationCase"
+    },
+    "merchant": {
+      "BIAN": "Merchant",
+      "ISO20022": "Merchant"
+    }
+  }
+}

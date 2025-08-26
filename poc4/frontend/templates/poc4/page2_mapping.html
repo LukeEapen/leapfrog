@@ -31,38 +31,80 @@
 
 <form method="post" id="mapping-form">
   <!-- Top action bar just below tabs -->
-  <div class="d-flex justify-content-end align-items-center mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-3">
+      <span class="small text-muted">Filter origins:</span>
+      <div class="form-check form-check-inline align-items-center d-flex gap-1">
+        <input class="form-check-input" type="checkbox" id="filter-source">
+        <label class="form-check-label" for="filter-source"><span class="badge bg-danger">DATA SOURCE 1</span></label>
+        <button class="btn btn-xs btn-outline-secondary minimize-origin" type="button" data-origin="source" title="Minimize DS1 rows">–</button>
+      </div>
+      <div class="form-check form-check-inline align-items-center d-flex gap-1">
+        <input class="form-check-input" type="checkbox" id="filter-legacy">
+        <label class="form-check-label" for="filter-legacy"><span class="badge bg-dark">DATA SOURCE 2</span></label>
+        <button class="btn btn-xs btn-outline-secondary minimize-origin" type="button" data-origin="legacy" title="Minimize DS2 rows">–</button>
+      </div>
+      <!-- Dynamic DS3+ chips -->
+      {% set ns = namespace(extras=[]) %}
+      {% for m in mapping %}
+        {% set o = m.get('origin','source') %}
+        {% if o not in ['source','legacy'] and o not in ns.extras %}
+          {% set _ = ns.extras.append(o) %}
+        {% endif %}
+      {% endfor %}
+      {% for o in ns.extras %}
+      <div class="form-check form-check-inline align-items-center d-flex gap-1">
+        <input class="form-check-input filter-extra" type="checkbox" id="filter-{{ o }}" data-origin="{{ o }}">
+        <label class="form-check-label" for="filter-{{ o }}">
+          {% if o[:2]|lower == 'ds' %}<span class="badge bg-secondary">DATA SOURCE {{ o[2:]|int }}</span>{% else %}<span class="badge bg-secondary">{{ o|upper }}</span>{% endif %}
+        </label>
+  <button class="btn btn-xs btn-outline-secondary minimize-origin" type="button" data-origin="{{ o }}" title="Minimize {{ o|upper }} rows">–</button>
+      </div>
+      {% endfor %}
+    </div>
     <button type="submit" class="btn btn-danger px-4" id="next-btn">Next</button>
   </div>
 
-
   <div class="row g-4 mapping-section">
-    <!-- Source -> Target Column (takes half width) -->
-    <div class="col-lg-6">
+    <div class="col-12">
       <div class="card h-100 shadow-sm">
         <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-sm btn-outline-danger collapse-btn" data-target="#source-map-body" aria-label="Collapse Source mappings">−</button>
-            <span>Source ➜ Target (Mapped Only)</span>
+            <button type="button" class="btn btn-sm btn-outline-danger collapse-btn" data-target="#map-body" aria-label="Collapse mappings">−</button>
+            <span>Origin ➜ Target (Mapped Only)</span>
           </div>
-          <span class="badge bg-danger origin-badge">SOURCE</span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary">COMBINED</span>
+          </div>
         </div>
-        <div class="card-body p-0" id="source-map-body">
+        <div class="card-body p-0" id="map-body">
           <div class="map-row map-header d-flex gap-2 small">
-            <div style="min-width:170px;max-width:300px;" class="sort-header" data-section="source" data-key="source">Source Field</div>
+            <div style="width:90px" class="sort-header" data-key="origin">Origin</div>
+            <div style="min-width:170px;max-width:300px;" class="sort-header" data-key="source">Field</div>
             <div style="width:16px"></div>
-            <div class="target-table sort-header" data-section="source" data-key="target_table">Target Table</div>
-            <div class="target-badge sort-header" data-section="source" data-key="target">Target Field</div>
-            <div style="width:70px" class="sort-header" data-section="source" data-key="type">Type</div>
-            <div style="width:55px" class="sort-header" data-section="source" data-key="similarity" title="Similarity %">Sim</div>
+            <div class="target-table sort-header" data-key="target_table">Target Table</div>
+            <div class="target-badge sort-header" data-key="target">Target Field</div>
+            <div style="width:70px" class="sort-header" data-key="type">Type</div>
+            <div style="width:55px" class="sort-header" data-key="similarity" title="Similarity %">Sim</div>
             <div class="flex-fill">Justification</div>
           </div>
-          {% set any_source = false %}
+          {% set any_any = false %}
           {% for m in mapping %}
             {% set origin = m.get('origin','source') %}
-            {% if origin == 'source' and m.target %}
-              {% set any_source = true %}
-              <div class="map-row d-flex gap-2 small" data-row="source" data-source="{{ m.source }}" data-target="{{ m.target }}" data-target_table="{{ m.target_table or '' }}" data-type="{{ target_types.get(m.target,'') }}" data-similarity="{{ (m.get('similarity',0)*100)|round(4) }}" title="{{ m.source }} ➜ {{ m.target }} :: {{ m.get('justification') or m.get('description') }}">
+            {% if m.target %}
+              {% set any_any = true %}
+              <div class="map-row d-flex gap-2 small" data-origin="{{ origin }}" data-source="{{ m.source }}" data-target="{{ m.target }}" data-target_table="{{ m.target_table or '' }}" data-type="{{ target_types.get(m.target,'') }}" data-similarity="{{ (m.get('similarity',0)*100)|round(4) }}" title="{{ m.source }} ➜ {{ m.target }} :: {{ m.get('justification') or m.get('description') }}" style="display:none;">
+                <span style="width:90px">
+                  {% if origin=='source' %}
+                    <span class="badge bg-danger">DATA SOURCE 1</span>
+                  {% elif origin=='legacy' %}
+                    <span class="badge bg-dark">DATA SOURCE 2</span>
+                  {% elif origin[:2]|lower == 'ds' %}
+                    <span class="badge bg-secondary">DATA SOURCE {{ origin[2:]|int }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ origin|upper }}</span>
+                  {% endif %}
+                </span>
                 <strong class="text-truncate">{% if m.source_table %}{{ m.source_table }}.{% endif %}{{ m.source }}</strong>
                 <i class="bi bi-arrow-right text-muted mt-1"></i>
                 <span class="target-table text-muted small" title="{{ m.target_table or '' }}">{{ m.target_table or '' }}</span>
@@ -78,63 +120,14 @@
               </div>
             {% endif %}
           {% endfor %}
-          {% if not any_source %}
-            <div class="p-3 text-muted small">No Source mappings available.</div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <!-- Legacy -> Target Column (takes half width) -->
-    <div class="col-lg-6">
-      <div class="card h-100 shadow-sm">
-        <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-sm btn-outline-danger collapse-btn" data-target="#legacy-map-body" aria-label="Collapse Legacy mappings">−</button>
-            <span>Legacy ➜ Target (Mapped Only)</span>
-          </div>
-          <span class="badge bg-dark origin-badge">LEGACY</span>
-        </div>
-        <div class="card-body p-0" id="legacy-map-body">
-          <div class="map-row map-header d-flex gap-2 small">
-            <div style="min-width:170px;max-width:300px;" class="sort-header" data-section="legacy" data-key="source">Legacy Field</div>
-            <div style="width:16px"></div>
-            <div class="target-table sort-header" data-section="legacy" data-key="target_table">Target Table</div>
-            <div class="target-badge sort-header" data-section="legacy" data-key="target">Target Field</div>
-            <div style="width:70px" class="sort-header" data-section="legacy" data-key="type">Type</div>
-            <div style="width:55px" class="sort-header" data-section="legacy" data-key="similarity" title="Similarity %">Sim</div>
-            <div class="flex-fill">Justification</div>
-          </div>
-          {% set any_legacy = false %}
-          {% for m in mapping %}
-            {% set origin = m.get('origin','source') %}
-            {% if origin == 'legacy' and m.target %}
-              {% set any_legacy = true %}
-              <div class="map-row d-flex gap-2 small" data-row="legacy" data-source="{{ m.source }}" data-target="{{ m.target }}" data-target_table="{{ m.target_table or '' }}" data-type="{{ target_types.get(m.target,'') }}" data-similarity="{{ (m.get('similarity',0)*100)|round(4) }}" title="{{ m.source }} ➜ {{ m.target }} :: {{ m.get('justification') or m.get('description') }}">
-                <strong class="text-truncate">{% if m.source_table %}{{ m.source_table }}.{% endif %}{{ m.source }}</strong>
-                <i class="bi bi-arrow-right text-muted mt-1"></i>
-                <span class="target-table text-muted small" title="{{ m.target_table or '' }}">{{ m.target_table or '' }}</span>
-                <select class="form-select form-select-sm target-badge target-select" name="target_{{ loop.index0 }}" aria-label="Select target field" style="max-width:240px;" data-current="{{ m.target }}">
-                  {% for tf in target_fields %}
-                    <option value="{{ tf }}">{{ tf }}</option>
-                  {% endfor %}
-                </select>
-                {% if target_types.get(m.target) %}<span class="badge bg-light text-dark border mt-1">{{ target_types.get(m.target) }}</span>{% endif %}
-                {% if m.get('similarity') %}<span class="meta mt-1">{{ (m.get('similarity',0)*100)|round(1) }}%</span>{% endif %}
-                <span class="text-muted justification">— {{ m.get('justification') or m.get('description') or 'Mapping created automatically.' }}</span>
-                <input type="hidden" name="target_type_{{ loop.index0 }}" value="{{ target_types.get(m.target,'') }}">
-              </div>
-            {% endif %}
-          {% endfor %}
-          {% if not any_legacy %}
-            <div class="p-3 text-muted small">No Legacy mappings available.</div>
+          {% if not any_any %}
+            <div class="p-3 text-muted small">No mappings available.</div>
           {% endif %}
         </div>
       </div>
     </div>
   </div>
 
-  
 </form>
 
 <!-- Floating Chat Panel -->
@@ -171,7 +164,7 @@ if(regenBtn){ regenBtn.addEventListener('click', async ()=>{ try{ const res=awai
 function toggleChat(){ const body=document.getElementById('chat-body'); const footer=document.getElementById('chat-footer'); const icon=document.getElementById('chat-min-icon'); const hidden=body.style.display==='none'; body.style.display= hidden? 'block':'none'; footer.style.display= hidden? 'block':'none'; icon.classList.toggle('bi-chevron-down', !hidden); icon.classList.toggle('bi-chevron-up', hidden);} 
 document.getElementById('chat-min-btn').addEventListener('click', toggleChat);
 
-// --- Collapse logic for Source / Legacy sections ---
+// --- Collapse logic for Combined section ---
 document.querySelectorAll('.collapse-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const targetSel = btn.getAttribute('data-target');
@@ -183,43 +176,116 @@ document.querySelectorAll('.collapse-btn').forEach(btn=>{
   });
 });
 
-// --- Sorting logic ---
-const sortState = { source: {}, legacy: {} };
-function sortRows(section, key){
-  const container = section==='source'? document.getElementById('source-map-body') : document.getElementById('legacy-map-body');
+// --- Filter logic with persistence (no defaults for DS1/DS2; DS3+ default ON) ---
+const filterSource = document.getElementById('filter-source');
+const filterLegacy = document.getElementById('filter-legacy');
+const extraFilters = Array.from(document.querySelectorAll('.filter-extra'));
+const ORIGIN_FILTERS_KEY = 'poc4_origin_filters';
+const ORIGIN_MIN_KEY = 'poc4_origin_min';
+
+function loadFilterPrefs(){
+  try{ return JSON.parse(localStorage.getItem(ORIGIN_FILTERS_KEY) || '{}') || {}; }catch(e){ return {}; }
+}
+function saveFilterPrefs(state){
+  try{ localStorage.setItem(ORIGIN_FILTERS_KEY, JSON.stringify(state||{})); }catch(e){}
+}
+function currentFilterState(){
+  const stored = loadFilterPrefs();
+  const state = { ...stored };
+  if(filterSource) state['source'] = !!filterSource.checked;
+  if(filterLegacy) state['legacy'] = !!filterLegacy.checked;
+  extraFilters.forEach(cb=>{ const o = (cb.dataset.origin||'').toLowerCase(); if(o){ state[o] = !!cb.checked; }});
+  return state;
+}
+function applyStoredPrefs(){
+  const stored = loadFilterPrefs();
+  // DS1/DS2 default false when not stored
+  if(filterSource){ filterSource.checked = !!stored['source']; }
+  if(filterLegacy){ filterLegacy.checked = !!stored['legacy']; }
+  // DS3+ default true when not stored
+  extraFilters.forEach(cb=>{
+    const o = (cb.dataset.origin||'').toLowerCase();
+    cb.checked = (o in stored) ? !!stored[o] : true;
+  });
+}
+function isOn(origin, state){
+  const o = (origin||'').toLowerCase();
+  if(o in state) return !!state[o];
+  // default: extras ON, DS1/DS2 OFF
+  return (o !== 'source' && o !== 'legacy');
+}
+function applyFilters(){
+  const state = currentFilterState();
+  document.querySelectorAll('#map-body .map-row[data-origin]').forEach(row=>{
+    const origin = (row.getAttribute('data-origin') || '').toLowerCase();
+    const ok = isOn(origin, state);
+    row.style.display = ok? 'flex':'none';
+  });
+  saveFilterPrefs(state);
+  // Re-apply minimize state so collapsed origins remain hidden
+  try{ applyMin(); }catch(e){}
+}
+filterSource?.addEventListener('change', applyFilters);
+filterLegacy?.addEventListener('change', applyFilters);
+extraFilters.forEach(cb=> cb.addEventListener('change', applyFilters));
+applyStoredPrefs();
+applyFilters();
+
+// --- Minimize per origin (collapse rows but keep filter state) ---
+function getMin(){ try{ return JSON.parse(localStorage.getItem(ORIGIN_MIN_KEY)||'{}')||{}; }catch(e){ return {}; } }
+function setMin(k,v){ try{ const s=getMin(); s[k]=!!v; localStorage.setItem(ORIGIN_MIN_KEY, JSON.stringify(s)); }catch(e){} }
+function applyMin(){
+  const s=getMin();
+  document.querySelectorAll('#map-body .map-row[data-origin]').forEach(row=>{
+    const o=(row.getAttribute('data-origin')||'').toLowerCase();
+    const minimized = !!s[o];
+    row.classList.toggle('collapsed-origin', minimized);
+    row.style.maxHeight = minimized? '0' : '';
+    row.style.overflow = minimized? 'hidden' : '';
+    row.style.paddingTop = row.style.paddingBottom = minimized? '0' : '';
+    row.style.margin = minimized? '0' : '';
+  });
+}
+document.querySelectorAll('.minimize-origin').forEach(btn=>{
+  btn.addEventListener('click', ()=>{ const o=(btn.dataset.origin||'').toLowerCase(); const s=getMin(); setMin(o, !s[o]); applyMin(); });
+});
+applyMin();
+
+// --- Sorting logic (combined) ---
+const sortState = {};
+function sortRows(key){
+  const container = document.getElementById('map-body');
   if(!container) return;
-  const rows = Array.from(container.querySelectorAll(`.map-row[data-row='${section}']`));
+  const rows = Array.from(container.querySelectorAll(`.map-row[data-origin]`));
   if(!rows.length) return;
-  const currentDir = sortState[section][key] === 'asc'? 'desc':'asc';
-  sortState[section][key] = currentDir;
+  const currentDir = sortState[key] === 'asc'? 'desc':'asc';
+  sortState[key] = currentDir;
   rows.sort((a,b)=>{
     let av = a.getAttribute(`data-${key}`)||''; let bv = b.getAttribute(`data-${key}`)||'';
-    // numeric detection for similarity
+    // origin ordering: source before legacy if asc
+    if(key==='origin'){
+      av = (av||'').toLowerCase(); bv = (bv||'').toLowerCase();
+      if(av===bv) return 0;
+      return currentDir==='asc' ? (av==='source'? -1:1) : (av==='source'? 1:-1);
+    }
     const anum = parseFloat(av); const bnum = parseFloat(bv);
     if(!isNaN(anum) && !isNaN(bnum)){
       return currentDir==='asc'? anum - bnum : bnum - anum;
     }
-    av = av.toLowerCase(); bv = bv.toLowerCase();
+    av = (av||'').toLowerCase(); bv = (bv||'').toLowerCase();
     if(av < bv) return currentDir==='asc'? -1:1;
-    // Start minimized
-    toggleChat();
     if(av > bv) return currentDir==='asc'? 1:-1;
     return 0;
   });
-  // Reinsert after header (first map-header row)
   const header = container.querySelector('.map-header');
   rows.forEach(r=> container.appendChild(r));
-  // Visual indicator (optional simple underline)
   container.querySelectorAll('.sort-header').forEach(h=> h.classList.remove('sorted-asc','sorted-desc'));
   const activeHeader = container.querySelector(`.sort-header[data-key='${key}']`);
   if(activeHeader){ activeHeader.classList.add(currentDir==='asc'? 'sorted-asc':'sorted-desc'); }
-  const lower = msg.toLowerCase();
-  if(lower==='next' || lower==='go next' || lower==='continue'){ document.getElementById('next-btn')?.click(); return false; }
-  if(lower.includes('regenerate')){ document.getElementById('regenerate-btn')?.click(); }
 }
 document.querySelectorAll('.sort-header').forEach(h=>{
   h.style.cursor='pointer';
-  h.addEventListener('click', ()=> sortRows(h.getAttribute('data-section'), h.getAttribute('data-key')));
+  h.addEventListener('click', ()=> sortRows(h.getAttribute('data-key')));
 });
 
 // Initialize target selects and keep hidden type in sync

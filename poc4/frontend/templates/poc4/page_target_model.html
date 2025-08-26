@@ -1,0 +1,132 @@
+{% extends 'poc4/base.html' %}
+{% block content %}
+<div class="bg-danger text-white py-3 mb-4 rounded shadow-sm text-center">
+  <h2 class="mb-0">Target Model Designer</h2>
+  <small>Design, review, approve, and download your target-state schema</small>
+</div>
+
+{% include 'poc4/_subnav.j2' %}
+
+<!-- Meta flags for JS -->
+<div id="tmodel-meta" data-has-draft="{{ '1' if target_model_draft else '0' }}" hidden></div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="text-muted small">This page is independent of Validation; it won’t trigger migration.</div>
+  <div class="d-flex gap-2">
+    <form method="post" class="m-0" id="design-form">
+      <input type="hidden" name="action" value="design_target_model">
+      <button type="submit" class="btn btn-outline-danger btn-sm">Generate Draft</button>
+    </form>
+    {% if target_model_draft %}
+    <form method="post" class="m-0">
+      <input type="hidden" name="action" value="approve_target_model">
+      <button type="submit" class="btn btn-success btn-sm">Approve</button>
+    </form>
+    <a href="{{ url_for('poc4.download_target_model') }}" class="btn btn-outline-secondary btn-sm">Download JSON</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-8">
+    <div class="card h-100 shadow-sm">
+      <div class="card-header bg-light text-danger fw-bold">Draft Preview</div>
+      <div class="card-body">
+        {% if not target_model_draft %}
+          <div class="alert alert-info">Click Generate Draft to produce a target model from your selected sources.</div>
+        {% elif target_model_draft.error %}
+          <div class="alert alert-danger">{{ target_model_draft.error }}</div>
+        {% else %}
+          {% if target_model_draft.er_diagram_mermaid %}
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="small text-muted">Entity-Relationship (Mermaid)</span>
+              <span class="badge bg-light text-dark border">ER</span>
+            </div>
+            <div class="border rounded p-2 bg-white">
+              <div class="mermaid" style="max-height: 260px; overflow:auto;">
+{{ target_model_draft.er_diagram_mermaid }}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          {% if target_model_draft.alignment %}
+          <div class="mb-3">
+            <div class="small text-muted mb-1">Standards alignment (BIAN/ISO)</div>
+            <div class="d-flex flex-wrap gap-2">
+              {% for t in target_model_draft.tables %}
+                {% set a = (target_model_draft.alignment[t.name] if (target_model_draft.alignment and t.name in target_model_draft.alignment) else None) %}
+                <div class="border rounded p-2 bg-light">
+                  <div class="small"><code>{{ t.name }}</code></div>
+                  {% if a %}
+                    <span class="badge bg-danger-subtle text-danger border">BIAN: {{ a.BIAN }}</span>
+                    <span class="badge bg-secondary-subtle text-dark border">ISO: {{ a.ISO20022 }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">No mapping</span>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          <div class="accordion" id="tmodelAccordion">
+            {% for t in target_model_draft.tables %}
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="head-{{ t.name }}">
+                <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#body-{{ t.name }}" aria-expanded="false" aria-controls="body-{{ t.name }}">
+                  <span class="me-2"><code>{{ t.name }}</code></span>
+                  <span class="badge bg-light text-dark border">{{ t.fields|length }} fields</span>
+                </button>
+              </h2>
+              <div id="body-{{ t.name }}" class="accordion-collapse collapse" aria-labelledby="head-{{ t.name }}" data-bs-parent="#tmodelAccordion">
+                <div class="accordion-body p-2">
+                  <div class="d-flex flex-wrap gap-2">
+                    {% for f in t.fields %}
+                      <span class="badge {% if f.primary_key %}bg-danger text-white{% else %}bg-light text-dark border{% endif %}">
+                        {{ f.name }}<span class="text-muted">:{{ f.type }}</span>{% if f.primary_key %}<span class="ms-1">(PK)</span>{% endif %}
+                      </span>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="border rounded p-2 bg-light mt-3" style="max-height:240px; overflow:auto;">
+            <pre class="small mb-0">{{ target_model_draft | tojson(indent=2) }}</pre>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-header bg-danger text-white">Actions</div>
+      <div class="card-body">
+        <ol class="small mb-0">
+          <li>Click Generate Draft to infer a canonical model across your selected sources.</li>
+          <li>Review the ER diagram, relationships, and fields.</li>
+          <li>Approve to mark it final, or download JSON anytime.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mermaid -->
+<script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  try { mermaid.initialize({ startOnLoad: true, theme: 'default' }); } catch(e){}
+  // Auto-generate once when navigated with ?auto=1 and no draft exists
+  (function(){
+    try{
+      const p = new URLSearchParams(window.location.search);
+      const meta = document.getElementById('tmodel-meta');
+      const hasDraft = (meta?.dataset?.hasDraft === '1');
+      if(p.get('auto')==='1' && !hasDraft){
+        document.getElementById('design-form')?.submit();
+      }
+    }catch(e){}
+  })();
+</script>
+{% endblock %}

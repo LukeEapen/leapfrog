@@ -6,6 +6,14 @@
   <small>Modern Data Migration Workflow</small>
 </div>
 
+<!-- Convenience: Back to Upload button (anchors to same page) -->
+<div class="mb-3">
+  <a href="{{ url_for('poc4.page1') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Back to Upload
+  </a>
+  <span class="text-muted small ms-2">Returns to the Upload tab without changing the URL.</span>
+  </div>
+
 {% include 'poc4/_subnav.j2' %}
 
 <style>
@@ -22,35 +30,75 @@
     <button type="submit" class="btn btn-danger px-4" id="next-btn">Next</button>
   </div>
   <div class="row g-4">
-    <!-- Source Column -->
-    <div class="col-md-4">
+    <!-- Combined Origins Column (Source + Legacy) -->
+    <div class="col-md-8">
       <div class="card h-100 shadow-sm">
-        <div class="card-header bg-light text-danger fw-bold">Source System</div>
-        <div class="card-body">
-          <div class="mb-3">
-            <label class="form-label">Source Schema</label>
-            <select class="form-select mb-2" id="source-schema-select" name="source_schema" required>
-              <option value="source_schema.json" selected>Source (Relational)</option>
-            </select>
-            <input type="file" class="form-control" id="source-schema-upload" accept="application/json">
-          </div>
-          <div id="source-schema-fields"></div>
-        </div>
-      </div>
+  <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
+    <span>Origin Systems</span>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-sm btn-outline-danger" type="button" id="add-datasource-btn" title="Add another Data Source">Add Data Source</button>
     </div>
-    <!-- Legacy Column -->
-    <div class="col-md-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-header bg-light text-danger fw-bold">Legacy System</div>
+  </div>
         <div class="card-body">
-          <div class="mb-3">
-            <label class="form-label">Legacy Schema</label>
-            <select class="form-select mb-2" id="legacy-schema-select" name="legacy_schema" required>
-              <option value="legacy_schema.json" selected>Legacy Core (Mainframe)</option>
-            </select>
-            <input type="file" class="form-control" id="legacy-schema-upload" accept="application/json">
+      <div class="mb-3">
+            <label class="form-label">Select origin schemas (multiple allowed)</label>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="source-enable" name="enable_source">
+        <label class="form-check-label" for="source-enable">Data Source 1 (Relational)</label>
+        <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="source-add-top" title="Add new Data Source 1 schema">Add</button>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="legacy-enable" name="enable_legacy">
+        <label class="form-check-label" for="legacy-enable">Data Source 2 (Mainframe)</label>
+        <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="legacy-add-top" title="Add new Data Source 2 schema">Add</button>
+            </div>
           </div>
-          <div id="legacy-schema-fields"></div>
+      <!-- Hidden file inputs for top-level quick add -->
+      <input type="file" class="d-none" id="source-schema-upload-top" accept="application/json">
+      <input type="file" class="d-none" id="legacy-schema-upload-top" accept="application/json">
+          <!-- Source selector (shown when checked) -->
+          <div id="source-section" class="mb-3" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label m-0">Data Source 1 Schema</label>
+              <button class="btn btn-sm btn-outline-secondary" type="button" id="source-min-btn" title="Minimize this section">Minimize</button>
+            </div>
+            <div id="source-body">
+            <div class="input-group mb-2">
+              <select class="form-select" id="source-schema-select" name="source_schema">
+                <option value="" selected disabled>Loading…</option>
+              </select>
+              <button class="btn btn-outline-secondary" type="button" id="source-rename-btn" title="Rename selected schema">Rename</button>
+              <button class="btn btn-outline-danger" type="button" id="source-delete-btn" title="Delete selected schema">Delete</button>
+              <button class="btn btn-outline-danger" type="button" id="source-add-btn" title="Add a new schema to the list">Add</button>
+            </div>
+              <input type="file" class="d-none" id="source-schema-upload" accept="application/json" aria-label="Upload custom Source schema JSON">
+              <div class="form-text" id="source-upload-hint">Use Add to upload and register a JSON schema.</div>
+            <div class="mt-2" id="source-schema-fields"></div>
+            </div>
+          </div>
+          <!-- Legacy selector (shown when checked) -->
+          <div id="legacy-section" class="mb-3" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label m-0">Data Source 2 Schema</label>
+              <button class="btn btn-sm btn-outline-secondary" type="button" id="legacy-min-btn" title="Minimize this section">Minimize</button>
+            </div>
+            <div id="legacy-body">
+            <div class="input-group mb-2">
+              <select class="form-select" id="legacy-schema-select" name="legacy_schema">
+                <option value="" selected disabled>Loading…</option>
+              </select>
+              <button class="btn btn-outline-secondary" type="button" id="legacy-rename-btn" title="Rename selected schema">Rename</button>
+              <button class="btn btn-outline-danger" type="button" id="legacy-delete-btn" title="Delete selected schema">Delete</button>
+              <button class="btn btn-outline-danger" type="button" id="legacy-add-btn" title="Add a new schema to the list">Add</button>
+            </div>
+              <input type="file" class="d-none" id="legacy-schema-upload" accept="application/json" aria-label="Upload custom Legacy schema JSON">
+              <div class="form-text" id="legacy-upload-hint">Use Add to upload and register a JSON schema.</div>
+            <div class="mt-2" id="legacy-schema-fields"></div>
+            </div>
+          </div>
+
+          <!-- Dynamic extra data sources will be appended here -->
+          <div id="extra-ds-container"></div>
         </div>
       </div>
     </div>
@@ -61,13 +109,25 @@
         <div class="card-body">
           <div class="mb-3">
             <label class="form-label">Target Schema</label>
-            <select class="form-select mb-2" id="target-schema-select" name="target_schema" required>
-              <option value="target_schema.json" selected>Target OLAP Flat</option>
-              <option value="target_schema_future.json">Future OLAP Enhanced</option>
-            </select>
-            <input type="file" class="form-control" id="target-schema-upload" accept="application/json">
+            <div class="input-group mb-2">
+              <select class="form-select" id="target-schema-select" name="target_schema" required>
+                <option value="" selected disabled>Loading…</option>
+              </select>
+              <button class="btn btn-outline-secondary" type="button" id="target-rename-btn" title="Rename selected schema">Rename</button>
+              <button class="btn btn-outline-danger" type="button" id="target-delete-btn" title="Delete selected schema">Delete</button>
+            </div>
+            <div class="input-group mt-2">
+              <input type="file" class="form-control" id="target-schema-upload" accept="application/json" aria-label="Upload custom Target schema JSON">
+              <button class="btn btn-outline-danger" type="button" id="target-add-btn" title="Add this schema to the list">Add to list</button>
+            </div>
+            <div class="form-text" id="target-upload-hint">Upload a JSON schema file, then click Add to register it.</div>
           </div>
           <div id="target-schema-fields"></div>
+          <hr>
+          <div class="d-grid gap-2">
+            <button type="button" id="design-model-btn" class="btn btn-outline-danger btn-sm">Design Target Model</button>
+            <div class="form-text small">Saves selections, then opens the Target Model page and auto-generates the draft.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -75,6 +135,7 @@
 </form>
 
 <!-- Floating Chat Widget -->
+<script id="extra-sources-json" type="application/json">{{ (extra_sources or []) | tojson | safe }}</script>
 <div class="card floating-chat" id="chat-widget">
   <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center" style="cursor:move;">
     <span class="fw-semibold small d-flex align-items-center gap-1"><i class="bi bi-robot"></i> Assistant</span>
@@ -124,12 +185,328 @@ function appendMessage(sender,text){ const chat=document.getElementById('chat-me
 async function loadSchema(file,target){ try{ const res= await fetch(`/poc4/static_schema/schemas/${file}`); const schema= await res.json(); renderSchemaFields(schema,target);}catch(e){ document.getElementById(target).innerHTML='<div class="text-danger">Failed to load schema.</div>'; }}
 function renderSchemaFields(schema,target){ let html=''; if(schema.tables){ schema.tables.forEach(t=>{ html+=`<div class=\"card mb-2\"><div class=\"card-header bg-light fw-bold\">${t.name}</div><div class=\"card-body p-2\"><ul class=\"list-group\">`; t.fields.forEach(f=>{ html+=`<li class=\"list-group-item d-flex justify-content-between align-items-center\"><span>${f.name}</span><span class=\"badge bg-danger\">${f.type}</span></li>`; }); html+='</ul></div></div>'; }); } document.getElementById(target).innerHTML=html; }
 
-['source','legacy','target'].forEach(kind=>{ const sel=document.getElementById(`${kind}-schema-select`); if(sel){ sel.addEventListener('change',()=>{ loadSchema(sel.value, `${kind}-schema-fields`); }); }});
-['source','legacy','target'].forEach(kind=>{ const up=document.getElementById(`${kind}-schema-upload`); if(up){ up.addEventListener('change', e=>{ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=evt=>{ try{ const schema=JSON.parse(evt.target.result); renderSchemaFields(schema, `${kind}-schema-fields`);}catch(err){ document.getElementById(`${kind}-schema-fields`).innerHTML='<div class="text-danger">Invalid JSON file.</div>'; } }; reader.readAsText(file); }); }});
+// Toggle Source/Legacy sections via checkboxes
+const sourceEnable = document.getElementById('source-enable');
+const legacyEnable = document.getElementById('legacy-enable');
+const sourceSection = document.getElementById('source-section');
+const legacySection = document.getElementById('legacy-section');
+if (sourceEnable) sourceEnable.addEventListener('change', ()=>{ sourceSection.style.display = sourceEnable.checked ? 'block':'none'; });
+if (legacyEnable) legacyEnable.addEventListener('change', ()=>{ legacySection.style.display = legacyEnable.checked ? 'block':'none'; });
 
-// Initial load
-loadSchema('source_schema.json','source-schema-fields');
-loadSchema('legacy_schema.json','legacy-schema-fields');
-loadSchema('target_schema.json','target-schema-fields');
+['source','legacy','target'].forEach(kind=>{ const sel=document.getElementById(`${kind}-schema-select`); if(sel){ sel.addEventListener('change',()=>{ const val = sel.value; if(val){ loadSchema(val, `${kind}-schema-fields`); }}); }});
+['source','legacy','target'].forEach(kind=>{ const up=document.getElementById(`${kind}-schema-upload`); if(up){ up.addEventListener('change', e=>{ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=evt=>{ try{ const schema=JSON.parse(evt.target.result); renderSchemaFields(schema, `${kind}-schema-fields`);}catch(err){ document.getElementById(`${kind}-schema-fields`).innerHTML='<div class=\"text-danger\">Invalid JSON file.</div>'; } }; reader.readAsText(file); }); }});
+
+// Initial load: do not auto-load any schemas; wait for user selection
+
+// Add-to-list uploader for Source/Legacy
+async function addSchemaToList(kind){
+  const fileInput = document.getElementById(`${kind}-schema-upload`);
+  const selectEl = document.getElementById(`${kind}-schema-select`);
+  const hintEl = document.getElementById(`${kind}-upload-hint`);
+  if(!fileInput || !fileInput.files || !fileInput.files[0]){
+    if(hintEl) hintEl.textContent = 'Please choose a JSON file first.';
+    return;
+  }
+  const fd = new FormData();
+  fd.append('schemaFile', fileInput.files[0]);
+  // Optional: suggested name
+  fd.append('name', fileInput.files[0].name || `${kind}_schema.json`);
+  // Tag kind for categorized lists
+  fd.append('kind', kind === 'source' ? 'source' : (kind === 'legacy' ? 'legacy' : (kind === 'target' ? 'target' : '')));
+  try{
+    const res = await fetch('/poc4/upload_schema', { method:'POST', body: fd });
+    const data = await res.json();
+    if(!data.ok){ throw new Error(data.error || 'Upload failed'); }
+    const fname = data.filename;
+    if(selectEl){
+      // Insert option if not exists
+      let opt = Array.from(selectEl.options).find(o=>o.value===fname);
+      if(!opt){ opt = document.createElement('option'); opt.value = fname; opt.textContent = fname; selectEl.appendChild(opt); }
+      selectEl.value = fname;
+      // Trigger field preview load
+      loadSchema(fname, `${kind}-schema-fields`);
+    }
+    if(hintEl){ hintEl.textContent = `Added ${fname} to the list.`; }
+  }catch(e){
+    if(hintEl){ hintEl.textContent = `Add failed: ${e.message || e}`; }
+  }
+}
+// Add buttons near selects
+document.getElementById('source-add-btn')?.addEventListener('click', ()=> document.getElementById('source-schema-upload')?.click());
+document.getElementById('legacy-add-btn')?.addEventListener('click', ()=> document.getElementById('legacy-schema-upload')?.click());
+document.getElementById('target-add-btn')?.addEventListener('click', ()=> document.getElementById('target-schema-upload')?.click());
+// When a file is chosen, upload and register
+['source','legacy','target'].forEach(kind=>{
+  const up = document.getElementById(`${kind}-schema-upload`);
+  if(!up) return;
+  up.addEventListener('change', ()=> addSchemaToList(kind));
+});
+
+// Rename selected schema option (safe server-side rename)
+async function renameSelected(kind){
+  const sel = document.getElementById(`${kind}-schema-select`);
+  if(!sel || !sel.value){ return; }
+  const oldName = sel.value;
+  const proposed = prompt('New schema name (with or without .json):', oldName);
+  if(!proposed){ return; }
+  const fd = new FormData();
+  fd.append('oldName', oldName);
+  fd.append('newName', proposed);
+  try{
+    const res = await fetch('/poc4/rename_schema', { method:'POST', body: fd });
+    const data = await res.json();
+    if(!data.ok){ throw new Error(data.error || 'Rename failed'); }
+    const newFile = data.filename;
+    // Update select option
+    let opt = Array.from(sel.options).find(o=>o.value===oldName);
+    if(opt){ opt.value = newFile; opt.textContent = newFile; }
+    sel.value = newFile;
+  }catch(e){ alert(`Rename failed: ${e.message || e}`); }
+}
+document.getElementById('source-rename-btn')?.addEventListener('click', ()=> renameSelected('source'));
+document.getElementById('legacy-rename-btn')?.addEventListener('click', ()=> renameSelected('legacy'));
+document.getElementById('target-rename-btn')?.addEventListener('click', ()=> renameSelected('target'));
+
+// Dynamic schema list loader for base kinds and any extra DS selects
+async function populateSchemaSelects(){
+  try{
+    const res = await fetch('/poc4/list_schemas');
+    const data = await res.json();
+    if(!data.ok) throw new Error(data.error || 'Failed to load schema list');
+    const byKind = data.filesByKind || { source:[], legacy:[], target:[], uncategorized:[] };
+    const fillSelect = (sel, files)=>{
+      if(!sel) return;
+      const current = sel.value;
+      sel.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      placeholder.textContent = 'Select schema…';
+      sel.appendChild(placeholder);
+      (files || []).forEach(f=>{
+        const opt = document.createElement('option');
+        opt.value = f; opt.textContent = f;
+        sel.appendChild(opt);
+      });
+    };
+    ['source','legacy','target'].forEach(kind=>{
+      const sel = document.getElementById(`${kind}-schema-select`);
+      if(!sel) return;
+      fillSelect(sel, byKind[kind]);
+      // No defaults on load; keep placeholder until user selects
+    });
+    // Fill extra DS selects (they are tagged with data-kind="source")
+    document.querySelectorAll('select.extra-ds-select').forEach(sel=>{
+      fillSelect(sel, byKind['source']);
+    });
+  }catch(e){ console.warn('Schema list load failed', e); }
+}
+populateSchemaSelects();
+// Top-level quick add buttons (beside the checkboxes)
+document.getElementById('source-add-top')?.addEventListener('click', ()=> document.getElementById('source-schema-upload-top')?.click());
+document.getElementById('legacy-add-top')?.addEventListener('click', ()=> document.getElementById('legacy-schema-upload-top')?.click());
+document.getElementById('source-schema-upload-top')?.addEventListener('change', ()=>{
+  // Mirror into section uploader and call add
+  const top = document.getElementById('source-schema-upload-top');
+  const sec = document.getElementById('source-schema-upload');
+  if(top && sec && top.files?.length){ sec.files = top.files; addSchemaToList('source'); top.value=''; }
+});
+document.getElementById('legacy-schema-upload-top')?.addEventListener('change', ()=>{
+  const top = document.getElementById('legacy-schema-upload-top');
+  const sec = document.getElementById('legacy-schema-upload');
+  if(top && sec && top.files?.length){ sec.files = top.files; addSchemaToList('legacy'); top.value=''; }
+});
+
+// Delete selected schema
+async function deleteSelected(kind){
+  const sel = document.getElementById(`${kind}-schema-select`);
+  if(!sel || !sel.value){ return; }
+  const name = sel.value;
+  if(!confirm(`Delete schema ${name}?`)) return;
+  const fd = new FormData(); fd.append('name', name);
+  try{
+    const res = await fetch('/poc4/delete_schema', { method:'POST', body: fd });
+    const data = await res.json();
+    if(!data.ok){ throw new Error(data.error || 'Delete failed'); }
+    // Remove option and clear preview
+    const opt = Array.from(sel.options).find(o=>o.value===name);
+    if(opt) opt.remove();
+    sel.value = '';
+    const fieldsEl = document.getElementById(`${kind}-schema-fields`);
+    if(fieldsEl) fieldsEl.innerHTML = '';
+  }catch(e){ alert(`Delete failed: ${e.message || e}`); }
+}
+document.getElementById('source-delete-btn')?.addEventListener('click', ()=> deleteSelected('source'));
+document.getElementById('legacy-delete-btn')?.addEventListener('click', ()=> deleteSelected('legacy'));
+document.getElementById('target-delete-btn')?.addEventListener('click', ()=> deleteSelected('target'));
+
+// ---- Dynamic extra Data Source sections (DS3+) ----
+let dsCounter = 3; // start at 3 since 1 & 2 exist
+const extraContainer = document.getElementById('extra-ds-container');
+function createExtraDsSection(n){
+  const id = `ds${n}`;
+  const wrap = document.createElement('div');
+  wrap.className = 'mb-3';
+  wrap.innerHTML = `
+    <div class="d-flex justify-content-between align-items-center mb-1">
+      <label class="form-label m-0">Data Source ${n} Schema</label>
+      <div class="btn-group btn-group-sm" role="group" aria-label="Extra DS ${n} actions">
+        <button class="btn btn-outline-secondary" type="button" id="${id}-min" title="Minimize this section">Minimize</button>
+        <button class="btn btn-outline-secondary" type="button" id="${id}-rename">Rename</button>
+        <button class="btn btn-outline-danger" type="button" id="${id}-delete">Delete</button>
+        <button class="btn btn-outline-danger" type="button" id="${id}-add">Add</button>
+        <button class="btn btn-outline-secondary" type="button" id="${id}-remove-section" title="Remove this Data Source section">Remove Section</button>
+      </div>
+    </div>
+    <div id="${id}-body">
+    <div class="input-group mb-2">
+      <select class="form-select extra-ds-select" id="${id}-select" name="extra_sources">
+        <option value="" selected disabled>Loading…</option>
+      </select>
+    </div>
+    <input type="file" class="d-none" id="${id}-upload" accept="application/json" aria-label="Upload custom schema JSON">
+    <div class="form-text" id="${id}-hint">Use Add to upload and register a JSON schema for this Data Source.</div>
+    <div class="mt-2" id="${id}-fields"></div>
+    </div>
+    <hr>
+  `;
+  extraContainer.appendChild(wrap);
+  // Populate select with current list
+  populateSchemaSelects();
+  // Change handler: preview fields
+  const sel = wrap.querySelector(`#${id}-select`);
+  sel?.addEventListener('change', ()=>{
+    const val = sel.value; if(val){ loadSchema(val, `${id}-fields`); }
+  });
+  // Minimize handler + apply stored state
+  const minBtn = wrap.querySelector(`#${id}-min`);
+  const bodyEl = wrap.querySelector(`#${id}-body`);
+  applyMinState(id, bodyEl, minBtn);
+  minBtn?.addEventListener('click', ()=>{
+    const s = getMinState(); const cur = !!s[id]; setMinState(id, !cur); applyMinState(id, bodyEl, minBtn);
+  });
+  // Upload flow
+  wrap.querySelector(`#${id}-add`)?.addEventListener('click', ()=> wrap.querySelector(`#${id}-upload`)?.click());
+  const uploadEl = wrap.querySelector(`#${id}-upload`);
+  uploadEl?.addEventListener('change', async ()=>{
+    // Reuse uploader
+    const fileInput = uploadEl;
+    const hintEl = wrap.querySelector(`#${id}-hint`);
+    if(!fileInput || !fileInput.files || !fileInput.files[0]){ if(hintEl) hintEl.textContent='Please choose a JSON file first.'; return; }
+    const fd = new FormData();
+    fd.append('schemaFile', fileInput.files[0]);
+    fd.append('name', fileInput.files[0].name || `ds${n}_schema.json`);
+    fd.append('kind', 'source');
+    try{
+      const res = await fetch('/poc4/upload_schema', { method:'POST', body: fd });
+      const data = await res.json();
+      if(!data.ok) throw new Error(data.error || 'Upload failed');
+      const fname = data.filename;
+      // refresh and select
+      await populateSchemaSelects();
+      const sel2 = wrap.querySelector(`#${id}-select`);
+      if(sel2){ sel2.value = fname; loadSchema(fname, `${id}-fields`); }
+      if(hintEl) hintEl.textContent = `Added ${fname} to the list.`;
+    }catch(e){ if(hintEl) hintEl.textContent = `Add failed: ${e.message || e}`; }
+  });
+  // Rename
+  wrap.querySelector(`#${id}-rename`)?.addEventListener('click', async ()=>{
+    const sel3 = wrap.querySelector(`#${id}-select`);
+    if(!sel3 || !sel3.value) return;
+    const oldName = sel3.value;
+    const proposed = prompt('New schema name (with or without .json):', oldName);
+    if(!proposed) return;
+    const fd = new FormData();
+    fd.append('oldName', oldName);
+    fd.append('newName', proposed);
+    try{
+      const res = await fetch('/poc4/rename_schema', { method:'POST', body: fd });
+      const data = await res.json();
+      if(!data.ok) throw new Error(data.error || 'Rename failed');
+      const newFile = data.filename;
+      await populateSchemaSelects();
+      const sel4 = wrap.querySelector(`#${id}-select`);
+      if(sel4){ sel4.value = newFile; }
+    }catch(e){ alert(`Rename failed: ${e.message || e}`); }
+  });
+  // Delete
+  wrap.querySelector(`#${id}-delete`)?.addEventListener('click', async ()=>{
+    const sel5 = wrap.querySelector(`#${id}-select`);
+    if(!sel5 || !sel5.value) return;
+    const name = sel5.value;
+    if(!confirm(`Delete schema ${name}?`)) return;
+    const fd = new FormData(); fd.append('name', name);
+    try{
+      const res = await fetch('/poc4/delete_schema', { method:'POST', body: fd });
+      const data = await res.json();
+      if(!data.ok) throw new Error(data.error || 'Delete failed');
+      await populateSchemaSelects();
+      sel5.value = '';
+      const fieldsEl = wrap.querySelector(`#${id}-fields`);
+      if(fieldsEl) fieldsEl.innerHTML='';
+    }catch(e){ alert(`Delete failed: ${e.message || e}`); }
+  });
+  // Remove section (does not delete file; just removes this selector)
+  wrap.querySelector(`#${id}-remove-section`)?.addEventListener('click', ()=>{
+    wrap.remove();
+  });
+}
+
+document.getElementById('add-datasource-btn')?.addEventListener('click', ()=>{
+  createExtraDsSection(dsCounter++);
+});
+// Recreate any existing extra sources from server (pre-selected on previous visit)
+try{
+  const extraEl = document.getElementById('extra-sources-json');
+  const existing = extraEl ? JSON.parse(extraEl.textContent || '[]') : [];
+  if(Array.isArray(existing) && existing.length){
+    for(let i=0;i<existing.length;i++){
+      createExtraDsSection(dsCounter++);
+    }
+  // Do not pre-select any schema on load; user must choose explicitly
+  }
+}catch(e){}
+
+// ---- Minimize state (Page 1) ----
+const P1_MIN_KEY = 'poc4_p1_min';
+function getMinState(){ try{ return JSON.parse(localStorage.getItem(P1_MIN_KEY)||'{}')||{}; }catch(e){ return {}; } }
+function setMinState(key, val){ try{ const s = getMinState(); s[key] = !!val; localStorage.setItem(P1_MIN_KEY, JSON.stringify(s)); }catch(e){} }
+function applyMinState(key, bodyEl, btn){ const s=getMinState(); const minimized=!!s[key]; if(bodyEl){ bodyEl.style.display = minimized? 'none':'block'; } if(btn){ btn.textContent = minimized? 'Expand':'Minimize'; } }
+// Wire source/legacy minimize
+(function(){
+  const sBtn = document.getElementById('source-min-btn');
+  const sBody = document.getElementById('source-body');
+  applyMinState('source', sBody, sBtn);
+  sBtn?.addEventListener('click', ()=>{ const s=getMinState(); const cur=!!s['source']; setMinState('source', !cur); applyMinState('source', sBody, sBtn); });
+  const lBtn = document.getElementById('legacy-min-btn');
+  const lBody = document.getElementById('legacy-body');
+  applyMinState('legacy', lBody, lBtn);
+  lBtn?.addEventListener('click', ()=>{ const s=getMinState(); const cur=!!s['legacy']; setMinState('legacy', !cur); applyMinState('legacy', lBody, lBtn); });
+})();
+
+// Quick action: Save selections and go to Target Model page with auto-design
+document.getElementById('design-model-btn')?.addEventListener('click', async ()=>{
+  try{
+    const enable_source = document.getElementById('source-enable')?.checked ? 'on' : '';
+    const enable_legacy = document.getElementById('legacy-enable')?.checked ? 'on' : '';
+    const source_schema = document.getElementById('source-schema-select')?.value || '';
+    const legacy_schema = document.getElementById('legacy-schema-select')?.value || '';
+    const target_schema = document.getElementById('target-schema-select')?.value || '';
+    const fd = new FormData();
+    fd.append('enable_source', enable_source);
+    fd.append('enable_legacy', enable_legacy);
+    if(source_schema) fd.append('source_schema', source_schema);
+    if(legacy_schema) fd.append('legacy_schema', legacy_schema);
+    if(target_schema) fd.append('target_schema', target_schema);
+    // Include any explicitly selected extra data sources (DS3+ selectors)
+    document.querySelectorAll('select.extra-ds-select')?.forEach(sel=>{
+      const v = sel.value; if(v){ fd.append('extra_sources', v); }
+    });
+    await fetch('/poc4/page1/save_selections', { method:'POST', body: fd });
+  // Navigate to Target Model page with a hint to auto-run design (one-time)
+  window.location.href = '/poc4/target_model?auto=1';
+  }catch(e){ alert('Failed to save selections.'); }
+});
 </script>
 {% endblock %}

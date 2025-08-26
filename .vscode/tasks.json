@@ -4,7 +4,12 @@
 		{
 			"type": "shell",
 			"label": "Run Flask backend (three section)",
-			"command": "set FLASK_APP=poc2_backend_processor_optimized.py && set FLASK_ENV=development && flask run --port=5000",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$env:FLASK_APP='poc2_backend_processor_optimized.py'; $env:FLASK_ENV='development'; flask run --port=5000"
+			],
 			"group": "build",
 			"isBackground": true
 		},
@@ -50,10 +55,7 @@
 			],
 			"options": {
 				"cwd": "${workspaceFolder}/poc3b/backend"
-			},
-			"problemMatcher": [
-				"$eslint-stylish"
-			]
+			}
 		},
 		{
 			"label": "POC 4",
@@ -88,35 +90,6 @@
 				"POC 4",
 				"POC 5"
 			]
-		},
-		{
-			"label": "Run dev harness POC4",
-			"type": "shell",
-			"command": "python",
-			"args": [
-				"dev_run_agent_poc4.py"
-			],
-			"group": "build"
-		},
-		{
-			"label": "Run POC5 (verify)",
-			"type": "shell",
-			"command": "python",
-			"args": [
-				"product_architecture_definition.py"
-			],
-			"isBackground": true,
-			"group": "build"
-		},
-		{
-			"label": "Run POC5 (verify)",
-			"type": "shell",
-			"command": "python",
-			"args": [
-				"product_architecture_definition.py"
-			],
-			"isBackground": true,
-			"group": "build"
 		}
 	]
 }

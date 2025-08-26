@@ -1,0 +1,93 @@
+{
+  "tables": [
+    {
+      "name": "banking_olap_flat",
+      "fields": [
+        {
+          "name": "customer_id",
+          "type": "int"
+        },
+        {
+          "name": "firstname",
+          "type": "string"
+        },
+        {
+          "name": "customerFamilyName",
+          "type": "string"
+        },
+        {
+          "name": "customerEmailAddress",
+          "type": "string"
+        },
+        {
+          "name": "customerContactNumber",
+          "type": "string"
+        },
+        {
+          "name": "customerPostalAddress",
+          "type": "string"
+        },
+        {
+          "name": "accountArrangementInstanceReference",
+          "type": "int"
+        },
+        {
+          "name": "accountArrangementType",
+          "type": "string"
+        },
+        {
+          "name": "accountArrangementBalance",
+          "type": "float"
+        },
+        {
+          "name": "accountArrangementStartDate",
+          "type": "timestamp"
+        },
+        {
+          "name": "transactionInstanceReference",
+          "type": "int"
+        },
+        {
+          "name": "transactionAmount",
+          "type": "float"
+        },
+        {
+          "name": "transactionType",
+          "type": "string"
+        },
+        {
+          "name": "transactionDate",
+          "type": "timestamp"
+        },
+        {
+          "name": "productInstanceReference",
+          "type": "int"
+        },
+        {
+          "name": "productName",
+          "type": "string"
+        },
+        {
+          "name": "productType",
+          "type": "string"
+        },
+        {
+          "name": "productInterestRate",
+          "type": "float"
+        },
+        {
+          "name": "olapUniqueIdentifier",
+          "type": "uuid"
+        },
+        {
+          "name": "etlBatchNumber",
+          "type": "int"
+        },
+        {
+          "name": "etlTimestamp",
+          "type": "timestamp"
+        }
+      ]
+    }
+  ]
+}

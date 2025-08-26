@@ -1,0 +1,108 @@
+{
+  "tables": [
+    {
+      "name": "cardholder",
+      "fields": [
+        { "name": "cardholder_id", "type": "NUMBER", "primary_key": true },
+        { "name": "customer_ref", "type": "VARCHAR2(50)" },
+        { "name": "first_name", "type": "VARCHAR2(50)" },
+        { "name": "last_name", "type": "VARCHAR2(50)" },
+        { "name": "email_addr", "type": "VARCHAR2(120)" },
+        { "name": "phone_num", "type": "VARCHAR2(25)" },
+        { "name": "postal_addr", "type": "VARCHAR2(255)" },
+        { "name": "created_ts", "type": "DATE" }
+      ]
+    },
+    {
+      "name": "card_account",
+      "fields": [
+        { "name": "card_account_id", "type": "NUMBER", "primary_key": true },
+        { "name": "cardholder_id", "type": "NUMBER" },
+        { "name": "product_cd", "type": "VARCHAR2(10)" },
+        { "name": "account_status_cd", "type": "CHAR(1)" },
+        { "name": "open_dt", "type": "DATE" },
+        { "name": "close_dt", "type": "DATE" },
+        { "name": "credit_limit_amt", "type": "NUMBER(18,2)" },
+        { "name": "current_bal_amt", "type": "NUMBER(18,2)" },
+        { "name": "avail_credit_amt", "type": "NUMBER(18,2)" }
+      ]
+    },
+    {
+      "name": "card",
+      "fields": [
+        { "name": "card_id", "type": "NUMBER", "primary_key": true },
+        { "name": "card_account_id", "type": "NUMBER" },
+        { "name": "pan_token", "type": "VARCHAR2(64)" },
+        { "name": "bin", "type": "CHAR(6)" },
+        { "name": "last4", "type": "CHAR(4)" },
+        { "name": "exp_month", "type": "CHAR(2)" },
+        { "name": "exp_year", "type": "CHAR(2)" },
+        { "name": "card_status_cd", "type": "CHAR(1)" },
+        { "name": "embossed_name", "type": "VARCHAR2(26)" },
+        { "name": "issue_dt", "type": "DATE" },
+        { "name": "block_dt", "type": "DATE" }
+      ]
+    },
+    {
+      "name": "merchant",
+      "fields": [
+        { "name": "merchant_id", "type": "NUMBER", "primary_key": true },
+        { "name": "merchant_name", "type": "VARCHAR2(120)" },
+        { "name": "mcc", "type": "CHAR(4)" },
+        { "name": "country_cd", "type": "CHAR(2)" }
+      ]
+    },
+    {
+      "name": "card_auth",
+      "fields": [
+        { "name": "auth_id", "type": "NUMBER", "primary_key": true },
+        { "name": "card_id", "type": "NUMBER" },
+        { "name": "auth_ts", "type": "DATE" },
+        { "name": "amount", "type": "NUMBER(18,2)" },
+        { "name": "currency_cd", "type": "CHAR(3)" },
+        { "name": "response_cd", "type": "CHAR(2)" },
+        { "name": "auth_code", "type": "VARCHAR2(12)" },
+        { "name": "merchant_id", "type": "NUMBER" }
+      ]
+    },
+    {
+      "name": "card_txn",
+      "fields": [
+        { "name": "txn_id", "type": "NUMBER", "primary_key": true },
+        { "name": "card_id", "type": "NUMBER" },
+        { "name": "post_ts", "type": "DATE" },
+        { "name": "auth_id", "type": "NUMBER" },
+        { "name": "dr_cr_ind", "type": "CHAR(1)" },
+        { "name": "amount", "type": "NUMBER(18,2)" },
+        { "name": "currency_cd", "type": "CHAR(3)" },
+        { "name": "network_ref_id", "type": "VARCHAR2(40)" },
+        { "name": "merchant_id", "type": "NUMBER" }
+      ]
+    },
+    {
+      "name": "dispute_case",
+      "fields": [
+        { "name": "case_id", "type": "NUMBER", "primary_key": true },
+        { "name": "txn_id", "type": "NUMBER" },
+        { "name": "case_open_ts", "type": "DATE" },
+        { "name": "reason_cd", "type": "VARCHAR2(10)" },
+        { "name": "status_cd", "type": "CHAR(1)" },
+        { "name": "resolved_ts", "type": "DATE" }
+      ]
+    }
+  ],
+  "metadata": {
+    "schema_name": "cards_issuing",
+    "description": "Card issuing/acquiring schema with cardholder, cards, auths, and clearing transactions",
+    "version": "1.0.0",
+    "source_system": "Card Switch / Network",
+    "naming_conventions": {
+      "prefixes": {
+        "cardholder": "ch_",
+        "card_account": "ca_",
+        "card": "card_",
+        "transaction": "txn_"
+      }
+    }
+  }
+}

@@ -341,6 +341,61 @@ class MigrationExecutionAgent:
         tgt.row_factory = sqlite3.Row
         return src, leg, tgt
 
+    def _open_ds3_db(self) -> Optional[sqlite3.Connection]:
+        """Open the DS3 (cards) DB if present."""
+        try:
+            base = self._schemas_dir()
+            p = os.path.join(base, 'cards_ds3.db')
+            if not os.path.exists(p):
+                return None
+            conn = sqlite3.connect(p)
+            conn.row_factory = sqlite3.Row
+            return conn
+        except Exception:
+            return None
+
+    # --- Origin label helpers ---
+    def _origin_label(self, origin_code: str) -> str:
+        """Convert internal origin code to a friendly data_origin label.
+        source -> Data Source 1, legacy -> Data Source 2, dsN -> Data Source N
+        """
+        oc = (origin_code or '').strip().lower()
+        if oc == 'source':
+            return 'Data Source 1'
+        if oc == 'legacy':
+            return 'Data Source 2'
+        if oc.startswith('ds'):
+            # extract number after 'ds'
+            try:
+                n = int(oc[2:])
+                return f'Data Source {n}'
+            except Exception:
+                return 'Data Source'
+        # passthrough for existing/unknown
+        return origin_code
+
+    def _origin_code_from_label(self, label: str) -> str:
+        """Convert a friendly data_origin label back to an internal code.
+        Data Source 1 -> source, Data Source 2 -> legacy, Data Source N -> dsN
+        """
+        if not label:
+            return ''
+        lab = label.strip()
+        if lab.lower() == 'existing':
+            return 'existing'
+        # Normalize common forms
+        if lab.lower() == 'data source 1':
+            return 'source'
+        if lab.lower() == 'data source 2':
+            return 'legacy'
+        if lab.lower().startswith('data source '):
+            try:
+                n = int(lab.split()[-1])
+                return f'ds{n}'
+            except Exception:
+                return lab.lower()
+        return lab.lower()
+
     def _group_mapping_by_target_table(self, mapping: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
         by_tbl: Dict[str, List[Dict[str, Any]]] = {}
         for m in mapping or []:
@@ -365,14 +420,19 @@ class MigrationExecutionAgent:
         """Pick a stable business/entity key for deduplication.
         Preference order: explicit id columns, common domain keys, else all mapped target columns.
         """
-        # Prefer customer-level identity over account/transaction IDs for flat target tables
+        # Explicit preference: for flat OLAP table, dedupe on customer_id when available
+        tl = target_table.lower() if target_table else ''
+        if 'customer_id' in [c.lower() for c in target_columns]:
+            if tl == 'banking_olap_flat_exact':
+                return ['customer_id']
+        # Prefer customer-level identity over email (emails may be missing for DS3)
         cand = [
-            'email', 'customer_id', f'{target_table}_id', 'reference', 'external_id', 'uuid',
+            'customer_id', 'email', f'{target_table}_id', 'reference', 'external_id', 'uuid',
             'account_id', 'transaction_id', 'id'
         ]
-        tl = [c.lower() for c in target_columns]
+        tl_cols = [c.lower() for c in target_columns]
         for k in cand:
-            if k.lower() in tl:
+            if k.lower() in tl_cols:
                 return [k]
         # Composite: prefer name+date style if present
         composites = [
@@ -381,7 +441,7 @@ class MigrationExecutionAgent:
             ['email'],
         ]
         for comp in composites:
-            if all(c in tl for c in comp):
+            if all(c in tl_cols for c in comp):
                 return comp
         # Fallback: all columns (will hash to produce a key)
         return target_columns[:]
@@ -401,6 +461,7 @@ class MigrationExecutionAgent:
           1) customer_id-like (customer_id, cust_id, customerid, custid)
           2) email-like (email, cust_email_addr, email_address)
           3) composite name (first_name/cust_first_nm + last_name/cust_last_nm)
+        Also supports DS3 hints (cardholder_id, email_addr).
         Returns a normalized string or None if no candidate.
         """
         # Normalize keys for case-insensitive lookup
@@ -414,11 +475,11 @@ class MigrationExecutionAgent:
             return None
 
         # 1) Customer ID like (avoid generic 'id' which could be account/transaction id)
-        id_val = first_present(['customer_id', 'cust_id', 'customerid', 'custid'])
+        id_val = first_present(['customer_id', 'cust_id', 'customerid', 'custid', 'cardholder_id'])
         if id_val:
             return f"cust:{id_val}"
         # 2) Email like
-        email_val = first_present(['email', 'cust_email_addr', 'email_address'])
+        email_val = first_present(['email', 'cust_email_addr', 'email_address', 'email_addr'])
         if email_val:
             return f"email:{email_val}"
         # 3) Composite name
@@ -426,6 +487,110 @@ class MigrationExecutionAgent:
         last = first_present(['last_name', 'cust_last_nm'])
         if first or last:
             return f"name:{(first or '').strip()}_{(last or '').strip()}"
+        return None
+
+    def _ds3_link_maps(self, ds3: Optional[sqlite3.Connection]) -> Dict[str, Any]:
+        """Preload relationship maps for DS3 to compute a consistent entity anchor across tables."""
+        maps = {
+            'card_to_acct': {},
+            'acct_to_holder': {},
+            'txn_to_card': {},
+            'auth_to_card': {},
+            'case_to_txn': {},
+        }
+        if ds3 is None:
+            return maps
+        try:
+            for r in ds3.execute('SELECT card_id, card_account_id FROM "card"'):
+                maps['card_to_acct'][r[0]] = r[1]
+        except Exception:
+            pass
+        try:
+            for r in ds3.execute('SELECT card_account_id, cardholder_id FROM "card_account"'):
+                maps['acct_to_holder'][r[0]] = r[1]
+        except Exception:
+            pass
+        try:
+            for r in ds3.execute('SELECT auth_id, card_id FROM "card_auth"'):
+                maps['auth_to_card'][r[0]] = r[1]
+        except Exception:
+            pass
+        try:
+            for r in ds3.execute('SELECT txn_id, card_id FROM "card_txn"'):
+                maps['txn_to_card'][r[0]] = r[1]
+        except Exception:
+            pass
+        try:
+            for r in ds3.execute('SELECT case_id, txn_id FROM "dispute_case"'):
+                maps['case_to_txn'][r[0]] = r[1]
+        except Exception:
+            pass
+        return maps
+
+    def _ds3_anchor_for_row(self, table: str, row: Dict[str, Any], maps: Dict[str, Any]) -> Optional[str]:
+        """Return a stable DS3 entity anchor string like 'ds3:holder:123' based on relationship chains."""
+        tl = (table or '').lower()
+        lk = {k.lower(): k for k in row.keys()}
+        def _get(name: str):
+            key = lk.get(name.lower())
+            return row.get(key) if key else None
+        # cardholder
+        if tl == 'cardholder' or _get('cardholder_id') is not None:
+            ch = _get('cardholder_id')
+            if ch is not None:
+                return f"ds3:holder:{ch}"
+        # via card_account
+        if tl == 'card_account' or _get('card_account_id') is not None:
+            acct = _get('card_account_id')
+            if acct is not None:
+                holder = maps.get('acct_to_holder', {}).get(acct)
+                return f"ds3:holder:{holder}" if holder is not None else f"ds3:acct:{acct}"
+        # via card
+        if tl == 'card' or _get('card_id') is not None:
+            card = _get('card_id')
+            if card is not None:
+                acct = maps.get('card_to_acct', {}).get(card)
+                holder = maps.get('acct_to_holder', {}).get(acct) if acct is not None else None
+                return f"ds3:holder:{holder}" if holder is not None else f"ds3:card:{card}"
+        # via card_txn
+        if tl == 'card_txn' or _get('txn_id') is not None:
+            txn = _get('txn_id')
+            if txn is not None:
+                card = maps.get('txn_to_card', {}).get(txn)
+                if card is not None:
+                    acct = maps.get('card_to_acct', {}).get(card)
+                    holder = maps.get('acct_to_holder', {}).get(acct) if acct is not None else None
+                    if holder is not None:
+                        return f"ds3:holder:{holder}"
+                return f"ds3:txn:{txn}"
+        # via dispute_case -> card_txn chain
+        if tl == 'dispute_case' or _get('case_id') is not None:
+            case_id = _get('case_id')
+            txn = _get('txn_id')
+            if txn is None and case_id is not None:
+                txn = maps.get('case_to_txn', {}).get(case_id)
+            if txn is not None:
+                card = maps.get('txn_to_card', {}).get(txn)
+                if card is not None:
+                    acct = maps.get('card_to_acct', {}).get(card)
+                    holder = maps.get('acct_to_holder', {}).get(acct) if acct is not None else None
+                    if holder is not None:
+                        return f"ds3:holder:{holder}"
+                return f"ds3:case:{case_id or ''}"
+        # via card_auth
+        if tl == 'card_auth' or _get('auth_id') is not None:
+            auth = _get('auth_id')
+            if auth is not None:
+                card = maps.get('auth_to_card', {}).get(auth)
+                if card is not None:
+                    acct = maps.get('card_to_acct', {}).get(card)
+                    holder = maps.get('acct_to_holder', {}).get(acct) if acct is not None else None
+                    if holder is not None:
+                        return f"ds3:holder:{holder}"
+                return f"ds3:auth:{auth}"
+        # merchant rows have no direct holder linkage in-row; skip to avoid creating separate entities
+        if tl == 'merchant' or _get('merchant_id') is not None:
+            return None
         return None
 
     def _fetch_all_rows(self, conn: sqlite3.Connection, table: str, columns: List[str]) -> List[Dict[str, Any]]:
@@ -478,14 +643,16 @@ class MigrationExecutionAgent:
         except Exception:
             return -1
 
-    def _build_flat_entities(self, src: sqlite3.Connection, leg: sqlite3.Connection, target_cols: List[str]) -> Dict[str, Dict[str, Any]]:
+    def _build_flat_entities(self, src: sqlite3.Connection, leg: sqlite3.Connection, target_cols: List[str]) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, str]]:
         """Build entity rows for 'banking_olap_flat_exact' by joining tables with proper keys.
         Produces at most one row per customer across both source and legacy.
+        Returns a tuple (entities_map, origin_map) where origin_map[entity_key] is 'source' or 'legacy'.
         """
         def only_cols(row: Dict[str, Any]) -> Dict[str, Any]:
             return {k: row.get(k) for k in target_cols}
 
         entities: Dict[str, Dict[str, Any]] = {}
+        ek_origin: Dict[str, str] = {}
 
         # Helper: fill product from account_type, using source product table if available
         def enrich_with_product(conn: sqlite3.Connection, t_row: Dict[str, Any]):
@@ -545,7 +712,7 @@ class MigrationExecutionAgent:
                 enrich_with_product(src, t_row)
                 # Mark origin
                 if 'data_origin' in target_cols:
-                    t_row['data_origin'] = 'source'
+                    t_row['data_origin'] = self._origin_label('source')
                 ek = None
                 if c.get('email'):
                     ek = f"email:{str(c.get('email')).strip().lower()}"
@@ -553,6 +720,7 @@ class MigrationExecutionAgent:
                     ek = f"cust:{str(c.get('customer_id')).strip().lower()}"
                 if ek:
                     entities[ek] = t_row
+                    ek_origin[ek] = 'source'
         except Exception:
             pass
 
@@ -615,7 +783,7 @@ class MigrationExecutionAgent:
                 enrich_with_product(src, t_row)
                 # Mark origin
                 if 'data_origin' in target_cols:
-                    t_row['data_origin'] = 'legacy'
+                    t_row['data_origin'] = self._origin_label('legacy')
                 ek = None
                 if c.get('cust_email_addr'):
                     ek = f"email:{str(c.get('cust_email_addr')).strip().lower()}"
@@ -630,13 +798,14 @@ class MigrationExecutionAgent:
                                 base[k] = v
                     else:
                         entities[ek] = t_row
+                        ek_origin[ek] = 'legacy'
         except Exception:
             pass
 
         # Ensure only target_cols are present
         for k in list(entities.keys()):
             entities[k] = only_cols(entities[k])
-        return entities
+        return entities, ek_origin
 
     def run(self, mapping: List[Dict[str, Any]], key_config: Optional[Dict[str, List[str]]] = None) -> Dict[str, Any]:
         """
@@ -649,6 +818,7 @@ class MigrationExecutionAgent:
         logs: List[str] = []
         summary: Dict[str, Dict[str, int]] = {}
         src, leg, tgt = self._open_dbs()
+        ds3 = self._open_ds3_db()
         try:
             tgt.execute('BEGIN')
             grouped = self._group_mapping_by_target_table(mapping)
@@ -656,51 +826,158 @@ class MigrationExecutionAgent:
             for tgt_table, rows in grouped.items():
                 # Determine involved columns
                 target_cols = sorted({r['target'] for r in rows if r['target']})
+                # For flat table, force-include customer_id so we can dedupe/populate it even if not mapped
+                if tgt_table == 'banking_olap_flat_exact' and 'customer_id' not in [c.lower() for c in target_cols]:
+                    target_cols = list(target_cols) + ['customer_id']
                 # Entity key selection
                 key_cols = (key_config or {}).get(tgt_table) or self._choose_entity_keys(tgt_table, target_cols)
                 # Special-case: flat OLAP table assembled via joins
                 if tgt_table == 'banking_olap_flat_exact':
-                    entity_map = self._build_flat_entities(src, leg, target_cols)
+                    # 1) Build source+legacy joined entities as before
+                    entity_map, ek_origin_map = self._build_flat_entities(src, leg, target_cols)
                     ins = 0
+                    # Track per-origin counts (approximate for src/legacy via data_origin)
+                    origin_counts = {'source': 0, 'legacy': 0, 'ds3': 0}
+                    processed_by_origin = {'source': 0, 'legacy': 0, 'ds3': 0}
+                    # Compute processed counts directly from origins (customers and cardholders)
+                    try:
+                        processed_by_origin['source'] = int(src.execute('SELECT COUNT(1) FROM "customer"').fetchone()[0])
+                    except Exception:
+                        pass
+                    try:
+                        processed_by_origin['legacy'] = int(leg.execute('SELECT COUNT(1) FROM "legacy_customer"').fetchone()[0])
+                    except Exception:
+                        pass
                     for ek, t_row in entity_map.items():
                         rowid = self._insert_or_update(tgt, tgt_table, t_row, key_cols)
                         if rowid == -1:
                             logs.append(f"[{tgt_table}] FAILED upsert for key={ek}")
                         else:
                             ins += 1
+                            # Use ek_origin_map for accurate attribution
+                            src_origin = ek_origin_map.get(ek)
+                            if src_origin in ('source','legacy'):
+                                origin_counts[src_origin] += 1
                         if ek:
                             global_entities.add(ek)
-                    summary[tgt_table] = {'entities': len(entity_map), 'inserted_or_updated': ins, 'key_cols': len(key_cols)}
-                    logs.append(f"[{tgt_table}] joined entities={len(entity_map)} using keys={key_cols}")
+                    # 2) Additionally, handle extra DS origins generically (e.g., ds3)
+                    extra_rows = [r for r in rows if r.get('origin','').startswith('ds')]
+                    if extra_rows and ds3 is not None:
+                        # DS3 processed count = distinct holders
+                        try:
+                            processed_by_origin['ds3'] = int(ds3.execute('SELECT COUNT(DISTINCT cardholder_id) FROM "cardholder"').fetchone()[0])
+                        except Exception:
+                            pass
+                        # Build table->columns map for ds3
+                        ds3_needed: Dict[str, List[str]] = {}
+                        mandatory = {
+                            'cardholder': ['cardholder_id'],
+                            'card_account': ['card_account_id','cardholder_id'],
+                            'card': ['card_id','card_account_id'],
+                            'card_txn': ['txn_id','card_id','merchant_id','auth_id'],
+                            'card_auth': ['auth_id','card_id','merchant_id'],
+                            'dispute_case': ['case_id','txn_id'],
+                            'merchant': ['merchant_id']
+                        }
+                        for r in extra_rows:
+                            if r['source_table'] and r['source']:
+                                tbl = r['source_table']
+                                ds3_needed.setdefault(tbl, []).append(r['source'])
+                        # Ensure mandatory ID columns needed for anchor computation are present
+                        for tbl, cols in list(ds3_needed.items()):
+                            need = mandatory.get((tbl or '').lower(), [])
+                            for c in need:
+                                if c not in cols:
+                                    cols.append(c)
+                        ds3_maps = self._ds3_link_maps(ds3)
+                        # Fetch and map
+                        for tbl, cols in ds3_needed.items():
+                            for o_row in self._fetch_all_rows(ds3, tbl, cols):
+                                t_row: Dict[str, Any] = {c: None for c in target_cols}
+                                for r in extra_rows:
+                                    if r['source_table'] != tbl:
+                                        continue
+                                    src_col = r['source']; tgt_col = r['target']
+                                    if not src_col or not tgt_col:
+                                        continue
+                                    val = o_row.get(src_col)
+                                    if val is not None:
+                                        t_row[tgt_col] = val
+                                if 'data_origin' in target_cols:
+                                    t_row['data_origin'] = self._origin_label('ds3')
+                                # Prefer DS3 holder anchor for stable entity keys; also set customer_id when present
+                                ds3_anchor = self._ds3_anchor_for_row(tbl, o_row, ds3_maps)
+                                if ds3_anchor and 'customer_id' in target_cols and (t_row.get('customer_id') in (None, '')):
+                                    try:
+                                        parts = ds3_anchor.split(':')
+                                        if len(parts) == 3 and parts[1] == 'holder':
+                                            t_row['customer_id'] = parts[2]
+                                    except Exception:
+                                        pass
+                                # Compute entity key after potential customer_id fill; if anchor exists, use it as ek
+                                ek = self._entity_key_value(t_row, key_cols)
+                                if ds3_anchor:
+                                    ek = ds3_anchor
+                                # Require holder-level anchor and a non-null customer_id for flat table to avoid NULL-key duplicates
+                                parts = (ds3_anchor or '').split(':') if ds3_anchor else []
+                                if (not ds3_anchor) or len(parts) != 3 or parts[1] != 'holder' or not t_row.get('customer_id'):
+                                    continue
+                                # Skip rows when no entity key can be derived (prevents NULL-key duplicates)
+                                if not ek or not ek.strip('|'):
+                                    continue
+                                if not ek.strip('|'):
+                                    # Derive from origin row when key empty (prefer DS3 relationship anchor)
+                                    obk = ds3_anchor or self._origin_business_key(o_row)
+                                    ek = obk or ek
+                                rowid = self._insert_or_update(tgt, tgt_table, t_row, key_cols)
+                                if rowid == -1:
+                                    logs.append(f"[{tgt_table}] DS3 FAILED upsert for key={ek}")
+                                else:
+                                    ins += 1
+                                    origin_counts['ds3'] += 1
+                                if ek:
+                                    global_entities.add(ek)
+                    summary[tgt_table] = {'entities': len(entity_map), 'inserted_or_updated': ins, 'key_cols': len(key_cols), 'origin_counts': origin_counts, 'processed_by_origin': processed_by_origin}
+                    logs.append(f"[{tgt_table}] joined entities={len(entity_map)} using keys={key_cols}; origin_counts={origin_counts}; processed={processed_by_origin}")
                     continue
                 # Build origin-select columns mapping
                 src_needed: Dict[str, List[str]] = {}
                 leg_needed: Dict[str, List[str]] = {}
+                ds3_needed: Dict[str, List[str]] = {}
                 for r in rows:
                     if r['origin'] == 'legacy':
                         if r['source_table'] and r['source']:
                             leg_needed.setdefault(r['source_table'], []).append(r['source'])
-                    else:
+                    elif r['origin'] == 'source':
                         if r['source_table'] and r['source']:
                             src_needed.setdefault(r['source_table'], []).append(r['source'])
+                    elif r.get('origin','').startswith('ds'):
+                        if r['source_table'] and r['source']:
+                            ds3_needed.setdefault(r['source_table'], []).append(r['source'])
                 # Fetch rows per origin table
-                origin_rows: List[Tuple[str, Dict[str, Any]]] = []  # (origin, row)
+                origin_rows: List[Tuple[str, str, Dict[str, Any]]] = []  # (origin, table, row)
                 for tbl, cols in src_needed.items():
                     for row in self._fetch_all_rows(src, tbl, cols):
-                        origin_rows.append(('source', {**row}))
+                        origin_rows.append(('source', tbl, {**row}))
                 for tbl, cols in leg_needed.items():
                     for row in self._fetch_all_rows(leg, tbl, cols):
-                        origin_rows.append(('legacy', {**row}))
+                        origin_rows.append(('legacy', tbl, {**row}))
+                if ds3 is not None:
+                    for tbl, cols in ds3_needed.items():
+                        for row in self._fetch_all_rows(ds3, tbl, cols):
+                            origin_rows.append(('ds3', tbl, {**row}))
+                # Preload DS3 maps to compute anchors consistently
+                ds3_maps = self._ds3_link_maps(ds3)
                 # Merge rows into target shape keyed by entity key
                 entity_map: Dict[str, Dict[str, Any]] = {}
-                for origin, o_row in origin_rows:
+                for origin, src_tbl_name, o_row in origin_rows:
                     # Build a target-shaped row from mapping for this origin row
                     t_row: Dict[str, Any] = {c: None for c in target_cols}
                     for r in rows:
                         if r['origin'] != origin:
                             continue
-                        src_tbl = r['source_table']; src_col = r['source']; tgt_col = r['target']
-                        if not src_tbl or not src_col or not tgt_col:
+                        r_src_tbl = r['source_table']; src_col = r['source']; tgt_col = r['target']
+                        if not r_src_tbl or not src_col or not tgt_col:
                             continue
                         # Copy value if present
                         val = o_row.get(src_col)
@@ -708,12 +985,29 @@ class MigrationExecutionAgent:
                             t_row[tgt_col] = val
                     # Mark origin if requested
                     if 'data_origin' in target_cols:
-                        t_row['data_origin'] = 'source' if origin == 'source' else 'legacy'
-                    # Compute entity key
+                        t_row['data_origin'] = self._origin_label(origin)
+                    # Compute entity key: favor DS3 relationship anchor to group across its tables
                     ek = self._entity_key_value(t_row, key_cols)
+                    ds3_anchor: Optional[str] = None
+                    if origin == 'ds3':
+                        ds3_anchor = self._ds3_anchor_for_row(src_tbl_name, o_row, ds3_maps)
+                        if ds3_anchor:
+                            # Force grouping by holder/account anchor regardless of existing key cols
+                            ek = ds3_anchor
+                            # If anchor is holder:<id> and target has customer_id, populate it to stabilize upserts
+                            if 'customer_id' in target_cols and (t_row.get('customer_id') in (None, '')):
+                                try:
+                                    # anchor format: 'ds3:holder:<id>'
+                                    parts = ds3_anchor.split(':')
+                                    if len(parts) == 3 and parts[1] == 'holder':
+                                        t_row['customer_id'] = parts[2]
+                                except Exception:
+                                    pass
                     # If target key columns unavailable or empty, derive from origin business key
                     if not any((t_row.get(k) not in (None, '')) for k in key_cols):
-                        obk = self._origin_business_key(o_row)
+                        obk: Optional[str] = ds3_anchor if ds3_anchor else None
+                        if not obk:
+                            obk = self._origin_business_key(o_row)
                         if obk:
                             ek = obk
                     # If still no entity key, skip this row (prevents product-only rows from creating entities)
@@ -727,14 +1021,15 @@ class MigrationExecutionAgent:
                             if (base.get(c) in (None, '')) and (v not in (None, '')):
                                 base[c] = v
                         # Preserve data_origin preference: existing > source > legacy
-                        if 'data_origin' in base and base.get('data_origin') != 'existing':
+                        if 'data_origin' in base and self._origin_code_from_label(base.get('data_origin')) != 'existing':
                             # Upgrade to source if current is legacy and this row is source
-                            if origin == 'source' and base.get('data_origin') == 'legacy':
-                                base['data_origin'] = 'source'
+                            if origin == 'source' and self._origin_code_from_label(base.get('data_origin')) == 'legacy':
+                                base['data_origin'] = self._origin_label('source')
                     else:
                         entity_map[ek] = t_row
                 # Upsert to target
                 ins = upd = 0
+                origin_counts = {'source': 0, 'legacy': 0, 'ds3': 0}
                 for ek, t_row in entity_map.items():
                     rowid = self._insert_or_update(tgt, tgt_table, t_row, key_cols)
                     if rowid == -1:
@@ -743,10 +1038,15 @@ class MigrationExecutionAgent:
                         # Heuristic: treat as insert if key-only lookup returned none (we can't perfectly know without extra query)
                         # For simplicity, count as insert if any key part was newly seen in this run
                         ins += 1
+                        # attribute counts by origin tag if present (map label -> code)
+                        _lbl = t_row.get('data_origin')
+                        _code = self._origin_code_from_label(_lbl)
+                        if _code in origin_counts:
+                            origin_counts[_code] += 1
                     if ek:
                         global_entities.add(ek)
-                summary[tgt_table] = {'entities': len(entity_map), 'inserted_or_updated': ins, 'key_cols': len(key_cols)}
-                logs.append(f"[{tgt_table}] merged entities={len(entity_map)} using keys={key_cols}")
+                summary[tgt_table] = {'entities': len(entity_map), 'inserted_or_updated': ins, 'key_cols': len(key_cols), 'origin_counts': origin_counts}
+                logs.append(f"[{tgt_table}] merged entities={len(entity_map)} using keys={key_cols}; origin_counts={origin_counts}")
             tgt.commit()
             return {"status": "Migration completed", "summary": summary, "logs": logs, "global_unique_entities": len(global_entities)}
         except Exception as e:
@@ -756,12 +1056,23 @@ class MigrationExecutionAgent:
                 pass
             return {"status": "error", "error": str(e), "logs": logs}
         finally:
-            try: src.close()
-            except Exception: pass
-            try: leg.close()
-            except Exception: pass
-            try: tgt.close()
-            except Exception: pass
+            try:
+                src.close()
+            except Exception:
+                pass
+            try:
+                leg.close()
+            except Exception:
+                pass
+            try:
+                tgt.close()
+            except Exception:
+                pass
+            try:
+                if ds3 is not None:
+                    ds3.close()
+            except Exception:
+                pass
 
 class ReconciliationAgent:
     """
@@ -773,6 +1084,242 @@ class ReconciliationAgent:
     def approve(self, migration_result):
         # Implement reconciliation logic here
         return {"matched": 950, "unmatched": 50, "report": "Sample reconciliation report"}
+
+# --- Target Model Design Agent ---
+class TargetModelDesignAgent:
+    """
+    Proposes a target-state data model by unifying fields across the selected source schemas.
+    Uses simple canonicalization inspired by BIAN/ISO domain naming (no external calls).
+    """
+    CANON_TABLES = {
+        # banking core
+        'customer': 'customer', 'legacy_customer': 'customer', 'cardholder': 'customer',
+        'account': 'account', 'legacy_account': 'account', 'card_account': 'account',
+        'transaction': 'transaction', 'legacy_ledger': 'transaction', 'card_txn': 'transaction',
+        'product': 'product',
+        # cards specifics kept as adjacent domain tables as needed
+        'card': 'card', 'card_auth': 'card_auth', 'dispute_case': 'dispute_case', 'merchant': 'merchant'
+    }
+
+    FIELD_MAP = {
+        # customer
+        'cust_id': 'customer_id', 'customer_id': 'customer_id',
+        'cardholder_id': 'customer_id',
+        'first_name': 'first_name', 'cust_first_nm': 'first_name',
+        'last_name': 'last_name', 'cust_last_nm': 'last_name',
+        'email': 'email', 'cust_email_addr': 'email',
+        'phone': 'phone', 'cust_phone_num': 'phone',
+        'address': 'address', 'cust_postal_addr': 'address',
+        'created_at': 'created_at', 'cust_created_ts': 'created_at',
+        # account
+        'account_id': 'account_id', 'acct_id': 'account_id', 'card_account_id': 'account_id',
+        'customer_id_ref': 'customer_id',
+        'customer_ref': 'customer_id',
+        'customer_id': 'customer_id',
+        'account_type': 'account_type', 'acct_type_cd': 'account_type',
+        'balance': 'balance', 'acct_curr_bal_amt': 'balance',
+        'opened_at': 'opened_at', 'acct_open_dt': 'opened_at',
+        # transaction
+        'transaction_id': 'transaction_id', 'ledger_entry_id': 'transaction_id', 'txn_id': 'transaction_id',
+        'amount': 'amount', 'txn_amt': 'amount',
+        'transaction_type': 'transaction_type', 'txn_type_cd': 'transaction_type', 'dr_cr_ind': 'transaction_type',
+        'transaction_date': 'transaction_date', 'entry_ts': 'transaction_date',
+        # product
+        'product_id': 'product_id', 'product_name': 'product_name', 'product_type': 'product_type', 'interest_rate': 'interest_rate',
+        # cards
+        'card_id': 'card_id', 'card_status_cd': 'card_status',
+        'auth_id': 'auth_id',
+        'merchant_id': 'merchant_id', 'merchant_name': 'merchant_name',
+        'case_id': 'case_id'
+    }
+
+    DEFAULT_TYPE = 'string'
+
+    def _is_flat_table(self, name: str) -> bool:
+        n = (name or '').strip().lower()
+        return n in ('banking_olap_flat', 'banking_olap_flat_exact')
+
+    def _classify_flat_field(self, field_name: str) -> str:
+        """Classify a flat field into a canonical table using simple BIAN/ISO-aligned hints."""
+        n = (field_name or '').strip().lower()
+        # direct id hints first
+        if n in ('customer_id','cust_id','cardholder_id','date_of_birth','dob','first_name','last_name','email','phone','address','created_at'):
+            return 'customer'
+        if n in ('account_id','acct_id','account_type','acct_type_cd','balance','acct_curr_bal_amt','opened_at','acct_open_dt','iban','sort_code'):
+            return 'account'
+        if n in ('transaction_id','txn_id','ledger_entry_id','amount','txn_amt','transaction_type','txn_type_cd','dr_cr_ind','transaction_date','entry_ts','currency'):
+            return 'transaction'
+        if n in ('product_id','product_name','product_type','interest_rate'):
+            return 'product'
+        if n in ('card_id','card_status','card_status_cd','pan','expiry','cvv'):
+            return 'card'
+        if n in ('auth_id','auth_ts','auth_amount'):
+            return 'card_auth'
+        if n in ('case_id','dispute_reason','case_status'):
+            return 'dispute_case'
+        if n in ('merchant_id','merchant_name','mcc','merchant_city','merchant_country'):
+            return 'merchant'
+        # token-based fallbacks
+        tokens = [t for t in n.replace('-', '_').split('_') if t]
+        ts = set(tokens)
+        if {'customer','cust','cardholder','party'} & ts:
+            return 'customer'
+        if {'account','acct'} & ts:
+            return 'account'
+        if {'transaction','txn','ledger','entry'} & ts:
+            return 'transaction'
+        if {'product'} & ts:
+            return 'product'
+        if 'merchant' in ts:
+            return 'merchant'
+        if 'card' in ts and 'auth' not in ts:
+            return 'card'
+        if 'auth' in ts:
+            return 'card_auth'
+        if 'case' in ts or 'dispute' in ts:
+            return 'dispute_case'
+        # default unknowns to customer if identity-like, else transaction as generic catch-all
+        if any(k in n for k in ['name','email','phone','address']):
+            return 'customer'
+        if any(k in n for k in ['amount','date','time']):
+            return 'transaction'
+        return 'customer'
+
+    def _canon_table(self, name: str) -> str:
+        key = (name or '').strip().lower()
+        return self.CANON_TABLES.get(key, key)
+
+    def _canon_field(self, table: str, field_name: str) -> str:
+        key = (field_name or '').strip().lower()
+        return self.FIELD_MAP.get(key, key)
+
+    def design(self, source_schema_docs: list[dict]) -> dict:
+        from collections import defaultdict
+        # Collect fields per canonical table
+        fields_by_table: dict[str, dict[str, str]] = defaultdict(dict)  # table -> field -> type
+        for doc in source_schema_docs:
+            try:
+                for t in (doc or {}).get('tables', []):
+                    tname = t.get('name')
+                    # If a flat table is present, classify each field into canonical tables
+                    if self._is_flat_table(tname):
+                        for f in t.get('fields', []) or []:
+                            raw_name = f.get('name')
+                            if not raw_name:
+                                continue
+                            ctbl = self._classify_flat_field(raw_name)
+                            cf = self._canon_field(ctbl, raw_name)
+                            ftype = (f.get('type') or self.DEFAULT_TYPE)
+                            prev = fields_by_table[ctbl].get(cf)
+                            if not prev or (prev == self.DEFAULT_TYPE and ftype != self.DEFAULT_TYPE):
+                                fields_by_table[ctbl][cf] = ftype
+                    else:
+                        ctbl = self._canon_table(tname)
+                        for f in t.get('fields', []) or []:
+                            raw_name = f.get('name')
+                            if not raw_name:
+                                continue
+                            cf = self._canon_field(ctbl, raw_name)
+                            ftype = (f.get('type') or self.DEFAULT_TYPE)
+                            # Prefer a more specific type if encountered later
+                            prev = fields_by_table[ctbl].get(cf)
+                            if not prev or (prev == self.DEFAULT_TYPE and ftype != self.DEFAULT_TYPE):
+                                fields_by_table[ctbl][cf] = ftype
+            except Exception:
+                continue
+
+        # Ensure keys for core domains
+        core_order = [
+            'customer', 'account', 'transaction', 'product', 'card', 'card_auth', 'dispute_case', 'merchant'
+        ]
+        tables = []
+        table_fields_cache: dict[str, list[dict]] = {}
+        for tname in core_order + sorted([k for k in fields_by_table.keys() if k not in core_order]):
+            if tname not in fields_by_table:
+                continue
+            flds = fields_by_table[tname]
+            # Ensure primary keys for obvious tables
+            pk_names = {
+                'customer': 'customer_id', 'account': 'account_id', 'transaction': 'transaction_id', 'product': 'product_id',
+                'card': 'card_id', 'card_auth': 'auth_id', 'dispute_case': 'case_id', 'merchant': 'merchant_id'
+            }
+            out_fields = []
+            for fname, ftype in sorted(flds.items()):
+                field_obj = {"name": fname, "type": ftype}
+                if pk_names.get(tname) == fname:
+                    field_obj["primary_key"] = True
+                out_fields.append(field_obj)
+            table_fields_cache[tname] = out_fields
+            tables.append({"name": tname, "fields": out_fields})
+
+        # Infer relationships (FKs) by matching *_id fields to primary keys of other tables
+        pk_by_table = {}
+        for t in tables:
+            tname = t["name"]
+            for f in t["fields"]:
+                if f.get("primary_key"):
+                    pk_by_table[tname] = f["name"]
+                    break
+        relationships = []
+        # Helper: reverse map of pk name -> candidate tables
+        pk_name_to_tables = {}
+        for tb, pk in pk_by_table.items():
+            pk_name_to_tables.setdefault(pk, []).append(tb)
+        for t in tables:
+            tname = t["name"]
+            own_pk = pk_by_table.get(tname)
+            for f in t["fields"]:
+                fname = f.get("name")
+                if not fname or fname == own_pk:
+                    continue
+                if fname.endswith("_id") or fname in pk_name_to_tables:
+                    candidates = pk_name_to_tables.get(fname, [])
+                    # Avoid self-reference unless intentional and primary key differs
+                    candidates = [c for c in candidates if c != tname]
+                    if candidates:
+                        to_table = candidates[0]
+                        relationships.append({
+                            "from_table": tname,
+                            "from_field": fname,
+                            "to_table": to_table,
+                            "to_field": pk_by_table.get(to_table),
+                            "kind": "many_to_one"
+                        })
+
+        # Mermaid ER diagram (one-to-many where parent ||--o{ child)
+        def _mm(name: str) -> str:
+            return (name or '').upper().replace(' ', '_')
+        mer_lines = ["erDiagram"]
+        for rel in relationships:
+            parent = _mm(rel["to_table"])  # one side
+            child = _mm(rel["from_table"])  # many side
+            label = rel.get("from_field") or "rel"
+            mer_lines.append(f"    {parent} ||--o{{ {child} : {label}")
+        er_mermaid = "\n".join(mer_lines)
+
+        # Standards alignment hints
+        alignment = {
+            "customer": {"BIAN": "Party", "ISO20022": "Party"},
+            "account": {"BIAN": "CurrentAccount/ProductArrangement", "ISO20022": "CashAccount"},
+            "transaction": {"BIAN": "FinancialTransaction", "ISO20022": "Entry/Tx"},
+            "product": {"BIAN": "Product", "ISO20022": "Product"},
+            "card": {"BIAN": "Card", "ISO20022": "Card"},
+            "card_auth": {"BIAN": "Authorization", "ISO20022": "Authorization"},
+            "dispute_case": {"BIAN": "Case", "ISO20022": "InvestigationCase"},
+            "merchant": {"BIAN": "Merchant", "ISO20022": "Merchant"}
+        }
+
+        return {
+            "metadata": {
+                "designed_by": "TargetModelDesignAgent",
+                "standards_hint": ["BIAN", "ISO20022"],
+                "version": 1
+            },
+            "tables": tables,
+            "relationships": relationships,
+            "er_diagram_mermaid": er_mermaid,
+            "alignment": alignment
+        }
 
 # Instantiate agents for import in routes.py
 schema_mapping_agent = SchemaMappingAgent()

@@ -13,6 +13,9 @@ app = Flask(__name__)
 SRC_SCHEMA_PATH = 'poc4/frontend/static/schemas/source_schema.json'
 LEG_SCHEMA_PATH = 'poc4/frontend/static/schemas/legacy_schema.json'
 TGT_SCHEMA_PATH = 'poc4/frontend/static/schemas/target_schema.json'
+# DS3 Cards schema
+DS3_SCHEMA_PATH = 'poc4/frontend/static/schemas/source_cards_schema_ds3.json'
+DS3_DB_PATH = 'poc4/frontend/static/schemas/cards_ds3.db'
 
 # --- Sample data for each schema ---
 SAMPLE_DATA = {
@@ -109,22 +112,22 @@ def insert_sample(conn, schema, prefix='src_'):
         # Deduplicate column names to avoid duplicates in flat schemas
         seen_cols = set()
         cols_unique = []
+        type_by_col = {}
         for f in table['fields']:
             name = f.get('name')
             if not name or name in seen_cols:
                 continue
             seen_cols.add(name)
             cols_unique.append(name)
+            # record first-seen type mapping
+            type_by_col[name] = map_type(f['type'])
         if not cols_unique:
             continue
         # Build two synthetic sample rows
         for i in range(2):
             vals = []
-            for f in table['fields']:
-                name = f.get('name')
-                if name not in seen_cols:
-                    continue
-                t = map_type(f['type'])
+            for name in cols_unique:
+                t = type_by_col.get(name, 'TEXT')
                 if t == 'INTEGER':
                     vals.append(i + 1)
                 elif t == 'REAL':
@@ -229,7 +232,7 @@ TEMPLATE = '''
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    conn, src_schema, tgt_schema = get_conn()
+    conn, src_schema, tgt_schema = get_conn(SRC_SCHEMA_PATH, TGT_SCHEMA_PATH)
     src_tables = [f"src_{t['name']}" for t in src_schema['tables']]
     tgt_tables = [f"tgt_{t['name']}" for t in tgt_schema['tables']]
     source_table = request.form.get('source_table', src_tables[0])
@@ -504,6 +507,172 @@ def create_and_populate_db(schema_path, db_path, sample_data):
     conn.commit()
     return conn
 
+# --- DS3 Cards specific DB creation (20 rows per table) ---
+def create_and_populate_cards_ds3_db(schema_path: str = DS3_SCHEMA_PATH, db_path: str = DS3_DB_PATH, rows_per_table: int = 20):
+    # Helpers kept function-local to avoid polluting global namespace
+    def _map_type(t: str) -> str:
+        t = (t or '').lower()
+        if t.startswith('int'): return 'INTEGER'
+        if t.startswith('number') or t.startswith('float') or t.startswith('decimal'): return 'REAL'
+        if t.startswith('varchar') or t.startswith('char') or t == 'string': return 'TEXT'
+        if t in ('datetime','timestamp','date'): return 'TEXT'
+        return 'TEXT'
+    FIRST_NAMES = ["Alice","Bob","Carol","David","Eve","Frank","Grace","Heidi","Ivan","Judy","Mallory","Niaj","Olivia","Peggy","Rupert","Sybil","Trent","Victor","Wendy","Yvonne"]
+    LAST_NAMES = ["Smith","Jones","Brown","Taylor","Wilson","Clark","Hall","Young","Allen","King","Scott","Green","Adams","Baker","Carter","Diaz","Evans","Foster","Gomez","Hayes"]
+    STREETS = ["Main St","Oak Ave","Pine Rd","Maple Ln","Cedar St","Birch Blvd","Sunset Dr","Hillcrest Ave","Riverview Rd","Lakeview Dr"]
+    MCCS = ["5411","5812","5732","5999","5912","4789","4899","4511","4111","5814"]
+    COUNTRIES = ["US","GB","CA","AU","DE","FR","ES","IT","IN","SG"]
+    PRODUCT_CDS = ["VISA","MC","AMEX","DISC"]
+    ACCT_STATUS = ["A","B","L"]
+    RESP_CDS = ["00","05","51","14","54","91"]
+    def _rand_phone():
+        import random
+        return f"555-{random.randint(200,999)}-{random.randint(1000,9999)}"
+    def _rand_timestamp(start_year=2022, end_year=2025):
+        from datetime import datetime, timedelta
+        import random
+        start = datetime(start_year,1,1)
+        end = datetime(end_year,12,31,23,59,59)
+        delta = end - start
+        rand_sec = random.randint(0, int(delta.total_seconds()))
+        return (start + timedelta(seconds=rand_sec)).strftime('%Y-%m-%d %H:%M:%S')
+
+    with open(schema_path, 'r', encoding='utf-8') as f:
+        schema = json.load(f)
+    os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
+    conn = sqlite3.connect(db_path)
+    # Create tables
+    for table in schema['tables']:
+        fields = []
+        pk = None
+        seen = set()
+        for field in table['fields']:
+            fname = field['name']
+            if fname in seen:
+                continue
+            seen.add(fname)
+            col = f"{fname} {_map_type(field['type'])}"
+            if field.get('primary_key'): pk = fname
+            fields.append(col)
+        if pk:
+            fields.append(f"PRIMARY KEY({pk})")
+        conn.execute(f'DROP TABLE IF EXISTS "{table["name"]}"')
+        sql = f"CREATE TABLE \"{table['name']}\" ({', '.join(fields)})"
+        conn.execute(sql)
+    # Populate deterministic-relational sample rows
+    import os as _os
+    import random as _random
+    holders = []
+    for i in range(1, rows_per_table+1):
+        fn = _random.choice(FIRST_NAMES)
+        ln = _random.choice(LAST_NAMES)
+        holders.append({
+            'cardholder_id': i,
+            'customer_ref': f"CUST{1000+i}",
+            'first_name': fn,
+            'last_name': ln,
+            'email_addr': f"{fn.lower()}.{ln.lower()}{i}@cards.com",
+            'phone_num': _rand_phone(),
+            'postal_addr': f"{_random.randint(100,999)} {_random.choice(STREETS)}",
+            'created_ts': _rand_timestamp(2021, 2025)
+        })
+    accounts = []
+    for i, h in enumerate(holders, start=1):
+        accounts.append({
+            'card_account_id': 1000 + i,
+            'cardholder_id': h['cardholder_id'],
+            'product_cd': _random.choice(PRODUCT_CDS),
+            'account_status_cd': _random.choice(ACCT_STATUS),
+            'open_dt': _rand_timestamp(2021, 2025),
+            'close_dt': None,
+            'credit_limit_amt': round(_random.uniform(1000, 20000), 2),
+            'current_bal_amt': round(_random.uniform(0, 15000), 2),
+            'avail_credit_amt': round(_random.uniform(0, 15000), 2),
+        })
+    cards = []
+    for i, a in enumerate(accounts, start=1):
+        bin_val = _random.choice(["411111","550000","340000","601100"])  # Visa/Master/Amex/Discover bins
+        last4 = f"{_random.randint(0,9999):04d}"
+        cards.append({
+            'card_id': 2000 + i,
+            'card_account_id': a['card_account_id'],
+            'pan_token': _os.urandom(16).hex(),
+            'bin': bin_val,
+            'last4': last4,
+            'exp_month': f"{_random.randint(1,12):02d}",
+            'exp_year': f"{_random.randint(25,30):02d}",
+            'card_status_cd': _random.choice(["A","B","L"]),
+            'embossed_name': f"{holders[i-1]['first_name']} {holders[i-1]['last_name']}",
+            'issue_dt': _rand_timestamp(2022, 2025),
+            'block_dt': None,
+        })
+    merchants = []
+    for i in range(1, rows_per_table+1):
+        merchants.append({
+            'merchant_id': 3000 + i,
+            'merchant_name': f"Merchant {i:03d}",
+            'mcc': _random.choice(MCCS),
+            'country_cd': _random.choice(COUNTRIES)
+        })
+    auths = []
+    for i in range(1, rows_per_table+1):
+        c = _random.choice(cards)
+        m = _random.choice(merchants)
+        auths.append({
+            'auth_id': 4000 + i,
+            'card_id': c['card_id'],
+            'auth_ts': _rand_timestamp(2023, 2025),
+            'amount': round(_random.uniform(1, 500), 2),
+            'currency_cd': _random.choice(["USD","EUR","GBP","INR","AUD"]),
+            'response_cd': _random.choice(RESP_CDS),
+            'auth_code': f"{_random.randint(100000,999999)}",
+            'merchant_id': m['merchant_id']
+        })
+    txns = []
+    for i in range(1, rows_per_table+1):
+        c = _random.choice(cards)
+        maybe_auth = _random.choice(auths)
+        txns.append({
+            'txn_id': 5000 + i,
+            'card_id': c['card_id'],
+            'post_ts': _rand_timestamp(2023, 2025),
+            'auth_id': maybe_auth['auth_id'],
+            'dr_cr_ind': _random.choice(['D','C']),
+            'amount': round(_random.uniform(1, 500), 2),
+            'currency_cd': _random.choice(["USD","EUR","GBP","INR","AUD"]),
+            'network_ref_id': _os.urandom(8).hex(),
+            'merchant_id': maybe_auth['merchant_id']
+        })
+    cases = []
+    for i in range(1, rows_per_table+1):
+        t = _random.choice(txns)
+        opened = _rand_timestamp(2023, 2025)
+        cases.append({
+            'case_id': 6000 + i,
+            'txn_id': t['txn_id'],
+            'case_open_ts': opened,
+            'reason_cd': _random.choice(["FRD","NOTASDESCR","NOREC","DUPL","RET"]),
+            'status_cd': _random.choice(["O","P","R","C"]),
+            'resolved_ts': None
+        })
+    def _insert_bulk(conn, table_name: str, rows: list):
+        if not rows: return
+        cols = list(rows[0].keys())
+        qcols = ', '.join([f'"{c}"' for c in cols])
+        placeholders = ', '.join(['?' for _ in cols])
+        for r in rows:
+            vals = [r.get(c) for c in cols]
+            conn.execute(f"INSERT INTO \"{table_name}\" ({qcols}) VALUES ({placeholders})", vals)
+    _insert_bulk(conn, 'cardholder', holders)
+    _insert_bulk(conn, 'card_account', accounts)
+    _insert_bulk(conn, 'card', cards)
+    _insert_bulk(conn, 'merchant', merchants)
+    _insert_bulk(conn, 'card_auth', auths)
+    _insert_bulk(conn, 'card_txn', txns)
+    _insert_bulk(conn, 'dispute_case', cases)
+    conn.commit()
+    return conn
+
 # --- Reset utility: delete DB files and recreate from SAMPLE_DATA ---
 def reset_all_dbs(src_schema_path: str = SRC_SCHEMA_PATH, leg_schema_path: str = LEG_SCHEMA_PATH, tgt_schema_path: str = TGT_SCHEMA_PATH):
     # Use the directory of the provided schema paths to determine the DB base dir
@@ -556,7 +725,8 @@ def preview(schema_type):
     db_map = {
         'source': ('source_schema.json', 'source.db'),
         'legacy': ('legacy_schema.json', 'legacy.db'),
-        'target': ('target_schema.json', 'target.db')
+        'target': ('target_schema.json', 'target.db'),
+        'cards': ('source_cards_schema_ds3.json', 'cards_ds3.db')
     }
     if schema_type not in db_map:
         return 'Invalid schema type', 400
@@ -565,7 +735,10 @@ def preview(schema_type):
     # Create/populate if not exists
     import os
     if not os.path.exists(db_path):
-        create_and_populate_db(f"poc4/frontend/static/schemas/{schema_file}", db_path, SAMPLE_DATA)
+        if schema_type == 'cards':
+            create_and_populate_cards_ds3_db(f"poc4/frontend/static/schemas/{schema_file}", db_path, rows_per_table=20)
+        else:
+            create_and_populate_db(f"poc4/frontend/static/schemas/{schema_file}", db_path, SAMPLE_DATA)
     conn = sqlite3.connect(db_path)
     tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")]
     table_data = {}
@@ -589,6 +762,7 @@ if __name__ == '__main__':
     parser.add_argument('--legacy', type=str, default=LEG_SCHEMA_PATH)
     parser.add_argument('--target', type=str, default=TGT_SCHEMA_PATH)
     parser.add_argument('--mapfile', type=str, default=None)
+    parser.add_argument('--create-ds3-cards', action='store_true', help='Create DS3 cards database (20 rows per table)')
     parser.add_argument('--reset', action='store_true', help='Delete existing DB files and recreate with sample data')
     args = parser.parse_args()
 
@@ -600,6 +774,13 @@ if __name__ == '__main__':
         create_and_populate_db(args.source, 'poc4/frontend/static/schemas/source.db', SAMPLE_DATA)
         create_and_populate_db(args.legacy, 'poc4/frontend/static/schemas/legacy.db', SAMPLE_DATA)
         create_and_populate_db(args.target, 'poc4/frontend/static/schemas/target.db', SAMPLE_DATA)
+        # Also create DS3 cards DB by default or when requested
+        if args.create_ds3_cards or True:
+            try:
+                create_and_populate_cards_ds3_db(DS3_SCHEMA_PATH, DS3_DB_PATH, rows_per_table=20)
+                print('DS3 cards database created and populated with 20 rows per table.')
+            except Exception as e:
+                print(f'Failed to create DS3 cards DB: {e}')
         print('Databases created and populated with sample data.')
 
         # For demo: transfer data using mapping/rules

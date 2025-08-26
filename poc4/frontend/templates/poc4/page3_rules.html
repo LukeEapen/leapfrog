@@ -40,22 +40,51 @@
     </div>
   </div>
   <div class="row g-4 rules-wrapper">
-    <!-- Column 1: Source ➜ Target Rules -->
-    <div class="col-lg-6">
+    <div class="col-12">
       <div class="card h-100 shadow-sm">
         <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
-          <span>Source ➜ Target Rules</span>
+          <div class="d-flex align-items-center gap-3">
+            <span>Origin ➜ Target Rules</span>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="filter-source">
+              <label class="form-check-label" for="filter-source"><span class="badge bg-danger">DATA SOURCE 1</span></label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="filter-legacy">
+              <label class="form-check-label" for="filter-legacy"><span class="badge bg-dark">DATA SOURCE 2</span></label>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" type="button" id="minimize-source" title="Minimize DS1 rows">Minimize DS1</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button" id="minimize-legacy" title="Minimize DS2 rows">Minimize DS2</button>
+            {# Dynamic DS3+ chips based on rules origins #}
+            {% set ns = namespace(extras=[]) %}
+            {% for rule in rules %}
+              {% set o = rule.origin %}
+              {% if o not in ['source','legacy'] and o not in ns.extras %}
+                {% set _ = ns.extras.append(o) %}
+              {% endif %}
+            {% endfor %}
+            {% for o in ns.extras %}
+            <div class="form-check form-check-inline align-items-center d-flex gap-1">
+              <input class="form-check-input filter-extra" type="checkbox" id="filter-{{ o }}" data-origin="{{ o }}">
+              <label class="form-check-label" for="filter-{{ o }}">
+                {% if o[:2]|lower == 'ds' %}<span class="badge bg-secondary">DATA SOURCE {{ o[2:]|int }}</span>{% else %}<span class="badge bg-secondary">{{ o|upper }}</span>{% endif %}
+              </label>
+              <button class="btn btn-xs btn-outline-secondary minimize-extra" type="button" data-origin="{{ o }}" title="Minimize {{ o|upper }} rows">–</button>
+            </div>
+            {% endfor %}
+          </div>
           <div class="d-flex align-items-center gap-2">
-            <button name="action" value="apply_all_source" class="btn btn-outline-danger btn-sm" type="submit" title="Apply recommended to all Source rules">Apply All (Source)</button>
-            <span class="badge bg-danger">SOURCE</span>
+            <button name="action" value="apply_all_source" class="btn btn-outline-danger btn-sm" type="submit" title="Apply recommended to all Data Source 1 rules">Apply All (Data Source 1)</button>
+            <button name="action" value="apply_all_legacy" class="btn btn-outline-dark btn-sm" type="submit" title="Apply recommended to all Data Source 2 rules">Apply All (Data Source 2)</button>
           </div>
         </div>
         <div class="card-body p-0">
           <table class="table table-sm table-striped table-hover mb-0 rules-table">
             <thead class="table-light">
               <tr class="small">
+                <th style="width:90px">Origin</th>
                 <th style="min-width:170px">Target Field</th>
-                <th style="min-width:140px">Source Field(s)</th>
+                <th style="min-width:140px">Source/Legacy Field(s)</th>
                 <th style="min-width:240px">Rule</th>
                 <th style="min-width:260px">Example</th>
                 <th style="width:50px"></th>
@@ -63,111 +92,53 @@
             </thead>
             <tbody>
               {% for rule in rules %}
-                {% if rule.origin == 'source' %}
-        <tr class="rule-row" title="{{ rule.field_full }} :: {{ rule.sources_display }} :: {{ rule.example }}">
-                  <td>
-                    <div class="field-stack" data-field-full="{{ rule.field_full }}" data-field-name="{{ rule.field_name }}">
-                      <strong class="field-label">{{ rule.field_full }}</strong>
-                      {% set _tbl = rule.target_table or (rule.field_full.split('.')[0] if '.' in rule.field_full else '') %}
-                      {% if _tbl %}<span class="tbl">{{ _tbl }}</span>{% endif %}
-                    </div>
-                  </td>
-                  <td class="text-muted">{{ rule.sources_display }}</td>
-                  <td>
-                    <div class="d-flex gap-2 align-items-center">
-                      <input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control form-control-sm" />
-                      {% if rule.variants %}
-            <select class="form-select form-select-sm" name="preferred_{{ loop.index0 }}" title="Preferred variant" data-current="{{ rule.preferred|e if rule.preferred else '' }}">
-                        <option value="">Preferred…</option>
-                        {% for v in rule.variants %}
-              <option value="{{ v }}">{{ v }}</option>
-                        {% endfor %}
-                      </select>
-                      <button type="button" class="btn btn-outline-secondary btn-xs apply-selected" data-index="{{ loop.index0 }}" title="Apply selected variant">Apply</button>
-                      {% endif %}
-                    </div>
-                  </td>
-                  <td class="text-muted">
-                    <div>{{ rule.example }}</div>
+              <tr class="rule-row" data-origin="{{ rule.origin }}" title="{{ rule.field_full }} :: {{ rule.sources_display }} :: {{ rule.example }}" style="display:none;">
+                <td>
+                  {% if rule.origin=='source' %}
+                    <span class="badge bg-danger">DATA SOURCE 1</span>
+                  {% elif rule.origin=='legacy' %}
+                    <span class="badge bg-dark">DATA SOURCE 2</span>
+                  {% elif rule.origin[:2]|lower == 'ds' %}
+                    <span class="badge bg-secondary">DATA SOURCE {{ rule.origin[2:]|int }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ rule.origin|upper }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="field-stack" data-field-full="{{ rule.field_full }}" data-field-name="{{ rule.field_name }}">
+                    <strong class="field-label">{{ rule.field_full }}</strong>
+                    {% set _tbl = rule.target_table or (rule.field_full.split('.')[0] if '.' in rule.field_full else '') %}
+                    {% if _tbl %}<span class="tbl">{{ _tbl }}</span>{% endif %}
+                  </div>
+                </td>
+                <td class="text-muted">{{ rule.sources_display }}</td>
+                <td>
+                  <div class="d-flex gap-2 align-items-center">
+                    <input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control form-control-sm" />
                     {% if rule.variants %}
-          {% set _row_index = loop.index0 %}
-                      <div class="small text-secondary mt-1">Variants:
-                        <ul class="mb-0 ps-3 mt-1">
-                          {% for v in rule.variants %}<li>{{ v }}</li>{% endfor %}
-                        </ul>
-                      </div>
+                    <select class="form-select form-select-sm" name="preferred_{{ loop.index0 }}" title="Preferred variant" data-current="{{ rule.preferred|e if rule.preferred else '' }}">
+                      <option value="">Preferred…</option>
+                      {% for v in rule.variants %}
+                      <option value="{{ v }}">{{ v }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="button" class="btn btn-outline-secondary btn-xs apply-selected" data-index="{{ loop.index0 }}" title="Apply selected variant">Apply</button>
                     {% endif %}
-                  </td>
-                  <td><button type="button" class="btn btn-outline-danger btn-sm edit-rule-btn" data-index="{{ loop.index0 }}">Edit</button></td>
-                </tr>
-                {% endif %}
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    <!-- Column 2: Legacy ➜ Target Rules -->
-    <div class="col-lg-6">
-      <div class="card h-100 shadow-sm">
-        <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
-          <span>Legacy ➜ Target Rules</span>
-          <div class="d-flex align-items-center gap-2">
-            <button name="action" value="apply_all_legacy" class="btn btn-outline-dark btn-sm" type="submit" title="Apply recommended to all Legacy rules">Apply All (Legacy)</button>
-            <span class="badge bg-dark">LEGACY</span>
-          </div>
-        </div>
-        <div class="card-body p-0">
-          <table class="table table-sm table-striped table-hover mb-0 rules-table">
-            <thead class="table-light">
-              <tr class="small">
-                <th style="min-width:170px">Target Field</th>
-                <th style="min-width:140px">Legacy Field(s)</th>
-                <th style="min-width:240px">Rule</th>
-                <th style="min-width:260px">Example</th>
-                <th style="width:50px"></th>
+                  </div>
+                </td>
+                <td class="text-muted">
+                  <div>{{ rule.example }}</div>
+                  {% if rule.variants %}
+                  {% set _row_index = loop.index0 %}
+                  <div class="small text-secondary mt-1">Variants:
+                    <ul class="mb-0 ps-3 mt-1">
+                      {% for v in rule.variants %}<li>{{ v }}</li>{% endfor %}
+                    </ul>
+                  </div>
+                  {% endif %}
+                </td>
+                <td><button type="button" class="btn btn-outline-danger btn-sm edit-rule-btn" data-index="{{ loop.index0 }}">Edit</button></td>
               </tr>
-            </thead>
-            <tbody>
-              {% for rule in rules %}
-                {% if rule.origin == 'legacy' %}
-        <tr class="rule-row" title="{{ rule.field_full }} :: {{ rule.sources_display }} :: {{ rule.example }}">
-                  <td>
-                    <div class="field-stack" data-field-full="{{ rule.field_full }}" data-field-name="{{ rule.field_name }}">
-                      <strong class="field-label">{{ rule.field_full }}</strong>
-                      {% set _tbl = rule.target_table or (rule.field_full.split('.')[0] if '.' in rule.field_full else '') %}
-                      {% if _tbl %}<span class="tbl">{{ _tbl }}</span>{% endif %}
-                    </div>
-                  </td>
-                  <td class="text-muted">{{ rule.sources_display }}</td>
-                  <td>
-                    <div class="d-flex gap-2 align-items-center">
-                      <input type="text" name="rule_{{ loop.index0 }}" value="{{ rule.rule }}" class="form-control form-control-sm" />
-                      {% if rule.variants %}
-            <select class="form-select form-select-sm" name="preferred_{{ loop.index0 }}" title="Preferred variant" data-current="{{ rule.preferred|e if rule.preferred else '' }}">
-                        <option value="">Preferred…</option>
-                        {% for v in rule.variants %}
-              <option value="{{ v }}">{{ v }}</option>
-                        {% endfor %}
-                      </select>
-                      <button type="button" class="btn btn-outline-secondary btn-xs apply-selected" data-index="{{ loop.index0 }}" title="Apply selected variant">Apply</button>
-                      {% endif %}
-                    </div>
-                  </td>
-                  <td class="text-muted">
-                    <div>{{ rule.example }}</div>
-                    {% if rule.variants %}
-          {% set _row_index = loop.index0 %}
-                      <div class="small text-secondary mt-1">Variants:
-                        <ul class="mb-0 ps-3 mt-1">
-                          {% for v in rule.variants %}<li>{{ v }}</li>{% endfor %}
-                        </ul>
-                      </div>
-                    {% endif %}
-                  </td>
-                  <td><button type="button" class="btn btn-outline-danger btn-sm edit-rule-btn" data-index="{{ loop.index0 }}">Edit</button></td>
-                </tr>
-                {% endif %}
               {% endfor %}
             </tbody>
           </table>
@@ -216,6 +187,69 @@
   document.getElementById('chat-min-btn').addEventListener('click', toggleChat);
   // Start minimized
   toggleChat();
+
+  // Filter origin toggles with persistence (DS1/DS2 default OFF, DS3+ default ON)
+  const filterSource = document.getElementById('filter-source');
+  const filterLegacy = document.getElementById('filter-legacy');
+  const extraFilters = Array.from(document.querySelectorAll('.filter-extra'));
+  const ORIGIN_FILTERS_KEY = 'poc4_origin_filters';
+  const ORIGIN_MIN_KEY = 'poc4_origin_min';
+  function loadFilterPrefs(){ try{ return JSON.parse(localStorage.getItem(ORIGIN_FILTERS_KEY)||'{}')||{}; }catch(e){ return {}; } }
+  function saveFilterPrefs(state){ try{ localStorage.setItem(ORIGIN_FILTERS_KEY, JSON.stringify(state||{})); }catch(e){} }
+  function currentFilterState(){
+    const stored = loadFilterPrefs();
+    const state = { ...stored };
+    if(filterSource) state['source'] = !!filterSource.checked;
+    if(filterLegacy) state['legacy'] = !!filterLegacy.checked;
+    extraFilters.forEach(cb=>{ const o=(cb.dataset.origin||'').toLowerCase(); if(o){ state[o]=!!cb.checked; }});
+    return state;
+  }
+  function applyStoredPrefs(){
+    const stored = loadFilterPrefs();
+    if(filterSource){ filterSource.checked = !!stored['source']; }
+    if(filterLegacy){ filterLegacy.checked = !!stored['legacy']; }
+    extraFilters.forEach(cb=>{ const o=(cb.dataset.origin||'').toLowerCase(); cb.checked = (o in stored) ? !!stored[o] : true; });
+  }
+  function isOn(origin, state){
+    const o = (origin||'').toLowerCase();
+    if(o in state) return !!state[o];
+    return (o !== 'source' && o !== 'legacy');
+  }
+  function applyFilters(){
+    const state = currentFilterState();
+    document.querySelectorAll('.rule-row[data-origin]').forEach(row=>{
+      const origin = (row.getAttribute('data-origin') || '').toLowerCase();
+      const ok = isOn(origin, state);
+      row.style.display = ok ? 'table-row' : 'none';
+    });
+    saveFilterPrefs(state);
+  try{ applyMin(); }catch(e){}
+  }
+  filterSource?.addEventListener('change', applyFilters);
+  filterLegacy?.addEventListener('change', applyFilters);
+  extraFilters.forEach(cb=> cb.addEventListener('change', applyFilters));
+  applyStoredPrefs();
+  applyFilters();
+
+  // Minimize per origin (collapse rows but keep filter state)
+  function getMin(){ try{ return JSON.parse(localStorage.getItem(ORIGIN_MIN_KEY)||'{}')||{}; }catch(e){ return {}; } }
+  function setMin(k,v){ try{ const s=getMin(); s[k]=!!v; localStorage.setItem(ORIGIN_MIN_KEY, JSON.stringify(s)); }catch(e){} }
+  function applyMin(){
+    const s=getMin();
+    document.querySelectorAll('.rule-row[data-origin]').forEach(row=>{
+      const o=(row.getAttribute('data-origin')||'').toLowerCase();
+      const minimized = !!s[o];
+      row.style.display = row.style.display; // keep filter effect
+      row.classList.toggle('collapsed-origin', minimized);
+      row.style.visibility = minimized? 'collapse' : '';
+    });
+  }
+  document.getElementById('minimize-source')?.addEventListener('click', ()=>{ const s=getMin(); setMin('source', !s['source']); applyMin(); });
+  document.getElementById('minimize-legacy')?.addEventListener('click', ()=>{ const s=getMin(); setMin('legacy', !s['legacy']); applyMin(); });
+  document.querySelectorAll('.minimize-extra').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ const o=(btn.dataset.origin||'').toLowerCase(); const s=getMin(); setMin(o, !s[o]); applyMin(); });
+  });
+  applyMin();
 
   // Toggle qualified/unqualified
   const toggle = document.getElementById('toggleQualified');

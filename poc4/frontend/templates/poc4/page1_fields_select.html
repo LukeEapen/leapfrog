@@ -14,44 +14,102 @@
   <button type="submit" class="btn btn-danger" id="next-btn">Next</button>
   </div>
   <div class="row g-4">
-    <div class="col-md-4">
+    <div class="col-md-8">
       <div class="card h-100 shadow-sm">
         <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
-          <span>Source ({{ source_schema_file }})</span>
-          <div class="form-check m-0 small">
-            <input class="form-check-input" type="checkbox" id="select_all_source">
-            <label class="form-check-label" for="select_all_source">All</label>
+          <div class="d-flex align-items-center gap-3">
+            <span>Origin Fields</span>
+            <span class="badge bg-light text-dark border">Data Source 1: {{ source_schema_file }}</span>
+            <span class="badge bg-light text-dark border">Data Source 2: {{ legacy_schema_file }}</span>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="form-check form-check-inline m-0 small">
+              <input class="form-check-input" type="checkbox" id="filter-source">
+              <label class="form-check-label" for="filter-source"><span class="badge bg-danger">DATA SOURCE 1</span></label>
+            </div>
+            <div class="form-check form-check-inline m-0 small">
+              <input class="form-check-input" type="checkbox" id="filter-legacy">
+              <label class="form-check-label" for="filter-legacy"><span class="badge bg-dark">DATA SOURCE 2</span></label>
+            </div>
           </div>
         </div>
         <div class="card-body" style="max-height:60vh;overflow:auto;">
-          {% for f in source_fields %}
-          <div class="form-check small">
-            <input class="form-check-input source-box" type="checkbox" name="source_field" value="{{ f.name }}" id="src_{{ loop.index }}">
-            <label class="form-check-label" for="src_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
+          <!-- Source section -->
+      <div id="source-section" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-semibold text-danger">Data Source 1 ({{ source_schema_file }})</span>
+              <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-secondary btn-sm" id="p1b-min-source" type="button">Minimize</button>
+                <div class="form-check m-0 small">
+                  <input class="form-check-input" type="checkbox" id="select_all_source">
+                  <label class="form-check-label" for="select_all_source">Select All</label>
+                </div>
+              </div>
+            </div>
+            <div id="p1b-body-source">
+            {% for f in source_fields %}
+            <div class="form-check small">
+              <input class="form-check-input source-box" type="checkbox" name="source_field" value="{{ f.name }}" id="src_{{ loop.index }}">
+              <label class="form-check-label" for="src_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
+            </div>
+            {% endfor %}
+            {% if not source_fields %}<div class="text-muted small">No Data Source 1 schema selected on Page 1.</div>{% endif %}
+            <hr>
+            </div>
           </div>
-          {% endfor %}
+          <!-- Legacy section -->
+      <div id="legacy-section" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-semibold text-dark">Data Source 2 ({{ legacy_schema_file }})</span>
+              <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-secondary btn-sm" id="p1b-min-legacy" type="button">Minimize</button>
+                <div class="form-check m-0 small">
+                  <input class="form-check-input" type="checkbox" id="select_all_legacy">
+                  <label class="form-check-label" for="select_all_legacy">Select All</label>
+                </div>
+              </div>
+            </div>
+            <div id="p1b-body-legacy">
+            {% for f in legacy_fields %}
+            <div class="form-check small">
+              <input class="form-check-input legacy-box" type="checkbox" name="legacy_field" value="{{ f.name }}" id="leg_{{ loop.index }}">
+              <label class="form-check-label" for="leg_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
+            </div>
+            {% endfor %}
+            {% if not legacy_fields %}<div class="text-muted small">No Data Source 2 schema selected on Page 1.</div>{% endif %}
+            </div>
+          </div>
+
+          <!-- Extra Data Sources (DS3+) -->
+          {% if extra_sources and extra_sources_fields %}
+            {% for extra in extra_sources_fields %}
+            <div id="extra-section-{{ extra.index }}" class="mb-3" style="display:none;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold text-danger">Data Source {{ extra.index + 3 }} ({{ extra.file }})</span>
+                <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-outline-secondary btn-sm" id="p1b-min-extra-{{ extra.index }}" type="button">Minimize</button>
+                  <div class="form-check m-0 small">
+                    <input class="form-check-input" type="checkbox" id="select_all_extra_{{ extra.index }}">
+                    <label class="form-check-label" for="select_all_extra_{{ extra.index }}">Select All</label>
+                  </div>
+                </div>
+              </div>
+              <div id="p1b-body-extra-{{ extra.index }}">
+              {% for f in extra.fields %}
+              <div class="form-check small">
+                <input class="form-check-input extra-box extra-idx-{{ extra.index }}" type="checkbox" name="extra_field::{{ extra.index }}" value="{{ f.name }}" id="ex_{{ extra.index }}_{{ loop.index }}">
+                <label class="form-check-label" for="ex_{{ extra.index }}_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
+              </div>
+              {% endfor %}
+              {% if not extra.fields %}<div class="text-muted small">No fields in this Data Source.</div>{% endif %}
+              <hr>
+              </div>
+            </div>
+            {% endfor %}
+          {% endif %}
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
-          <span>Legacy ({{ legacy_schema_file }})</span>
-          <div class="form-check m-0 small">
-            <input class="form-check-input" type="checkbox" id="select_all_legacy">
-            <label class="form-check-label" for="select_all_legacy">All</label>
-          </div>
-        </div>
-        <div class="card-body" style="max-height:60vh;overflow:auto;">
-          {% for f in legacy_fields %}
-          <div class="form-check small">
-            <input class="form-check-input legacy-box" type="checkbox" name="legacy_field" value="{{ f.name }}" id="leg_{{ loop.index }}">
-            <label class="form-check-label" for="leg_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
     <div class="col-md-4">
       <div class="card h-100 shadow-sm">
         <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
@@ -137,6 +195,8 @@
   .chat-body-area{min-height:220px; max-height:340px}
   .small-muted{font-size:.85em; color:#6c757d}
 </style>
+<!-- Flags from server for pre-checking origin filters -->
+<div id="p1b-flags" data-has-source="{% if source_fields|length > 0 %}1{% else %}0{% endif %}" data-has-legacy="{% if legacy_fields|length > 0 %}1{% else %}0{% endif %}" data-extra-count="{{ extra_sources|length if extra_sources else 0 }}" hidden></div>
 <div class="card floating-chat" id="chat-widget">
   <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center" style="cursor:move;">
     <span class="fw-semibold small d-flex align-items-center gap-1"><i class="bi bi-robot"></i> Assistant</span>
@@ -173,6 +233,15 @@ function bindSelectAll(masterId, boxClass){
 bindSelectAll('select_all_source','source-box');
 bindSelectAll('select_all_legacy','legacy-box');
 bindSelectAll('select_all_target','target-box');
+// Bind for extra DS groups
+try{
+  const extraCount = parseInt(document.getElementById('p1b-flags')?.dataset.extraCount || '0');
+  for(let i=0;i<extraCount;i++){
+    const id = `select_all_extra_${i}`;
+    const cls = `extra-idx-${i}`;
+    bindSelectAll(id, cls);
+  }
+}catch(e){}
 
 // Chat helpers
 function toggleChatBody(){
@@ -187,6 +256,61 @@ function toggleChatBody(){
 document.getElementById('chat-min-btn')?.addEventListener('click', toggleChatBody);
 // Start minimized
 toggleChatBody();
+
+// Origin filter toggles (no defaults)
+const filterSource = document.getElementById('filter-source');
+const filterLegacy = document.getElementById('filter-legacy');
+const sourceSection = document.getElementById('source-section');
+const legacySection = document.getElementById('legacy-section');
+function applyFilters(){
+  const showSource = !!filterSource?.checked;
+  const showLegacy = !!filterLegacy?.checked;
+  if(sourceSection) sourceSection.style.display = showSource? 'block':'none';
+  if(legacySection) legacySection.style.display = showLegacy? 'block':'none';
+  // Toggle extra sections
+  try{
+    const extraCount = parseInt(document.getElementById('p1b-flags')?.dataset.extraCount || '0');
+    for(let i=0;i<extraCount;i++){
+      const sec = document.getElementById(`extra-section-${i}`);
+      if(sec) sec.style.display = (showSource || showLegacy) ? 'block' : 'block'; // keep visible when any origin is shown; can refine with per-DS toggles later
+    }
+  }catch(e){}
+}
+filterSource?.addEventListener('change', applyFilters);
+filterLegacy?.addEventListener('change', applyFilters);
+// Pre-check filters based on whether fields are present (reflecting Page 1 enablement)
+try{
+  const flagsEl = document.getElementById('p1b-flags');
+  const hasSource = flagsEl ? flagsEl.dataset.hasSource === '1' : false;
+  const hasLegacy = flagsEl ? flagsEl.dataset.hasLegacy === '1' : false;
+  if(filterSource) filterSource.checked = !!hasSource;
+  if(filterLegacy) filterLegacy.checked = !!hasLegacy;
+}catch(e){}
+applyFilters();
+
+// Minimize state (Page 1b)
+const P1B_MIN_KEY = 'poc4_p1b_min';
+function getMinState(){ try{ return JSON.parse(localStorage.getItem(P1B_MIN_KEY)||'{}')||{}; }catch(e){ return {}; } }
+function setMinState(key, val){ try{ const s = getMinState(); s[key] = !!val; localStorage.setItem(P1B_MIN_KEY, JSON.stringify(s)); }catch(e){} }
+function applyMinState(key, bodyEl, btn){ const s=getMinState(); const minimized=!!s[key]; if(bodyEl){ bodyEl.style.display = minimized? 'none':'block'; } if(btn){ btn.textContent = minimized? 'Expand':'Minimize'; } }
+// Wire buttons
+(function(){
+  const sBtn = document.getElementById('p1b-min-source');
+  const sBody = document.getElementById('p1b-body-source');
+  if(sBtn && sBody){ applyMinState('source', sBody, sBtn); sBtn.addEventListener('click', ()=>{ const s=getMinState(); const cur=!!s['source']; setMinState('source', !cur); applyMinState('source', sBody, sBtn); }); }
+  const lBtn = document.getElementById('p1b-min-legacy');
+  const lBody = document.getElementById('p1b-body-legacy');
+  if(lBtn && lBody){ applyMinState('legacy', lBody, lBtn); lBtn.addEventListener('click', ()=>{ const s=getMinState(); const cur=!!s['legacy']; setMinState('legacy', !cur); applyMinState('legacy', lBody, lBtn); }); }
+  try{
+    const extraCount = parseInt(document.getElementById('p1b-flags')?.dataset.extraCount || '0');
+    for(let i=0;i<extraCount;i++){
+      const btn = document.getElementById(`p1b-min-extra-${i}`);
+      const body = document.getElementById(`p1b-body-extra-${i}`);
+      const key = `extra-${i}`;
+      if(btn && body){ applyMinState(key, body, btn); btn.addEventListener('click', ()=>{ const s=getMinState(); const cur=!!s[key]; setMinState(key, !cur); applyMinState(key, body, btn); }); }
+    }
+  }catch(e){}
+})();
 
 function setAllByChat(masterId, boxClass, checked){
   const master=document.getElementById(masterId);

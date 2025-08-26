@@ -48,6 +48,30 @@
             </select>
           </div>
           <div class="mb-3">
+            <label class="form-label">Legacy Database</label>
+            <select class="form-select" name="legacy_db">
+              {% for db in legacy_schemas %}
+                {% if db == selected_legacy_db %}
+                  <option value="{{ db }}" selected>{{ db }}</option>
+                {% else %}
+                  <option value="{{ db }}">{{ db }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Data Source 3 (DS3)</label>
+            <select class="form-select" name="ds3_db">
+              {% for db in ds3_schemas %}
+                {% if db == selected_ds3_db %}
+                  <option value="{{ db }}" selected>{{ db }}</option>
+                {% else %}
+                  <option value="{{ db }}">{{ db }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
             <label class="form-label">Target Database</label>
             <select class="form-select" name="target_db" required>
               {% for db in target_schemas %}
@@ -59,13 +83,19 @@
               {% endfor %}
             </select>
           </div>
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Apply</button>
+          </div>
         </form>
       </div>
     </div>
   </div>
   <div class="col-md-4">
     <div class="card h-100 shadow-sm">
-      <div class="card-header bg-light text-danger fw-bold">Migration Execution & Query</div>
+      <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
+        <span>Migration Execution & Query</span>
+        <a href="{{ url_for('poc4.target_model') }}" class="btn btn-sm btn-outline-danger">Open Target Model Designer</a>
+      </div>
       <div class="card-body">
         {% if not migration_preview %}
           <pre class="small text-muted">No migration executed yet. Click Validate to see the plan before execution.</pre>
@@ -78,6 +108,7 @@
             <strong>Migration Plan Preview</strong><br>
             Table Pairs: {{ migration_preview.total_table_pairs }} | Field Mappings: {{ migration_preview.total_field_mappings }}<br>
             Est. Rows: {{ migration_preview.estimated_total_rows }}
+            <div class="small text-muted mt-1">Note: DS3 row counts reflect unique connected entities (cardholder-centric) across card, card_account, card, card_auth, card_txn, dispute_case, and merchant.</div>
           </div>
           <div class="mb-3" style="max-height:240px; overflow:auto;">
             <table class="table table-sm table-bordered align-middle mb-0">
@@ -177,6 +208,8 @@
         {% elif query_error %}
         <div class="alert alert-danger mt-3">{{ query_error }}</div>
         {% endif %}
+
+  <!-- Target model content moved to dedicated page -->
       </div>
     </div>
   </div>
@@ -228,5 +261,12 @@
       if(val.includes('execute')){ e.preventDefault(); document.querySelector('form input[name="action"][value="execute"]')?.form?.submit(); return false; }
     }, {capture:true});
   })();
+
+  // Target Model design flow is now a separate page; no auto-submit here.
+</script>
+<!-- Mermaid for ER diagram -->
+<script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  try { mermaid.initialize({ startOnLoad: true, theme: 'default' }); } catch(e){}
 </script>
 {% endblock %}
