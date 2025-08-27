@@ -1,0 +1,1356 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POC4 Data Migration</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #23272b 0%, #343a40 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      color: #23272b;
+    }
+    .agent-card {
+      background: #fff;
+      color: #23272b;
+      border-radius: 2rem;
+      box-shadow: 0 8px 32px rgba(44,44,44,0.18);
+      padding: 2.5rem 2rem;
+      margin: 3vh auto;
+      max-width: 900px;
+      min-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .agent-title {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: #d32f2f;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.01em;
+    }
+    .agent-desc {
+      font-size: 1.15rem;
+      margin-bottom: 2rem;
+      color: #343a40;
+    }
+    .btn-next {
+      background: #d32f2f;
+      color: #fff;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.85rem 2.5rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(211,47,47,0.08);
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    .btn-next:hover {
+      background: #b71c1c;
+    }
+    .standards {
+      margin: 1.5rem 0 2rem 0;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .badge-standard {
+      background: #23272b;
+      color: #fff;
+      border-radius: 8px;
+      padding: 8px 22px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+    }
+    .form-label {
+      font-size: 1.15rem;
+      color: #d32f2f;
+      font-weight: 600;
+    }
+    #functionsList .form-check-input {
+      accent-color: #d32f2f;
+      width: 1.3em;
+      height: 1.3em;
+    }
+    #functionsList .form-check-label {
+      font-size: 1.08rem;
+      color: #23272b;
+      font-weight: 500;
+    }
+    #result {
+      background: #f1f3f4;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.08);
+      color: #23272b;
+      padding: 1.5rem;
+      margin-top: 2rem;
+      font-size: 1.08rem;
+      min-height: 120px;
+    }
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.10);
+      border: none;
+      background: #f8f9fa;
+    }
+    .card-body {
+      background: #fff;
+      border-radius: 1rem;
+      color: #23272b;
+      padding: 1rem 1.2rem;
+    }
+    .fw-bold {
+      color: #d32f2f !important;
+      font-weight: 700 !important;
+      font-size: 1.12rem;
+    }
+    .small.text-secondary {
+      color: #343a40 !important;
+      font-size: 0.98rem;
+    }
+    .alert-success {
+      background: #fff;
+      color: #23272b;
+      border: 2px solid #d32f2f;
+    }
+    /* Subnav styling to match POC2 tabbed look */
+    .poc4-subnav { margin-top: -6px; }
+    .poc4-subnav .nav { gap: .35rem; }
+    .poc4-subnav .nav-link {
+      border-radius: 999px;
+      border: 1px solid #d32f2f;
+      color: #d32f2f;
+      background: #fff;
+      font-weight: 600;
+      padding: .35rem .9rem;
+      box-shadow: 0 2px 8px rgba(211,47,47,.08);
+      transition: background .2s, color .2s, box-shadow .2s, transform .05s;
+    }
+    .poc4-subnav .nav-link:hover {
+      color: #fff;
+      background: linear-gradient(90deg,#d32f2f 60%,#b71c1c);
+      box-shadow: 0 4px 12px rgba(211,47,47,.18);
+      transform: translateY(-1px);
+    }
+    .poc4-subnav .nav-link.active {
+      color: #fff !important;
+      background: linear-gradient(90deg,#d32f2f 60%,#b71c1c);
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(211,47,47,.18);
+    }
+    .poc4-subnav .nav-link .bi { margin-right: .35rem; }
+    /* Shared step tabs (classic tab look, modern styling) */
+    .poc4-steps { border-bottom: 1px solid #e9ecef; gap: .15rem; }
+    .poc4-steps .nav-link {
+      border: 1px solid transparent;
+      border-top-left-radius: .6rem;
+      border-top-right-radius: .6rem;
+      border-bottom: none;
+      color: #6c757d;
+      font-weight: 600;
+      padding: .5rem 1rem;
+      background: transparent;
+      margin: 0 .15rem;
+      transition: background .2s, color .2s, box-shadow .2s, border-color .2s;
+    }
+    .poc4-steps .nav-link:hover {
+      color: #b71c1c;
+      background: #fff;
+      border-color: #f3c3c3 #f3c3c3 #e9ecef;
+      box-shadow: 0 2px 8px rgba(211,47,47,.06);
+    }
+    .poc4-steps .nav-link.active, .poc4-steps .show>.nav-link {
+      color: #b71c1c;
+      background-color: #fff;
+      border-color: #d32f2f #d32f2f #fff;
+      position: relative;
+      top: 1px; /* overlap bottom border for seamless tab */
+      box-shadow: 0 2px 8px rgba(211,47,47,.08);
+    }
+  </style>
+</head>
+<body>
+  
+<div class="bg-danger text-white py-3 mb-4 rounded shadow-sm text-center">
+  <h2 class="mb-0">Target Model Designer</h2>
+  <small>Design, review, approve, and download your target-state schema</small>
+</div>
+
+<div class="container mb-3 poc4-subnav">
+  <ul class="nav nav-pills justify-content-center">
+    
+    <li class="nav-item">
+      <a class="nav-link" href="http://127.0.0.1:5002/migration-intermediate" target="_blank" rel="noopener">
+        <i class="bi bi-diagram-3"></i> Migration Intermediate
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link " href="/poc4/db">
+        <i class="bi bi-database"></i> DB Browser
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link " href="/poc4/page5">
+        <i class="bi bi-check2-circle"></i> Reconciliation Summary
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="http://127.0.0.1:5000/poc4/page1">
+        <i class="bi bi-arrow-right-circle"></i> Upload & Design
+      </a>
+    </li>
+  </ul>
+  <hr class="mt-3 mb-0"/>
+  <!-- subnav partial -->
+</div>
+
+<!-- Meta flags for JS -->
+<div id="tmodel-meta" data-has-draft="0" hidden></div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="text-muted small">This page is independent of Validation; it won’t trigger migration.</div>
+  <div class="d-flex gap-2">
+    <form method="post" class="m-0" id="design-form">
+      <input type="hidden" name="action" value="design_target_model">
+      <button type="submit" class="btn btn-outline-danger btn-sm">Generate Draft</button>
+    </form>
+    
+  <a href="/poc4/page2" class="btn btn-danger btn-sm">Next: Mapping</a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-8">
+    <div class="card h-100 shadow-sm">
+      <div class="card-header bg-light text-danger fw-bold">Draft Preview</div>
+      <div class="card-body">
+        
+        
+
+        
+  
+          <div class="alert alert-info">Click Generate Draft to produce a target model from your selected sources.</div>
+        
+
+        <!-- Mapping section moved to bottom; still renders without a draft -->
+        <div class="mb-3 mt-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small text-muted">Field Mapping (Source ➜ Target)</span>
+            <span class="badge bg-light text-dark border">Mapping</span>
+          </div>
+          
+          
+          <div class="border rounded p-2 bg-white mb-2">
+            <div class="mermaid" style="max-height: 260px; overflow:auto;">
+flowchart LR
+  classDef legacy fill:#FFF3E0,stroke:#FB8C00,stroke-width:1px,color:#4A2A00;
+  classDef source fill:#E8F0FF,stroke:#3A7BDA,stroke-width:1px,color:#0B3A79;
+  subgraph Source
+  direction TB
+  L_legacy_legacy_account_acct_avail_bal_amt[&#34;Legacy:legacy_account.acct_avail_bal_amt&#34;]
+  class L_legacy_legacy_account_acct_avail_bal_amt legacy;
+  L_legacy_legacy_account_acct_close_dt[&#34;Legacy:legacy_account.acct_close_dt&#34;]
+  class L_legacy_legacy_account_acct_close_dt legacy;
+  L_legacy_legacy_account_acct_curr_bal_amt[&#34;Legacy:legacy_account.acct_curr_bal_amt&#34;]
+  class L_legacy_legacy_account_acct_curr_bal_amt legacy;
+  L_legacy_legacy_account_acct_open_dt[&#34;Legacy:legacy_account.acct_open_dt&#34;]
+  class L_legacy_legacy_account_acct_open_dt legacy;
+  L_legacy_legacy_account_acct_status_cd[&#34;Legacy:legacy_account.acct_status_cd&#34;]
+  class L_legacy_legacy_account_acct_status_cd legacy;
+  L_legacy_legacy_account_acct_type_cd[&#34;Legacy:legacy_account.acct_type_cd&#34;]
+  class L_legacy_legacy_account_acct_type_cd legacy;
+  L_legacy_legacy_account_cust_id[&#34;Legacy:legacy_account.cust_id&#34;]
+  class L_legacy_legacy_account_cust_id legacy;
+  L_legacy_legacy_customer_cust_created_ts[&#34;Legacy:legacy_customer.cust_created_ts&#34;]
+  class L_legacy_legacy_customer_cust_created_ts legacy;
+  L_legacy_legacy_customer_cust_email_addr[&#34;Legacy:legacy_customer.cust_email_addr&#34;]
+  class L_legacy_legacy_customer_cust_email_addr legacy;
+  L_legacy_legacy_customer_cust_first_nm[&#34;Legacy:legacy_customer.cust_first_nm&#34;]
+  class L_legacy_legacy_customer_cust_first_nm legacy;
+  L_legacy_legacy_customer_cust_last_nm[&#34;Legacy:legacy_customer.cust_last_nm&#34;]
+  class L_legacy_legacy_customer_cust_last_nm legacy;
+  L_legacy_legacy_customer_cust_phone_num[&#34;Legacy:legacy_customer.cust_phone_num&#34;]
+  class L_legacy_legacy_customer_cust_phone_num legacy;
+  L_legacy_legacy_customer_cust_postal_addr[&#34;Legacy:legacy_customer.cust_postal_addr&#34;]
+  class L_legacy_legacy_customer_cust_postal_addr legacy;
+  L_legacy_legacy_ledger_acct_id[&#34;Legacy:legacy_ledger.acct_id&#34;]
+  class L_legacy_legacy_ledger_acct_id legacy;
+  L_legacy_legacy_ledger_batch_id[&#34;Legacy:legacy_ledger.batch_id&#34;]
+  class L_legacy_legacy_ledger_batch_id legacy;
+  L_legacy_legacy_ledger_created_by[&#34;Legacy:legacy_ledger.created_by&#34;]
+  class L_legacy_legacy_ledger_created_by legacy;
+  L_legacy_legacy_ledger_created_ts[&#34;Legacy:legacy_ledger.created_ts&#34;]
+  class L_legacy_legacy_ledger_created_ts legacy;
+  L_legacy_legacy_ledger_currency_cd[&#34;Legacy:legacy_ledger.currency_cd&#34;]
+  class L_legacy_legacy_ledger_currency_cd legacy;
+  L_legacy_legacy_ledger_dr_cr_ind[&#34;Legacy:legacy_ledger.dr_cr_ind&#34;]
+  class L_legacy_legacy_ledger_dr_cr_ind legacy;
+  L_legacy_legacy_ledger_entry_ts[&#34;Legacy:legacy_ledger.entry_ts&#34;]
+  class L_legacy_legacy_ledger_entry_ts legacy;
+  L_legacy_legacy_ledger_ledger_entry_id[&#34;Legacy:legacy_ledger.ledger_entry_id&#34;]
+  class L_legacy_legacy_ledger_ledger_entry_id legacy;
+  L_legacy_legacy_ledger_ref_txn_id[&#34;Legacy:legacy_ledger.ref_txn_id&#34;]
+  class L_legacy_legacy_ledger_ref_txn_id legacy;
+  L_legacy_legacy_ledger_txn_amt[&#34;Legacy:legacy_ledger.txn_amt&#34;]
+  class L_legacy_legacy_ledger_txn_amt legacy;
+  L_legacy_legacy_ledger_txn_type_cd[&#34;Legacy:legacy_ledger.txn_type_cd&#34;]
+  class L_legacy_legacy_ledger_txn_type_cd legacy;
+  L_source_account_account_type[&#34;Source:account.account_type&#34;]
+  class L_source_account_account_type source;
+  L_source_account_balance[&#34;Source:account.balance&#34;]
+  class L_source_account_balance source;
+  L_source_account_customer_id[&#34;Source:account.customer_id&#34;]
+  class L_source_account_customer_id source;
+  L_source_account_opened_at[&#34;Source:account.opened_at&#34;]
+  class L_source_account_opened_at source;
+  L_source_customer_address[&#34;Source:customer.address&#34;]
+  class L_source_customer_address source;
+  L_source_customer_created_at[&#34;Source:customer.created_at&#34;]
+  class L_source_customer_created_at source;
+  L_source_customer_email[&#34;Source:customer.email&#34;]
+  class L_source_customer_email source;
+  L_source_customer_first_name[&#34;Source:customer.first_name&#34;]
+  class L_source_customer_first_name source;
+  L_source_customer_last_name[&#34;Source:customer.last_name&#34;]
+  class L_source_customer_last_name source;
+  L_source_customer_phone[&#34;Source:customer.phone&#34;]
+  class L_source_customer_phone source;
+  L_source_product_interest_rate[&#34;Source:product.interest_rate&#34;]
+  class L_source_product_interest_rate source;
+  L_source_product_product_id[&#34;Source:product.product_id&#34;]
+  class L_source_product_product_id source;
+  L_source_product_product_name[&#34;Source:product.product_name&#34;]
+  class L_source_product_product_name source;
+  L_source_product_product_type[&#34;Source:product.product_type&#34;]
+  class L_source_product_product_type source;
+  L_source_transaction_account_id[&#34;Source:transaction.account_id&#34;]
+  class L_source_transaction_account_id source;
+  L_source_transaction_amount[&#34;Source:transaction.amount&#34;]
+  class L_source_transaction_amount source;
+  L_source_transaction_transaction_date[&#34;Source:transaction.transaction_date&#34;]
+  class L_source_transaction_transaction_date source;
+  L_source_transaction_transaction_id[&#34;Source:transaction.transaction_id&#34;]
+  class L_source_transaction_transaction_id source;
+  L_source_transaction_transaction_type[&#34;Source:transaction.transaction_type&#34;]
+  class L_source_transaction_transaction_type source;
+  end
+  subgraph Target
+  direction TB
+  subgraph TBL_banking_olap_flat_exact[&#34;banking_olap_flat_exact&#34;]
+  direction TB
+  R_banking_olap_flat_exact_account_id[&#34;banking_olap_flat_exact.account_id&#34;]
+  R_banking_olap_flat_exact_account_type[&#34;banking_olap_flat_exact.account_type&#34;]
+  R_banking_olap_flat_exact_address[&#34;banking_olap_flat_exact.address&#34;]
+  R_banking_olap_flat_exact_amount[&#34;banking_olap_flat_exact.amount&#34;]
+  R_banking_olap_flat_exact_balance[&#34;banking_olap_flat_exact.balance&#34;]
+  R_banking_olap_flat_exact_card_account_avail_credit_amt[&#34;banking_olap_flat_exact.card_account_avail_credit_amt&#34;]
+  R_banking_olap_flat_exact_card_account_close_dt[&#34;banking_olap_flat_exact.card_account_close_dt&#34;]
+  R_banking_olap_flat_exact_card_account_current_bal_amt[&#34;banking_olap_flat_exact.card_account_current_bal_amt&#34;]
+  R_banking_olap_flat_exact_card_account_open_dt[&#34;banking_olap_flat_exact.card_account_open_dt&#34;]
+  R_banking_olap_flat_exact_card_auth_id[&#34;banking_olap_flat_exact.card_auth_id&#34;]
+  R_banking_olap_flat_exact_card_id[&#34;banking_olap_flat_exact.card_id&#34;]
+  R_banking_olap_flat_exact_card_status_cd[&#34;banking_olap_flat_exact.card_status_cd&#34;]
+  R_banking_olap_flat_exact_card_txn_amount[&#34;banking_olap_flat_exact.card_txn_amount&#34;]
+  R_banking_olap_flat_exact_card_txn_currency_cd[&#34;banking_olap_flat_exact.card_txn_currency_cd&#34;]
+  R_banking_olap_flat_exact_card_txn_dr_cr_ind[&#34;banking_olap_flat_exact.card_txn_dr_cr_ind&#34;]
+  R_banking_olap_flat_exact_card_txn_id[&#34;banking_olap_flat_exact.card_txn_id&#34;]
+  R_banking_olap_flat_exact_cardholder_email_addr[&#34;banking_olap_flat_exact.cardholder_email_addr&#34;]
+  R_banking_olap_flat_exact_cardholder_phone_num[&#34;banking_olap_flat_exact.cardholder_phone_num&#34;]
+  R_banking_olap_flat_exact_cardholder_postal_addr[&#34;banking_olap_flat_exact.cardholder_postal_addr&#34;]
+  R_banking_olap_flat_exact_created_at[&#34;banking_olap_flat_exact.created_at&#34;]
+  R_banking_olap_flat_exact_customer_id[&#34;banking_olap_flat_exact.customer_id&#34;]
+  R_banking_olap_flat_exact_email[&#34;banking_olap_flat_exact.email&#34;]
+  R_banking_olap_flat_exact_first_name[&#34;banking_olap_flat_exact.first_name&#34;]
+  R_banking_olap_flat_exact_interest_rate[&#34;banking_olap_flat_exact.interest_rate&#34;]
+  R_banking_olap_flat_exact_last_name[&#34;banking_olap_flat_exact.last_name&#34;]
+  R_banking_olap_flat_exact_merchant_id[&#34;banking_olap_flat_exact.merchant_id&#34;]
+  R_banking_olap_flat_exact_opened_at[&#34;banking_olap_flat_exact.opened_at&#34;]
+  R_banking_olap_flat_exact_phone[&#34;banking_olap_flat_exact.phone&#34;]
+  R_banking_olap_flat_exact_product_id[&#34;banking_olap_flat_exact.product_id&#34;]
+  R_banking_olap_flat_exact_product_name[&#34;banking_olap_flat_exact.product_name&#34;]
+  R_banking_olap_flat_exact_product_type[&#34;banking_olap_flat_exact.product_type&#34;]
+  R_banking_olap_flat_exact_transaction_date[&#34;banking_olap_flat_exact.transaction_date&#34;]
+  R_banking_olap_flat_exact_transaction_id[&#34;banking_olap_flat_exact.transaction_id&#34;]
+  R_banking_olap_flat_exact_transaction_type[&#34;banking_olap_flat_exact.transaction_type&#34;]
+  end
+  end
+  L_source_account_customer_id --&gt; R_banking_olap_flat_exact_customer_id
+  L_source_customer_first_name --&gt; R_banking_olap_flat_exact_first_name
+  L_source_customer_last_name --&gt; R_banking_olap_flat_exact_last_name
+  L_source_customer_email --&gt; R_banking_olap_flat_exact_email
+  L_source_customer_phone --&gt; R_banking_olap_flat_exact_phone
+  L_source_customer_address --&gt; R_banking_olap_flat_exact_address
+  L_source_customer_created_at --&gt; R_banking_olap_flat_exact_created_at
+  L_source_transaction_account_id --&gt; R_banking_olap_flat_exact_account_id
+  L_source_account_customer_id --&gt; R_banking_olap_flat_exact_customer_id
+  L_source_account_account_type --&gt; R_banking_olap_flat_exact_account_type
+  L_source_account_balance --&gt; R_banking_olap_flat_exact_balance
+  L_source_account_opened_at --&gt; R_banking_olap_flat_exact_opened_at
+  L_source_transaction_transaction_id --&gt; R_banking_olap_flat_exact_transaction_id
+  L_source_transaction_account_id --&gt; R_banking_olap_flat_exact_account_id
+  L_source_transaction_amount --&gt; R_banking_olap_flat_exact_amount
+  L_source_transaction_transaction_type --&gt; R_banking_olap_flat_exact_transaction_type
+  L_source_transaction_transaction_date --&gt; R_banking_olap_flat_exact_transaction_date
+  L_source_product_product_id --&gt; R_banking_olap_flat_exact_product_id
+  L_source_product_product_name --&gt; R_banking_olap_flat_exact_product_name
+  L_source_product_product_type --&gt; R_banking_olap_flat_exact_product_type
+  L_source_product_interest_rate --&gt; R_banking_olap_flat_exact_interest_rate
+  L_legacy_legacy_account_cust_id --&gt; R_banking_olap_flat_exact_card_id
+  L_legacy_legacy_customer_cust_first_nm --&gt; R_banking_olap_flat_exact_first_name
+  L_legacy_legacy_customer_cust_last_nm --&gt; R_banking_olap_flat_exact_last_name
+  L_legacy_legacy_customer_cust_email_addr --&gt; R_banking_olap_flat_exact_cardholder_email_addr
+  L_legacy_legacy_customer_cust_phone_num --&gt; R_banking_olap_flat_exact_cardholder_phone_num
+  L_legacy_legacy_customer_cust_postal_addr --&gt; R_banking_olap_flat_exact_cardholder_postal_addr
+  L_legacy_legacy_customer_cust_created_ts --&gt; R_banking_olap_flat_exact_created_at
+  L_legacy_legacy_ledger_acct_id --&gt; R_banking_olap_flat_exact_card_id
+  L_legacy_legacy_account_cust_id --&gt; R_banking_olap_flat_exact_card_id
+  L_legacy_legacy_account_acct_type_cd --&gt; R_banking_olap_flat_exact_account_type
+  L_legacy_legacy_account_acct_status_cd --&gt; R_banking_olap_flat_exact_card_status_cd
+  L_legacy_legacy_account_acct_open_dt --&gt; R_banking_olap_flat_exact_card_account_open_dt
+  L_legacy_legacy_account_acct_close_dt --&gt; R_banking_olap_flat_exact_card_account_close_dt
+  L_legacy_legacy_account_acct_curr_bal_amt --&gt; R_banking_olap_flat_exact_card_account_current_bal_amt
+  L_legacy_legacy_account_acct_avail_bal_amt --&gt; R_banking_olap_flat_exact_card_account_avail_credit_amt
+  L_legacy_legacy_ledger_ledger_entry_id --&gt; R_banking_olap_flat_exact_merchant_id
+  L_legacy_legacy_ledger_acct_id --&gt; R_banking_olap_flat_exact_card_id
+  L_legacy_legacy_ledger_entry_ts --&gt; R_banking_olap_flat_exact_amount
+  L_legacy_legacy_ledger_dr_cr_ind --&gt; R_banking_olap_flat_exact_card_txn_dr_cr_ind
+  L_legacy_legacy_ledger_txn_amt --&gt; R_banking_olap_flat_exact_card_txn_amount
+  L_legacy_legacy_ledger_currency_cd --&gt; R_banking_olap_flat_exact_card_txn_currency_cd
+  L_legacy_legacy_ledger_txn_type_cd --&gt; R_banking_olap_flat_exact_card_txn_currency_cd
+  L_legacy_legacy_ledger_ref_txn_id --&gt; R_banking_olap_flat_exact_card_txn_id
+  L_legacy_legacy_ledger_batch_id --&gt; R_banking_olap_flat_exact_card_auth_id
+  L_legacy_legacy_ledger_created_by --&gt; R_banking_olap_flat_exact_created_at
+  L_legacy_legacy_ledger_created_ts --&gt; R_banking_olap_flat_exact_created_at
+  linkStyle 0 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 1 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 2 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 3 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 4 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 5 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 6 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 7 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 8 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 9 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 10 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 11 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 12 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 13 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 14 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 15 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 16 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 17 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 18 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 19 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 20 stroke:#3A7BDA,stroke-width:2px,opacity:0.9;
+  linkStyle 21 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 22 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 23 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 24 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 25 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 26 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 27 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 28 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 29 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 30 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 31 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 32 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 33 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 34 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 35 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 36 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 37 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 38 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 39 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 40 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 41 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 42 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 43 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 44 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 45 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  linkStyle 46 stroke:#FB8C00,stroke-width:2px,opacity:0.9;
+  subgraph LEGEND
+  direction LR
+  LEG_legacy[&#34;Legacy&#34;]
+  class LEG_legacy legacy;
+  LEG_source[&#34;Source&#34;]
+  class LEG_source source;
+  end
+            </div>
+          </div>
+          
+          <style>
+            .badge.origin-badge.origin-source { background-color: #E8F0FF; }
+            .badge.origin-badge.origin-legacy { background-color: #FFF3E0; }
+            .badge.origin-badge.origin-ds { background-color: #E8F5E9; }
+            .badge.origin-badge.origin-other { background-color: #F5F5F5; }
+          </style>
+          <div class="table-responsive border rounded">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 12rem;">Target Table</th>
+                  <th style="width: 12rem;">Target Field</th>
+                  <th style="width: 12rem;">Source Origin</th>
+                  <th style="width: 16rem;">Source Table</th>
+                  <th>Source Field</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>account_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>transaction</code></td>
+                    <td><code>account_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>account_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>transaction</code></td>
+                    <td><code>account_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>account_type</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_account</code></td>
+                    <td><code>acct_type_cd</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>account_type</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>account</code></td>
+                    <td><code>account_type</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>address</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>customer</code></td>
+                    <td><code>address</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>amount</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>entry_ts</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>amount</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>transaction</code></td>
+                    <td><code>amount</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>balance</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>account</code></td>
+                    <td><code>balance</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_account_avail_credit_amt</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_account</code></td>
+                    <td><code>acct_avail_bal_amt</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_account_close_dt</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_account</code></td>
+                    <td><code>acct_close_dt</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_account_current_bal_amt</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_account</code></td>
+                    <td><code>acct_curr_bal_amt</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_account_open_dt</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_account</code></td>
+                    <td><code>acct_open_dt</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_auth_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>batch_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_account</code></td>
+                    <td><code>cust_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_account</code></td>
+                    <td><code>cust_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>acct_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>acct_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_status_cd</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_account</code></td>
+                    <td><code>acct_status_cd</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_txn_amount</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>txn_amt</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_txn_currency_cd</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>currency_cd</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_txn_currency_cd</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>txn_type_cd</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_txn_dr_cr_ind</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>dr_cr_ind</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>card_txn_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>ref_txn_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>cardholder_email_addr</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_customer</code></td>
+                    <td><code>cust_email_addr</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>cardholder_phone_num</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_customer</code></td>
+                    <td><code>cust_phone_num</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>cardholder_postal_addr</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_customer</code></td>
+                    <td><code>cust_postal_addr</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>created_at</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_customer</code></td>
+                    <td><code>cust_created_ts</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>created_at</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>created_by</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>created_at</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>created_ts</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>created_at</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>customer</code></td>
+                    <td><code>created_at</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>customer_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>account</code></td>
+                    <td><code>customer_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>customer_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>account</code></td>
+                    <td><code>customer_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>email</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>customer</code></td>
+                    <td><code>email</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>first_name</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_customer</code></td>
+                    <td><code>cust_first_nm</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>first_name</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>customer</code></td>
+                    <td><code>first_name</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>interest_rate</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>product</code></td>
+                    <td><code>interest_rate</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>last_name</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_customer</code></td>
+                    <td><code>cust_last_nm</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>last_name</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>customer</code></td>
+                    <td><code>last_name</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>merchant_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-legacy">
+                        LEGACY
+                      </span>
+                    </td>
+                    <td><code>legacy_ledger</code></td>
+                    <td><code>ledger_entry_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>opened_at</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>account</code></td>
+                    <td><code>opened_at</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>phone</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>customer</code></td>
+                    <td><code>phone</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>product_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>product</code></td>
+                    <td><code>product_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>product_name</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>product</code></td>
+                    <td><code>product_name</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>product_type</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>product</code></td>
+                    <td><code>product_type</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>transaction_date</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>transaction</code></td>
+                    <td><code>transaction_date</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>transaction_id</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>transaction</code></td>
+                    <td><code>transaction_id</code></td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      
+                        <code>banking_olap_flat_exact</code>
+                        
+                      
+                    </td>
+                    <td><code>transaction_type</code></td>
+                    <td>
+                      <span class="badge origin-badge text-dark border origin-source">
+                        SOURCE
+                      </span>
+                    </td>
+                    <td><code>transaction</code></td>
+                    <td><code>transaction_type</code></td>
+                  </tr>
+                  
+                
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-header bg-danger text-white">Actions</div>
+      <div class="card-body">
+        <ol class="small mb-0">
+          <li>Click Generate Draft to infer a canonical model across your selected sources.</li>
+          <li>Review the ER diagram, relationships, and fields.</li>
+          <li>Approve to mark it final, or download JSON anytime.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom CTA: Next: Mapping -->
+<div class="mt-3">
+  <a href="/poc4/page2" class="btn btn-danger w-100">Next: Mapping</a>
+  <div class="form-text text-center mt-1">Proceed to map selected sources to the designed target schema.</div>
+</div>
+
+<!-- Mermaid -->
+<script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  try { mermaid.initialize({ startOnLoad: true, theme: 'default' }); } catch(e){}
+  // Auto-generate once when navigated with ?auto=1 and no draft exists
+  (function(){
+    try{
+      const p = new URLSearchParams(window.location.search);
+      const meta = document.getElementById('tmodel-meta');
+      const hasDraft = (meta?.dataset?.hasDraft === '1');
+      if(p.get('auto')==='1' && !hasDraft){
+        document.getElementById('design-form')?.submit();
+      }
+    }catch(e){}
+  })();
+</script>
+
+  <!-- Bootstrap JS (required for collapse/accordion, dropdowns, etc.) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

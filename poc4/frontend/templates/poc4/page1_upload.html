@@ -25,10 +25,6 @@
 {% include 'poc4/_steps.j2' %}
 
 <form method="post" enctype="multipart/form-data" id="upload-form">
-  <!-- Top action bar just below tabs -->
-  <div class="d-flex justify-content-end align-items-center mb-3">
-    <button type="submit" class="btn btn-danger px-4" id="next-btn">Next</button>
-  </div>
   <div class="row g-4">
     <!-- Combined Origins Column (Source + Legacy) -->
     <div class="col-md-8">
@@ -105,16 +101,20 @@
     <!-- Target Column -->
     <div class="col-md-4">
       <div class="card h-100 shadow-sm">
-  <div class="card-header bg-light text-danger fw-bold">Target</div>
+  <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">Target</div>
         <div class="card-body">
+          <!-- Broad yellow action just below Target header -->
+          <button type="button" id="design-model-btn" class="btn btn-warning w-100 mb-3">Design Target Model</button>
           <div class="mb-3">
-            <label class="form-label">Target Schema</label>
+            <label class="form-label">Existing Target Schema</label>
             <div class="input-group mb-2">
               <select class="form-select" id="target-schema-select" name="target_schema" required>
                 <option value="" selected disabled>Loading…</option>
               </select>
               <button class="btn btn-outline-secondary" type="button" id="target-rename-btn" title="Rename selected schema">Rename</button>
               <button class="btn btn-outline-danger" type="button" id="target-delete-btn" title="Delete selected schema">Delete</button>
+              <!-- Move Next: Mapping into the same row -->
+              <button type="submit" class="btn btn-danger ms-2" id="next-btn" title="Proceed to Mapping">Next: Mapping</button>
             </div>
             <div class="input-group mt-2">
               <input type="file" class="form-control" id="target-schema-upload" accept="application/json" aria-label="Upload custom Target schema JSON">
@@ -124,14 +124,12 @@
           </div>
           <div id="target-schema-fields"></div>
           <hr>
-          <div class="d-grid gap-2">
-            <button type="button" id="design-model-btn" class="btn btn-outline-danger btn-sm">Design Target Model</button>
-            <div class="form-text small">Saves selections, then opens the Target Model page and auto-generates the draft.</div>
-          </div>
+          <div class="form-text small">Saves selections, then opens the Target Model page and auto-generates the draft.</div>
         </div>
       </div>
     </div>
   </div>
+  
 </form>
 
 <!-- Floating Chat Widget -->

@@ -32,6 +32,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
   <style>
     #loadingSpinner {
       display: none;
@@ -398,18 +399,7 @@
 
         <form method="post">
           <div class="mb-4">
-            <!-- New: Legacy Business Description section -->
-            <div class="card mb-4 shadow-sm">
-              <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                <span>Legacy Business Description</span>
-              </div>
-              <div class="card-body">
-                <div id="legacyBusinessRender" class="formatted-content"></div>
-                {% if legacy_business_description %}
-                <input type="hidden" id="legacyBusinessInput" value="{{ legacy_business_description | tojson | safe }}" data-raw="{{ legacy_business_description | e }}">
-                {% endif %}
-              </div>
-            </div>
+            <!-- Legacy Business Description section moved to end; conditionally shown -->
             <div class="card mb-4 shadow-sm">
               <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                 <span>Product Overview</span>
@@ -440,6 +430,24 @@
               </div>
             </div>
 
+            <!-- Hidden input to carry legacy value from backend (even if empty) -->
+            <input type="hidden" id="legacyBusinessInput" name="legacy_business_description"
+                   value="{{ legacy_business_description | default('') | tojson | safe }}"
+                   data-raw="{{ legacy_business_description | default('') | e }}">
+
+            <!-- Legacy Business Description (conditionally visible as last section) -->
+            <div id="legacySectionCard" class="card mb-4 shadow-sm" style="display:none;">
+              <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-archive me-2"></i>Legacy Business Description</span>
+                <button type="button" class="btn btn-sm btn-warning" onclick="toggleChatPanel('legacy')">
+                  💬 Chat
+                </button>
+              </div>
+              <div class="card-body">
+                <div id="legacyBusinessRender" class="formatted-content"></div>
+              </div>
+            </div>
+
             <div class="d-grid mt-4">
               <button type="submit" id="submitBtn" class="btn btn-danger btn-lg w-100" onclick="handleSubmit(event)">
                 <span class="default-text">Approve & Submit</span>
@@ -466,46 +474,100 @@
         try {
           const input = document.getElementById(inputId);
           const renderDiv = document.getElementById(renderId);
+          if (!input || !renderDiv) return;
 
-          if (!input || !renderDiv) {
-            console.error(`Required elements not found for ${inputId}`);
+          const content = input.getAttribute('data-raw');
+          if (!content) {
+            renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
             return;
           }
 
-          let content = input.getAttribute('data-raw');
-          console.log(`Raw data for ${inputId}:`, content);
+          // 1) Markdown to HTML
+          const renderedHTML = marked.parse(content);
+          renderDiv.innerHTML = renderedHTML;
 
-          if (content) {
-            const renderedContent = marked.parse(content);
-            console.log(`Rendered content for ${inputId}:`, renderedContent);
-            renderDiv.innerHTML = renderedContent;
-          } else {
-            renderDiv.innerHTML = '<p class="text-muted">No content available</p>';
-            console.error(`No data found in data-raw attribute for ${inputId}`);
+          // 2) Mermaid rendering for fenced blocks ```mermaid
+          if (renderDiv.querySelector('.language-mermaid, code.language-mermaid')) {
+            mermaid.initialize({ startOnLoad: false });
+            renderDiv.querySelectorAll('.language-mermaid, code.language-mermaid').forEach(block => {
+              const code = block.textContent || block.innerText;
+              const container = document.createElement('div');
+              container.className = 'mermaid';
+              container.textContent = code;
+              block.parentNode.replaceChild(container, block);
+            });
+            mermaid.run();
           }
+
+          // 3) Fallback table creation if markdown didn’t render a table but pipes exist
+          if (!renderDiv.querySelector('table') && content.includes('|')) {
+            const lines = content.trim().split('\n').filter(line => line.includes('|'));
+            if (lines.length > 1) {
+              const header = lines[0];
+              const body = lines.slice(1);
+              let html = '<table class="table table-bordered table-striped table-sm"><thead><tr>';
+              header.split('|').forEach(cell => { html += `<th>${cell.trim()}</th>`; });
+              html += '</tr></thead><tbody>';
+              body.forEach(row => {
+                if (!row.includes('|')) return;
+                html += '<tr>';
+                row.split('|').forEach(cell => { html += `<td>${cell.trim()}</td>`; });
+                html += '</tr>';
+              });
+              html += '</tbody></table>';
+              renderDiv.innerHTML = html;
+            }
+          }
+
+          // 4) Style any tables
+          renderDiv.querySelectorAll('table').forEach(table => {
+            table.classList.add('table', 'table-bordered', 'table-striped', 'table-sm');
+          });
         } catch (error) {
-          console.error(`Error rendering ${inputId}:`, error);
-          document.getElementById(renderId).innerHTML =
-            '<div class="alert alert-danger">' +
-            '<h6>Error Details:</h6>' +
-            '<pre>' + error.toString() + '</pre>' +
-            '</div>';
+          const rd = document.getElementById(renderId);
+          if (rd) {
+            rd.innerHTML = '<div class="alert alert-danger">' +
+              '<h6>Error Details:</h6>' +
+              '<pre>' + (error ? error.toString() : 'Unknown error') + '</pre>' +
+              '</div>';
+          }
         }
       }
 
-      // Render both overviews
-      renderMarkdownContent('productOverviewInput', 'productOverviewRender');
-      renderMarkdownContent('featureOverviewInput', 'featureOverviewRender');
+      // Render Product & Feature if present
+      if (document.getElementById('productOverviewInput')) {
+        renderMarkdownContent('productOverviewInput', 'productOverviewRender');
+      }
+      if (document.getElementById('featureOverviewInput')) {
+        renderMarkdownContent('featureOverviewInput', 'featureOverviewRender');
+      }
 
-      // Fallback for legacy section if not provided by backend: pull from localStorage
+      // Conditionally show Legacy section as the last card
+      const legacyCard = document.getElementById('legacySectionCard');
+      const legacyInput = document.getElementById('legacyBusinessInput');
       const legacyRender = document.getElementById('legacyBusinessRender');
-      if (legacyRender) {
-        const legacyInput = document.getElementById('legacyBusinessInput');
-        if (legacyInput) {
+      const selectedFlag = (localStorage.getItem('legacySelected') || '').toLowerCase() === 'true';
+      const backendDesc = legacyInput ? (legacyInput.getAttribute('data-raw') || '') : '';
+      const localDesc = localStorage.getItem('legacyBusinessDescription') || '';
+      const shouldShowLegacy = selectedFlag || (!!backendDesc && backendDesc.trim().length > 0) || (!!localDesc && localDesc.trim().length > 0);
+
+      if (legacyCard && shouldShowLegacy) {
+        legacyCard.style.display = '';
+        if (backendDesc && backendDesc.trim()) {
           renderMarkdownContent('legacyBusinessInput', 'legacyBusinessRender');
-        } else {
-          const ls = localStorage.getItem('legacyBusinessDescription') || '';
-          legacyRender.innerHTML = ls ? marked.parse(ls) : '<p class="text-muted">No legacy description available</p>';
+        } else if (legacyRender) {
+          if (localDesc) {
+            // Create a temporary element to leverage the same renderer path
+            const tmp = document.createElement('input');
+            tmp.type = 'hidden';
+            tmp.id = 'tmpLegacyInput';
+            tmp.setAttribute('data-raw', localDesc);
+            document.body.appendChild(tmp);
+            renderMarkdownContent('tmpLegacyInput', 'legacyBusinessRender');
+            document.body.removeChild(tmp);
+          } else {
+            legacyRender.innerHTML = '<p class="text-muted">No legacy description available</p>';
+          }
         }
       }
     });
@@ -654,7 +716,7 @@
         input.value = '';
       }
     }
-    function toggleChatPanel(section = null) {
+  function toggleChatPanel(section = null) {
       const panel = document.getElementById('chatPanel');
       const input = document.getElementById('chatInput');
       const title = document.getElementById('chatSectionTitle');
@@ -665,9 +727,12 @@
       panel.style.display = isOpening ? 'block' : 'none';
       mainContent.style.marginLeft = isOpening ? '340px' : '0';
 
-      if (section && isOpening) {
-        input.dataset.section = section;
-        title.textContent = section === 'product' ? 'Product Overview Chat' : 'Feature Overview Chat';
+      if (isOpening) {
+        if (section) input.dataset.section = section;
+        const sec = input.dataset.section || 'product';
+        title.textContent = sec === 'product'
+          ? 'Product Overview Chat'
+          : (sec === 'feature' ? 'Feature Overview Chat' : 'Legacy Business Description Chat');
       }
     }
 
@@ -677,7 +742,7 @@
       const input = document.getElementById('chatInput');
       const message = input.value.trim();
       const chatbox = document.getElementById('chatMessages');
-      const section = input.dataset.section || 'product';
+  const section = input.dataset.section || 'product';
       const sendButton = input.nextElementSibling;
       sendButton.disabled = true;
       sendButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
@@ -706,15 +771,26 @@
           chatbox.appendChild(confirmation);
           setTimeout(() => confirmation.remove(), 2000);
 
-          // Update corresponding section
-          const renderId = section === 'product' ? 'productOverviewRender' : 'featureOverviewRender';
-          const inputId = section === 'product' ? 'productOverviewInput' : 'featureOverviewInput';
+          // Update corresponding section (supports product, feature, legacy)
+          const renderId = section === 'product'
+            ? 'productOverviewRender'
+            : (section === 'feature' ? 'featureOverviewRender' : 'legacyBusinessRender');
+          const inputId = section === 'product'
+            ? 'productOverviewInput'
+            : (section === 'feature' ? 'featureOverviewInput' : 'legacyBusinessInput');
           const renderDiv = document.getElementById(renderId);
           const hiddenInput = document.getElementById(inputId);
 
           hiddenInput.setAttribute('data-raw', reply);
           hiddenInput.value = JSON.stringify(reply);
           renderDiv.innerHTML = marked.parse(reply);
+
+          if (section === 'legacy') {
+            localStorage.setItem('legacyBusinessDescription', reply);
+            localStorage.setItem('legacySelected', 'true');
+            const legacyCard = document.getElementById('legacySectionCard');
+            if (legacyCard) legacyCard.style.display = '';
+          }
         })
         .finally(() => {
           input.value = '';

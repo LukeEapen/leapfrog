@@ -1,7 +1,7 @@
 <ul class="nav nav-tabs mb-4 justify-content-center poc4-steps" id="poc4Tabs" role="tablist">
   {% set path = request.path %}
   <li class="nav-item">
-  <a class="nav-link {{ 'active' if path == '/poc4/page1' else '' }}" href="{{ url_for('poc4.page1') }}" role="tab">1. Upload</a>
+  <a class="nav-link {{ 'active' if path == '/poc4/page1' else '' }}" href="{{ url_for('poc4.page1') }}" role="tab">1. Upload & Design</a>
   </li>
   {% if '/poc4/page1_fields' in path %}
   <li class="nav-item">

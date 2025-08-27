@@ -309,6 +309,28 @@
         padding: 0.5rem 1rem;
       }
     }
+
+    /* Legacy section highlight */
+    .legacy-optional {
+      background: linear-gradient(180deg, #fff7e6 0%, #fffaf0 100%);
+      border: 2px dashed #ffecb5;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 16px rgba(255, 193, 7, 0.12);
+    }
+    .legacy-optional .legacy-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .legacy-optional .badge-new {
+      background: #ffc107;
+      color: #212529;
+      font-weight: 700;
+    }
+    .legacy-help {
+      color: #7a5c00;
+    }
   </style>
 
 </head>
@@ -372,30 +394,37 @@
               </div>
             </div>
 
-            <!-- Legacy Upload Row (COBOL/JCL) -->
-            <div class="row g-3 mb-4">
-              <div class="col-md-6">
-                <label class="form-label">
-                  <i class="bi bi-file-earmark-code me-2"></i>Legacy COBOL/JCL File
-                </label>
-                <input type="file" class="form-control" id="legacyFileInput" name="legacy_files[]" accept=".cob,.cbl,.cpy,.jcl,.txt">
-                <small class="text-muted">Upload a single COBOL/JCL file (optional)</small>
+            <!-- Legacy Upload Row (COBOL/JCL) - NEW / Optional -->
+            <div class="legacy-optional p-3 mb-4">
+              <div class="legacy-header">
+                <div class="h6 m-0"><i class="bi bi-archive me-2"></i>Legacy Artifacts</div>
+                <span class="badge badge-new rounded-pill">NEW • Optional</span>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">
-                  <i class="bi bi-folder2-open me-2"></i>Legacy Folder (multiple files)
-                </label>
-                <input type="file" class="form-control" id="legacyFolderInput" name="legacy_files[]" webkitdirectory directory multiple>
-                <small class="text-muted">Select a folder containing COBOL/JCL files (optional)</small>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">
+                    <i class="bi bi-file-earmark-code me-2"></i>Legacy COBOL/JCL File(s)
+                  </label>
+                  <input type="file" class="form-control" id="legacyFileInput" name="legacy_files[]" accept=".cob,.cbl,.cpy,.jcl,.txt" multiple>
+                  <small class="legacy-help">Upload one or more COBOL/JCL files or use the folder selector</small>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">
+                    <i class="bi bi-folder2-open me-2"></i>Legacy Folder (multiple files)
+                  </label>
+                  <input type="file" class="form-control" id="legacyFolderInput" name="legacy_files[]" webkitdirectory directory multiple>
+                  <small class="legacy-help">Select a folder containing COBOL/JCL files</small>
+                </div>
+                <div class="col-12 d-flex align-items-center gap-2">
+                  <button type="button" class="btn btn-light border" id="extractLegacyBtn">
+                    Extract Legacy Business Description
+                  </button>
+                  <span class="small" id="legacyStatus"></span>
+                </div>
               </div>
-              <div class="col-12 d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-light border" id="extractLegacyBtn">
-                  Extract Legacy Business Description
-                </button>
-                <span class="small text-muted" id="legacyStatus"></span>
-              </div>
-              <!-- Hidden field to carry the extracted description with the main form submit -->
+              <!-- Hidden fields: description + selection flag -->
               <input type="hidden" name="legacy_business_description" id="legacyBusinessHidden">
+              <input type="hidden" name="legacy_selected" id="legacySelectedHidden" value="false">
             </div>
 
             <div class="mb-4">
@@ -515,10 +544,21 @@
     (function () {
       const btn = document.getElementById('extractLegacyBtn');
       if (!btn) return;
-      const statusEl = document.getElementById('legacyStatus');
+  const statusEl = document.getElementById('legacyStatus');
       const fileInput = document.getElementById('legacyFileInput');
       const folderInput = document.getElementById('legacyFolderInput');
       const hidden = document.getElementById('legacyBusinessHidden');
+  const legacySelectedHidden = document.getElementById('legacySelectedHidden');
+      function markLegacySelected() {
+        localStorage.setItem('legacySelected', 'true');
+        if (legacySelectedHidden) legacySelectedHidden.value = 'true';
+      }
+      fileInput?.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files.length) markLegacySelected();
+      });
+      folderInput?.addEventListener('change', () => {
+        if (folderInput.files && folderInput.files.length) markLegacySelected();
+      });
 
       function showToast(message, variant = 'success') {
         const toastEl = document.getElementById('legacyToast');
@@ -538,11 +578,49 @@
         statusEl.classList.toggle('text-success', !isError);
       }
 
+      async function pickFolderFilesIfNeeded(existingFiles) {
+        // If no folder files and File System Access API is available, prompt user
+        if (existingFiles.length && (!window.showDirectoryPicker)) return [];
+        try {
+          if (!window.showDirectoryPicker) return [];
+          const dirHandle = await window.showDirectoryPicker();
+          const collected = [];
+          const allowed = new Set(['.cob', '.cbl', '.cpy', '.jcl', '.txt']);
+          async function walkDir(handle, path = '') {
+            for await (const [name, entry] of handle.entries()) {
+              const currentPath = path ? `${path}/${name}` : name;
+              if (entry.kind === 'file') {
+                const ext = (name.substring(name.lastIndexOf('.')) || '').toLowerCase();
+                if (!allowed.size || allowed.has(ext)) {
+                  const file = await entry.getFile();
+                  // Recreate File with path prefix to retain folder structure in name
+                  const f2 = new File([file], currentPath, { type: file.type, lastModified: file.lastModified });
+                  collected.push(f2);
+                }
+              } else if (entry.kind === 'directory') {
+                await walkDir(entry, currentPath);
+              }
+            }
+          }
+          await walkDir(dirHandle);
+          return collected;
+        } catch (e) {
+          console.warn('Folder picker cancelled or failed:', e);
+          return [];
+        }
+      }
+
       btn.addEventListener('click', async () => {
         try {
-          const files = [];
-          if (fileInput?.files?.length) files.push(fileInput.files[0]);
+          let files = [];
+          if (fileInput?.files?.length) files.push(...fileInput.files);
           if (folderInput?.files?.length) files.push(...folderInput.files);
+
+          // Fallback: prompt for a folder if none provided or browser didn’t expose folder selection
+          if (!files.length) {
+            const picked = await pickFolderFilesIfNeeded(files);
+            if (picked.length) files = picked;
+          }
 
           if (!files.length) {
             setStatus('Please select a legacy file or folder first.', true);
@@ -561,13 +639,15 @@
 
           // Persist for Page 2 and include in main form submit
           localStorage.setItem('legacyBusinessDescription', desc);
-    if (hidden) hidden.value = desc;
+          localStorage.setItem('legacySelected', 'true');
+          if (hidden) hidden.value = desc;
+          if (legacySelectedHidden) legacySelectedHidden.value = 'true';
           setStatus('Legacy description extracted ✓');
-    showToast('Legacy description extracted ✓', 'success');
+          showToast('Legacy description extracted ✓', 'success');
         } catch (e) {
           console.error(e);
           setStatus('Failed to extract legacy description', true);
-    showToast('Failed to extract legacy description', 'danger');
+          showToast('Failed to extract legacy description', 'danger');
         }
       });
     })();

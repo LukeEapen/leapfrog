@@ -4,6 +4,8 @@ import sys
 import sqlite3
 import shutil  # added for backup/rollback
 from flask import send_file, abort
+from flask import Response
+import io
 import uuid
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.utils import secure_filename
@@ -80,320 +82,103 @@ def get_target_model_final():
 def set_target_model_final(doc):
     _state()['target_model_final'] = doc
 
-@poc4_bp.route('/target_model', methods=['GET', 'POST'])
-def target_model():
-    """Dedicated page to design, preview, approve, and download the Target Model."""
-    # Common locations
+
+def _build_migration_sql_script() -> str:
+    """Best-effort SQL script (SQLite-flavored) reflecting the current mapping.
+    - Uses ATTACH DATABASE to reference the demo DBs in schemas dir.
+    - Emits INSERT INTO ... SELECT ... per (origin, source_table, target_table) group.
+    - This is a static approximation; Page 4's execution used entity-level merge logic.
+    """
+    mapping = get_mapping() or []
+    if not mapping:
+        return "-- No mapping available. Complete Page 2 mapping first.\n"
+
     schemas_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+    src_db = os.path.join(schemas_dir, 'source.db')
+    leg_db = os.path.join(schemas_dir, 'legacy.db')
+    tgt_db = os.path.join(schemas_dir, 'target.db')
+    ds3_db = os.path.join(schemas_dir, 'cards_ds3.db')
+
+    # Group by (origin, source_table, target_table)
+    groups: dict[tuple[str, str, str], list[dict]] = {}
+    origins_present = set()
+    for m in mapping:
+        origin = (m.get('origin') or 'source').lower()
+        s_tbl = (m.get('source_table') or '').strip()
+        t_tbl = (m.get('target_table') or '').strip()
+        s_col = (m.get('source') or '').strip()
+        t_col = (m.get('target') or '').strip()
+        if not (origin and s_tbl and t_tbl and s_col and t_col):
+            continue
+        groups.setdefault((origin, s_tbl, t_tbl), []).append(m)
+        origins_present.add(origin)
+
+    # Optional: map rule text by (origin, target_table, target_field) for inline comments
+    rules_map = {}
     try:
-        os.makedirs(schemas_dir, exist_ok=True)
+        rules = get_rules() or []
+        for r in rules:
+            key = ((r.get('origin') or 'source').lower(), (r.get('target_table') or '').strip(), (r.get('field') or '').strip())
+            if key not in rules_map:
+                txt = r.get('preferred') or r.get('rule') or ''
+                rules_map[key] = txt
     except Exception:
         pass
-    # Resolve selected schema files from Page 1 (Origin Systems) only.
-    # Do NOT fall back to defaults here; use only explicit selections to honor user intent.
-    src_schema_file = session.get('source_schema')
-    leg_schema_file = session.get('legacy_schema')
-    extras_files = session.get('extra_sources', []) or []
-    tgt_schema_file = session.get('target_schema', 'target_schema.json')  # for display/download context only
 
-    def _load_json(path):
-        import json as _json
-        try:
-            with open(path, 'r', encoding='utf-8') as fh:
-                return _json.load(fh)
-        except Exception:
-            return {"tables": []}
+    lines: list[str] = []
+    lines.append('-- Migration Script (SQLite)')
+    lines.append('-- Note: This static SQL approximates the executed migration (entity-based merge).')
+    lines.append('-- Review and adapt JOIN keys and NULL handling as needed before running.')
+    lines.append('-- Field-level mappings are emitted per statement with inline comments.')
+    lines.append('')
+    lines.append('BEGIN;')
+    # ATTACH databases (target as tgt)
+    # Use absolute paths so script can be run from anywhere
+    def _q(path: str) -> str:
+        return path.replace('"', '""')
+    lines.append(f'-- Target DB')
+    lines.append(f"ATTACH DATABASE \"{_q(tgt_db)}\" AS tgt;")
+    if 'source' in origins_present:
+        lines.append(f'-- Source DB')
+        lines.append(f"ATTACH DATABASE \"{_q(src_db)}\" AS source;")
+    if 'legacy' in origins_present:
+        lines.append(f'-- Legacy DB')
+        lines.append(f"ATTACH DATABASE \"{_q(leg_db)}\" AS legacy;")
+    if any(o.startswith('ds3') for o in origins_present):
+        lines.append(f'-- DS3 (cards) DB')
+        lines.append(f"ATTACH DATABASE \"{_q(ds3_db)}\" AS ds3;")
+    lines.append('')
 
-    # Build a temporary mapping for display if none exists in session
-    def _ephemeral_mapping():
-        mapping = get_mapping() or []
-        if mapping:
-            return mapping
-        try:
-            # Load schemas
-            src_doc = _load_json(os.path.join(schemas_dir, src_schema_file)) if src_schema_file else {"tables": []}
-            leg_doc = _load_json(os.path.join(schemas_dir, leg_schema_file)) if leg_schema_file else {"tables": []}
-            tgt_doc = _load_json(os.path.join(schemas_dir, tgt_schema_file)) if tgt_schema_file else {"tables": []}
-            extras_docs = []
-            for ef in (extras_files or []):
-                if ef:
-                    extras_docs.append((ef, _load_json(os.path.join(schemas_dir, ef))))
-            # Helpers
-            def _build_ft_map(doc):
-                ft = {}
-                for t in (doc.get('tables') or []):
-                    for f in (t.get('fields') or []):
-                        nm = f.get('name')
-                        if nm:
-                            ft[nm] = t.get('name')
-                return ft
-            src_ft = _build_ft_map(src_doc)
-            leg_ft = _build_ft_map(leg_doc)
-            tgt_ft = _build_ft_map(tgt_doc)
-            # Run mappers
-            src_map = schema_mapping_agent.map_schema(src_doc, tgt_doc) if src_doc else []
-            leg_map = schema_mapping_agent.map_schema(leg_doc, tgt_doc) if leg_doc else []
-            ext_maps = []
-            for i, (fn, edoc) in enumerate(extras_docs):
-                try:
-                    m = schema_mapping_agent.map_schema(edoc, tgt_doc)
-                except Exception:
-                    m = []
-                for mm in m:
-                    mm['origin'] = f'ds{i+3}'
-                    # backfill source_table
-                    # build once per extra
-                    eft = _build_ft_map(edoc)
-                    mm['source_table'] = eft.get(mm.get('source'))
-                    if mm.get('target'):
-                        mm['target_table'] = tgt_ft.get(mm.get('target'))
-                ext_maps.extend(m)
-            # Backfill core maps
-            for m in src_map:
-                m['origin'] = 'source'
-                m['source_table'] = src_ft.get(m.get('source'))
-                if m.get('target'):
-                    m['target_table'] = tgt_ft.get(m.get('target'))
-            for m in leg_map:
-                m['origin'] = 'legacy'
-                m['source_table'] = leg_ft.get(m.get('source'))
-                if m.get('target'):
-                    m['target_table'] = tgt_ft.get(m.get('target'))
-            return src_map + leg_map + ext_maps
-        except Exception:
-            return []
-
-    # Build a Mermaid graph for current mapping (source -> target field edges)
-    def _build_mapping_mermaid():
-        """Build a Mermaid flowchart for Source ➜ Target mapping with:
-        - Color-coding by origin (source/legacy/dsN) for left-side nodes and edge strokes.
-        - Grouping of target fields into subgraphs per target table.
-        - A compact legend showing only the origins present.
-        """
-        import re
-        mapping = get_mapping() or _ephemeral_mapping() or []
-        # Build a target field->table map from the selected Target schema
-        tgt_schema_path = os.path.join(schemas_dir, tgt_schema_file)
-        tgt_doc = _load_json(tgt_schema_path)
-        tgt_ft = {}
-        try:
-            for t in (tgt_doc.get('tables') or []):
-                for f in (t.get('fields') or []):
-                    nm = f.get('name')
-                    if nm:
-                        tgt_ft[nm] = t.get('name')
-        except Exception:
-            pass
-        # Collect nodes and edges with origin context
-        edges: list[tuple[str, str, str]] = []  # (left_id, right_id, origin)
-        left_nodes: dict[str, tuple[str, str]] = {}  # id -> (label, origin)
-        # Right nodes grouped by target table
-        right_groups: dict[str, dict[str, str]] = {}  # table -> {id: label}
-
-        def sid(s: str) -> str:
-            return re.sub(r'[^a-zA-Z0-9_]', '_', s or '')[:80] or 'x'
-
-        for m in mapping:
-            s_tbl = m.get('source_table') or ''
-            s_col = m.get('source') or ''
-            t_tbl = m.get('target_table') or tgt_ft.get((m.get('target') or '')) or ''
-            t_col = m.get('target') or ''
-            origin = (m.get('origin') or 'source').lower()
+    # Emit per-group INSERT ... SELECT ...
+    for (origin, s_tbl, t_tbl), items in sorted(groups.items()):
+        if not items:
+            continue
+        lines.append(f"-- {origin}.{s_tbl} -> tgt.{t_tbl} ({len(items)} fields)")
+        target_cols = []
+        select_exprs = []
+        for m in items:
+            s_col = (m.get('source') or '').strip()
+            t_col = (m.get('target') or '').strip()
             if not (s_col and t_col):
                 continue
-            origin_cap = 'Source' if origin == 'source' else ('Legacy' if origin == 'legacy' else origin.upper())
-            l_label = f"{origin_cap}:{s_tbl}.{s_col}" if s_tbl else f"{origin_cap}:{s_col}"
-            r_label = f"{t_tbl}.{t_col}" if t_tbl else f"{t_col}"
-            l_id = f"L_{sid(origin)}_{sid(s_tbl)}_{sid(s_col)}"
-            r_id = f"R_{sid(t_tbl)}_{sid(t_col)}"
-            left_nodes[l_id] = (l_label, origin)
-            group = t_tbl or 'UNASSIGNED'
-            right_groups.setdefault(group, {})[r_id] = r_label
-            edges.append((l_id, r_id, origin))
+            target_cols.append(f'"{t_col}"')
+            expr = f'{origin}."{s_tbl}"."{s_col}" AS "{t_col}"'
+            # Inline comment with preferred rule if available
+            rule_txt = rules_map.get((origin, t_tbl, t_col))
+            if rule_txt:
+                expr += f' /* {rule_txt} */'
+            select_exprs.append(expr)
+        if not target_cols:
+            continue
+        cols_join = ', '.join(target_cols)
+        sel_join = ', '.join(select_exprs)
+        lines.append(f'INSERT INTO tgt."{t_tbl}" ({cols_join})')
+        lines.append(f'SELECT {sel_join}')
+        lines.append(f'FROM {origin}."{s_tbl}";')
+        lines.append('')
 
-        if not edges:
-            return ''
-
-        # Color palette per origin (nodes + edge strokes)
-        def _colors_for_origin(o: str):
-            base = {
-                'source': ('#E8F0FF', '#3A7BDA', '#0B3A79'),  # fill, stroke, text
-                'legacy': ('#FFF3E0', '#FB8C00', '#4A2A00'),
-                'ds3':   ('#E8F5E9', '#43A047', '#1B5E20'),
-                'ds4':   ('#F3E5F5', '#8E24AA', '#4A148C'),
-                'ds5':   ('#E0F7FA', '#00838F', '#004D40'),
-            }
-            # Any dsN beyond predefined gets a rotating set
-            if o in base:
-                return base[o]
-            if o.startswith('ds'):
-                # derive a color deterministically from the number
-                try:
-                    n = int(o[2:])
-                except Exception:
-                    n = 6
-                palette = [
-                    ('#FFFDE7', '#FBC02D', '#5F3700'),  # amber
-                    ('#EDE7F6', '#5E35B1', '#311B92'),  # deep purple
-                    ('#E1F5FE', '#039BE5', '#01579B'),  # light blue
-                    ('#FCE4EC', '#D81B60', '#880E4F'),  # pink
-                ]
-                return palette[(n - 3) % len(palette)]
-            # default gray
-            return ('#F5F5F5', '#9E9E9E', '#424242')
-
-        origins_present = sorted({o for _, _, o in edges})
-
-        lines = ["flowchart LR"]
-
-        # Define classes per origin
-        for o in origins_present:
-            fill, stroke, text = _colors_for_origin(o)
-            lines.append(f"  classDef {sid(o)} fill:{fill},stroke:{stroke},stroke-width:1px,color:{text};")
-
-        # Origins cluster with class applied per node
-        lines.append("  subgraph Source")
-        lines.append("  direction TB")
-        for nid, (lbl, o) in sorted(left_nodes.items()):
-            ocls = sid(o)
-            lines.append(f"  {nid}[\"{lbl}\"]")
-            lines.append(f"  class {nid} {ocls};")
-        lines.append("  end")
-
-        # Target cluster grouped by table
-        lines.append("  subgraph Target")
-        lines.append("  direction TB")
-        for tbl in sorted(right_groups.keys()):
-            sub_name = sid(f"TBL_{tbl}")
-            pretty = tbl if tbl != 'UNASSIGNED' else 'Other/Unassigned'
-            lines.append(f"  subgraph {sub_name}[\"{pretty}\"]")
-            lines.append("  direction TB")
-            for nid, lbl in sorted(right_groups[tbl].items()):
-                lines.append(f"  {nid}[\"{lbl}\"]")
-            lines.append("  end")
-        lines.append("  end")
-
-        # Edges and per-edge styles matching origin color
-        for l, r, _ in edges:
-            lines.append(f"  {l} --> {r}")
-        # linkStyle indices are in the order edges are declared in the diagram
-        for idx, (_, _, o) in enumerate(edges):
-            _, stroke, _ = _colors_for_origin(o)
-            lines.append(f"  linkStyle {idx} stroke:{stroke},stroke-width:2px,opacity:0.9;")
-
-        # Legend showing origins present
-        if origins_present:
-            lines.append("  subgraph LEGEND")
-            lines.append("  direction LR")
-            for o in origins_present:
-                lid = f"LEG_{sid(o)}"
-                lines.append(f"  {lid}[\"{o.title()}\"]")
-                lines.append(f"  class {lid} {sid(o)};")
-            lines.append("  end")
-
-        return "\n".join(lines)
-
-    # Build a simple table-friendly list of mapping pairs
-    def _build_mapping_pairs():
-        mapping = get_mapping() or _ephemeral_mapping() or []
-        # Build field->table map from selected Target schema for backfill
-        tgt_schema_path = os.path.join(schemas_dir, tgt_schema_file)
-        tgt_doc = _load_json(tgt_schema_path)
-        tgt_ft = {}
-        try:
-            for t in (tgt_doc.get('tables') or []):
-                for f in (t.get('fields') or []):
-                    nm = f.get('name')
-                    if nm:
-                        tgt_ft[nm] = t.get('name')
-        except Exception:
-            pass
-        rows = []
-        for m in mapping:
-            s_tbl = m.get('source_table') or ''
-            s_col = m.get('source') or ''
-            t_tbl = m.get('target_table') or tgt_ft.get((m.get('target') or '')) or ''
-            t_col = m.get('target') or ''
-            if not (s_col and t_col):
-                continue
-            origin = (m.get('origin') or 'source').lower()
-            rows.append({
-                'origin': origin,
-                'source_table': s_tbl,
-                'source': s_col,
-                'target_table': t_tbl,
-                'target': t_col,
-            })
-        rows.sort(key=lambda r: (
-            r.get('target_table') or '',
-            r.get('target') or '',
-            r.get('origin') or '',
-            r.get('source_table') or '',
-            r.get('source') or ''
-        ))
-        return rows
-
-    # Actions
-    if request.method == 'POST':
-        action = request.form.get('action') or 'design_target_model'
-        if action == 'design_target_model':
-            docs = []
-            for f in (src_schema_file, leg_schema_file):
-                if not f:
-                    continue
-                p = os.path.join(schemas_dir, f)
-                if os.path.exists(p):
-                    docs.append(_load_json(p))
-            # Include any explicitly selected extra data sources from Page 1
-            for ef in extras_files:
-                if not ef:
-                    continue
-                p = os.path.join(schemas_dir, ef)
-                if os.path.exists(p):
-                    docs.append(_load_json(p))
-            try:
-                agent = TargetModelDesignAgent()
-                draft = agent.design(docs)
-                set_target_model_draft(draft)
-            except Exception as e:
-                set_target_model_draft({"error": str(e)})
-        elif action == 'approve_target_model':
-            draft = get_target_model_draft()
-            if draft:
-                set_target_model_final(draft)
-        # After POST, fall through to a single render below
-
-    # GET: optionally auto-generate when ?auto=1 is present
-    if request.method == 'GET' and request.args.get('auto') == '1':
-        docs = []
-        for f in (src_schema_file, leg_schema_file):
-            if not f:
-                continue
-            p = os.path.join(schemas_dir, f)
-            if os.path.exists(p):
-                docs.append(_load_json(p))
-        # Include any explicitly selected extra data sources from Page 1
-        for ef in extras_files:
-            if not ef:
-                continue
-            p = os.path.join(schemas_dir, ef)
-            if os.path.exists(p):
-                docs.append(_load_json(p))
-        try:
-            agent = TargetModelDesignAgent()
-            draft = agent.design(docs)
-            set_target_model_draft(draft)
-        except Exception as e:
-            set_target_model_draft({"error": str(e)})
-
-    # Single render for both GET/POST
-    return render_template(
-        'poc4/page_target_model.html',
-        target_model_draft=get_target_model_draft(),
-        target_model_final=get_target_model_final(),
-        mapping_mermaid=_build_mapping_mermaid(),
-        mapping_pairs=_build_mapping_pairs()
-    )
+    lines.append('COMMIT;')
+    return "\n".join(lines)
 
 # --- Schema metadata helpers (categorization: source|legacy|target) ---
 def _schemas_dir():
@@ -509,6 +294,401 @@ def _fallback_reset_all_dbs(src_schema_path: str, leg_schema_path: str, tgt_sche
     _fallback_create_and_populate_db(tgt_schema_path, tgt_db)
     return {'source': src_db, 'legacy': leg_db, 'target': tgt_db}
 
+@poc4_bp.route('/target_model', methods=['GET', 'POST'])
+def target_model():
+    """Target Model Designer page with draft/approve and mapping previews.
+    - Uses only the schemas selected on Page 1 (including extras/DS3).
+    - Applies field filters chosen on Page 1 when generating the draft.
+    - Mapping previews backfill/correct Source Table using origin field->table maps.
+    """
+    schemas_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+    try:
+        os.makedirs(schemas_dir, exist_ok=True)
+    except Exception:
+        pass
+
+    src_schema_file = session.get('source_schema')
+    leg_schema_file = session.get('legacy_schema')
+    extras_files = list(session.get('extra_sources', []) or [])
+    # Do NOT auto-include DS3; only include extras explicitly selected on Page 1
+
+    selected_source_fields = set(session.get('selected_source_fields') or [])
+    selected_legacy_fields = set(session.get('selected_legacy_fields') or [])
+    selected_extra_fields_map = session.get('selected_extra_fields') or {}
+
+    def _load_json(path: str):
+        import json as _json
+        with open(path, 'r', encoding='utf-8') as f:
+            return _json.load(f)
+
+    def _filter_doc_fields(doc, selected_names: set[str]):
+        try:
+            if not selected_names:
+                return doc
+            out = {'tables': []}
+            for t in (doc or {}).get('tables', []) or []:
+                keep = [f for f in (t.get('fields') or []) if f.get('name') in selected_names]
+                if keep:
+                    out['tables'].append({'name': t.get('name'), 'fields': keep})
+            return out
+        except Exception:
+            return doc
+
+    def _target_doc_for_mapping():
+        # Prefer approved, then draft, then static target file
+        doc = get_target_model_final() or get_target_model_draft()
+        if doc:
+            return doc
+        try:
+            tgt_schema_file = session.get('target_schema', 'target_schema.json')
+            p = os.path.join(schemas_dir, tgt_schema_file)
+            if os.path.exists(p):
+                return _load_json(p)
+        except Exception:
+            pass
+        return {'tables': []}
+
+    # Build field->table maps for each selected origin to correct/backfill source_table labels
+    def _origin_field_table_maps():
+        def _build_ft_map(doc):
+            ft = {}
+            for t in (doc.get('tables') or []):
+                for f in (t.get('fields') or []):
+                    nm = f.get('name')
+                    if nm:
+                        ft[nm] = t.get('name')
+            return ft
+        maps = {}
+        try:
+            # Source
+            if src_schema_file:
+                p = os.path.join(schemas_dir, src_schema_file)
+                if os.path.exists(p):
+                    maps['source'] = _build_ft_map(_filter_doc_fields(_load_json(p), selected_source_fields))
+            # Legacy
+            if leg_schema_file:
+                p = os.path.join(schemas_dir, leg_schema_file)
+                if os.path.exists(p):
+                    maps['legacy'] = _build_ft_map(_filter_doc_fields(_load_json(p), selected_legacy_fields))
+            # Extras (ds3, ds4, ...)
+            for i, ef in enumerate(extras_files or []):
+                if not ef:
+                    continue
+                p = os.path.join(schemas_dir, ef)
+                if not os.path.exists(p):
+                    continue
+                try:
+                    sel = set((selected_extra_fields_map or {}).get(ef) or [])
+                    edoc = _filter_doc_fields(_load_json(p), sel)
+                    maps[f'ds{i+3}'] = _build_ft_map(edoc)
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        return maps
+
+    # Helper: filtered origin docs per selection
+    def _filtered_origin_docs():
+        docs = {}
+        try:
+            if src_schema_file:
+                p = os.path.join(schemas_dir, src_schema_file)
+                if os.path.exists(p):
+                    docs['source'] = _filter_doc_fields(_load_json(p), selected_source_fields)
+            if leg_schema_file:
+                p = os.path.join(schemas_dir, leg_schema_file)
+                if os.path.exists(p):
+                    docs['legacy'] = _filter_doc_fields(_load_json(p), selected_legacy_fields)
+            for i, ef in enumerate(extras_files or []):
+                if not ef:
+                    continue
+                p = os.path.join(schemas_dir, ef)
+                if not os.path.exists(p):
+                    continue
+                sel = set((selected_extra_fields_map or {}).get(ef) or [])
+                docs[f'ds{i+3}'] = _filter_doc_fields(_load_json(p), sel)
+        except Exception:
+            pass
+        return docs
+
+    # Build a comprehensive mapping preview against the preferred target doc,
+    # supplementing any existing stored mapping to ensure all selected fields appear.
+    def _build_mapping_preview_list():
+        preview = []
+        raw_mapping = get_mapping() or []
+        # Allowed origins based on explicit selections
+        allowed = set()
+        if src_schema_file:
+            allowed.add('source')
+        if leg_schema_file:
+            allowed.add('legacy')
+        for i, _ in enumerate(extras_files or []):
+            allowed.add(f'ds{i+3}')
+        stored = [m for m in raw_mapping if (m.get('origin') or 'source').lower() in allowed]
+        # Prefer designed target doc for mapping
+        tgt_doc = _target_doc_for_mapping()
+        # Field->table maps for annotations
+        oftm = _origin_field_table_maps()
+        tgt_ft = {}
+        try:
+            for t in (tgt_doc.get('tables') or []):
+                for f in (t.get('fields') or []):
+                    nm = f.get('name')
+                    if nm:
+                        tgt_ft[nm] = t.get('name')
+        except Exception:
+            pass
+        # Start with stored
+        preview.extend(stored)
+        # Compute suggestions for any missing source fields (so all selected fields are covered)
+        try:
+            origin_docs = _filtered_origin_docs()
+            for origin, odoc in origin_docs.items():
+                try:
+                    sugg = schema_mapping_agent.map_schema(odoc, tgt_doc)
+                except Exception:
+                    sugg = []
+                # Build a set of already mapped sources for this origin
+                have = {(m.get('source') or '').lower() for m in preview if (m.get('origin') or 'source').lower() == origin}
+                # Annotate suggestions and include only missing sources
+                ft = oftm.get(origin, {})
+                for s in sugg:
+                    s_name = (s.get('source') or '').lower()
+                    if not s_name or s_name in have:
+                        continue
+                    s['origin'] = origin
+                    s['source_table'] = ft.get(s.get('source'))
+                    if s.get('target'):
+                        s['target_table'] = tgt_ft.get(s.get('target'))
+                    preview.append(s)
+        except Exception:
+            pass
+        return preview
+
+    def _build_mapping_mermaid():
+        import re
+        mapping = _build_mapping_preview_list()
+        if not mapping:
+            return ''
+
+        # Target field->table map from preferred target doc
+        tgt_doc = _target_doc_for_mapping()
+        tgt_ft = {}
+        try:
+            for t in (tgt_doc.get('tables') or []):
+                for f in (t.get('fields') or []):
+                    nm = f.get('name')
+                    if nm:
+                        tgt_ft[nm] = t.get('name')
+        except Exception:
+            pass
+        # Origin field->table maps
+        oftm = _origin_field_table_maps()
+
+        edges = []  # (left_id, right_id, origin)
+        left_nodes = {}  # id -> (label, origin)
+        right_groups = {}
+
+        def sid(s: str) -> str:
+            return re.sub(r'[^a-zA-Z0-9_]', '_', s or '')[:80] or 'x'
+
+        for m in mapping:
+            s_col = m.get('source') or ''
+            t_tbl = m.get('target_table') or tgt_ft.get((m.get('target') or '')) or ''
+            t_col = m.get('target') or ''
+            origin = (m.get('origin') or 'source').lower()
+            if not (s_col and t_col):
+                continue
+            s_tbl = m.get('source_table') or oftm.get(origin, {}).get(s_col) or ''
+            origin_cap = 'Source' if origin == 'source' else ('Legacy' if origin == 'legacy' else origin.upper())
+            l_label = f"{origin_cap}:{s_tbl}.{s_col}" if s_tbl else f"{origin_cap}:{s_col}"
+            r_label = f"{t_tbl}.{t_col}" if t_tbl else f"{t_col}"
+            l_id = f"L_{sid(origin)}_{sid(s_tbl)}_{sid(s_col)}"
+            r_id = f"R_{sid(t_tbl)}_{sid(t_col)}"
+            left_nodes[l_id] = (l_label, origin)
+            group = t_tbl or 'UNASSIGNED'
+            right_groups.setdefault(group, {})[r_id] = r_label
+            edges.append((l_id, r_id, origin))
+
+        if not edges:
+            return ''
+
+        def _colors_for_origin(o: str):
+            base = {
+                'source': ('#E8F0FF', '#3A7BDA', '#0B3A79'),
+                'legacy': ('#FFF3E0', '#FB8C00', '#4A2A00'),
+                'ds3':   ('#E8F5E9', '#43A047', '#1B5E20'),
+                'ds4':   ('#F3E5F5', '#8E24AA', '#4A148C'),
+                'ds5':   ('#E0F7FA', '#00838F', '#004D40'),
+            }
+            if o in base:
+                return base[o]
+            if o.startswith('ds'):
+                try:
+                    n = int(o[2:])
+                except Exception:
+                    n = 6
+                palette = [
+                    ('#FFFDE7', '#FBC02D', '#5F3700'),
+                    ('#EDE7F6', '#5E35B1', '#311B92'),
+                    ('#E1F5FE', '#039BE5', '#01579B'),
+                    ('#FCE4EC', '#D81B60', '#880E4F'),
+                ]
+                return palette[(n - 3) % len(palette)]
+            return ('#F5F5F5', '#9E9E9E', '#424242')
+
+        origins_present = sorted({o for _, _, o in edges})
+        lines = ["flowchart LR"]
+        for o in origins_present:
+            fill, stroke, text = _colors_for_origin(o)
+            lines.append(f"  classDef {sid(o)} fill:{fill},stroke:{stroke},stroke-width:1px,color:{text};")
+        lines.append("  subgraph Source")
+        lines.append("  direction TB")
+        for nid, (lbl, o) in sorted(left_nodes.items()):
+            ocls = sid(o)
+            lines.append(f"  {nid}[\"{lbl}\"]")
+            lines.append(f"  class {nid} {ocls};")
+        lines.append("  end")
+        lines.append("  subgraph Target")
+        lines.append("  direction TB")
+        for tbl in sorted(right_groups.keys()):
+            sub_name = sid(f"TBL_{tbl}")
+            pretty = tbl if tbl != 'UNASSIGNED' else 'Other/Unassigned'
+            lines.append(f"  subgraph {sub_name}[\"{pretty}\"]")
+            lines.append("  direction TB")
+            for nid, lbl in sorted(right_groups[tbl].items()):
+                lines.append(f"  {nid}[\"{lbl}\"]")
+            lines.append("  end")
+        lines.append("  end")
+        for l, r, _ in edges:
+            lines.append(f"  {l} --> {r}")
+        for idx, (_, _, o) in enumerate(edges):
+            _, stroke, _ = _colors_for_origin(o)
+            lines.append(f"  linkStyle {idx} stroke:{stroke},stroke-width:2px,opacity:0.9;")
+        if origins_present:
+            lines.append("  subgraph LEGEND")
+            lines.append("  direction LR")
+            for o in origins_present:
+                lid = f"LEG_{sid(o)}"
+                lines.append(f"  {lid}[\"{o.title()}\"]")
+                lines.append(f"  class {lid} {sid(o)};")
+            lines.append("  end")
+        return "\n".join(lines)
+
+    def _build_mapping_pairs():
+        mapping = _build_mapping_preview_list()
+        if not mapping:
+            return []
+        tgt_doc = _target_doc_for_mapping()
+        tgt_ft = {}
+        try:
+            for t in (tgt_doc.get('tables') or []):
+                for f in (t.get('fields') or []):
+                    nm = f.get('name')
+                    if nm:
+                        tgt_ft[nm] = t.get('name')
+        except Exception:
+            pass
+        oftm = _origin_field_table_maps()
+        rows = []
+        for m in mapping:
+            s_col = m.get('source') or ''
+            t_tbl = m.get('target_table') or tgt_ft.get((m.get('target') or '')) or ''
+            t_col = m.get('target') or ''
+            if not (s_col and t_col):
+                continue
+            origin = (m.get('origin') or 'source').lower()
+            s_tbl = m.get('source_table') or oftm.get(origin, {}).get(s_col) or ''
+            rows.append({
+                'origin': origin,
+                'source_table': s_tbl,
+                'source': s_col,
+                'target_table': t_tbl,
+                'target': t_col,
+            })
+        rows.sort(key=lambda r: (
+            r.get('target_table') or '',
+            r.get('target') or '',
+            r.get('origin') or '',
+            r.get('source_table') or '',
+            r.get('source') or ''
+        ))
+        return rows
+
+    # Actions
+    if request.method == 'POST':
+        action = request.form.get('action') or 'design_target_model'
+        if action == 'design_target_model':
+            docs = []
+            # Source
+            if src_schema_file:
+                p = os.path.join(schemas_dir, src_schema_file)
+                if os.path.exists(p):
+                    docs.append(_filter_doc_fields(_load_json(p), selected_source_fields))
+            # Legacy
+            if leg_schema_file:
+                p = os.path.join(schemas_dir, leg_schema_file)
+                if os.path.exists(p):
+                    docs.append(_filter_doc_fields(_load_json(p), selected_legacy_fields))
+            # Extras explicitly chosen on Page 1
+            for ef in (extras_files or []):
+                if not ef:
+                    continue
+                p = os.path.join(schemas_dir, ef)
+                if os.path.exists(p):
+                    sel = set((selected_extra_fields_map or {}).get(ef) or [])
+                    docs.append(_filter_doc_fields(_load_json(p), sel))
+            try:
+                if not docs:
+                    set_target_model_draft({"error": "No source schemas selected. Enable Source/Legacy or add DS extras on Page 1, then try Generate Draft."})
+                else:
+                    agent = TargetModelDesignAgent()
+                    draft = agent.design(docs)
+                    set_target_model_draft(draft)
+            except Exception as e:
+                set_target_model_draft({"error": str(e)})
+        elif action == 'approve_target_model':
+            draft = get_target_model_draft()
+            if draft:
+                set_target_model_final(draft)
+        # Fall through to render
+
+    # Optional auto-generate when requested
+    if request.method == 'GET' and request.args.get('auto') == '1' and not get_target_model_draft():
+        docs = []
+        if src_schema_file:
+            p = os.path.join(schemas_dir, src_schema_file)
+            if os.path.exists(p):
+                docs.append(_filter_doc_fields(_load_json(p), selected_source_fields))
+        if leg_schema_file:
+            p = os.path.join(schemas_dir, leg_schema_file)
+            if os.path.exists(p):
+                docs.append(_filter_doc_fields(_load_json(p), selected_legacy_fields))
+        for ef in (extras_files or []):
+            if not ef:
+                continue
+            p = os.path.join(schemas_dir, ef)
+            if os.path.exists(p):
+                sel = set((selected_extra_fields_map or {}).get(ef) or [])
+                docs.append(_filter_doc_fields(_load_json(p), sel))
+        try:
+            if docs:
+                agent = TargetModelDesignAgent()
+                draft = agent.design(docs)
+                set_target_model_draft(draft)
+            else:
+                set_target_model_draft({"error": "No source schemas selected. Enable Source/Legacy or add DS extras on Page 1, then try Generate Draft."})
+        except Exception as e:
+            set_target_model_draft({"error": str(e)})
+
+    return render_template(
+        'poc4/page_target_model.html',
+        target_model_draft=get_target_model_draft(),
+        target_model_final=get_target_model_final(),
+        mapping_mermaid=_build_mapping_mermaid(),
+        mapping_pairs=_build_mapping_pairs(),
+    )
+
 @poc4_bp.route('/page1', methods=['GET', 'POST'])
 def page1():
     if request.method == 'POST':
@@ -594,14 +774,7 @@ def page1_fields():
     source_schema_file = session.get('source_schema')
     legacy_schema_file = session.get('legacy_schema')
     extra_sources_files = session.get('extra_sources', [])
-    # Ensure DS3 single-pick is treated as an extra source if set
-    ds3_schema_file = session.get('ds3_schema')
-    if ds3_schema_file:
-        try:
-            if ds3_schema_file not in (extra_sources_files or []):
-                extra_sources_files = (extra_sources_files or []) + [ds3_schema_file]
-        except Exception:
-            extra_sources_files = [ds3_schema_file]
+    # Do NOT auto-include DS3 here; rely solely on explicit extra_sources selections
     target_schema_file = session.get('target_schema', 'target_schema.json')
     source_schema = load_schema(source_schema_file) if source_schema_file else {"tables": []}
     legacy_schema = load_schema(legacy_schema_file) if legacy_schema_file else {"tables": []}
@@ -655,6 +828,112 @@ def page1_fields():
         extra_sources_fields=extras_flat
     )
 
+@poc4_bp.route('/auto_mapping', methods=['GET'])
+def auto_mapping():
+    """Regenerate mapping suggestions based on current session selections.
+    Returns JSON with status and counts; updates the server-side mapping store.
+    """
+    import json
+    try:
+        # Load selected schema filenames from session
+        source_schema_file = session.get('source_schema')
+        legacy_schema_file = session.get('legacy_schema')
+        extra_sources_files = list(session.get('extra_sources', []) or [])
+        # Do NOT auto-include DS3; only use explicit extras
+        target_schema_file = session.get('target_schema', 'target_schema.json')
+
+        base_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
+        def load_schema(fname):
+            if not fname:
+                return {'tables': []}
+            try:
+                with open(os.path.join(base_path, fname), 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                return {'tables': []}
+
+        source_schema = load_schema(source_schema_file)
+        legacy_schema = load_schema(legacy_schema_file)
+        # Prefer designed target doc (approved or draft) if present
+        target_schema = get_target_model_final() or get_target_model_draft() or load_schema(target_schema_file)
+        extra_schemas = [(fn, load_schema(fn)) for fn in (extra_sources_files or [])]
+
+        # Build field filters from session
+        selected_source = set(session.get('selected_source_fields') or [])
+        selected_legacy = set(session.get('selected_legacy_fields') or [])
+        selected_extra = session.get('selected_extra_fields') or {}
+
+        def filter_schema(schema, selected):
+            if not selected:
+                return schema
+            out = {'tables': []}
+            for t in (schema.get('tables') or []):
+                keeps = [f for f in (t.get('fields') or []) if f.get('name') in selected]
+                if keeps:
+                    out['tables'].append({'name': t.get('name'), 'fields': keeps})
+            return out
+
+        filtered_source = filter_schema(source_schema, selected_source)
+        filtered_legacy = filter_schema(legacy_schema, selected_legacy)
+        filtered_extras = [(fn, filter_schema(sch, set(selected_extra.get(fn, [])))) for fn, sch in extra_schemas]
+
+        # Helper: field->table maps for annotation
+        def build_field_table_map(schema):
+            m = {}
+            for t in (schema.get('tables') or []):
+                for f in (t.get('fields') or []):
+                    nm = f.get('name')
+                    if nm:
+                        m[nm] = t.get('name')
+            return m
+        src_ft = build_field_table_map(source_schema)
+        leg_ft = build_field_table_map(legacy_schema)
+        tgt_ft = build_field_table_map(target_schema)
+
+        # Generate mappings via agent
+        src_map = schema_mapping_agent.map_schema(filtered_source, target_schema)
+        leg_map = schema_mapping_agent.map_schema(filtered_legacy, target_schema)
+        extra_map = []
+        for idx, (fn, sch) in enumerate(filtered_extras):
+            try:
+                m = schema_mapping_agent.map_schema(sch, target_schema)
+            except Exception:
+                m = []
+            for mm in m:
+                mm['origin'] = f'ds{idx+3}'
+            extra_map.extend(m)
+
+        # Annotate
+        for m in src_map:
+            m['origin'] = 'source'
+            m['source_table'] = src_ft.get(m.get('source'))
+            if m.get('target'):
+                m['target_table'] = tgt_ft.get(m.get('target'))
+        for m in leg_map:
+            m['origin'] = 'legacy'
+            m['source_table'] = leg_ft.get(m.get('source'))
+            if m.get('target'):
+                m['target_table'] = tgt_ft.get(m.get('target'))
+        for mm in extra_map:
+            try:
+                # map origin back to extra schema index
+                if mm.get('origin', '').startswith('ds'):
+                    idx = int(mm['origin'][2:]) - 3
+                    if 0 <= idx < len(extra_schemas):
+                        _, sch = extra_schemas[idx]
+                        ftm = build_field_table_map(sch)
+                        mm['source_table'] = ftm.get(mm.get('source'))
+            except Exception:
+                pass
+            if mm.get('target'):
+                mm['target_table'] = tgt_ft.get(mm.get('target'))
+
+        mapping = src_map + leg_map + extra_map
+        set_mapping(mapping)
+        return jsonify({"ok": True, "count": len(mapping)})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 @poc4_bp.route('/page2', methods=['GET', 'POST'])
 def page2():
     import json
@@ -663,14 +942,7 @@ def page2():
     source_schema_file = session.get('source_schema')
     legacy_schema_file = session.get('legacy_schema')
     extra_sources_files = session.get('extra_sources', [])
-    # Ensure DS3 single-pick is treated as an extra source if set
-    ds3_schema_file = session.get('ds3_schema')
-    if ds3_schema_file:
-        try:
-            if ds3_schema_file not in (extra_sources_files or []):
-                extra_sources_files = (extra_sources_files or []) + [ds3_schema_file]
-        except Exception:
-            extra_sources_files = [ds3_schema_file]
+    # Do NOT auto-include DS3; rely solely on explicit extra_sources selections
     target_schema_file = session.get('target_schema', 'target_schema.json')
     base_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'schemas')
     def load_schema(fname):
@@ -771,12 +1043,14 @@ def page2():
                 else:
                     mm['justification'] = f"Auto-mapped {mm.get('source')} to {mm.get('target')} based on heuristic"
         mapping = source_mapping + legacy_mapping + extra_mappings
+        # Persist initial mapping so other pages (Target Model, Rules) can access it
+        set_mapping(mapping)
     else:
         # If a previous mapping exists, append mappings for any new extras (e.g., DS3)
-        existing_origins = { (mm.get('origin') or 'source').lower() for mm in mapping }
+        existing_origins = {(mm.get('origin') or 'source').lower() for mm in mapping}
         appended = False
         for idx, (fn, sch) in enumerate(filtered_extras):
-            origin_name = f'ds{idx+3}'
+            origin_name = f"ds{idx+3}"
             if origin_name in existing_origins:
                 continue
             try:
@@ -1330,17 +1604,57 @@ def page4():
         # Design target model from selected source schemas
         if action == 'design_target_model':
             import json as _json
-            docs = []
-            for f in [src_schema_path, leg_schema_path]:
+            # Helper to filter a loaded schema doc by selected field names
+            def _filter_doc_fields(doc, selected_names):
                 try:
-                    with open(f, 'r', encoding='utf-8') as fh:
-                        docs.append(_json.load(fh))
+                    if not selected_names:
+                        return doc
+                    out = {'tables': []}
+                    for t in (doc or {}).get('tables', []) or []:
+                        keep = [f for f in (t.get('fields') or []) if f.get('name') in selected_names]
+                        if keep:
+                            out['tables'].append({'name': t.get('name'), 'fields': keep})
+                    return out
+                except Exception:
+                    return doc
+            # Only use schemas explicitly selected on Page 1
+            docs = []
+            try:
+                sel_src_fields = set(session.get('selected_source_fields') or [])
+                sel_leg_fields = set(session.get('selected_legacy_fields') or [])
+                sel_extra_fields_map = session.get('selected_extra_fields') or {}
+                # Source
+                src_sel_name = session.get('source_schema')
+                if src_sel_name:
+                    p = os.path.join(schemas_dir, src_sel_name)
+                    if os.path.exists(p):
+                        with open(p, 'r', encoding='utf-8') as fh:
+                            docs.append(_filter_doc_fields(_json.load(fh), sel_src_fields))
+                # Legacy
+                leg_sel_name = session.get('legacy_schema')
+                if leg_sel_name:
+                    p = os.path.join(schemas_dir, leg_sel_name)
+                    if os.path.exists(p):
+                        with open(p, 'r', encoding='utf-8') as fh:
+                            docs.append(_filter_doc_fields(_json.load(fh), sel_leg_fields))
+                # Extras (DS3+), only those explicitly chosen on Page 1
+                extra_list = list((session.get('extra_sources', []) or []))
+                # Treat ds3 single-pick as an extra
+                try:
+                    ds3_schema_file = session.get('ds3_schema')
+                    if ds3_schema_file and ds3_schema_file not in extra_list:
+                        extra_list.append(ds3_schema_file)
                 except Exception:
                     pass
-            # Include DS3 schema if selected
-            try:
-                with open(os.path.join(schemas_dir, ds3_schema_file), 'r', encoding='utf-8') as fh:
-                    docs.append(_json.load(fh))
+                for ef in extra_list:
+                    if not ef:
+                        continue
+                    p = os.path.join(schemas_dir, ef)
+                    if os.path.exists(p):
+                        with open(p, 'r', encoding='utf-8') as fh:
+                            edoc = _json.load(fh)
+                        sel = set((sel_extra_fields_map or {}).get(ef) or [])
+                        docs.append(_filter_doc_fields(edoc, sel))
             except Exception:
                 pass
             try:
@@ -1696,9 +2010,22 @@ def page5():
         try:
             result = reconciliation_agent.approve(get_result() or {})
             session['reconciliation_result'] = result
+            # After approval, generate and download the SQL script
+            script_text = _build_migration_sql_script()
+            mem = io.BytesIO(script_text.encode('utf-8'))
+            return send_file(mem, as_attachment=True, download_name='migration.sql', mimetype='application/sql')
         except Exception as e:
             return render_template('poc4/page5_reconciliation.html', error=str(e), migration_result=get_result(), reconciliation_result=session.get('reconciliation_result'), target_backup=session.get('target_backup'))
     return render_template('poc4/page5_reconciliation.html', migration_result=get_result(), reconciliation_result=session.get('reconciliation_result'), target_backup=session.get('target_backup'))
+
+@poc4_bp.route('/download/migration.sql')
+def download_migration_sql():
+    """Download the best-effort SQL script representing the current mapping."""
+    try:
+        script_text = _build_migration_sql_script()
+        return Response(script_text, mimetype='application/sql', headers={'Content-Disposition': 'attachment; filename=migration.sql'})
+    except Exception:
+        abort(500)
 
 @poc4_bp.route('/static_schema/schemas/<filename>')
 def static_schema(filename):

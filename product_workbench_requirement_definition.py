@@ -140,6 +140,63 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 THREAD_POOL_SIZE = 12  # Increased for more parallelism (tune as needed for your hardware)
 executor = ThreadPoolExecutor(max_workers=THREAD_POOL_SIZE)
 
+# Hard ceilings to control input size to agents (rough char -> token approximation)
+MAX_AGENT_INPUT_CHARS = int(os.getenv('MAX_AGENT_INPUT_CHARS', '12000'))
+BUDGETS = {
+    'user_inputs': 2000,     # industry/sector/geography/intent/features
+    'product': 3500,         # product_overview
+    'feature': 3500,         # feature_overview
+    'legacy': 2000,          # legacy_business_description
+    'guidance': 500          # small guidance appended per agent
+}
+
+def _clip(text: str, max_chars: int) -> str:
+    try:
+        t = text or ""
+        if len(t) <= max_chars:
+            return t
+        return t[:max_chars]
+    except Exception:
+        return (text or "")[:max_chars]
+
+def _compose_user_inputs_block(user_inputs: dict) -> str:
+    block = f"""
+    # Original User Inputs
+    Industry: {user_inputs.get('industry', '')}
+    Sector: {user_inputs.get('sector', '')}
+    Geography: {user_inputs.get('geography', '')}
+    Intent: {user_inputs.get('intent', '')}
+    Features: {user_inputs.get('features', '')}
+    """
+    return _clip(block, BUDGETS['user_inputs'])
+
+def build_capped_combined_input(user_inputs, product_overview, feature_overview, legacy_desc) -> str:
+    """Compose the combined input with per-section budgets and a total cap."""
+    ui = _compose_user_inputs_block(user_inputs)
+    po = _clip(product_overview or "", BUDGETS['product'])
+    fo = _clip(feature_overview or "", BUDGETS['feature'])
+    ld = _clip(legacy_desc or "", BUDGETS['legacy'])
+
+    body = f"""
+    {ui}
+
+    # Product Overview (Agent 1.1 Output)
+    {po}
+
+    # Feature Overview (Agent 2 Analysis)
+    {fo}
+
+    # Legacy Business Description (from Legacy Code)
+    {ld}
+
+    # Incorporation Guidelines
+    - Use insights from the Legacy Business Description to inform and refine Functional, Non-Functional, Data, and Legal/Compliance requirements when relevant.
+    - When a requirement or statement is directly derived from legacy artifacts, add a trailing citation line: "Source: Legacy Code" or "Reference: Legacy Code" (one line per item where applicable).
+    - Do not over-cite; include a citation only when the point is supported by the legacy artifacts.
+    """
+    # Enforce global cap as a final guard
+    return _clip(body, MAX_AGENT_INPUT_CHARS)
+
 # Utility for parallel agent calls
 def run_agents_in_parallel(agent_tasks):
     import time
@@ -792,31 +849,7 @@ def page3():
         feature_overview = data.get("feature_overview", "")
         product_overview = data.get("product_overview", "")
         legacy_desc_full = data.get("legacy_business_description", "") or user_inputs.get("legacy_business_description", "")
-        # Trim legacy description to control token size for performance
-        legacy_desc = (legacy_desc_full or "")[:2000]
-
-        combined_input = f"""
-        # Original User Inputs
-        Industry: {user_inputs.get('industry', '')}
-        Sector: {user_inputs.get('sector', '')}
-        Geography: {user_inputs.get('geography', '')}
-        Intent: {user_inputs.get('intent', '')}
-        Features: {user_inputs.get('features', '')}
-
-        # Product Overview (Agent 1.1 Output)
-        {product_overview}
-
-        # Feature Overview (Agent 2 Analysis)
-        {feature_overview}
-
-        # Legacy Business Description (from Legacy Code)
-        {legacy_desc}
-
-        # Incorporation Guidelines
-        - Use insights from the Legacy Business Description to inform and refine Functional, Non-Functional, Data, and Legal/Compliance requirements when relevant.
-        - When a requirement or statement is directly derived from legacy artifacts, add a trailing citation line: "Source: Legacy Code" or "Reference: Legacy Code" (one line per item where applicable).
-        - Do not over-cite; include a citation only when the point is supported by the legacy artifacts.
-        """
+        combined_input = build_capped_combined_input(user_inputs, product_overview, feature_overview, legacy_desc_full)
 
         try:
             logging.info(f"[PAGE3] Combined input for agents: {combined_input}")
@@ -835,9 +868,10 @@ def page3():
         # Light guidance to 4.x agents: leverage and cite legacy-derived insights
         agent_inputs = []
         for k in keys:
-            guidance = (
+            guidance = _clip(
                 "When applicable, incorporate insights from 'Legacy Business Description' into this section. "
-                "Add 'Source: Legacy Code' on lines that are directly supported by legacy artifacts."
+                "Add 'Source: Legacy Code' on lines that are directly supported by legacy artifacts.",
+                BUDGETS['guidance']
             )
             agent_inputs.append((ASSISTANTS[k], combined_input + "\n\n[Agent Guidance]\n" + guidance))
 

@@ -10,5 +10,8 @@
   },
   "target_model.json": {
     "kind": "target"
+  },
+  "target_model_1.json": {
+    "kind": "target"
   }
 }
