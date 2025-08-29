@@ -14,3 +14,4 @@ venv/
 *.sqlite
 *.db
 .DS_Store
+poc5/.flask_session/
