@@ -638,7 +638,7 @@ def page1():
 
         # Persistent event loop for agent orchestration
         def run_agents():
-            import threading, psutil, gc
+            import threading, gc
             t0 = time.time()
             try:
                 loop = None
@@ -647,11 +647,10 @@ def page1():
                 except RuntimeError:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
-                # Run all agent calls in the persistent event loop
-                a11, a2, a3 = loop.run_until_complete(call_agents_parallel([
+                # Run background agent calls (Page 1): Product Overview and Feature Overview only
+                a11, a2 = loop.run_until_complete(call_agents_parallel([
                     (ASSISTANTS['agent_1_1'], context),
-                    (ASSISTANTS['agent_2'], context),
-                    (ASSISTANTS['agent_3'], context)
+                    (ASSISTANTS['agent_2'], context)
                 ]))
                 logging.info(f"[PERF] Page1 agent batch: {time.time() - t0:.2f}s")
                 logging.info(f"Agent 1.1 Output: {a11}")
@@ -661,7 +660,6 @@ def page1():
                     "inputs": inputs,
                     "product_overview": a11,
                     "feature_overview": a2,
-                    "highest_order": a3,
                     "legacy_business_description": inputs.get('legacy_business_description', ''),
                     "status": "complete"
                 }
@@ -683,7 +681,6 @@ def page1():
             # Resource usage logging and cleanup
             try:
                 logging.info(f"[RESOURCE] Thread count: {threading.active_count()}")
-                logging.info(f"[RESOURCE] Memory usage: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB")
                 gc.collect()
             except Exception as e:
                 logging.warning(f"Resource logging failed: {e}")
@@ -736,13 +733,58 @@ def page2():
         # Log the updated data for debugging
         logging.info(f"[PAGE2][POST] Updated data: {json.dumps(data, indent=2)}")
 
-        # Save updated data
+        # Save updated data prior to agent calls
         if USING_REDIS:
             redis_client.setex(session_id, 3600, json.dumps(data))
         else:
             with open(os.path.join(TEMP_DIR, f'prd_session_{session_id}.json'), 'w') as f:
                 json.dump(data, f)
-        return redirect('/page3')
+
+        # Build combined input from product, feature, and legacy descriptions
+        user_inputs = data.get("inputs", {})
+        feature_overview = data.get("feature_overview", "")
+        product_overview = data.get("product_overview", "")
+        legacy_desc_full = data.get("legacy_business_description", "") or user_inputs.get("legacy_business_description", "")
+        combined_input = build_capped_combined_input(user_inputs, product_overview, feature_overview, legacy_desc_full)
+
+        # Call agent_4_x in parallel and persist outputs, then go straight to Page 4
+        import threading, gc
+        loop = None
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        keys = [k for k in ASSISTANTS if k.startswith("agent_4_")]
+        agent_inputs = []
+        for k in keys:
+            guidance = _clip(
+                "When applicable, incorporate insights from 'Legacy Business Description' into this section. "
+                "Add 'Source: Legacy Code' on lines that are directly supported by legacy artifacts.",
+                BUDGETS['guidance']
+            )
+            agent_inputs.append((ASSISTANTS[k], combined_input + "\n\n[Agent Guidance]\n" + guidance))
+
+        results = loop.run_until_complete(call_agents_parallel(agent_inputs))
+        outputs = dict(zip(keys, results))
+        data['combined_outputs'] = outputs
+        session['combined_outputs'] = outputs
+
+        # Persist combined outputs
+        if USING_REDIS:
+            redis_client.setex(session_id, 3600, json.dumps(data))
+        else:
+            with open(os.path.join(TEMP_DIR, f'prd_session_{session_id}.json'), 'w') as f:
+                json.dump(data, f)
+
+        try:
+            logging.info(f"[RESOURCE] Thread count: {threading.active_count()}")
+            gc.collect()
+        except Exception as e:
+            logging.warning(f"Resource logging failed: {e}")
+
+        return redirect('/page4')
 
     return render_template("page2_agents.html",
         agent11_output=data.get('product_overview', ''),
@@ -794,16 +836,7 @@ def update_content():
             new_response = call_agent(ASSISTANTS['agent_2'], full_prompt)
             stored_data['feature_overview'] = new_response
         elif content_type == 'highest_order':
-            existing_content = stored_data.get('combined_outputs', {}).get('highest_order', '')
-            full_prompt = f"""Here is the current High-Level Requirements section.
-
-            {existing_content}
-
-            Please revise it based on this instruction:
-            {new_content}
-            """
-            new_response = call_agent(ASSISTANTS['agent_3'], full_prompt)
-            stored_data['combined_outputs']['highest_order'] = new_response
+            return jsonify({'error': 'Highest-order requirements editing is disabled in this flow.'}), 400
         elif content_type.startswith('agent_4_'):
                 agent_id = ASSISTANTS.get(content_type)
                 if not agent_id:
@@ -856,7 +889,7 @@ def page3():
         except UnicodeEncodeError:
             logging.info(f"[PAGE3] Combined input for agents: {combined_input.encode('ascii', 'replace').decode('ascii')}")
 
-        import threading, psutil, gc
+        import threading, gc
         loop = None
         try:
             loop = asyncio.get_event_loop()
@@ -888,7 +921,6 @@ def page3():
 
         try:
             logging.info(f"[RESOURCE] Thread count: {threading.active_count()}")
-            logging.info(f"[RESOURCE] Memory usage: {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB")
             gc.collect()
         except Exception as e:
             logging.warning(f"Resource logging failed: {e}")

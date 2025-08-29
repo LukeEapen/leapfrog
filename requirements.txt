@@ -1,7 +1,6 @@
-flask-session
 # Web Framework
-flask==3.0.0
-flask[async]==3.0.0
+Flask==3.0.0
+Flask-Session>=0.5.0
 Flask-Limiter==3.5.0
 Werkzeug>=3.0.1         # Flask dependency for security features
 
@@ -16,7 +15,9 @@ tiktoken>=0.5.1        # For token counting - relaxed pinning for compatibility
 # chromadb>=0.4.0         # Vector database - commented out for deployment
 # sentence-transformers>=2.2.0  # Embeddings - heavy memory usage, commented out
 # faiss-cpu>=1.7.0        # Facebook AI Similarity Search - commented out for deployment
-numpy>=1.24.0,<2.0.0    # For vector operations - added upper bound for stability
+# NumPy: use <2 for Python <3.13, and 2.x for Python >=3.13 to ensure wheels are available
+numpy>=1.24.0,<2.0.0; python_version < '3.13'
+numpy>=2.0.0; python_version >= '3.13'
 # scikit-learn>=1.3.0     # For additional ML operations - commented out for deployment
 
 # Performance & Async Processing
@@ -34,7 +35,7 @@ httpx>=0.25.0          # Modern async HTTP client
 # Document Processing
 python-docx==1.1.0
 markdown==3.5.2
-# markdown2==2.4.11      # Removed - redundant with markdown
+markdown2==2.4.11      # Required by product_workbench_requirement_definition.py
 beautifulsoup4==4.12.3
 lxml>=4.9.3             # Required by beautifulsoup4 for XML processing
 PyPDF2>=3.0.1           # For PDF processing
@@ -49,7 +50,7 @@ PyJWT>=2.8.0           # For JWT token handling
 bcrypt>=4.1.0          # For password hashing
 
 # Storage & Caching - Lightweight for deployment
-# redis>=4.5.1           # Commented out for deployment
+redis>=4.5.1           # Enable Redis for session/cache backend
 cachetools>=5.3.0      # In-memory caching
 # diskcache>=5.6.3       # Persistent disk caching - commented out for deployment
 
