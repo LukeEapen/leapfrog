@@ -222,7 +222,7 @@
                         <span id="action_spinner" class="spinner-border spinner-border-sm text-danger d-none" role="status" aria-hidden="true"></span>
                         <span id="action_timer" class="text-danger small d-none" style="min-width:3em;display:inline-block;"></span>
                         <span id="action_status" class="text-muted small d-none"></span>
-                        <button type="submit" class="btn btn-danger action-btn" name="action" value="extract_decisions" title="Parse PRD + System Mapping, fill all fields across tabs, and use educated guesses for anything missing." {% if lock_tab1 %}disabled{% endif %}>Extract Decisions</button>
+                        <button type="submit" class="btn btn-danger action-btn" name="action" value="extract_decisions" title="Parse PRD + System Mapping, fill all fields across tabs, and use educated guesses for anything missing." {% if lock_tab1 %}disabled{% endif %}>Generate Arch Context</button>
                         {% if not lock_tab1 %}
                             <button type="submit" class="btn btn-outline-secondary action-btn" name="action" value="lock_tab1" title="Lock editing of Context & Requirements inputs (Tab 1).">Lock Tab 1</button>
                         {% else %}
