@@ -223,7 +223,7 @@ ASSISTANTS = {
     'agent_1_1': 'asst_htCAXHgeveZkjJj84Ldpnv6L', # Agent 1.1 - Product Overview Synthesizer – System Instructions
     'agent_2'  : 'asst_t5hnaKy1wPvD48jTbn8Mx45z',   # Agent 2: Feature Overview Generator – System Instructions
     'agent_3'  : 'asst_EqkbMBdfOpUoEUaBPxCChVLR',   # Agent 3: Highest-Order Requirements Agent
-    'agent_24_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator - System Instructions
+    'agent_4_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator - System Instructions
     'agent_4_2': 'asst_CLBdcKGduMvSBM06MC1OJ7bF', # Agent 4.2: Operational Business Requirements Generator – System Instructions
     'agent_4_3': 'asst_61ITzgJTPqkQf4OFnnMnndNb', # Agent 4.3: Capability-Scoped Non-Functional Requirements Generator – System Instructions
     'agent_4_4': 'asst_pPFGsMMqWg04OSHNmyQ5oaAy', # Agent 4.4: Data Attribute Requirement Generator – System Instructions
@@ -381,6 +381,9 @@ def api_legacy_business_description():
         if not desc:
             # Fallback to heuristic extraction
             desc = extract_legacy_business_description(texts)
+        # Ensure explicit source citation is present
+        if desc and "Legacy Code" not in desc:
+            desc = desc + "\n\nSource: Legacy Code"
         return jsonify({'description': desc})
     except Exception as e:
         logging.error(f"Legacy extraction failed: {e}")
@@ -608,6 +611,9 @@ def page1():
                         logging.warning(f"Legacy extraction failed: {e}")
                         # no-op fallback; legacy_desc remains empty
         if legacy_desc:
+            # Ensure explicit source citation is present
+            if "Legacy Code" not in legacy_desc:
+                legacy_desc = legacy_desc + "\n\nSource: Legacy Code"
             inputs['legacy_business_description'] = legacy_desc
 
         session.update(inputs)
@@ -761,7 +767,7 @@ def page2():
         for k in keys:
             guidance = _clip(
                 "When applicable, incorporate insights from 'Legacy Business Description' into this section. "
-                "Add 'Source: Legacy Code' on lines that are directly supported by legacy artifacts.",
+                "Add 'Source: Legacy Code' on any requirement derived from legacy artifacts.",
                 BUDGETS['guidance']
             )
             agent_inputs.append((ASSISTANTS[k], combined_input + "\n\n[Agent Guidance]\n" + guidance))
@@ -841,17 +847,35 @@ def update_content():
                 agent_id = ASSISTANTS.get(content_type)
                 if not agent_id:
                     return jsonify({'error': f'Unknown agent for {content_type}'}), 400
+
+                # Gather full context for Page 4 agents: user inputs, product, feature, legacy
+                user_inputs = stored_data.get('inputs', {})
+                feature_overview = stored_data.get('feature_overview', '')
+                product_overview = stored_data.get('product_overview', '')
+                legacy_desc_full = stored_data.get('legacy_business_description', '') or user_inputs.get('legacy_business_description', '')
+                combined_input = build_capped_combined_input(user_inputs, product_overview, feature_overview, legacy_desc_full)
+
+                # Existing content for the targeted section
                 existing_content = stored_data.get('combined_outputs', {}).get(content_type, '')
-                full_prompt = f"""You are updating the following section of a Product Requirements Document. Keep all useful information intact, and only modify based on the user request. Be conservative with deletions.
 
-                {existing_content}
+                # Guidance to enforce citation when legacy-derived statements are included
+                guidance = _clip(
+                    "When applicable, incorporate insights from 'Legacy Business Description' into this section. "
+                    "Add 'Source: Legacy Code' on lines that are directly supported by legacy artifacts.",
+                    BUDGETS['guidance']
+                )
 
-                User instruction:
-                {new_content}
-                """
+                full_prompt = (
+                    "You are updating a section of a Product Requirements Document. Keep all useful information intact, "
+                    "and only modify based on the user request. Be conservative with deletions.\n\n"
+                    "[Current Section Content]\n" + existing_content + "\n\n"
+                    "[User Instruction]\n" + new_content + "\n\n"
+                    "[Combined Context: User Inputs, Product, Feature, Legacy]\n" + combined_input + "\n\n"
+                    "[Agent Guidance]\n" + guidance
+                )
 
                 new_response = call_agent(agent_id, full_prompt)
-                stored_data['combined_outputs'][content_type] = new_response   
+                stored_data.setdefault('combined_outputs', {})[content_type] = new_response   
 
         # Store updated data
         if USING_REDIS:
@@ -964,7 +988,7 @@ def page4():
         outputs = {
             'product_overview': data.get('product_overview', ''),
             'feature_overview': data.get('feature_overview', ''),
-           # 'agent_4_1': data.get('combined_outputs', {}).get('agent_4_1', ''),
+            'agent_4_1': data.get('combined_outputs', {}).get('agent_4_1', ''),
             'agent_4_2': data.get('combined_outputs', {}).get('agent_4_2', ''),
             'agent_4_3': data.get('combined_outputs', {}).get('agent_4_3', ''),
             'agent_4_4': data.get('combined_outputs', {}).get('agent_4_4', ''),
