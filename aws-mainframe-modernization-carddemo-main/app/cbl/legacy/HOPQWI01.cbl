@@ -1,0 +1,351 @@
+>>SOURCE FORMAT FREE
+*> Program: HOPQWI01  (Homeowners Quote – Wisconsin)
+*> Purpose: Read CSV requests, prefill (stub), underwrite, rate, and emit JSON quote + audit log.
+*> Notes : Demo logic only. Replace stubbed factors/rules with filed rates & enterprise services.
+
+IDENTIFICATION DIVISION.
+PROGRAM-ID. HOPQWI01.
+ENVIRONMENT DIVISION.
+INPUT-OUTPUT SECTION.
+FILE-CONTROL.
+    SELECT IN-FILE  ASSIGN TO 'QUOTEWI.IN'   ORGANIZATION LINE SEQUENTIAL.
+    SELECT OUT-FILE ASSIGN TO 'QUOTEWI.OUT'  ORGANIZATION LINE SEQUENTIAL.
+    SELECT LOG-FILE ASSIGN TO 'QUOTEWI.LOG'  ORGANIZATION LINE SEQUENTIAL.
+
+DATA DIVISION.
+FILE SECTION.
+FD IN-FILE.
+01 IN-REC               PIC X(512).
+
+FD OUT-FILE.
+01 OUT-REC              PIC X(4096).
+
+FD LOG-FILE.
+01 LOG-REC              PIC X(4096).
+
+WORKING-STORAGE SECTION.
+
+01 WS-RUN.
+   05 WS-PROGRAM                 PIC X(8)   VALUE 'HOPQWI01'.
+   05 WS-DATE-TIME.
+      10 WS-CD                   PIC X(21).
+   05 WS-SEQ                     PIC 9(9)   VALUE 0.
+   05 WS-EOF                     PIC X      VALUE 'N'.
+
+*> ---------- Parsed input (CSV) ----------
+*> CSV columns (19):
+*> 1 MEMBER-ID
+*> 2 ADDR-LINE1
+*> 3 CITY
+*> 4 COUNTY
+*> 5 STATE
+*> 6 ZIP5
+*> 7 YEAR-BUILT
+*> 8 SQFT
+*> 9 CONSTRUCTION (FRAME|MASONRY)
+*> 10 ROOF-MATERIAL (ASPHALT|METAL|WOOD)
+*> 11 ROOF-YEAR
+*> 12 PROTECTION-CLASS (1-10)
+*> 13 PRIOR-CLAIMS (0-5)
+*> 14 CREDIT-TIER (EXCELLENT|GOOD|FAIR|POOR|NONE)
+*> 15 MULTI-POLICY (Y|N)
+*> 16 PROTECTIVE-DEVICES (SMK;ALM;SPR;DBLT ...)
+*> 17 COVERAGE-A (whole dollars)
+*> 18 DEDUCTIBLE (whole dollars)
+*> 19 WIND-HAIL-DED (percent whole number; e.g., 1=1%)
+
+01 IN-FIELDS.
+   05 IN-MEMBER-ID               PIC X(32).
+   05 IN-ADDR-L1                 PIC X(64).
+   05 IN-CITY                    PIC X(32).
+   05 IN-COUNTY                  PIC X(32).
+   05 IN-STATE                   PIC X(2).
+   05 IN-ZIP5                    PIC X(5).
+   05 IN-YEAR-BUILT              PIC 9(4).
+   05 IN-SQFT                    PIC 9(6).
+   05 IN-CONSTRUCTION            PIC X(12).
+   05 IN-ROOF-MAT                PIC X(12).
+   05 IN-ROOF-YEAR               PIC 9(4).
+   05 IN-PROTECT-CLASS           PIC 9.
+   05 IN-PRIOR-CLAIMS            PIC 9.
+   05 IN-CREDIT-TIER             PIC X(12).
+   05 IN-MULTI-POLICY            PIC X.
+   05 IN-PROT-DEVICES            PIC X(64).
+   05 IN-COV-A                   PIC 9(9).
+   05 IN-DEDUCTIBLE              PIC 9(7).
+   05 IN-WH-DED-PCT              PIC 9(2).
+
+*> ---------- Derived & rating fields ----------
+01 WS-CALC.
+   05 WS-CURR-YEAR               PIC 9(4).
+   05 WS-ROOF-AGE                PIC 9(3).
+   05 WS-HOME-AGE                PIC 9(3).
+   05 WS-TERR-FACTOR             PIC 9V999 VALUE 1.000.
+   05 WS-PC-FACTOR               PIC 9V999 VALUE 1.000.
+   05 WS-CONSTR-FACTOR           PIC 9V999 VALUE 1.000.
+   05 WS-ROOF-FACTOR             PIC 9V999 VALUE 1.000.
+   05 WS-DED-FACTOR              PIC 9V999 VALUE 1.000.
+   05 WS-WH-DED-FACTOR           PIC 9V999 VALUE 1.000.
+   05 WS-CREDIT-FACTOR           PIC 9V999 VALUE 1.000.
+   05 WS-HAZARD-FACTOR           PIC 9V999 VALUE 1.000.
+   05 WS-DISCOUNT-FACTOR         PIC 9V999 VALUE 1.000.
+   05 WS-MULTI-DISC              PIC 9V999 VALUE 1.000.
+   05 WS-PROT-DISC               PIC 9V999 VALUE 1.000.
+   05 WS-NEW-HOME-DISC           PIC 9V999 VALUE 1.000.
+   05 WS-CLAIMS-SUR              PIC 9V999 VALUE 1.000.
+   05 WS-BASE-RATE-PER-1000      PIC 9(4)V99 VALUE 4.50.  *> demo only
+   05 WS-PREMIUM-BASE            PIC 9(9)V99 VALUE 0.
+   05 WS-PREMIUM-RATED           PIC 9(9)V99 VALUE 0.
+   05 WS-PREMIUM-DISCOUNTED      PIC 9(9)V99 VALUE 0.
+   05 WS-FEES                    PIC 9(7)V99 VALUE 0.
+   05 WS-TAX                     PIC 9(7)V99 VALUE 0.
+   05 WS-TOTAL                   PIC 9(9)V99 VALUE 0.
+   05 WS-TAX-RATE                PIC 9V999 VALUE 1.020.   *> 2% tax
+   05 WS-POLICY-FEE              PIC 9(4)V99 VALUE 25.00.
+   05 WS-SERVICE-FEE             PIC 9(3)V99 VALUE 5.00.
+
+*> ---------- Decision / status ----------
+01 WS-DECISION.
+   05 WS-STATUS                  PIC X(9)  VALUE 'APPROVED'. *> APPROVED|REFERRED|DECLINED
+   05 WS-REASONS                 PIC X(256) VALUE SPACES.
+
+*> Protective device flags (parsed from IN-PROT-DEVICES)
+01 WS-PD.
+   05 PD-SMK                     PIC X VALUE 'N'.
+   05 PD-ALM                     PIC X VALUE 'N'.
+   05 PD-SPR                     PIC X VALUE 'N'.
+   05 PD-DBLT                    PIC X VALUE 'N'.
+
+*> Quote reference ID
+01 WS-QUOTE-ID                   PIC X(32).
+
+01 WS-TEXTS.
+   05 COMMA                      PIC X VALUE ','.
+   05 SEMI                       PIC X VALUE ';'.
+
+PROCEDURE DIVISION.
+MAIN-LOGIC.
+    MOVE FUNCTION CURRENT-DATE TO WS-CD
+    PERFORM GET-CURR-YEAR
+    OPEN INPUT IN-FILE
+         OUTPUT OUT-FILE LOG-FILE
+
+    PERFORM UNTIL WS-EOF = 'Y'
+       READ IN-FILE
+          AT END MOVE 'Y' TO WS-EOF
+          NOT AT END
+             PERFORM PARSE-CSV
+             PERFORM PREFILL-STUBS
+             PERFORM UNDERWRITE-WI
+             IF WS-STATUS NOT = 'DECLINED'
+                PERFORM RATE-WI
+                PERFORM APPLY-DISCOUNTS
+                PERFORM FEES-TAXES
+             END-IF
+             PERFORM BUILD-QUOTE
+             PERFORM WRITE-OUTPUTS
+       END-READ
+    END-PERFORM
+
+    CLOSE IN-FILE OUT-FILE LOG-FILE
+    GOBACK.
+
+GET-CURR-YEAR.
+    MOVE FUNCTION CURRENT-DATE(1:4) TO WS-CURR-YEAR
+    .
+
+PARSE-CSV.
+    *> Reset flags
+    MOVE 'N' TO PD-SMK PD-ALM PD-SPR PD-DBLT
+    MOVE SPACES TO IN-FIELDS WS-REASONS
+    MOVE 'APPROVED' TO WS-STATUS
+
+    UNSTRING IN-REC DELIMITED BY ALL COMMA
+       INTO IN-MEMBER-ID, IN-ADDR-L1, IN-CITY, IN-COUNTY, IN-STATE, IN-ZIP5,
+            IN-YEAR-BUILT, IN-SQFT, IN-CONSTRUCTION, IN-ROOF-MAT, IN-ROOF-YEAR,
+            IN-PROTECT-CLASS, IN-PRIOR-CLAIMS, IN-CREDIT-TIER, IN-MULTI-POLICY,
+            IN-PROT-DEVICES, IN-COV-A, IN-DEDUCTIBLE, IN-WH-DED-PCT
+    END-UNSTRING
+
+    *> Parse protective device list (semicolon-separated)
+    PERFORM VARYING WS-SEQ FROM 1 BY 1 UNTIL WS-SEQ > 32
+       EXIT PERFORM
+    END-PERFORM
+    PERFORM PARSE-PROT-DEV
+    .
+
+PARSE-PROT-DEV.
+    DECLARE SUBSTR   PIC X(8).
+    PERFORM VARYING WS-SEQ FROM 1 BY 1
+            UNTIL WS-SEQ > FUNCTION LENGTH(IN-PROT-DEVICES)
+       UNSTRING IN-PROT-DEVICES DELIMITED BY SEMI OR SPACE
+           INTO SUBSTR
+           WITH POINTER WS-SEQ
+       END-UNSTRING
+       EVALUATE FUNCTION UPPER-CASE(SUBSTR)
+         WHEN 'SMK'  MOVE 'Y' TO PD-SMK
+         WHEN 'ALM'  MOVE 'Y' TO PD-ALM
+         WHEN 'SPR'  MOVE 'Y' TO PD-SPR
+         WHEN 'DBLT' MOVE 'Y' TO PD-DBLT
+         WHEN OTHER CONTINUE
+       END-EVALUATE
+    END-PERFORM
+    .
+
+PREFILL-STUBS.
+    *> Example: if protection class missing, infer rough PC by zip (very naive)
+    IF IN-PROTECT-CLASS = 0
+       IF IN-ZIP5(1:3) = '532' OR IN-ZIP5(1:3) = '534'
+          MOVE 3 TO IN-PROTECT-CLASS
+       ELSE
+          MOVE 5 TO IN-PROTECT-CLASS
+       END-IF
+    END-IF
+    .
+
+UNDERWRITE-WI.
+    MOVE FUNCTION NUMVAL(WS-CURR-YEAR) - FUNCTION NUMVAL(IN-ROOF-YEAR) TO WS-ROOF-AGE
+    MOVE FUNCTION NUMVAL(WS-CURR-YEAR) - FUNCTION NUMVAL(IN-YEAR-BUILT) TO WS-HOME-AGE
+
+    *> State check
+    IF FUNCTION UPPER-CASE(IN-STATE) NOT = 'WI'
+       MOVE 'DECLINED' TO WS-STATUS
+       STRING 'Non-WI risk' DELIMITED BY SIZE
+              INTO WS-REASONS
+       END-STRING
+       EXIT PARAGRAPH
+    END-IF
+
+    *> Owner-occupied assumed by use case; add fields if needed
+
+    *> Hard stops
+    IF IN-PROTECT-CLASS = 10
+       MOVE 'DECLINED' TO WS-STATUS
+       STRING WS-REASONS DELIMITED BY SIZE ' | PC=10' DELIMITED BY SIZE
+              INTO WS-REASONS
+       END-STRING
+    END-IF
+
+    IF IN-PRIOR-CLAIMS > 2
+       MOVE 'DECLINED' TO WS-STATUS
+       STRING WS-REASONS DELIMITED BY SIZE ' | >2 prior claims' DELIMITED BY SIZE
+              INTO WS-REASONS
+       END-STRING
+    END-IF
+
+    IF FUNCTION NUMVAL(IN-COV-A) < 50000 OR FUNCTION NUMVAL(IN-COV-A) > 2000000
+       MOVE 'DECLINED' TO WS-STATUS
+       STRING WS-REASONS DELIMITED BY SIZE ' | Coverage A out of bounds' DELIMITED BY SIZE
+              INTO WS-REASONS
+       END-STRING
+    END-IF
+
+    *> Soft referrals
+    IF WS-ROOF-AGE > 40 AND WS-STATUS = 'APPROVED'
+       MOVE 'REFERRED' TO WS-STATUS
+       STRING WS-REASONS DELIMITED BY SIZE ' | Roof age >40' DELIMITED BY SIZE
+              INTO WS-REASONS
+       END-STRING
+    END-IF
+
+    IF FUNCTION UPPER-CASE(IN-ROOF-MAT) = 'WOOD' AND WS-ROOF-AGE > 15
+       IF WS-STATUS = 'APPROVED' MOVE 'REFERRED' TO WS-STATUS END-IF
+       STRING WS-REASONS DELIMITED BY SIZE ' | Wood roof >15y' DELIMITED BY SIZE
+              INTO WS-REASONS
+       END-STRING
+    END-IF
+    .
+
+RATE-WI.
+    *> Territory factor (toy example by zip band)
+    EVALUATE TRUE
+      WHEN IN-ZIP5(1:3) = '532' OR IN-ZIP5(1:3) = '534'
+           MOVE 1.20 TO WS-TERR-FACTOR
+      WHEN IN-ZIP5(1:3) = '535' OR IN-ZIP5(1:3) = '537'
+           MOVE 1.10 TO WS-TERR-FACTOR
+      WHEN OTHER
+           MOVE 1.00 TO WS-TERR-FACTOR
+    END-EVALUATE
+
+    *> Protection class factor
+    EVALUATE IN-PROTECT-CLASS
+      WHEN 1 THRU 3 MOVE 1.00 TO WS-PC-FACTOR
+      WHEN 4 THRU 5 MOVE 1.05 TO WS-PC-FACTOR
+      WHEN 6         MOVE 1.10 TO WS-PC-FACTOR
+      WHEN 7         MOVE 1.20 TO WS-PC-FACTOR
+      WHEN 8         MOVE 1.35 TO WS-PC-FACTOR
+      WHEN 9         MOVE 1.50 TO WS-PC-FACTOR
+      WHEN OTHER     MOVE 2.00 TO WS-PC-FACTOR
+    END-EVALUATE
+
+    *> Construction factor
+    IF FUNCTION UPPER-CASE(IN-CONSTRUCTION) = 'MASONRY'
+       MOVE 0.95 TO WS-CONSTR-FACTOR
+    ELSE
+       MOVE 1.00 TO WS-CONSTR-FACTOR
+    END-IF
+
+    *> Roof factor
+    IF WS-ROOF-AGE <= 10
+       MOVE 0.95 TO WS-ROOF-FACTOR
+    ELSE IF WS-ROOF-AGE <= 25
+       MOVE 1.00 TO WS-ROOF-FACTOR
+    ELSE
+       MOVE 1.10 TO WS-ROOF-FACTOR
+    END-IF
+
+    *> Deductible factors
+    EVALUATE FUNCTION NUMVAL(IN-DEDUCTIBLE)
+      WHEN 500    MOVE 1.05 TO WS-DED-FACTOR
+      WHEN 1000   MOVE 1.00 TO WS-DED-FACTOR
+      WHEN 2000   MOVE 0.95 TO WS-DED-FACTOR
+      WHEN 5000   MOVE 0.90 TO WS-DED-FACTOR
+      WHEN OTHER  MOVE 1.00 TO WS-DED-FACTOR
+    END-EVALUATE
+
+    EVALUATE IN-WH-DED-PCT
+      WHEN 0 MOVE 1.00 TO WS-WH-DED-FACTOR
+      WHEN 1 MOVE 0.97 TO WS-WH-DED-FACTOR
+      WHEN 2 MOVE 0.95 TO WS-WH-DED-FACTOR
+      WHEN OTHER MOVE 0.94 TO WS-WH-DED-FACTOR
+    END-EVALUATE
+
+    *> Credit factor (usage allowed in WI; honor enterprise policy)
+    EVALUATE FUNCTION UPPER-CASE(IN-CREDIT-TIER)
+      WHEN 'EXCELLENT' MOVE 0.90 TO WS-CREDIT-FACTOR
+      WHEN 'GOOD'      MOVE 0.95 TO WS-CREDIT-FACTOR
+      WHEN 'FAIR'      MOVE 1.00 TO WS-CREDIT-FACTOR
+      WHEN 'POOR'      MOVE 1.10 TO WS-CREDIT-FACTOR
+      WHEN OTHER       MOVE 1.00 TO WS-CREDIT-FACTOR
+    END-EVALUATE
+
+    *> Hazard factor by county (toy)
+    EVALUATE FUNCTION UPPER-CASE(IN-COUNTY)
+      WHEN 'DOOR' 'DOUGLAS' 'BAYFIELD' MOVE 1.05 TO WS-HAZARD-FACTOR
+      WHEN OTHER                        MOVE 1.00 TO WS-HAZARD-FACTOR
+    END-EVALUATE
+
+    *> Claims surcharge
+    EVALUATE IN-PRIOR-CLAIMS
+      WHEN 0 MOVE 1.00 TO WS-CLAIMS-SUR
+      WHEN 1 MOVE 1.05 TO WS-CLAIMS-SUR
+      WHEN 2 MOVE 1.10 TO WS-CLAIMS-SUR
+      WHEN OTHER MOVE 1.25 TO WS-CLAIMS-SUR
+    END-EVALUATE
+
+    *> Base premium per $1,000 Coverage A
+    COMPUTE WS-PREMIUM-BASE =
+      (FUNCTION NUMVAL(IN-COV-A) / 1000)
+      * WS-BASE-RATE-PER-1000
+
+    *> Apply multiplicative factors
+    COMPUTE WS-PREMIUM-RATED ROUNDED =
+      WS-PREMIUM-BASE
+      * WS-TERR-FACTOR
+      * WS-PC-FACTOR
+      * WS-CONSTR-FACTOR
+      * WS-ROOF-FACTOR
+      * WS-DED-FACTOR
+      * WS-WH-DED-FACTOR
+      * WS-CREDIT-FACTOR
+      * WS-HAZA*
