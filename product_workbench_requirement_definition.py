@@ -222,7 +222,6 @@ ASSISTANTS = {
     #'agent_1': 'asst_EvIwemZYiG4cCmYc7GnTZoQZ',
     'agent_1_1': 'asst_htCAXHgeveZkjJj84Ldpnv6L', # Agent 1.1 - Product Overview Synthesizer – System Instructions
     'agent_2'  : 'asst_t5hnaKy1wPvD48jTbn8Mx45z',   # Agent 2: Feature Overview Generator – System Instructions
-    'agent_3'  : 'asst_EqkbMBdfOpUoEUaBPxCChVLR',   # Agent 3: Highest-Order Requirements Agent
     'agent_4_1': 'asst_Ed8s7np19IPmjG5aOpMAYcPM', # Agent 4.1: Product Requirements / User Stories Generator - System Instructions
     'agent_4_2': 'asst_CLBdcKGduMvSBM06MC1OJ7bF', # Agent 4.2: Operational Business Requirements Generator – System Instructions
     'agent_4_3': 'asst_61ITzgJTPqkQf4OFnnMnndNb', # Agent 4.3: Capability-Scoped Non-Functional Requirements Generator – System Instructions
@@ -232,7 +231,7 @@ ASSISTANTS = {
 }
 
 # Dedicated Legacy Business Description agent (optional). Set LEGACY_AGENT_ID env var.
-LEGACY_AGENT_ID = os.getenv('LEGACY_AGENT_ID') or ASSISTANTS.get('agent_3')
+LEGACY_AGENT_ID = os.getenv('LEGACY_AGENT_ID')
 
 ########################
 # LOGGING CONFIGURATION
@@ -890,69 +889,6 @@ def update_content():
         logging.error(f"Error updating content: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
-@app.route('/page3', methods=['GET', 'POST'])
-def page3():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-    data = get_data(session.get('data_key', '')) or {}
-
-    if request.method == 'POST':
-        user_inputs = data.get("inputs", {})
-        try:
-            logging.info(f"[PAGE3] user_inputs: {user_inputs}")
-        except UnicodeEncodeError:
-            logging.info(f"[PAGE3] user_inputs: {str(user_inputs).encode('ascii', 'replace').decode('ascii')}")
-
-        feature_overview = data.get("feature_overview", "")
-        product_overview = data.get("product_overview", "")
-        legacy_desc_full = data.get("legacy_business_description", "") or user_inputs.get("legacy_business_description", "")
-        combined_input = build_capped_combined_input(user_inputs, product_overview, feature_overview, legacy_desc_full)
-
-        try:
-            logging.info(f"[PAGE3] Combined input for agents: {combined_input}")
-        except UnicodeEncodeError:
-            logging.info(f"[PAGE3] Combined input for agents: {combined_input.encode('ascii', 'replace').decode('ascii')}")
-
-        import threading, gc
-        loop = None
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-        keys = [k for k in ASSISTANTS if k.startswith("agent_4_")]
-        # Light guidance to 4.x agents: leverage and cite legacy-derived insights
-        agent_inputs = []
-        for k in keys:
-            guidance = _clip(
-                "When applicable, incorporate insights from 'Legacy Business Description' into this section. "
-                "Add 'Source: Legacy Code' on lines that are directly supported by legacy artifacts.",
-                BUDGETS['guidance']
-            )
-            agent_inputs.append((ASSISTANTS[k], combined_input + "\n\n[Agent Guidance]\n" + guidance))
-
-        results = loop.run_until_complete(call_agents_parallel(agent_inputs))
-        outputs = dict(zip(keys, results))
-        data['combined_outputs'] = outputs
-        session['combined_outputs'] = outputs
-
-        if USING_REDIS:
-            redis_client.setex(session['data_key'], 3600, json.dumps(data))
-        else:
-            with open(os.path.join(TEMP_DIR, f'prd_session_{session["data_key"]}.json'), 'w') as f:
-                json.dump(data, f)
-
-        try:
-            logging.info(f"[RESOURCE] Thread count: {threading.active_count()}")
-            gc.collect()
-        except Exception as e:
-            logging.warning(f"Resource logging failed: {e}")
-
-        return redirect('/page4')
-
-    return render_template('page3_prompt_picker.html', highest_order=data.get('highest_order', ''))
-
 _agent_response_cache = {}
 
 async def call_agent_with_cache(agent_id, input_text):
@@ -986,13 +922,13 @@ def page4():
             return "No data found", 404  # Or render a friendly template
 
         outputs = {
-            'product_overview': data.get('product_overview', ''),
-            'feature_overview': data.get('feature_overview', ''),
-            'agent_4_1': data.get('combined_outputs', {}).get('agent_4_1', ''),
-            'agent_4_2': data.get('combined_outputs', {}).get('agent_4_2', ''),
-            'agent_4_3': data.get('combined_outputs', {}).get('agent_4_3', ''),
-            'agent_4_4': data.get('combined_outputs', {}).get('agent_4_4', ''),
-            'agent_4_5': data.get('combined_outputs', {}).get('agent_4_5', '')
+            'product_overview': dedupe_legacy_citations(data.get('product_overview', '')),
+            'feature_overview': dedupe_legacy_citations(data.get('feature_overview', '')),
+            'agent_4_1': dedupe_legacy_citations(data.get('combined_outputs', {}).get('agent_4_1', '')),
+            'agent_4_2': dedupe_legacy_citations(data.get('combined_outputs', {}).get('agent_4_2', '')),
+            'agent_4_3': dedupe_legacy_citations(data.get('combined_outputs', {}).get('agent_4_3', '')),
+            'agent_4_4': dedupe_legacy_citations(data.get('combined_outputs', {}).get('agent_4_4', '')),
+            'agent_4_5': dedupe_legacy_citations(data.get('combined_outputs', {}).get('agent_4_5', ''))
         }
         logger.info(json.dumps(outputs, indent=2))
 
@@ -1105,6 +1041,33 @@ def extract_references_from_outputs(outputs):
     logging.info(f"[REFERENCES] Extracted {len(cleaned_refs)} references")
     return cleaned_refs
 
+def dedupe_legacy_citations(text: str) -> str:
+    """Remove duplicate trailing 'Source: Legacy Code' lines and collapse consecutive duplicates.
+    - If multiple consecutive lines end with the exact citation, keep one.
+    - If block ends with duplicate citation lines, keep a single trailing citation.
+    """
+    if not isinstance(text, str) or not text:
+        return text
+    lines = text.splitlines()
+    deduped = []
+    citation = "Source: Legacy Code"
+    prev_was_citation = False
+    for ln in lines:
+        if ln.strip() == citation:
+            if not prev_was_citation:
+                deduped.append(ln)
+                prev_was_citation = True
+            else:
+                # skip duplicate citation line
+                continue
+        else:
+            deduped.append(ln)
+            prev_was_citation = False
+    # Also ensure we don't end with multiple blank lines before a citation
+    result = "\n".join(deduped)
+    result = re.sub(r"(\n\s*){3,}" , "\n\n", result)
+    return result
+
 limiter = Limiter(app=app, key_func=get_remote_address)
 
 # Replace with the new route
@@ -1130,17 +1093,18 @@ def generate_word_doc():
         legacy_section = data.get("legacy_business_description", "")
         if legacy_section and "Legacy Code" not in legacy_section:
             legacy_section = legacy_section + "\n\nSource: Legacy Code"
+        legacy_section = dedupe_legacy_citations(legacy_section)
 
         # Map all sections
         sections = {
             "Legacy Business Description (from Legacy Code)": legacy_section,
-            "Product Overview": data.get("product_overview", ""),
-            "Feature Overview": data.get("feature_overview", ""),
+            "Product Overview": dedupe_legacy_citations(data.get("product_overview", "")),
+            "Feature Overview": dedupe_legacy_citations(data.get("feature_overview", "")),
          #   "Product Requirements": data.get("combined_outputs", {}).get("agent_4_1", ""),
-            "Functional Requirements": data.get("combined_outputs", {}).get("agent_4_2", ""),
-            "Non-Functional Requirements": data.get("combined_outputs", {}).get("agent_4_3", ""),
-            "Data Requirements": data.get("combined_outputs", {}).get("agent_4_4", ""),
-            "Legal & Compliance Requirements": data.get("combined_outputs", {}).get("agent_4_5", "")
+            "Functional Requirements": dedupe_legacy_citations(data.get("combined_outputs", {}).get("agent_4_2", "")),
+            "Non-Functional Requirements": dedupe_legacy_citations(data.get("combined_outputs", {}).get("agent_4_3", "")),
+            "Data Requirements": dedupe_legacy_citations(data.get("combined_outputs", {}).get("agent_4_4", "")),
+            "Legal & Compliance Requirements": dedupe_legacy_citations(data.get("combined_outputs", {}).get("agent_4_5", ""))
         }
 
         # Add title and metadata
@@ -1526,32 +1490,7 @@ def chat_with_agent():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route("/chat_agent3", methods=["POST"])
-@require_auth
-def chat_agent3():
-    try:
-        data = request.get_json()
-        user_msg = data.get("message", "")
-        session_id = session.get("data_key", "")
-        current_data = get_data(session_id)
-
-        # Call Agent 3
-        agent_reply = call_agent(ASSISTANTS['agent_3'], user_msg)
-
-        # Update Highest Order section
-        if current_data:
-            current_data["highest_order"] = agent_reply
-            if USING_REDIS:
-                redis_client.setex(session_id, 3600, json.dumps(current_data))
-            else:
-                with open(os.path.join(TEMP_DIR, f'prd_session_{session_id}.json'), 'w') as f:
-                    json.dump(current_data, f)
-
-        return jsonify({"reply": agent_reply})
-
-    except Exception as e:
-        logging.error(f"Chat Agent 3 error: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+    
      
 
 @app.route("/review_prd", methods=["POST"])
