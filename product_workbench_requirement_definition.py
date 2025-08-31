@@ -342,9 +342,255 @@ def extract_legacy_business_description(file_texts):
     header = "## Legacy Business Description\nThe following summary was extracted from uploaded legacy artifacts (COBOL/JCL):\n"
     return header + "\n\n" + "\n\n".join(highlights)
 
+def generate_legacy_business_requirements(file_texts):
+    """Convert legacy artifacts into structured Business Requirements Breakdown (heuristic, POC 3b-style).
+    - Filters license headers and boilerplate (Apache, copyright, identifiers, divisions).
+    - Promotes lines like "Function : ..." to requirement names and derives brief logic steps from business verbs.
+    - Emits sections: Requirement N: <Name>, Description, Logic Description (bullets), Dependencies.
+    """
+    if not file_texts:
+        return ""
+
+    noise_substrings = [
+        'apache license', 'all rights reserved', 'copyright', 'you may not use this file',
+        'http://www.apache.org/licenses', 'https://www.apache.org/licenses', 'licensed under',
+        'identification division', 'environment division', 'data division', 'working-storage section',
+        'linkage section', 'procedure division', 'program-id', 'author', 'installation', 'date-written',
+    ]
+    skip_prefixes = ('*>', '//*', '/*', '//', '*', '*/')
+    business_verbs = (
+        'update', 'post', 'calculate', 'determine', 'validate', 'apply', 'compute', 'assess',
+        'flag', 'set', 'assign', 'add', 'remove', 'charge', 'waive', 'approve', 'reject'
+    )
+
+    def is_noise(s: str) -> bool:
+        u = s.lower()
+        if any(tok in u for tok in noise_substrings):
+            return True
+        if re.match(r"^\s*(program\s*:|application\s*:|type\s*:|author\s*:)", u):
+            return True
+        # Generic technical starters we want to skip
+        if re.match(r"^\s*(display\b|move\b|perform\b|if\b|end-if\b|add\b|subtract\b|select\b|assign\b|open\b|close\b|read\b|write\b|fetch\b|execute\b|evaluate\b|into\b|using\b|call\b)\b", u):
+            # Codey statements rarely translate directly; we mine business verbs separately
+            return True
+        # Paragraph labels like 1050-UPDATE-ACCOUNT
+        if re.match(r"^\s*\d{2,5}-[A-Z0-9\-]+\.?$", s):
+            return True
+        if len(s.strip()) < 4:
+            return True
+        return False
+
+    # Collect candidates per file
+    files_info = []
+    for fname, text in file_texts:
+        if not text:
+            continue
+        function_names = []
+        logic_lines = []
+        deps_tokens = set()
+        for raw in text.splitlines()[:2000]:
+            s = (raw or '').strip().strip('*').strip()
+            if not s or s.startswith(skip_prefixes):
+                # Still allow parsing of function lines under comments
+                cleaned = s.lstrip('*/ -').strip()
+            else:
+                cleaned = s
+
+            if not cleaned:
+                continue
+
+            low = cleaned.lower()
+            if 'function' in low and re.search(r"\bfunction\b\s*:\s*", low):
+                # Extract function name after 'Function :'
+                name = re.split(r"(?i)function\s*:\s*", cleaned, maxsplit=1)[-1]
+                name = name.strip().strip('.').strip()
+                if name and name.lower() not in ('n/a', 'tbd'):
+                    function_names.append(name)
+                continue
+
+            if is_noise(cleaned):
+                continue
+
+            # Business verb based logic extraction
+            if any(v in low for v in business_verbs):
+                # Normalize and end with period
+                line = cleaned
+                # Skip overtly technical content in logic
+                if re.search(r"\b(FILE|RECORD|SELECT|ASSIGN|OPEN|CLOSE|DISPLAY|MOVE|PERFORM|EVALUATE|FETCH|EXEC|SQL)\b", line):
+                    continue
+                line = re.sub(r"\s{2,}", " ", line)
+                if not line.endswith(('.','!','?')):
+                    line += '.'
+                # Token replacements to business nouns
+                repl = [
+                    (r"\bTRAN\b", "transaction"),
+                    (r"\btrans\b", "transaction"),
+                    (r"\bACCT\b", "account"),
+                    (r"\bBAL\b", "balance"),
+                    (r"\bAMT\b", "amount"),
+                ]
+                for pat, rep in repl:
+                    line = re.sub(pat, rep, line, flags=re.IGNORECASE)
+                logic_lines.append(line)
+
+            # Dependencies: uppercase tokens with hyphens or underscores (e.g., ACCT-BAL, TRAN-AMT)
+            for tok in re.findall(r"\b[A-Z][A-Z0-9_-]{3,}\b", cleaned):
+                # Avoid generic words
+                if tok not in ("IDENTIFICATION", "DIVISION", "PROGRAM", "AUTHOR", "SECTION", "DISPLAY", "MOVE"):
+                    deps_tokens.add(tok)
+
+        files_info.append({
+            'file': os.path.basename(fname or 'artifact'),
+            'functions': list(dict.fromkeys(function_names))[:20],  # preserve order, higher cap
+            'logic': list(dict.fromkeys(logic_lines))[:15],         # dedupe, higher cap
+            'deps': sorted(list(deps_tokens))[:20]
+        })
+
+    # Helpers for output prettification
+    def prettify_token(tok: str) -> str:
+        # Convert ACCT-CREDIT-LIMIT -> account credit limit
+        parts = re.split(r"[-_]+", tok)
+        words = []
+        for p in parts:
+            pl = p.lower()
+            mapping = {
+                'acct': 'account', 'tran': 'transaction', 'trans': 'transaction', 'amt': 'amount', 'bal': 'balance',
+                'desc': 'description', 'num': 'number', 'id': 'ID', 'ts': 'timestamp'
+            }
+            words.append(mapping.get(pl, pl))
+        # Capitalize ID if alone
+        return ' '.join(words).replace(' id', ' ID')
+
+    tech_deps_blacklist = (
+        'file', 'record', 'section', 'division', 'program', 'stmt', 'open', 'close', 'display', 'move', 'perform',
+        'select', 'assign', 'exec', 'sql', 'cics', 'db2', 'vsam', 'comp', 'pic'
+    )
+
+    def clean_deps(deps: set) -> list:
+        cleaned = []
+        for t in deps:
+            tl = t.lower()
+            if any(x in tl for x in tech_deps_blacklist):
+                continue
+            cleaned.append(prettify_token(t))
+        # De-dupe while preserving order
+        seen = set()
+        out = []
+        for c in cleaned:
+            if c not in seen:
+                out.append(c)
+                seen.add(c)
+        return out[:10]
+
+    def mk_description(name: str) -> str:
+        nl = (name or '').lower()
+        if 'interest' in nl:
+            return 'Calculates interest based on configured rates, balances, and transaction timing.'
+        if 'post' in nl or 'posting' in nl:
+            return 'Posts daily transactions and updates affected account balances.'
+        if 'account update' in nl or 'update account' in nl:
+            return 'Accepts and applies account updates with validation.'
+        if 'late fee' in nl:
+            return 'Determines eligibility and applies late fees per policy.'
+        return f"Provides {name.strip().lower()}." if name else 'Provides business functionality.'
+
+    def mk_business_description(name: str, logic: list[str]) -> str:
+        base = mk_description(name)
+        if logic:
+            # Include up to two key activities as part of the sentence
+            steps = []
+            for s in logic[:2]:
+                c = re.sub(r"\s*[-•]\s*", "", s).strip()
+                if c.endswith('.'):
+                    c = c[:-1]
+                if c:
+                    steps.append(c)
+            if steps:
+                return f"{base} Key activities include: " + "; ".join(steps) + "."
+        return base
+
+    # Build Business Description (top-level) + Requirements
+    req_idx = 1
+    out = ["## Business Description"]
+    # Aggregate capability names from functions
+    all_funcs = []
+    for i in files_info:
+        all_funcs.extend(i['functions'])
+    if all_funcs:
+        out.append("Capabilities identified:")
+        # Dedup preserve order
+        seen = set()
+        caps = []
+        for f in all_funcs:
+            if f not in seen:
+                caps.append(f)
+                seen.add(f)
+        for f in caps:
+            out.append(f"- {f}")
+    # List files processed
+    if files_info:
+        out.append("")
+        out.append("Files processed:")
+        for i in files_info:
+            out.append(f"- {i['file']}")
+
+    out.append("")
+    out.append("## Business Requirements Breakdown")
+    for info in files_info:
+        funcs = info['functions'] or []
+        logic = info['logic'] or []
+        deps = clean_deps(set(info['deps'] or []))
+
+        # Per-file Business Description
+        file_funcs = funcs[:3]
+        if file_funcs:
+            out.append(f"\n#### {info['file']} — Business Description")
+            # Simple 1-2 sentence summary based on functions
+            if len(file_funcs) == 1:
+                out.append(f"This component supports: {file_funcs[0]}.")
+            else:
+                out.append("This component supports: " + ", ".join(file_funcs[:-1]) + f" and {file_funcs[-1]}.")
+
+        # If we have explicit functions, create a requirement per function; otherwise, one per file
+        targets = funcs if funcs else [f"Business process from {info['file']}"]
+        for name in targets:
+            title = name[:1].upper() + name[1:]
+            out.append(f"\n### Requirement {req_idx}: {title}")
+            # Business Description (business-facing summary)
+            out.append(f"Business Description: {mk_business_description(title, logic)}")
+            # Description prefers the function text, lightly normalized
+            out.append(f"Description: {mk_description(title)}")
+
+            if logic:
+                out.append("\nLogic Description:")
+                for step in logic[:4]:
+                    # Make step more businessy
+                    cleaned = step
+                    cleaned = re.sub(r"\bTRAN\b", "transaction", cleaned, flags=re.IGNORECASE)
+                    cleaned = re.sub(r"\bACCT\b", "account", cleaned, flags=re.IGNORECASE)
+                    # Remove trailing technical fragments like INTO/TO variable
+                    cleaned = re.sub(r"\b(INTO|TO)\b.+", "", cleaned).strip()
+                    if cleaned:
+                        out.append(f"- {cleaned}")
+
+            if deps:
+                out.append("\nDependencies:")
+                out.append("- Data elements: " + ", ".join(deps))
+
+            req_idx += 1
+            # Cap within inner loop (high ceiling to include most relevant requirements)
+            if req_idx > 200:
+                break
+
+    return "\n".join(out) if len(out) > 1 else ""
+
 def _summarize_with_agent(file_texts):
     """Use an agent to craft a concise Legacy Business Description from legacy code artifacts."""
     try:
+        # If no LEGACY_AGENT_ID is configured, skip agent call and let caller fallback to heuristic
+        if not LEGACY_AGENT_ID or not isinstance(LEGACY_AGENT_ID, str) or not LEGACY_AGENT_ID.strip():
+            logging.info("[LEGACY] LEGACY_AGENT_ID is not set; skipping agent summarization and using heuristic fallback")
+            return ""
         parts = []
         for fname, txt in file_texts[:5]:
             snippet = (txt or '')[:6000]
@@ -378,8 +624,8 @@ def api_legacy_business_description():
         # First try the agent summarizer
         desc = _summarize_with_agent(texts)
         if not desc:
-            # Fallback to heuristic extraction
-            desc = extract_legacy_business_description(texts)
+            # Fallback to heuristic requirements generator; then description if still empty
+            desc = generate_legacy_business_requirements(texts) or extract_legacy_business_description(texts)
         # Ensure explicit source citation is present
         if desc and "Legacy Code" not in desc:
             desc = desc + "\n\nSource: Legacy Code"
@@ -434,6 +680,10 @@ async def wait_for_run_completion(thread_id, run_id, timeout=90, poll_interval=0
 @monitor_agent_performance
 def call_agent(agent_id, input_text):
     try:
+        # Validate assistant id
+        if not agent_id or not isinstance(agent_id, str) or not agent_id.strip():
+            logging.error("[ERROR] assistant_id is missing or invalid; aborting call_agent")
+            return "Error: assistant_id not configured"
         logging.info(f"[CALL START] Calling agent {agent_id}")
         thread_key = f"thread_{agent_id}"
         if thread_key not in session:
@@ -493,6 +743,10 @@ def call_agent(agent_id, input_text):
 @monitor_agent_performance
 async def call_agent_async(agent_id, input_text):
     try:
+        # Validate assistant id
+        if not agent_id or not isinstance(agent_id, str) or not agent_id.strip():
+            logging.error("[ERROR] assistant_id is missing or invalid; aborting call_agent_async")
+            return "Error: assistant_id not configured"
         logging.info(f"[CALL START] Calling agent {agent_id}")
         thread_key = f"thread_{agent_id}"
         if thread_key not in session:
@@ -604,8 +858,8 @@ def page1():
                         texts.append((fs.filename, txt))
                 if texts:
                     try:
-                        # Prefer agent summarization, fallback to heuristic
-                        legacy_desc = _summarize_with_agent(texts) or extract_legacy_business_description(texts)
+                        # Prefer agent summarization, fallback to heuristic Business Requirements then description
+                        legacy_desc = _summarize_with_agent(texts) or generate_legacy_business_requirements(texts) or extract_legacy_business_description(texts)
                     except Exception as e:
                         logging.warning(f"Legacy extraction failed: {e}")
                         # no-op fallback; legacy_desc remains empty
@@ -842,6 +1096,14 @@ def update_content():
             stored_data['feature_overview'] = new_response
         elif content_type == 'highest_order':
             return jsonify({'error': 'Highest-order requirements editing is disabled in this flow.'}), 400
+        elif content_type == 'legacy':
+            # Update legacy business description directly, enforce citation
+            legacy_new = new_content or ''
+            if legacy_new and 'Legacy Code' not in legacy_new:
+                legacy_new = legacy_new.rstrip() + "\n\nSource: Legacy Code"
+            legacy_new = dedupe_legacy_citations(legacy_new)
+            stored_data['legacy_business_description'] = legacy_new
+            new_response = legacy_new
         elif content_type.startswith('agent_4_'):
                 agent_id = ASSISTANTS.get(content_type)
                 if not agent_id:
@@ -1374,6 +1636,10 @@ def before_request():
 ########################
 @monitor_agent_performance
 async def call_agent_with_retry(agent_id, input_text, max_retries=3):
+    # Validate assistant id before attempting retries
+    if not agent_id or not isinstance(agent_id, str) or not agent_id.strip():
+        logging.error("[ERROR] assistant_id is missing or invalid; aborting call_agent_with_retry")
+        return "Error: assistant_id not configured"
     for attempt in range(max_retries):
         try:
             # Create thread with initial message
