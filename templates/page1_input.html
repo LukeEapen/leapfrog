@@ -331,6 +331,16 @@
     .legacy-help {
       color: #7a5c00;
     }
+
+    /* How To: Floating Help and Offcanvas Guide */
+    .howto-fab {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 1055;
+      border-radius: 999px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
   </style>
 
 </head>
@@ -456,6 +466,32 @@
 
   </div>
 
+  <!-- How To: Floating Help and Offcanvas Guide -->
+  <button type="button" class="btn btn-danger howto-fab" data-bs-toggle="offcanvas" data-bs-target="#howToPanel" aria-controls="howToPanel" title="How To (Shift + ?)">
+    <i class="bi bi-question-circle-fill"></i>
+  </button>
+
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="howToPanel" aria-labelledby="howToLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="howToLabel">How To: Get Started</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ol class="mb-3">
+        <li>Fill out Industry, Sector, Geography, Intent, and Features.</li>
+        <li>(Optional) Upload a PRD and legacy files/folders to enrich outputs.</li>
+        <li>Submit to run background agents; you will review results on the next page.</li>
+      </ol>
+      <div class="mb-2"><strong>Tips</strong></div>
+      <ul>
+        <li>Be concise but specific in Intent and Features to steer better outputs.</li>
+        <li>Legacy uploads enable a “Legacy Business Description” and citations later.</li>
+        <li>You can edit any generated text on the review page before finalizing.</li>
+      </ul>
+      <div class="text-muted small mt-3">Shortcut: Press Shift + ? to open this guide.</div>
+    </div>
+  </div>
+
   <script>
     function handleSubmit(event) {
       event.preventDefault();
@@ -526,6 +562,16 @@
       if (file && file.size > maxSizeKB * 1024) {
         alert(`File exceeds ${maxSizeKB}KB. Please choose a smaller file.`);
         this.value = ''; // Clear the file input
+      }
+    });
+
+    // Keyboard shortcut: Shift + ?
+    document.addEventListener('keydown', function(e){
+      if (e.shiftKey && (e.key === '?' || e.key === '/')) {
+        const panel = document.getElementById('howToPanel');
+        if (!panel) return;
+        const off = bootstrap.Offcanvas.getOrCreateInstance(panel);
+        off.toggle();
       }
     });
   </script>
@@ -654,7 +700,56 @@
   </script>
   <!-- Bootstrap JS bundle for toast functionality -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- How To: Floating Help Button and Offcanvas Guide -->
+  <style>
+    .howto-fab {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 1055;
+      border-radius: 999px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+  </style>
+  <button type="button" class="btn btn-danger howto-fab" data-bs-toggle="offcanvas" data-bs-target="#howToPanel" aria-controls="howToPanel" title="How To (Shift + ?)">
+    <i class="bi bi-question-circle-fill"></i>
+  </button>
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="howToPanel" aria-labelledby="howToLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="howToLabel">How To: Inputs & Uploads</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ol class="mb-3">
+        <li>Fill Industry, Sector, and Geography to frame the domain.</li>
+        <li>Describe Product Intent and Features clearly and concisely.</li>
+        <li>(Optional) Upload PRD and Legacy files/folder to enrich outputs.</li>
+        <li>Click “Extract from Legacy” to prebuild a business description.</li>
+        <li>Submit to generate Product and Feature overviews on the next page.</li>
+      </ol>
+      <div class="mb-2"><strong>Tips</strong></div>
+      <ul>
+        <li>Be specific with outcomes and constraints to guide better drafts.</li>
+        <li>Legacy uploads enable citations and business-friendly requirements.</li>
+        <li>You can edit and chat with the assistant on the review pages.</li>
+      </ul>
+      <div class="text-muted small mt-3">Shortcut: Press Shift + ? to open this guide.</div>
+    </div>
+  </div>
+
   <script src="{{ url_for('static', filename='js/global.js') }}"></script>
+  <script>
+    // Keyboard shortcut: Shift + ?
+    document.addEventListener('keydown', function(e){
+      if (e.shiftKey && (e.key === '?' || e.key === '/')) {
+        const panel = document.getElementById('howToPanel');
+        if (!panel || !window.bootstrap) return;
+        const off = bootstrap.Offcanvas.getOrCreateInstance(panel);
+        off.toggle();
+      }
+    });
+  </script>
 </body>
 
 </html>

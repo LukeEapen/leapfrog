@@ -1035,6 +1035,45 @@
     });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- How To: Floating Help and Offcanvas Guide -->
+  <style>
+    .howto-fab { position: fixed; right: 24px; bottom: 24px; z-index: 1055; border-radius: 999px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+  </style>
+  <button type="button" class="btn btn-danger howto-fab" data-bs-toggle="offcanvas" data-bs-target="#howToPanel" aria-controls="howToPanel" title="How To (Shift + ?)">
+    <i class="bi bi-question-circle-fill"></i>
+  </button>
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="howToPanel" aria-labelledby="howToLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="howToLabel">How To: Final Output</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ol class="mb-3">
+        <li>Review each section rendered from markdown.</li>
+        <li>Use the chat controls to ask follow-up questions per section.</li>
+        <li>Click “Download as Word” to export the PRD document.</li>
+        <li>(Optional) Upload to Vector DB to enable downstream linking.</li>
+      </ol>
+      <div class="mb-2"><strong>Tips</strong></div>
+      <ul>
+        <li>Ensure legacy-derived lines include the “Source: Legacy Code” citation.</li>
+        <li>Use Expand/Collapse to skim quickly before deep review.</li>
+      </ul>
+      <div class="text-muted small mt-3">Shortcut: Press Shift + ? to open this guide.</div>
+    </div>
+  </div>
+  <script>
+    // Keyboard shortcut: Shift + ?
+    document.addEventListener('keydown', function(e){
+      if (e.shiftKey && (e.key === '?' || e.key === '/')) {
+        const panel = document.getElementById('howToPanel');
+        if (!panel || !window.bootstrap) return;
+        const off = bootstrap.Offcanvas.getOrCreateInstance(panel);
+        off.toggle();
+      }
+    });
+  </script>
   <div class="modal fade" id="reviewModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
