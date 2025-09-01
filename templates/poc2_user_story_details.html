@@ -6,6 +6,10 @@
   <title>User Story Drafting Solution</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
+    .howto-fab { position: fixed; right: 24px; bottom: 24px; z-index: 1060; border-radius: 999px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+    @media print { .howto-fab, #howtoDetailsModal { display: none !important; } }
+  </style>
+  <style>
     /* Modern CSS Variables for Design System */
     :root {
       --primary-red: #d0021b;
@@ -1631,6 +1635,59 @@
         <strong>Error:</strong> {{ error_message }}
       </div>
     </div>
+
+    <!-- Floating How To for User Story Details (Bootstrap 4 modal) -->
+    <button type="button" class="btn btn-danger howto-fab" data-toggle="modal" data-target="#howtoDetailsModal" title="How To (Shift + ?)">
+      <span class="mr-1">?</span> How To
+  
+    </button>
+    <div class="modal fade" id="howtoDetailsModal" tabindex="-1" role="dialog" aria-labelledby="howtoDetailsLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="howtoDetailsLabel">How To · Story Details</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <h6>1) Review Inputs</h6>
+            <ul>
+              <li>Epic Title and Description are carried from previous steps.</li>
+              <li>User Story Name and Description can be edited here.</li>
+            </ul>
+            <h6>2) Generate & Refine</h6>
+            <ul>
+              <li>Use the chat panels to refine Description, Acceptance Criteria, and Tagged Requirements.</li>
+              <li>Click Apply where available to update the on-page fields with AI suggestions.</li>
+            </ul>
+            <h6>3) Submit to Jira</h6>
+            <ul>
+              <li>Confirm Priority and Responsible Systems if applicable.</li>
+              <li>Click Submit to create the Jira ticket; a link will be shown on success.</li>
+            </ul>
+            <hr>
+            <small class="text-muted">Shortcut: Shift + ? toggles this guide.</small>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+  
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      // Keyboard shortcut: Shift + ?
+      document.addEventListener('keydown', function(e){
+        if (e.shiftKey && (e.key === '?' || e.key === '/')) {
+          $('#howtoDetailsModal').modal('toggle');
+        }
+      });
+    </script>
     {% endif %}
     
     <!-- Success Message Display -->

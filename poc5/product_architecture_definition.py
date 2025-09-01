@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for, make_response, send_file
+from flask import Flask, render_template, request, session, redirect, url_for, make_response, send_file, jsonify
 from flask_session import Session
 import os
 import json
@@ -3824,6 +3824,69 @@ def tabbed_workbench():
         return resp
     except Exception:
         return rendered
+
+
+# System Mapping UI and chat endpoints (POC5)
+@app.route('/system-mapping', methods=['GET'])
+def system_mapping_page_poc5():
+    # Reuse shared template at root-level templates
+    try:
+        return render_template('system_mapping.html')
+    except Exception:
+        # Fallback simple page if template missing
+        return make_response('<h2>System Mapping UI not found</h2><p>Ensure templates/system_mapping.html exists.</p>', 404)
+
+
+@app.route('/system-mapping-chat', methods=['POST'])
+def system_mapping_chat_poc5():
+    # Lightweight, offline-friendly response structured for the UI
+    try:
+        data = request.get_json(silent=True) or {}
+        msg = (data.get('message') or '').strip()
+        current = data.get('current_systems') or []
+        available = data.get('available_systems') or []
+    except Exception:
+        msg, current, available = '', [], []
+
+    # Basic heuristics to craft suggestions without external calls
+    suggestions = []
+    warnings = []
+    lower = msg.lower() if msg else ''
+    def add_sugg(name, reason):
+        if name not in current:
+            suggestions.append({'system': name, 'reason': reason})
+    # Recommend some typical components if absent
+    if not current:
+        add_sugg('API Gateway', 'Fronts services, routing, throttling, auth.')
+        add_sugg('Identity Provider', 'Authentication/authorization (OIDC/OAuth2).')
+        add_sugg('Message Bus', 'Async pub/sub for decoupling (e.g., Kafka).')
+    # Parse intent
+    if 'payment' in lower:
+        add_sugg('Payment Gateway', 'External payments processing integration.')
+    if 'search' in lower:
+        add_sugg('Search Service', 'Full-text/product search capability.')
+    if 'analytics' in lower or 'metrics' in lower:
+        add_sugg('Analytics Platform', 'Centralized analytics/BI.')
+    if 'cache' in lower or 'redis' in lower:
+        add_sugg('Cache', 'Low-latency caching layer.')
+    if 'warehouse' in lower or 'lake' in lower:
+        add_sugg('Data Warehouse', 'Batch analytics, reporting.')
+    # Guardrails
+    if len(current) > 60:
+        warnings.append('Large mapping detected; consider grouping systems into domains.')
+
+    text = {
+        'message': 'Here are some recommendations based on your context. You can Apply All or add systems individually.',
+        'suggestions': suggestions,
+        'warnings': warnings,
+    }
+    return jsonify({'success': True, **text})
+
+
+@app.route('/epic-results', methods=['GET'])
+def epic_results_alias_poc5():
+    # Friendly alias for Back button on mapping UI; return the main workbench
+    return redirect(url_for('tabbed_workbench'))
 
 
 if __name__ == "__main__":

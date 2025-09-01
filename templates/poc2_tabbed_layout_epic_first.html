@@ -1543,4 +1543,123 @@
     }
   </script>
 </body>
+
+<!-- Floating How To for Epic-First layout -->
+<style>
+  .howto-fab { position: fixed; right: 24px; bottom: 24px; z-index: 1060; border-radius: 999px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+  .howto-nav .nav-link.active { background: #dc3545; color: #fff; }
+  @media print { .howto-fab, #epicFirstHowToOffcanvas { display: none !important; } }
+  /* Ensure it overlays above other UI */
+  #epicFirstHowToOffcanvas { z-index: 1080; }
+  /* Optional tooltip style on hover */
+  .howto-fab[title] { position: relative; }
+  .howto-fab[title]:hover::after { content: attr(title); position: absolute; right: 60px; bottom: 50%; transform: translateY(50%); background: rgba(0,0,0,0.8); color:#fff; padding:6px 10px; border-radius:6px; white-space: nowrap; font-size:12px; }
+  .howto-fab[title]:hover::before { content:''; position:absolute; right:52px; bottom:50%; transform: translateY(50%); border:6px solid transparent; border-left-color: rgba(0,0,0,0.8); }
+</style>
+<button type="button" class="btn btn-danger howto-fab" data-bs-toggle="offcanvas" data-bs-target="#epicFirstHowToOffcanvas" aria-controls="epicFirstHowToOffcanvas" title="How To (Shift + ?)">
+  <i class="fas fa-question-circle"></i>
+</button>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="epicFirstHowToOffcanvas" aria-labelledby="epicFirstHowToLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="epicFirstHowToLabel">How To · Backlog Workbench (Epic-First)</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <ul class="nav nav-pills howto-nav mb-3" id="epicFirstHowToTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="howto-epic-gen-tab" data-bs-toggle="tab" data-bs-target="#howto-epic-gen" type="button" role="tab">
+          <i class="fas fa-flag me-1"></i> Epic Generation
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="howto-epic-approval-tab" data-bs-toggle="tab" data-bs-target="#howto-epic-approval" type="button" role="tab">
+          <i class="fas fa-check-double me-1"></i> Epic Approval
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="howto-user-stories-tab" data-bs-toggle="tab" data-bs-target="#howto-user-stories" type="button" role="tab">
+          <i class="fas fa-tasks me-1"></i> User Stories
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="howto-story-details-tab" data-bs-toggle="tab" data-bs-target="#howto-story-details" type="button" role="tab">
+          <i class="fas fa-info-circle me-1"></i> Story Details
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="epicFirstHowToTabContent">
+      <div class="tab-pane fade show active" id="howto-epic-gen" role="tabpanel">
+        <ol class="mb-3">
+          <li>Upload PRD (required) and optionally System Mapping; or pick a PRD from Vector DB.</li>
+          <li>Provide Context & Instructions (priorities, constraints, goals) to guide the output.</li>
+          <li>Click “Generate Epics” and review the results; select the epics you intend to progress.</li>
+          <li>Use the chat to refine epic titles and descriptions before moving to approval.</li>
+        </ol>
+        <div class="small text-muted">Tips: Keep epics outcome-focused; link them to measurable business value.</div>
+      </div>
+      <div class="tab-pane fade" id="howto-epic-approval" role="tabpanel">
+        <ol class="mb-3">
+          <li>Review generated epics against scope and constraints.</li>
+          <li>Approve or adjust epics; rejected epics won’t carry forward.</li>
+          <li>Once approved, proceed to generate User Stories for the approved epics.</li>
+        </ol>
+        <div class="small text-muted">Tips: Capture rationale for approvals; it helps downstream traceability.</div>
+      </div>
+      <div class="tab-pane fade" id="howto-user-stories" role="tabpanel">
+        <ol class="mb-3">
+          <li>Select an approved epic; click to generate user stories.</li>
+          <li>Review stories, refine with chat, and ensure clear acceptance criteria.</li>
+          <li>Move to Story Details to finalize and submit to Jira.</li>
+        </ol>
+        <div class="small text-muted">Tips: Prefer INVEST-compliant stories; keep scope manageable.</div>
+      </div>
+      <div class="tab-pane fade" id="howto-story-details" role="tabpanel">
+        <ol class="mb-3">
+          <li>Select a story, then generate acceptance criteria and details.</li>
+          <li>Refine AC and descriptions via chat; click Apply to update panels.</li>
+          <li>Submit to Jira and capture the ticket link for tracking.</li>
+        </ol>
+        <div class="small text-muted">Tips: Make AC testable and unambiguous; confirm non‑functional requirements.</div>
+      </div>
+    </div>
+
+    <hr>
+    <div class="small text-muted">Shortcut: Shift + ? toggles this guide. Auto-syncs to the active tab.</div>
+  </div>
+</div>
+
+<script>
+  // Keyboard shortcut: Shift + ? to toggle
+  document.addEventListener('keydown', function(e){
+    if (e.shiftKey && (e.key === '?' || e.key === '/')) {
+      const panel = document.getElementById('epicFirstHowToOffcanvas');
+      if (!panel || !window.bootstrap) return;
+      syncEpicFirstHowTo();
+      bootstrap.Offcanvas.getOrCreateInstance(panel).toggle();
+    }
+  });
+
+  function syncEpicFirstHowTo() {
+    const active = document.querySelector('#epicFirstTabs .nav-link.active');
+    if (!active) return;
+    const id = active.id || '';
+    const map = {
+      'epic-generation-tab': 'howto-epic-gen-tab',
+      'epic-approval-tab': 'howto-epic-approval-tab',
+      'user-stories-tab': 'howto-user-stories-tab',
+      'story-details-tab': 'howto-story-details-tab'
+    };
+    const targetId = map[id];
+    if (!targetId) return;
+    const btn = document.getElementById(targetId);
+    if (btn && window.bootstrap) bootstrap.Tab.getOrCreateInstance(btn).show();
+  }
+
+  document.getElementById('epicFirstTabs')?.addEventListener('shown.bs.tab', function(){
+    syncEpicFirstHowTo();
+  });
+
+  document.addEventListener('DOMContentLoaded', syncEpicFirstHowTo);
+</script>
 </html>

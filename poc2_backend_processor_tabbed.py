@@ -659,6 +659,70 @@ def extract_primary_system(responsible_systems_str):
     primary = parts[0].replace('System:','').replace('Component:','').strip()
     return primary or 'CAPS'
 
+# ---------------- System Mapping UI and Chat ----------------
+@app.route('/system-mapping', methods=['GET'])
+def system_mapping_page():
+    try:
+        return render_template('system_mapping.html')
+    except Exception as e:
+        logger.error(f"Error serving system mapping UI: {e}")
+        return f"Error: {e}", 500
+
+@app.route('/system-mapping-chat', methods=['POST'])
+def system_mapping_chat():
+    try:
+        data = request.get_json() or {}
+        user_message = (data.get('message') or '').strip()
+        current_systems = data.get('current_systems', []) or []
+        available_systems = data.get('available_systems', []) or []
+        if not user_message:
+            return jsonify({"success": False, "error": "Message is required"}), 400
+        # Build concise system context
+        def fmt_list(lst):
+            return ('\n- ' + '\n- '.join(lst)) if lst else ' None'
+        context = f"""
+You are a technical architect AI that recommends systems for a target architecture.
+
+User message:
+{user_message}
+
+Currently selected systems:{fmt_list(current_systems)}
+
+Available systems (names only):{fmt_list(available_systems)}
+
+Return guidance as a short paragraph. When appropriate, include a JSON blob with keys:
+message: short guidance string
+suggestions: array of objects {{ system: string, reason: string }} limited to top 5
+warnings: array of strings for risks or gaps (0-3 items)
+If you include JSON, ensure it is valid (no markdown fences).
+""".strip()
+        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        resp = client.chat.completions.create(
+            model=ALLOWED_MODEL,
+            messages=[
+                {"role": "system", "content": "Be concise, professional, and helpful."},
+                {"role": "user", "content": context}
+            ],
+            max_tokens=700,
+            temperature=0.5
+        )
+        answer = resp.choices[0].message.content.strip()
+        return jsonify({"success": True, "message": answer})
+    except Exception as e:
+        logger.error(f"System mapping chat error: {e}")
+        return jsonify({"success": False, "error": "Internal error"}), 500
+
+# Friendly alias for back navigation from system_mapping.html
+@app.route('/epic-results', methods=['GET'])
+def epic_results_alias():
+    try:
+        # Render the epics page with any stored epics if available
+        epics = session.get('generated_epics', [])
+        return render_template('poc2_tabbed_workbench.html')
+    except Exception as e:
+        logger.error(f"Epic results alias error: {e}")
+        return redirect(url_for('tabbed_layout'))
+
 # ---------------- Main ----------------
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5002))

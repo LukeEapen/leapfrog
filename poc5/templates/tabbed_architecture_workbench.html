@@ -253,6 +253,10 @@
                             {% endif %}
                             </div>
                         {% endif %}
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="window.open('/system-mapping','_blank')" {% if lock_tab1 %}disabled{% endif %}>Generate System Mapping</button>
+                            <div class="help small text-muted mt-1">Open the mapping canvas, export CSV, then upload it here.</div>
+                        </div>
                     </div>
                 </div>
             </div>
