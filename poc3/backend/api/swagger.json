@@ -1465,6 +1465,24 @@
         "raw": "```json\n[\n    {\n        \"element\": \"Integrate with Credit Decision Engine\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Step 1: Retrieve flagged account information from the charged-off account management system.\",\n            \"Step 2: Send the account information to the credit decision engine for risk assessment.\",\n            \"Step 3: Receive risk assessment and decision from the credit decision engine.\",\n            \"Step 4: Update the system with the risk assessment and decision for the flagged account.\"\n        ]\n    },\n    {\n        \"element\": \"Flag Account for Potential Charge-Off\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Step 1: Identify accounts that meet the criteria for potential charge-off.\",\n            \"Step 2: Flag the account for potential charge-off in the system.\"\n        ]\n    },\n    {\n        \"element\": \"Evaluate Account with Credit Decision Engine\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Step 1: Retrieve account information for evaluation.\",\n            \"Step 2: Perform risk assessment using credit decision engine.\",\n            \"Step 3: Determine the decision based on the risk assessment.\",\n            \"Step 4: Return the decision for the account.\"\n        ]\n    }\n]\n```"
       },
       "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "readTransactionCategoryBalanceRecords",
+            "pseudocode": "1. Retrieve necessary files for input\n    - Open the file containing transaction category balance records\n    - Read the data from the file\n2. Process transaction category balance records\n    - Parse the data to extract transaction category balances\n    - Store the balances in a data structure for further processing\n3. Return the transaction category balance records\n    - Provide the extracted balances to the calling function",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "updateAccountBalancesWithInterest",
+            "pseudocode": "1. Retrieve transaction data for interest calculation\n    - Fetch transaction data related to account balances and interest rates\n2. Calculate interest for each account\n    - For each account, calculate interest based on the transaction data and interest rates\n    - Update the account balance with the calculated interest\n3. Update account balances\n    - Store the updated account balances in the system",
+            "standard": "BIAN"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"readTransactionCategoryBalanceRecords\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": \"Retrieve necessary files for input\",\n                \"actions\": [\n                    \"Open the file containing transaction category balance records\",\n                    \"Read the data from the file\"\n                ]\n            },\n            {\n                \"step\": \"Process transaction category balance records\",\n                \"actions\": [\n                    \"Parse the data to extract transaction category balances\",\n                    \"Store the balances in a data structure for further processing\"\n                ]\n            },\n            {\n                \"step\": \"Return the transaction category balance records\",\n                \"actions\": [\n                    \"Provide the extracted balances to the calling function\"\n                ]\n            }\n        ]\n    },\n    {\n        \"element\": \"updateAccountBalancesWithInterest\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            {\n                \"step\": \"Retrieve transaction data for interest calculation\",\n                \"actions\": [\n                    \"Fetch transaction data related to account balances and interest rates\"\n                ]\n            },\n            {\n                \"step\": \"Calculate interest for each account\",\n                \"actions\": [\n                    \"For each account, calculate interest based on the transaction data and interest rates\",\n                    \"Update the account balance with the calculated interest\"\n                ]\n            },\n            {\n                \"step\": \"Update account balances\",\n                \"actions\": [\n                    \"Store the updated account balances in the system\"\n                ]\n            }\n        ]\n    }\n]\n```  "
+      },
+      "pseudocode": ""
     }
   ]
 }

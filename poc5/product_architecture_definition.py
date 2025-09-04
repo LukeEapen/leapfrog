@@ -55,18 +55,18 @@ AGENT_PROMPTS = {
 }
 
 # Tab index mapping for chat/approval navigation (nav order):
-# Default flow now: 0 (Context) → 6 (Context Doc) → 1 (Initial) → 7 (DB Design) → 8 (Service Design) → 2 (Key Decisions) → 3 (Comm & Integration) → 4 (Pros & Cons) → 5 (Docs)
-TAB_NAV_ORDER = [0, 6, 1, 7, 8, 2, 3, 4, 5]
+# Default flow now (Context Doc merged into Tab 0):
+# 0 (Context + Context Doc) → 1 (Initial) → 2 (System Interaction) → 5 (DB) → 6 (Service)
+# → 3 (Decisions+Integration+Pros) → 4 (Docs)
+TAB_NAV_ORDER = [0, 1, 2, 5, 6, 3, 4]
 AGENT_BY_TAB = {
-    0: 'agent_5_1',  # Context & Requirements
-    6: 'agent_5_6',  # Context Doc (use a distinct agent)
-    1: 'agent_mermaid',  # Initial Blueprint (diagram-focused)
-    7: 'agent_mermaid',  # Database Solution Design (ER/data schemas)
-    8: 'agent_mermaid',  # Service Solution Design (service decomposition/interfaces)
-    2: 'agent_5_2',  # Key Decisions
-    3: 'agent_5_3',  # Communication & Integration
-    4: 'agent_5_4',  # Pros & Cons
-    5: 'agent_5_5',  # Documentation & Review
+    0: 'agent_5_1',       # Context & Requirements (includes merged Context Doc)
+    1: 'agent_mermaid',   # Initial Blueprint (diagram-focused)
+    2: 'agent_mermaid',   # System Interaction (sequenceDiagram)
+    3: 'agent_5_2',       # Combined Decisions/Integration/Pros (text)
+    4: 'agent_5_5',       # Documentation & Review
+    5: 'agent_mermaid',   # Database Solution Design (ER/data schemas)
+    6: 'agent_mermaid',   # Service Solution Design (service decomposition/interfaces)
 }
 
 # Allowed fields per tab for chat-driven updates
@@ -80,26 +80,31 @@ TAB_ALLOWED_FIELDS: dict[int, list[str]] = {
         'dr_strategy','encryption_at_rest','encryption_in_transit','kms','api_gateway_type','service_mesh','edge_controls',
         'secrets_manager','iac_tool','ci_cd','environments','release_strategy','deployment_topology','tenancy_model',
         'observability_requirements','security_posture','cost_constraints','capacity_estimates','workloads',
-        'high_level_decision_points','one_way_door_decisions','other_relevant_questions'
+        'high_level_decision_points','one_way_door_decisions','other_relevant_questions',
+        # Merged Context Doc fields (formerly Tab 6)
+        'architecture_context','assumptions','stakeholders','in_scope','out_of_scope',
+        'migration_strategy','risks','open_questions'
     ],
-    1: ['architecture_diagram','system_interaction_diagram','data_model_diagram','service_decomposition_diagram','major_components','interface_definitions','data_schemas','reusable_patterns'],
-    7: [
+    1: ['architecture_diagram','major_components','interface_definitions','reusable_patterns'],
+    2: [
+        # System Interaction
+        'system_interaction_diagram','system_interaction_notes'
+    ],
+    3: [
+        # Combined: Decisions + Communication & Integration + Pros & Cons
+        'architectural_decisions','rationale_tradeoffs','blueprint_references',
+        'high_level_decision_points','one_way_door_decisions','other_relevant_questions',
+        'communication_protocols','data_flow_diagrams','integration_points',
+        'swot_analysis','risks_mitigation','risks'
+    ],
+    4: ['compiled_document','stakeholder_checklist'],
+    5: [
         # Database Solution Design
         'data_model_diagram','data_schemas','database_family'
     ],
-    8: [
+    6: [
         # Service Solution Design
         'service_decomposition_diagram','major_components','interface_definitions','reusable_patterns','api_style','caching_strategy'
-    ],
-    2: ['architectural_decisions','rationale_tradeoffs','blueprint_references','high_level_decision_points','one_way_door_decisions','other_relevant_questions'],
-    3: ['communication_protocols','data_flow_diagrams','integration_points'],
-    4: ['swot_analysis','risks_mitigation','risks'],
-    5: ['compiled_document','stakeholder_checklist'],
-    6: [
-        'architecture_context','assumptions','stakeholders','in_scope','out_of_scope','availability_sla','rpo_rto',
-        'performance_targets','security_posture','data_volume_retention','workloads','environments','release_strategy',
-        'deployment_topology','tenancy_model','observability_requirements','cost_constraints','capacity_estimates',
-        'migration_strategy','risks','open_questions'
     ],
 }
 
@@ -234,7 +239,7 @@ def _apply_agent_updates(idx: int, updates: dict):
                 session['decomposition_writeup'] = _build_decomposition_writeup_text(session.get('prd_text',''))
             except Exception:
                 pass
-        if idx == 6 and 'architecture_context' not in sets:
+        if idx == 0 and 'architecture_context' not in sets:
             session['architecture_context'] = generate_architecture_context()
     except Exception:
         pass
@@ -3403,7 +3408,7 @@ def tabbed_workbench():
             except Exception:
                 active_tab = 1
         elif action == 'generate_arch_context':
-            # Generate Context Doc via a distinct agent for Tab 6
+            # Generate Context Doc content (merged into Tab 0)
             try:
                 mapping = {}
                 try:
@@ -3428,7 +3433,7 @@ def tabbed_workbench():
             except Exception:
                 session['architecture_context'] = generate_architecture_context()
                 _normalize_context_doc(force=True)
-            active_tab = 6
+            active_tab = 0
         elif action == 'download_share':
             # Generate Word document export of all tabs
             bio = _build_docx_from_session()
@@ -3473,11 +3478,15 @@ def tabbed_workbench():
                         'current': session.get(session.get('chat_target_tab1','architecture_diagram'), ''),
                         'kind': 'sequence' if session.get('chat_target_tab1') == 'system_interaction_diagram' else ('er' if session.get('chat_target_tab1') == 'data_model_diagram' else 'flowchart')
                     }
-                # Route Database/Service Design tabs to Mermaid agent with dedicated target/kind
-                elif idx in (7, 8):
+                # Route System Interaction / DB / Service tabs to Mermaid agent with dedicated target/kind
+                elif idx in (2, 5, 6):
                     agent_key = 'agent_mermaid'
-                    tgt = 'data_model_diagram' if idx == 7 else 'service_decomposition_diagram'
-                    kind = 'er' if idx == 7 else 'flowchart'
+                    if idx == 2:
+                        tgt, kind = 'system_interaction_diagram', 'sequence'
+                    elif idx == 5:
+                        tgt, kind = 'data_model_diagram', 'er'
+                    else:
+                        tgt, kind = 'service_decomposition_diagram', 'flowchart'
                     ctx = {
                         'target': tgt,
                         'current': session.get(tgt, ''),
@@ -3502,14 +3511,14 @@ def tabbed_workbench():
                     if first.startswith(('graph','flowchart','sequencediagram','erdiagram','classdiagram','statediagram','gantt','pie','journey','mindmap','timeline','gitgraph')):
                         tgt = session.get('chat_target_tab1','architecture_diagram')
                         parsed_updates = {'set': {tgt: reply.strip()}}
-                # If on tabs 7/8 and no JSON updates, but reply looks like Mermaid, wrap it with the tab's target
-                if idx in (7, 8) and not parsed_updates:
+                # If on tabs 2/5/6 and no JSON updates, but reply looks like Mermaid, wrap it with the tab's target
+                if idx in (2, 5, 6) and not parsed_updates:
                     try:
                         first = (reply or '').strip().splitlines()[0].strip().lower() if reply else ''
                     except Exception:
                         first = ''
                     if first.startswith(('graph','flowchart','sequencediagram','erdiagram','classdiagram','statediagram','gantt','pie','journey','mindmap','timeline','gitgraph')):
-                        tgt = 'data_model_diagram' if idx == 7 else 'service_decomposition_diagram'
+                        tgt = 'system_interaction_diagram' if idx == 2 else ('data_model_diagram' if idx == 5 else 'service_decomposition_diagram')
                         parsed_updates = {'set': {tgt: reply.strip()}}
                 # Auto-apply on Tab 1 to behave like Mermaid AI Use
                 if idx == 1:
@@ -3546,10 +3555,10 @@ def tabbed_workbench():
                         applied = True
                     # Clear pending since we applied immediately
                     session[f'pending_updates_tab{idx}'] = ''
-                # Auto-apply on Tabs 7 and 8 similar to tab 1
-                elif idx in (7, 8):
-                    tgt = 'data_model_diagram' if idx == 7 else 'service_decomposition_diagram'
-                    kind = 'er' if idx == 7 else 'flowchart'
+                # Auto-apply on Tabs 2, 5 and 6 similar to tab 1
+                elif idx in (2, 5, 6):
+                    tgt = 'system_interaction_diagram' if idx == 2 else ('data_model_diagram' if idx == 5 else 'service_decomposition_diagram')
+                    kind = 'sequence' if idx == 2 else ('er' if idx == 5 else 'flowchart')
                     applied = False
                     if parsed_updates and isinstance(parsed_updates.get('set'), dict):
                         sets = parsed_updates['set']
@@ -3609,9 +3618,15 @@ def tabbed_workbench():
                 if last_user:
                     updates = _heuristic_updates_from_user(idx, last_user)
             if updates:
-                # For diagram-centric tabs (1,7,8), if updates don't target diagram fields, coerce to the tab's target
-                if idx in (1, 7, 8) and isinstance(updates, dict) and not (updates.get('set') and any(k in updates['set'] for k in ('architecture_diagram','system_interaction_diagram','data_model_diagram','service_decomposition_diagram'))):
-                    tgt = session.get('chat_target_tab1','architecture_diagram') if idx == 1 else ('data_model_diagram' if idx == 7 else 'service_decomposition_diagram')
+                # For diagram-centric tabs (1,2,5,6), if updates don't target diagram fields, coerce to the tab's target
+                if idx in (1, 2, 5, 6) and isinstance(updates, dict) and not (updates.get('set') and any(k in updates['set'] for k in ('architecture_diagram','system_interaction_diagram','data_model_diagram','service_decomposition_diagram'))):
+                    tgt = (
+                        session.get('chat_target_tab1','architecture_diagram') if idx == 1 else (
+                            'system_interaction_diagram' if idx == 2 else (
+                                'data_model_diagram' if idx == 5 else 'service_decomposition_diagram'
+                            )
+                        )
+                    )
                     if 'set' in updates and isinstance(updates['set'], dict) and len(updates['set']) == 1:
                         only_key = next(iter(updates['set'].keys()))
                         val = updates['set'][only_key]
@@ -3887,6 +3902,45 @@ def system_mapping_chat_poc5():
 def epic_results_alias_poc5():
     # Friendly alias for Back button on mapping UI; return the main workbench
     return redirect(url_for('tabbed_workbench'))
+
+
+# Simple combined page for Step 1 (Context & Requirements) + Step 2 (Initial Blueprint)
+@app.route('/combined-12', methods=['GET', 'POST'])
+def combined_step1_step2():
+    """Lightweight page that shows inputs for Context & Requirements and, upon submit,
+    immediately renders the Initial Blueprint on the same page.
+
+    This leaves the main tabbed workbench ("/") unchanged; use this as a simple flow.
+    """
+    # Persist submitted fields
+    if request.method == 'POST':
+        for key in (
+            'business_goals', 'legacy_system', 'constraints',
+            'architecture_style', 'desired_architecture_style',
+        ):
+            session[key] = request.form.get(key, '')
+        # Ensure dropdown-style defaults so diagrams have sensible values even without PRD
+        try:
+            _ensure_default_dropdowns()
+        except Exception:
+            pass
+        # Generate blueprint; if PRD not provided, allow non-strict fallbacks to populate services
+        try:
+            strict = True if session.get('prd_text') else False
+            session['architecture_diagram'] = generate_blueprint_from_session(strict_prd_only=strict)
+        except Exception:
+            # Keep any prior value if generation fails
+            pass
+
+    return render_template(
+        'page12_combined.html',
+        business_goals=session.get('business_goals', ''),
+        legacy_system=session.get('legacy_system', ''),
+        constraints=session.get('constraints', ''),
+        architecture_style=session.get('architecture_style', ''),
+        desired_architecture_style=session.get('desired_architecture_style', ''),
+        blueprint=session.get('architecture_diagram', ''),
+    )
 
 
 if __name__ == "__main__":

@@ -563,10 +563,27 @@ def tabbed_submit_jira():
             api_token = os.getenv('JIRA_API_TOKEN')
             if not api_token:
                 return jsonify({"success": False, "error": "JIRA_API_TOKEN not configured"})
-            jira = JIRA(server='https://lalluluke.atlassian.net/', basic_auth=('lalluluke@gmail.com', api_token))
+
+            # Configurable Jira connection (supports corporate CA bundles)
+            server = os.getenv('JIRA_SERVER', 'https://lalluluke.atlassian.net/')
+            email = os.getenv('JIRA_EMAIL', 'lalluluke@gmail.com')
+            verify_env = (os.getenv('JIRA_VERIFY', 'true') or 'true').lower()
+            ca_bundle = os.getenv('JIRA_CA_BUNDLE') or os.getenv('REQUESTS_CA_BUNDLE')
+
+            # Determine SSL verification behavior: path to CA bundle, True, or False (not recommended)
+            verify = True
+            if ca_bundle:
+                verify = ca_bundle
+            elif verify_env in ('false', '0', 'no'):
+                verify = False
+
+            options = { 'server': server, 'verify': verify }
+            jira = JIRA(options=options, basic_auth=(email, api_token))
+
             issue_dict = {'project': {'key':'SCRUM'}, 'summary': summary, 'description': full_desc, 'issuetype': {'name':'Story'}}
             new_issue = jira.create_issue(fields=issue_dict)
-            return jsonify({"success": True, "ticket_id": new_issue.key, "jira_url": f"https://lalluluke.atlassian.net/browse/{new_issue.key}"})
+            base_browse = server.rstrip('/') + '/browse/'
+            return jsonify({"success": True, "ticket_id": new_issue.key, "jira_url": f"{base_browse}{new_issue.key}"})
         except ImportError:
             return jsonify({"success": False, "error": "jira library not installed"})
         except Exception as je:

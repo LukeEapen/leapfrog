@@ -7,7 +7,17 @@ def get_jira_connection():
     JIRA_SERVER = os.getenv('JIRA_SERVER', 'https://lalluluke.atlassian.net/')
     EMAIL = os.getenv('JIRA_EMAIL', 'lalluluke@gmail.com')
     API_TOKEN = os.getenv('JIRA_API_TOKEN')
-    jira = JIRA(server=JIRA_SERVER, basic_auth=(EMAIL, API_TOKEN))
+    verify_env = (os.getenv('JIRA_VERIFY', 'true') or 'true').lower()
+    ca_bundle = os.getenv('JIRA_CA_BUNDLE') or os.getenv('REQUESTS_CA_BUNDLE')
+
+    verify = True
+    if ca_bundle:
+        verify = ca_bundle
+    elif verify_env in ('false', '0', 'no'):
+        verify = False
+
+    options = { 'server': JIRA_SERVER, 'verify': verify }
+    jira = JIRA(options=options, basic_auth=(EMAIL, API_TOKEN))
     return jira
 
 def fetch_user_stories(project_key: str = 'SCRUM', startAt: int = 0, maxResults: int = 20):

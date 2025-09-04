@@ -1,30 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>POC 5 - Architecture Workbench</title>
-        <!-- Fallback theme variables (in case /static/custom.css isn't loaded yet) -->
-        <style>
-            :root {
-                --primary-red: #dc3545;
-                --primary-red-dark: #c82333;
-                --primary-grey: #343a40;
-                --secondary-grey: #6c757d;
-                --light-grey: #f8f9fa;
-                --gradient-red: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-                --gradient-grey: linear-gradient(135deg, #343a40 0%, #495057 100%);
-            }
-        </style>
+    <!-- Bootstrap + Custom Theme -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/custom.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+    <!-- Mermaid for local diagram rendering -->
+    <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+    <!-- Base styles -->
     <style>
-        /* Page tweaks to align with POC2 look while using global custom.css */
-        body { 
-            min-height: 100vh; 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            /* Apply POC2 background color scheme */
-            background: var(--gradient-grey, linear-gradient(135deg, #343a40 0%, #495057 100%));
-            background-attachment: fixed;
-        }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--gradient-grey, linear-gradient(135deg, #343a40 0%, #495057 100%)); background-attachment: fixed; }
         .section { margin-bottom: 1.25rem; }
         label { font-weight: 600; color: var(--primary-red, #dc3545); }
         textarea, input[type="text"], select { width: 100%; padding: .5rem .75rem; border: 1px solid #e0e0e0; border-radius: .5rem; background: #fff; }
@@ -37,92 +24,62 @@
         /* Content panes */
         .tab-pane { display: none; }
         .tab-pane.active { display: block; }
-    /* Mermaid preview responsiveness */
-        #mermaidPreview svg { max-width: 100%; height: auto; }
-        #mermaidPreview { overflow: auto; }
-    #mermaidPreviewSystem svg { max-width: 100%; height: auto; }
-    #mermaidPreviewSystem { overflow: auto; }
-    #mermaidPreviewData svg { max-width: 100%; height: auto; }
-    #mermaidPreviewData { overflow: auto; }
-    #mermaidPreviewServiceDecomp svg { max-width: 100%; height: auto; }
-    #mermaidPreviewServiceDecomp { overflow: auto; }
+        /* Mermaid preview responsiveness */
+        #mermaidPreview svg,
+        #mermaidPreviewSystem svg,
+        #mermaidPreviewData svg,
+        #mermaidPreviewData2 svg,
+        #mermaidPreviewServiceDecomp svg,
+        #mermaidPreviewServiceDecomp2 svg { max-width: 100%; height: auto; }
+        #mermaidPreview,
+        #mermaidPreviewSystem,
+        #mermaidPreviewData,
+        #mermaidPreviewData2,
+        #mermaidPreviewServiceDecomp,
+        #mermaidPreviewServiceDecomp2 { overflow: auto; }
         /* Section cards to reduce clutter */
-    .section-card { background:#fff; border:1px solid #e9ecef; border-radius: .5rem; padding:1rem; margin-bottom:1rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+        .section-card { background:#fff; border:1px solid #e9ecef; border-radius: .5rem; padding:1rem; margin-bottom:1rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
         .section-card .section-title { font-size: 1.05rem; font-weight:700; color: var(--primary-grey, #343a40); margin-bottom:.5rem; }
         .help { color:#6c757d; font-size:.85rem; }
-    .badge-approve { background: #198754; }
-    .badge-light { background:#e9ecef; color:#6c757d; }
-    /* Layout: two-column with sticky chat on the right */
-    .sidebar-chat { position: sticky; top: 1rem; }
-    .chat-history { display:none; min-height: 200px; }
-    .chat-history.active { display:block; }
-    /* Make page width and container width same */
-    .container-fluid { padding-left: 1rem; padding-right: 1rem; }
-    /* Sticky action bar under tabs */
-    .action-bar { position: sticky; top: 0; z-index: 10; background: #fff; padding: .5rem .75rem; border: 1px solid #e9ecef; border-radius: .5rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
-    /* JSON Key-Value viewer */
-    .kv-wrapper { position: relative; }
-    .kv-toolbar { display:flex; gap:.5rem; justify-content:flex-end; align-items:center; margin:.25rem 0; }
-    .kv-toolbar .btn { padding:.1rem .4rem; font-size:.75rem; }
-    .kv-view { border:1px solid #e0e0e0; border-radius:.5rem; background:#fff; padding:.5rem .75rem; max-height: 300px; overflow:auto; font-size:.9rem; }
-    .kv-view ul { list-style: none; padding-left: 1rem; border-left: 2px solid #f1f3f5; margin: .2rem 0; }
-    .kv-view li { margin:.15rem 0; }
-    .kv-key { color:#495057; font-weight:600; }
-    .kv-primitive { color:#212529; }
-    .kv-type-badge { display:inline-block; font-size:.7rem; padding:.05rem .35rem; border-radius:.25rem; background:#f8f9fa; color:#6c757d; margin-left:.35rem; }
-    .kv-empty { color:#6c757d; font-style: italic; }
-    /* Fullscreen zoom overlay */
-    .diagram-zoom-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 1050; display:none; }
-    .diagram-zoom-toolbar { position: absolute; top: 12px; right: 12px; display:flex; gap:.5rem; }
-    .diagram-zoom-toolbar .btn { padding:.25rem .5rem; font-size:.9rem; }
-    .diagram-zoom-stage { position:absolute; inset:0; top:56px; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:24px; }
-    .diagram-zoom-canvas { transform-origin: 0 0; display:inline-block; background:#ffffff; padding:16px; border-radius:8px; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
-    .diagram-zoom-close { position:absolute; top:12px; left:12px; }
-    </style>
-    <script>
-        function showTab(idx) {
-            var tabs = document.querySelectorAll('.nav-tabs .nav-link');
-            var panes = document.querySelectorAll('.tab-pane');
-            tabs.forEach((t,i) => t.classList.toggle('active', i===idx));
-            panes.forEach((p,i) => p.classList.toggle('active', i===idx));
-            // Keep hidden active tab fields in sync for both main form and chat form
-            try {
-                var mainActive = document.getElementById('active_tab_input');
-                if (mainActive) mainActive.value = idx;
-                var chatActive = document.getElementById('chat_active_tab_input');
-                if (chatActive) chatActive.value = idx;
-            } catch(e) {}
-            if (idx === 1 && typeof window.triggerMermaidPreview === 'function') {
-                setTimeout(window.triggerMermaidPreview, 0);
-            }
+        .badge-approve { background: #198754; }
+        .badge-light { background:#e9ecef; color:#6c757d; }
+        /* Layout: two-column with sticky chat on the right */
+        .sidebar-chat { position: sticky; top: 1rem; }
+        .chat-history { display:none; min-height: 200px; }
+        .chat-history.active { display:block; }
+        /* Make page width and container width same */
+        .container-fluid { padding-left: 1rem; padding-right: 1rem; }
+        /* Sticky action bar under tabs */
+        .action-bar { position: sticky; top: 0; z-index: 10; background: #fff; padding: .5rem .75rem; border: 1px solid #e9ecef; border-radius: .5rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+        /* Design & Review section hero header */
+        .section-hero {
+            background: linear-gradient(135deg, #ef475d 0%, #dc3545 100%);
+            color: #fff;
+            border-bottom: none;
         }
-        window.addEventListener('DOMContentLoaded', function(){
-            var initialTab = Number('{{ active_tab|default(0) }}');
-            if (isNaN(initialTab)) initialTab = 0;
-            showTab(initialTab);
-            if (initialTab === 1 && typeof window.triggerMermaidPreview === 'function') {
-                window.triggerMermaidPreview();
-            }
-            // Initialize selects from context values
-            const selectVals = {
-                cloud_provider: '{{ cloud_provider|e }}',
-                region_strategy: '{{ region_strategy|e }}',
-                deployment_model: '{{ deployment_model|e }}',
-                database_family: '{{ database_family|e }}',
-                messaging_backbone: '{{ messaging_backbone|e }}',
-                identity_provider: '{{ identity_provider|e }}',
-                api_style: '{{ api_style|e }}',
-                caching_strategy: '{{ caching_strategy|e }}',
-                observability_stack: '{{ observability_stack|e }}',
-                encryption_at_rest: '{{ encryption_at_rest|e }}',
-                encryption_in_transit: '{{ encryption_in_transit|e }}'
-            };
-            Object.entries(selectVals).forEach(([id,val]) => {
-                const el = document.getElementById(id);
-                if (el && val) el.value = val;
-            });
-        });
-    </script>
+        .section-hero .h5,
+        .section-hero small,
+        .section-hero .btn,
+        .section-hero .text-muted { color: #fff !important; }
+        /* JSON Key-Value viewer */
+        .kv-wrapper { position: relative; }
+        .kv-toolbar { display:flex; gap:.5rem; justify-content:flex-end; align-items:center; margin:.25rem 0; }
+        .kv-toolbar .btn { padding:.1rem .4rem; font-size:.75rem; }
+        .kv-view { border:1px solid #e0e0e0; border-radius:.5rem; background:#fff; padding:.5rem .75rem; max-height: 300px; overflow:auto; font-size:.9rem; }
+        .kv-view ul { list-style: none; padding-left: 1rem; border-left: 2px solid #f1f3f5; margin: .2rem 0; }
+        .kv-view li { margin:.15rem 0; }
+        .kv-key { color:#495057; font-weight:600; }
+        .kv-primitive { color:#212529; }
+        .kv-type-badge { display:inline-block; font-size:.7rem; padding:.05rem .35rem; border-radius:.25rem; background:#f8f9fa; color:#6c757d; margin-left:.35rem; }
+        .kv-empty { color:#6c757d; font-style: italic; }
+        /* Fullscreen zoom overlay */
+        .diagram-zoom-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 1050; display:none; }
+        .diagram-zoom-toolbar { position: absolute; top: 12px; right: 12px; display:flex; gap:.5rem; }
+        .diagram-zoom-toolbar .btn { padding:.25rem .5rem; font-size:.9rem; }
+        .diagram-zoom-stage { position:absolute; inset:0; top:56px; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:24px; }
+        .diagram-zoom-canvas { transform-origin: 0 0; display:inline-block; background:#ffffff; padding:16px; border-radius:8px; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
+        .diagram-zoom-close { position:absolute; top:12px; left:12px; }
+    </style>
 </head>
 <body>
     <!-- Banner (POC2-style) -->
@@ -148,68 +105,57 @@
             <!-- Main content left -->
             <div class="col-xl-9 col-lg-8">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header section-hero">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
                                 <span class="h5 mb-0">Design & Review</span>
-                                <div class="small text-light-50">Upload PRD and System Mapping, extract decisions, and preview an initial diagram.</div>
+                                <div class="small">Upload PRD and System Mapping, extract decisions, and preview an initial diagram.</div>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                <ul class="nav nav-tabs mb-4">
+        <ul class="nav nav-tabs mb-4">
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showTab(0); return false;">
+            <a class="nav-link" href="#" data-index="0" onclick="showTab(0); return false;">
                             1. Context & Requirements
                             {% if approved_tab0 %}<span class="badge badge-approve ms-2">Approved</span>{% endif %}
                         </a>
                     </li>
+                    <!-- Context Doc merged into Tab 1; removed separate tab -->
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showTab(6); return false;">
-                            2. Context Doc
-                            {% if approved_tab6 %}<span class="badge badge-approve ms-2">Approved</span>{% endif %}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showTab(1); return false;">
-                            3. Initial Blueprint
+            <a class="nav-link" href="#" data-index="1" onclick="showTab(1); return false;">
+                            2. Initial Blueprint
                             {% if approved_tab1 %}<span class="badge badge-approve ms-2">Approved</span>{% endif %}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showTab(7); return false;">
-                            4. Database Solution Design
-                            {% if approved_tab7 %}<span class="badge badge-approve ms-2">Approved</span>{% endif %}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showTab(8); return false;">
-                            5. Service Solution Design
-                            {% if approved_tab8 %}<span class="badge badge-approve ms-2">Approved</span>{% endif %}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showTab(2); return false;">
-                            6. Key Decisions
+            <a class="nav-link" href="#" data-index="2" onclick="showTab(2); return false;">
+                            3. System Interaction
                             {% if approved_tab2 %}<span class="badge badge-approve ms-2">Approved</span>{% endif %}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showTab(3); return false;">
-                            7. Communication & Integration
+            <a class="nav-link" href="#" data-index="5" onclick="showTab(5); return false;">
+                            4. Database Solution Design
+                            {% if approved_tab5 %}<span class="badge badge-approve ms-2">Approved</span>{% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+            <a class="nav-link" href="#" data-index="6" onclick="showTab(6); return false;">
+                            5. Service Solution Design
+                            {% if approved_tab6 %}<span class="badge badge-approve ms-2">Approved</span>{% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+            <a class="nav-link" href="#" data-index="3" onclick="showTab(3); return false;">
+                            6. Decisions, Integration & Pros/Cons
                             {% if approved_tab3 %}<span class="badge badge-approve ms-2">Approved</span>{% endif %}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showTab(4); return false;">
-                            8. Pros & Cons
+            <a class="nav-link" href="#" data-index="4" onclick="showTab(4); return false;">
+                            7. Documentation & Review
                             {% if approved_tab4 %}<span class="badge badge-approve ms-2">Approved</span>{% endif %}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showTab(5); return false;">
-                            9. Documentation & Review
-                            {% if approved_tab5 %}<span class="badge badge-approve ms-2">Approved</span>{% endif %}
                         </a>
                     </li>
                 </ul>
@@ -228,12 +174,12 @@
                         {% else %}
                             <button type="submit" class="btn btn-outline-secondary action-btn" name="action" value="unlock_tab1" title="Unlock editing of Context & Requirements inputs (Tab 1).">Unlock Tab 1</button>
                         {% endif %}
-                        <button type="submit" class="btn btn-success action-btn" name="action" value="approve_and_next" title="Mark this tab as approved and advance along the flow (0 → 6 → 1 → 2 → 3 → 4 → 5).">Approve & Next Phase</button>
+                        <button type="submit" class="btn btn-success action-btn" name="action" value="approve_and_next" title="Mark this tab as approved and advance along the flow (0 → 1 → 2 → 5 → 6 → 3 → 4).">Approve & Next Phase</button>
                         <!-- Download full Word export of all tabs -->
                         <button type="submit" class="btn btn-warning action-btn" name="action" value="download_share" title="Download a Word document containing all tabs">Download/Share</button>
                     </div>
         <!-- Tab 1 -->
-    <div class="tab-pane section" id="tab1">
+    <div class="tab-pane section" id="tab1" data-index="0">
             <h2>Context & Requirements</h2>
             <div class="section-card">
                 <div class="section-title">Inputs</div>
@@ -516,6 +462,115 @@
                 </div>
             </div>
 
+            <div class="section-card">
+                <div class="section-title d-flex justify-content-between align-items-center">
+                    <span>Architecture Context (Generated)</span>
+                    <span class="d-flex gap-2">
+                        <button type="button" id="copyContextBtn" class="btn btn-sm btn-outline-secondary" title="Copy markdown to clipboard">Copy</button>
+                        <button type="button" id="downloadContextBtn" class="btn btn-sm btn-outline-danger" title="Download markdown as .md">Download .md</button>
+                        <span id="contextCopyStatus" class="small text-muted" style="display:none;">Copied</span>
+                    </span>
+                </div>
+                <label>Context Markdown:</label>
+                <textarea name="architecture_context" style="min-height:280px">{{ architecture_context }}</textarea>
+                <hr>
+                <h5>Advanced Context Fields</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label>Assumptions</label>
+                        <textarea name="assumptions">{{ assumptions }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Stakeholders</label>
+                        <textarea name="stakeholders">{{ stakeholders }}</textarea>
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label>In Scope</label>
+                        <textarea name="in_scope">{{ in_scope }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Out of Scope</label>
+                        <textarea name="out_of_scope">{{ out_of_scope }}</textarea>
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label>Availability / SLA</label>
+                        <input type="text" name="availability_sla" class="form-control form-control-sm" value="{{ availability_sla }}"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label>RPO / RTO</label>
+                        <input type="text" name="rpo_rto" class="form-control form-control-sm" value="{{ rpo_rto }}"/>
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label>Performance Targets</label>
+                        <input type="text" name="performance_targets" class="form-control form-control-sm" value="{{ performance_targets }}"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Security Posture</label>
+                        <input type="text" name="security_posture" class="form-control form-control-sm" value="{{ security_posture }}"/>
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label>Data Volume & Retention</label>
+                        <input type="text" name="data_volume_retention" class="form-control form-control-sm" value="{{ data_volume_retention }}"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Workloads</label>
+                        <input type="text" name="workloads" class="form-control form-control-sm" value="{{ workloads }}"/>
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label>Environments</label>
+                        <input type="text" name="environments" class="form-control form-control-sm" value="{{ environments }}"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Release Strategy</label>
+                        <input type="text" name="release_strategy" class="form-control form-control-sm" value="{{ release_strategy }}"/>
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label>Deployment Topology</label>
+                        <input type="text" name="deployment_topology" class="form-control form-control-sm" value="{{ deployment_topology }}"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Tenancy Model</label>
+                        <input type="text" name="tenancy_model" class="form-control form-control-sm" value="{{ tenancy_model }}"/>
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label>Observability Requirements</label>
+                        <textarea name="observability_requirements">{{ observability_requirements }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Cost Constraints</label>
+                        <input type="text" name="cost_constraints" class="form-control form-control-sm" value="{{ cost_constraints }}"/>
+                        <label class="mt-2">Capacity Estimates</label>
+                        <input type="text" name="capacity_estimates" class="form-control form-control-sm" value="{{ capacity_estimates }}"/>
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label>Migration Strategy</label>
+                        <textarea name="migration_strategy">{{ migration_strategy }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Risks</label>
+                        <textarea name="risks">{{ risks }}</textarea>
+                        <label class="mt-2">Open Questions</label>
+                        <textarea name="open_questions">{{ open_questions }}</textarea>
+                    </div>
+                </div>
+            </div>
+
 
                         <hr>
                         <h3>DecisionExtractorAgent Questions</h3>
@@ -532,8 +587,8 @@
                         </div>
                         <!-- Buttons moved to global action bar below tabs -->
     </div>
-    <!-- Tab 2 -->
-        <div class="tab-pane section" id="tab2">
+    <!-- Tab 2: Initial Blueprint (diagram only) -->
+    <div class="tab-pane section" id="tab2" data-index="1">
             <h2>Initial Blueprint</h2>
             {% if decomposition_writeup %}
             <div class="alert alert-info" role="alert" style="white-space:pre-wrap">
@@ -550,185 +605,28 @@
                             <button type="button" id="previewMermaidBtn" class="btn btn-sm btn-danger" title="Render the current Mermaid diagram locally without posting to the server.">Preview Diagram</button>
                         </div>
                         <div id="mermaidPreview" style="margin-top:1rem; background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; padding:12px;"></div>
-            <hr>
-            <label>System Interaction Diagram (Mermaid sequenceDiagram):</label><br>
-                        <textarea name="system_interaction_diagram">{{ system_interaction_diagram }}</textarea><br>
-                        <div class="mb-2">
-                            <button type="button" id="previewSystemBtn" class="btn btn-sm btn-outline-danger" title="Render the System Interaction diagram.">Preview System Interaction</button>
-                        </div>
-                        <div id="mermaidPreviewSystem" style="margin-top:1rem; background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; padding:12px;"></div>
-            <hr>
-            <label>Data Model / Database Design (Mermaid erDiagram):</label><br>
-                        <textarea name="data_model_diagram">{{ data_model_diagram }}</textarea><br>
-                        <div class="mb-2">
-                            <button type="button" id="previewDataModelBtn" class="btn btn-sm btn-outline-danger" title="Render the Data Model / ER diagram.">Preview Data Model</button>
-                        </div>
-                        <div id="mermaidPreviewData" style="margin-top:1rem; background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; padding:12px;"></div>
-            <hr>
-            <label>Service Decomposition (Mermaid flowchart):</label><br>
-                        <textarea name="service_decomposition_diagram">{{ service_decomposition_diagram }}</textarea><br>
-                        <div class="mb-2">
-                            <button type="button" id="previewServiceDecompBtn" class="btn btn-sm btn-outline-danger" title="Render the Service Decomposition flowchart.">Preview Service Decomposition</button>
-                        </div>
-                        <div id="mermaidPreviewServiceDecomp" style="margin-top:1rem; background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; padding:12px;"></div>
+            <!-- Removed System Interaction, Data Model, and Service Decomposition from Initial -->
             <label>Major Components/Services:</label><br>
                         <textarea name="major_components">{{ major_components }}</textarea><br>
             <label>Interface Definitions:</label><br>
                         <textarea name="interface_definitions">{{ interface_definitions }}</textarea><br>
-            <label>Data Schemas:</label><br>
-                        <textarea name="data_schemas">{{ data_schemas }}</textarea><br>
             <label>Reusable Patterns:</label><br>
                         <textarea name="reusable_patterns">{{ reusable_patterns }}</textarea><br>
     </div>
-    <!-- Tab 3 -->
-        <div class="tab-pane section" id="tab3">
-            <h2>Key Decisions Extraction</h2>
-            <label>Architectural Decisions:</label><br>
-                        <textarea name="architectural_decisions">{{ decisions }}</textarea><br>
-            <label>Rationale & Trade-offs:</label><br>
-                        <textarea name="rationale_tradeoffs">{{ rationale_tradeoffs }}</textarea><br>
-    </div>
-    <!-- Tab 4 -->
-        <div class="tab-pane section" id="tab4">
-            <h2>Communication & Integration Mapping</h2>
-            <label>Communication Protocols (gRPC, REST, Kafka, etc.):</label><br>
-                        <textarea name="communication_protocols">{{ communication }}</textarea><br>
-            <label>Data Flow Diagrams:</label><br>
-                        <textarea name="data_flow_diagrams">{{ data_flow_diagrams }}</textarea><br>
-            <label>Integration Points:</label><br>
-                        <textarea name="integration_points">{{ integration_points }}</textarea><br>
-
-    </div>
-    <!-- Tab 5 -->
-        <div class="tab-pane section" id="tab5">
-            <h2>Pros & Cons Analysis</h2>
-            <label>SWOT Analysis (Strengths, Weaknesses, Opportunities, Threats):</label><br>
-                        <textarea name="swot_analysis">{{ pros_cons }}</textarea><br>
-            <label>Risks & Mitigation Strategies:</label><br>
-                        <textarea name="risks_mitigation">{{ risks_mitigation }}</textarea><br>
-
-    </div>
-    <!-- Tab 6 -->
-        <div class="tab-pane section" id="tab6">
-            <h2>Documentation & Review</h2>
-            <label>Compiled Architecture Document:</label><br>
-                        <textarea name="compiled_document">{{ doc }}</textarea><br>
-            <label>Stakeholder Checklist:</label><br>
-                        <textarea name="stakeholder_checklist">{{ stakeholder_checklist }}</textarea><br>
-            <!-- Download/Share moved to global action bar -->
-
-                </div>
-    <!-- Tab 7: Architecture Context Doc -->
-        <div class="tab-pane section" id="tab7">
-            <h2>Architecture Context (Generated)</h2>
-            <!-- Regenerate Context Doc button removed; Approve covers generation/refresh -->
-            <label>Context Markdown:</label>
-            <div class="mb-2 d-flex gap-2">
-                <button type="button" id="copyContextBtn" class="btn btn-sm btn-outline-secondary" title="Copy markdown to clipboard">Copy</button>
-                <button type="button" id="downloadContextBtn" class="btn btn-sm btn-outline-danger" title="Download markdown as .md">Download .md</button>
-                <span id="contextCopyStatus" class="small text-muted" style="display:none;">Copied</span>
+    <!-- Tab 3: System Interaction -->
+    <div class="tab-pane section" id="tab3" data-index="2">
+            <h2>System Interaction</h2>
+            <label>System Interaction Diagram (Mermaid sequenceDiagram):</label><br>
+            <textarea name="system_interaction_diagram">{{ system_interaction_diagram }}</textarea><br>
+            <div class="mb-2">
+                <button type="button" id="previewSystemBtn" class="btn btn-sm btn-outline-danger" title="Render the System Interaction diagram.">Preview System Interaction</button>
             </div>
-            <textarea name="architecture_context" style="min-height:280px">{{ architecture_context }}</textarea>
-            <hr>
-            <h5>Advanced Context Fields</h5>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label>Assumptions</label>
-                    <textarea name="assumptions">{{ assumptions }}</textarea>
-                </div>
-                <div class="col-md-6">
-                    <label>Stakeholders</label>
-                    <textarea name="stakeholders">{{ stakeholders }}</textarea>
-                </div>
-            </div>
-            <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                    <label>In Scope</label>
-                    <textarea name="in_scope">{{ in_scope }}</textarea>
-                </div>
-                <div class="col-md-6">
-                    <label>Out of Scope</label>
-                    <textarea name="out_of_scope">{{ out_of_scope }}</textarea>
-                </div>
-            </div>
-            <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                    <label>Availability / SLA</label>
-                    <input type="text" name="availability_sla" class="form-control form-control-sm" value="{{ availability_sla }}"/>
-                </div>
-                <div class="col-md-6">
-                    <label>RPO / RTO</label>
-                    <input type="text" name="rpo_rto" class="form-control form-control-sm" value="{{ rpo_rto }}"/>
-                </div>
-            </div>
-            <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                    <label>Performance Targets</label>
-                    <input type="text" name="performance_targets" class="form-control form-control-sm" value="{{ performance_targets }}"/>
-                </div>
-                <div class="col-md-6">
-                    <label>Security Posture</label>
-                    <input type="text" name="security_posture" class="form-control form-control-sm" value="{{ security_posture }}"/>
-                </div>
-            </div>
-            <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                    <label>Data Volume & Retention</label>
-                    <input type="text" name="data_volume_retention" class="form-control form-control-sm" value="{{ data_volume_retention }}"/>
-                </div>
-                <div class="col-md-6">
-                    <label>Workloads</label>
-                    <input type="text" name="workloads" class="form-control form-control-sm" value="{{ workloads }}"/>
-                </div>
-            </div>
-            <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                    <label>Environments</label>
-                    <input type="text" name="environments" class="form-control form-control-sm" value="{{ environments }}"/>
-                </div>
-                <div class="col-md-6">
-                    <label>Release Strategy</label>
-                    <input type="text" name="release_strategy" class="form-control form-control-sm" value="{{ release_strategy }}"/>
-                </div>
-            </div>
-            <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                    <label>Deployment Topology</label>
-                    <input type="text" name="deployment_topology" class="form-control form-control-sm" value="{{ deployment_topology }}"/>
-                </div>
-                <div class="col-md-6">
-                    <label>Tenancy Model</label>
-                    <input type="text" name="tenancy_model" class="form-control form-control-sm" value="{{ tenancy_model }}"/>
-                </div>
-            </div>
-            <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                    <label>Observability Requirements</label>
-                    <textarea name="observability_requirements">{{ observability_requirements }}</textarea>
-                </div>
-                <div class="col-md-6">
-                    <label>Cost Constraints</label>
-                    <input type="text" name="cost_constraints" class="form-control form-control-sm" value="{{ cost_constraints }}"/>
-                    <label class="mt-2">Capacity Estimates</label>
-                    <input type="text" name="capacity_estimates" class="form-control form-control-sm" value="{{ capacity_estimates }}"/>
-                </div>
-            </div>
-            <div class="row g-3 mt-1">
-                <div class="col-md-6">
-                    <label>Migration Strategy</label>
-                    <textarea name="migration_strategy">{{ migration_strategy }}</textarea>
-                </div>
-                <div class="col-md-6">
-                    <label>Risks</label>
-                    <textarea name="risks">{{ risks }}</textarea>
-                    <label class="mt-2">Open Questions</label>
-                    <textarea name="open_questions">{{ open_questions }}</textarea>
-                </div>
-            </div>
-
+            <div id="mermaidPreviewSystem" style="margin-top:1rem; background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; padding:12px;"></div>
+            <label class="mt-3">System Interaction Notes:</label><br>
+            <textarea name="system_interaction_notes">{{ system_interaction_notes }}</textarea><br>
         </div>
-        <!-- Tab 8: Database Solution Design -->
-        <div class="tab-pane section" id="tab8">
+    <!-- Tab 4: Database Solution Design -->
+    <div class="tab-pane section" id="tab4" data-index="5">
             <h2>Database Solution Design</h2>
             <label>Data Model / ER Diagram (Mermaid erDiagram):</label><br>
             <textarea name="data_model_diagram">{{ data_model_diagram }}</textarea><br>
@@ -739,8 +637,8 @@
             <label class="mt-3">Data Schemas:</label><br>
             <textarea name="data_schemas">{{ data_schemas }}</textarea><br>
         </div>
-        <!-- Tab 9: Service Solution Design -->
-        <div class="tab-pane section" id="tab9">
+    <!-- Tab 5: Service Solution Design -->
+    <div class="tab-pane section" id="tab5" data-index="6">
             <h2>Service Solution Design</h2>
             <label>Service Decomposition (Mermaid flowchart):</label><br>
             <textarea name="service_decomposition_diagram">{{ service_decomposition_diagram }}</textarea><br>
@@ -754,6 +652,34 @@
             <textarea name="interface_definitions">{{ interface_definitions }}</textarea><br>
             <label>Reusable Patterns:</label><br>
             <textarea name="reusable_patterns">{{ reusable_patterns }}</textarea><br>
+        </div>
+    <!-- Tab 6: Decisions, Integration & Pros/Cons (combined) -->
+    <div class="tab-pane section" id="tab6" data-index="3">
+            <h2>Decisions, Integration & Pros/Cons</h2>
+            <label>Architectural Decisions:</label><br>
+            <textarea name="architectural_decisions">{{ decisions }}</textarea><br>
+            <label>Rationale & Trade-offs:</label><br>
+            <textarea name="rationale_tradeoffs">{{ rationale_tradeoffs }}</textarea><br>
+            <hr>
+            <label>Communication Protocols (gRPC, REST, Kafka, etc.):</label><br>
+            <textarea name="communication_protocols">{{ communication }}</textarea><br>
+            <label>Data Flow Diagrams:</label><br>
+            <textarea name="data_flow_diagrams">{{ data_flow_diagrams }}</textarea><br>
+            <label>Integration Points:</label><br>
+            <textarea name="integration_points">{{ integration_points }}</textarea><br>
+            <hr>
+            <label>SWOT Analysis (Strengths, Weaknesses, Opportunities, Threats):</label><br>
+            <textarea name="swot_analysis">{{ pros_cons }}</textarea><br>
+            <label>Risks & Mitigation Strategies:</label><br>
+            <textarea name="risks_mitigation">{{ risks_mitigation }}</textarea><br>
+        </div>
+    <!-- Tab 7: Documentation & Review -->
+    <div class="tab-pane section" id="tab7" data-index="4">
+            <h2>Documentation & Review</h2>
+            <label>Compiled Architecture Document:</label><br>
+            <textarea name="compiled_document">{{ doc }}</textarea><br>
+            <label>Stakeholder Checklist:</label><br>
+            <textarea name="stakeholder_checklist">{{ stakeholder_checklist }}</textarea><br>
         </div>
                 </form>
                     </div>
@@ -774,8 +700,7 @@
                   data-t4="{{ '1' if pending_tab4 else '0' }}"
                   data-t5="{{ '1' if pending_tab5 else '0' }}"
                   data-t6="{{ '1' if pending_tab6 else '0' }}"
-                  data-t7="{{ '1' if pending_tab7 else '0' }}"
-                  data-t8="{{ '1' if pending_tab8 else '0' }}"></span>
+                  data-t7="{{ '1' if pending_tab7 else '0' }}"></span>
             <!-- Hidden element to store pending updates JSON per tab for preview modal -->
             <span id="pending_updates_json" class="d-none"
                 data-tab0="{{ session['pending_updates_tab0']|default('') }}"
@@ -791,14 +716,13 @@
                     <!-- histories per tab -->
                     <div class="mb-2">
                         <textarea class="form-control form-control-sm chat-history" data-tab="0" readonly>{{ chat_tab0 }}</textarea>
-                        <textarea class="form-control form-control-sm chat-history" data-tab="6" readonly>{{ chat_tab6 }}</textarea>
                         <textarea class="form-control form-control-sm chat-history" data-tab="1" readonly>{{ chat_tab1 }}</textarea>
                         <textarea class="form-control form-control-sm chat-history" data-tab="2" readonly>{{ chat_tab2 }}</textarea>
                         <textarea class="form-control form-control-sm chat-history" data-tab="3" readonly>{{ chat_tab3 }}</textarea>
                         <textarea class="form-control form-control-sm chat-history" data-tab="4" readonly>{{ chat_tab4 }}</textarea>
                         <textarea class="form-control form-control-sm chat-history" data-tab="5" readonly>{{ chat_tab5 }}</textarea>
+                        <textarea class="form-control form-control-sm chat-history" data-tab="6" readonly>{{ chat_tab6 }}</textarea>
                         <textarea class="form-control form-control-sm chat-history" data-tab="7" readonly>{{ chat_tab7 }}</textarea>
-                        <textarea class="form-control form-control-sm chat-history" data-tab="8" readonly>{{ chat_tab8 }}</textarea>
                     </div>
             <form method="post" onsubmit="return prepareChatSubmit(this);">
                         <input type="hidden" name="active_tab" id="chat_active_tab_input" value="{{ active_tab }}"/>
@@ -824,50 +748,41 @@
                 <button type="submit" class="btn btn-sm btn-outline-danger chat-action" name="action" value="chat_send" title="Ask the agent; updates apply only to fields allowed for this tab.">Send</button>
                             <button type="submit" class="btn btn-sm btn-danger chat-action" id="chat_apply_btn" name="action" value="chat_apply" title="Apply structured updates from the last agent response to this tab's fields">Apply</button>
                             <a href="#" id="view_changes_link" class="ms-1 small text-decoration-underline" style="display:none" data-bs-toggle="modal" data-bs-target="#pendingUpdatesModal">View Changes</a>
-<!-- Modal for previewing pending chat updates -->
-<div class="modal fade" id="pendingUpdatesModal" tabindex="-1" aria-labelledby="pendingUpdatesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="pendingUpdatesModalLabel">Pending Chat Updates</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="pendingUpdatesPreview">No pending updates.</div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-                            <button type="submit" class="btn btn-sm btn-outline-secondary chat-action" name="action" value="chat_clear" title="Clear the chat transcript for this tab.">Clear</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-<!-- Mermaid for diagram preview -->
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+                            <!-- Modal for previewing pending chat updates -->
+                            <div class="modal fade" id="pendingUpdatesModal" tabindex="-1" aria-labelledby="pendingUpdatesModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="pendingUpdatesModalLabel">Pending Changes</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div id="pendingUpdatesPreview" class="small"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 <script>
-(function(){
-    let inited = false;
+    // Initialize Mermaid safely once per page
     function initMermaid(){
-        if (!inited && window.mermaid){
-            try { mermaid.initialize({ startOnLoad:false, theme:'default' }); } catch (e) {}
-            inited = true;
-        }
+        try {
+            if (window.mermaid && !window.__mermaidInitialized) {
+                // Theme is delegated to Mermaid defaults; startOnLoad is false as we render manually
+                if (typeof mermaid.initialize === 'function') {
+                    mermaid.initialize({ startOnLoad: false });
+                }
+                window.__mermaidInitialized = true;
+            }
+        } catch(e) { /* no-op */ }
     }
     async function renderMermaidRaw(raw, out){
         if (!out) return;
         if (!window.mermaid){
-            out.innerHTML = '<div class="text-danger">Mermaid library not loaded. Check network or CDN access.</div>';
-            return;
+            // mermaid will be initialized by initMermaid()
         }
-        raw = (raw || '').trim();
-        // Support fenced blocks ```mermaid ... ```
         const fenceMatch = raw.match(/```\s*mermaid\s*\n([\s\S]*?)```/i) || raw.match(/```\s*\n([\s\S]*?)```/i);
         if (fenceMatch && fenceMatch[1]) raw = fenceMatch[1].trim();
         // Determine first meaningful token (skip blanks and Mermaid comments starting with %%)
@@ -876,13 +791,8 @@
         const firstToken = (firstLine.split(/\s+/)[0] || '').toLowerCase();
         const allowed = new Set(['graph','flowchart','sequencediagram','classdiagram','erdiagram','statediagram','statediagram-v2','gantt','pie','journey','mindmap','timeline','gitgraph']);
         if (!allowed.has(firstToken)){
-            // Relaxed heuristic: try rendering if it contains a known keyword anywhere
-            const lc = raw.toLowerCase();
-            const hasKnown = Array.from(allowed).some(tok => lc.includes(tok));
-            if (!hasKnown){
-                out.innerHTML = '<div class="text-secondary">Enter Mermaid graph (e.g., <code>graph TD; A-->B;</code>) and click Preview.</div>';
-                return;
-            }
+            out.innerHTML = '<div class="text-secondary">Enter Mermaid graph (e.g., <code>graph TD; A-->B;</code>) and click Preview.</div>';
+            return;
         }
         initMermaid();
         out.innerHTML = '<div class="text-secondary">Rendering…</div>';
@@ -938,14 +848,12 @@
         function tabName(idx){
             const names = {
                 0: 'Context & Requirements',
-                6: 'Context Doc',
                 1: 'Initial Blueprint',
-                7: 'Database Solution Design',
-                8: 'Service Solution Design',
-                2: 'Key Decisions',
-                3: 'Communication & Integration',
-                4: 'Pros & Cons',
-                5: 'Documentation & Review'
+                2: 'System Interaction',
+                5: 'Database Solution Design',
+                6: 'Service Solution Design',
+                3: 'Decisions, Integration & Pros/Cons',
+                4: 'Documentation & Review'
             };
             return names[idx] || 'Tab';
         }
@@ -1026,16 +934,14 @@
         window.showTab = function(idx){
             var tabs = document.querySelectorAll('.nav-tabs .nav-link');
             var panes = document.querySelectorAll('.tab-pane');
-            tabs.forEach((t,i) => t.classList.toggle('active', i===idx));
-            panes.forEach((p,i) => p.classList.toggle('active', i===idx));
+            tabs.forEach((t) => t.classList.toggle('active', String(t.dataset.index) === String(idx)));
+            panes.forEach((p) => p.classList.toggle('active', String(p.dataset.index) === String(idx)));
             if (input) input.value = idx;
             updateChatUI(idx);
-            if ((idx === 1 || idx === 7 || idx === 8) && typeof window.triggerMermaidPreview === 'function') {
+            if ((idx === 1 || idx === 2 || idx === 5 || idx === 6) && typeof window.triggerMermaidPreview === 'function') {
                 setTimeout(function(){
                     previewBySelector('architecture_diagram','mermaidPreview');
                     previewBySelector('system_interaction_diagram','mermaidPreviewSystem');
-                    previewBySelector('data_model_diagram','mermaidPreviewData');
-                    previewBySelector('service_decomposition_diagram','mermaidPreviewServiceDecomp');
                     previewBySelector('data_model_diagram','mermaidPreviewData2');
                     previewBySelector('service_decomposition_diagram','mermaidPreviewServiceDecomp2');
                 }, 0);
@@ -1345,7 +1251,9 @@
             attach('mermaidPreview');
             attach('mermaidPreviewSystem');
             attach('mermaidPreviewData');
+            attach('mermaidPreviewData2');
             attach('mermaidPreviewServiceDecomp');
+            attach('mermaidPreviewServiceDecomp2');
         })();
 
         // Copy/Download for Context Markdown
@@ -1379,8 +1287,9 @@
             }
         })();
     });
-})();
-</script>
+    </script>
+    <!-- Bootstrap JS (for modal, dropdowns, etc.) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Overlay root created dynamically by script -->
     </body>
 </html>
