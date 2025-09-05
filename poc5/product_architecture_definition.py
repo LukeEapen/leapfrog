@@ -1275,7 +1275,9 @@ def generate_blueprint_from_session(strict_prd_only: bool = False) -> str:
         ]
 
     mermaid_lines = []
-    mermaid_lines.append("flowchart TB")
+    # Improve readability: larger spacing, left-to-right layout, simpler curves
+    mermaid_lines.append("%%{init: {'flowchart': {'curve': 'linear', 'htmlLabels': false, 'nodeSpacing': 80, 'rankSpacing': 120, 'padding': 10}, 'themeVariables': {'fontSize': '12px'}} }%%")
+    mermaid_lines.append("flowchart LR")
     mermaid_lines.append("classDef svc fill:#e3f2fd,stroke:#1976d2,stroke-width:1px,color:#0d47a1")
     mermaid_lines.append("classDef db fill:#fff3cd,stroke:#ff9800,color:#e65100")
     mermaid_lines.append("classDef gw fill:#fce4ec,stroke:#c2185b,color:#880e4f")
@@ -1343,7 +1345,8 @@ def generate_blueprint_from_session(strict_prd_only: bool = False) -> str:
     mermaid_lines.append("User-->APIGW")
     if idp:
         mermaid_lines.append("IDP-->|Auth|APIGW")
-    for i in range(1, len(svc_names)+1):
+    # Connect API GW to a limited set to reduce visual clutter when many services exist
+    for i in range(1, min(len(svc_names), 6)+1):
         mermaid_lines.append(f"APIGW-->S{i}")
     # Domain-typical data flow hints
     name_to_idx = {n: i for i, n in enumerate(svc_names, start=1)}
@@ -1361,7 +1364,8 @@ def generate_blueprint_from_session(strict_prd_only: bool = False) -> str:
         mermaid_lines.append(f"S{name_to_idx['Payment Service']}-->|settlement|PAYGW")
     for i in range(1, min(len(svc_names), 3)+1):
         mermaid_lines.append(f"S{i}-->DB{i}")
-    for i in range(1, len(svc_names)+1):
+    # Limit event bus edges to core services for clarity
+    for i in range(1, min(len(svc_names), 4)+1):
         mermaid_lines.append(f"S{i}-->|pub/sub|BUS")
     if caching and caching.lower() != 'none':
         for i in range(1, len(svc_names)+1):
@@ -1391,8 +1395,9 @@ def generate_blueprint_from_session(strict_prd_only: bool = False) -> str:
         mermaid += "\n%% System Mapping"
 
     alias_map: dict[str, str] = {}
-    shown_nodes_limit = 40
-    shown_edges_limit = 40
+    # Keep mapping overlays compact for readability
+    shown_nodes_limit = 12
+    shown_edges_limit = 12
 
     def get_alias(name: str) -> str:
         if name in alias_map:
@@ -2032,6 +2037,121 @@ def _fill_educated_guesses():
         _safe_set_session('constraints', 'TBD – capture NFRs, compliance, and technical constraints')
     if not session.get('legacy_system'):
         _safe_set_session('legacy_system', 'TBD – summarize current/legacy system context')
+
+
+def _final_fill_all_fields():
+    """Final pass to ensure every field used in tabs is non-empty.
+    Uses generators for diagram/doc fields and safe defaults for text fields.
+    Never overwrites existing non-empty values.
+    """
+    try:
+        # Union of allowed fields across tabs
+        all_fields: set[str] = set()
+        try:
+            for v in (TAB_ALLOWED_FIELDS or {}).values():
+                all_fields.update(v)
+        except Exception:
+            pass
+
+        # Smart defaults for common text fields
+        defaults: dict[str, str] = {
+            'business_goals': 'TBD – define goals and success metrics',
+            'legacy_system': 'TBD – summarize current/legacy system context',
+            'constraints': 'TBD – NFRs, compliance, and technical constraints',
+            'additional_requirements': '- TBD',
+            'architecture_style': (session.get('desired_architecture_style') or 'Microservices'),
+            'desired_architecture_style': (session.get('architecture_style') or 'Microservices'),
+            'cloud_provider': 'AWS',
+            'region_strategy': 'Single Region',
+            'deployment_model': 'Serverless',
+            'database_family': 'PostgreSQL',
+            'messaging_backbone': 'Kafka',
+            'identity_provider': 'Okta',
+            'api_style': 'REST',
+            'caching_strategy': 'Redis',
+            'observability_stack': 'Grafana/Loki/Tempo',
+            'data_residency': 'US',
+            'compliance_standards': 'TBD',
+            'workloads': 'Traffic patterns TBD',
+            'high_level_decision_points': '- TBD',
+            'one_way_door_decisions': '- TBD',
+            'other_relevant_questions': '- TBD',
+            'assumptions': '- TBD',
+            'stakeholders': '- Product\n- Engineering\n- Security\n- SRE',
+            'in_scope': '- TBD',
+            'out_of_scope': '- TBD',
+            'migration_strategy': 'TBD',
+            'risks': '- TBD',
+            'open_questions': '- TBD',
+            'rationale_tradeoffs': 'TBD',
+            'blueprint_references': f"PRD: {session.get('prd_file_name','')} | Mapping: {session.get('system_mapping_name','')}",
+            'communication_protocols': 'HTTP/REST + JSON',
+            'data_flow_diagrams': 'See generated Blueprint; flows inferred from Mapping edges.',
+            'integration_points': '- TBD',
+            'system_interaction_notes': 'Auth via IDP; request fan-out to services; DB writes; events on BUS.',
+            'stakeholder_checklist': '\n'.join(['- Security sign-off','- Compliance sign-off','- SRE runbooks','- Architecture review']),
+        }
+
+        for k, v in defaults.items():
+            _safe_set_session(k, v)
+
+        # Diagrams: always ensure present with a valid minimal diagram
+        if not (session.get('architecture_diagram') or '').strip():
+            session['architecture_diagram'] = generate_blueprint_from_session(strict_prd_only=True)
+        if not (session.get('system_interaction_diagram') or '').strip():
+            session['system_interaction_diagram'] = generate_system_interaction_diagram(strict_prd_only=True)
+        if not (session.get('data_model_diagram') or '').strip():
+            session['data_model_diagram'] = generate_data_model_diagram(strict_prd_only=True)
+        if not (session.get('service_decomposition_diagram') or '').strip():
+            session['service_decomposition_diagram'] = generate_service_decomposition_diagram(strict_prd_only=True)
+
+        # Initial blueprint textuals
+        if not (session.get('major_components') or '').strip():
+            svc_names = _top_services_from_decisions(session.get('high_level_decision_points','')) or ['CoreServiceA', 'CoreServiceB', 'CoreServiceC']
+            comps = [f"- {n} (stateless, scalable)" for n in svc_names]
+            comps += ['- API Gateway (rate limiting, auth, routing)', '- Identity Provider (OIDC/OAuth2)', '- Message Bus (async pub/sub)', '- Primary Database']
+            session['major_components'] = "\n".join(comps)
+        if not (session.get('interface_definitions') or '').strip():
+            api_style = (session.get('api_style') or 'REST').upper()
+            svc_names = _top_services_from_decisions(session.get('high_level_decision_points','')) or ['CoreServiceA']
+            lines = []
+            for n in svc_names:
+                base = re.sub(r'[^A-Za-z0-9]', '', n).lower() or 'service'
+                if api_style == 'REST':
+                    lines.append(f"- {n}: GET /{base}s, POST /{base}s, GET /{base}s/{{id}}, PUT /{base}s/{{id}}, DELETE /{base}s/{{id}}")
+                elif api_style == 'GRAPHQL':
+                    lines.append(f"- {n}: Query {base}s, Mutation upsert{base.capitalize()}")
+                else:
+                    lines.append(f"- {n}: rpc List{base.capitalize()}s(), rpc Get{base.capitalize()}(Id), rpc Upsert{base.capitalize()}(Dto)")
+            lines += ['- Auth: OIDC token on all requests', '- Versioning: Accept header or URI v1']
+            session['interface_definitions'] = "\n".join(lines)
+        if not (session.get('data_schemas') or '').strip():
+            svc_names = _top_services_from_decisions(session.get('high_level_decision_points','')) or ['CoreServiceA']
+            dbfam = (session.get('database_family') or '')
+            schem_lines = [
+                f"- Table: {svc_names[0].lower()} (id PK, name, created_at)",
+                "- Table: audit_log (id PK, entity, action, created_at)",
+                "- Indexes: ix_audit_log_created_at",
+                f"- Storage: {dbfam or 'Relational'} with daily backups"
+            ]
+            session['data_schemas'] = "\n".join(schem_lines)
+        if not (session.get('reusable_patterns') or '').strip():
+            session['reusable_patterns'] = '- Layered Architecture'
+
+        # SWOT and docs
+        if not (session.get('swot_analysis') or '').strip():
+            session['swot_analysis'] = _build_swot_markdown(session.get('swot_analysis',''))
+        if not (session.get('compiled_document') or '').strip():
+            session['compiled_document'] = _build_compiled_document_markdown()
+        if not (session.get('architecture_context') or '').strip():
+            session['architecture_context'] = generate_architecture_context()
+            try:
+                _normalize_context_doc()
+            except Exception:
+                pass
+    except Exception:
+        # Best-effort; never fail the request due to defaults
+        pass
 
 
 def _diagram_history_key(field: str) -> str:
@@ -3323,6 +3443,7 @@ def tabbed_workbench():
             # Fill from sources, then fill any remaining fields with educated guesses
             _auto_populate_from_sources()
             _fill_educated_guesses()
+            _final_fill_all_fields()
             active_tab = 0
         elif action == 'lock_tab1':
             session['lock_tab1'] = '1'
@@ -3433,6 +3554,10 @@ def tabbed_workbench():
             except Exception:
                 session['architecture_context'] = generate_architecture_context()
                 _normalize_context_doc(force=True)
+            try:
+                _final_fill_all_fields()
+            except Exception:
+                pass
             active_tab = 0
         elif action == 'download_share':
             # Generate Word document export of all tabs
@@ -3656,6 +3781,11 @@ def tabbed_workbench():
                     _normalize_context_doc()
                 except Exception:
                     pass
+                # Ensure completeness after updates
+                try:
+                    _final_fill_all_fields()
+                except Exception:
+                    pass
                 session[f'pending_updates_tab{idx}'] = ''
             active_tab = idx
         elif action == 'chat_clear':
@@ -3703,6 +3833,7 @@ def tabbed_workbench():
     if session.get('prd_text') or session.get('system_mapping'):
         _auto_populate_from_sources()
         _fill_educated_guesses()
+        _final_fill_all_fields()
 
     # Mark activity timestamp
     try:
@@ -3784,6 +3915,7 @@ def tabbed_workbench():
     system_interaction_diagram=session.get('system_interaction_diagram',''),
     data_model_diagram=session.get('data_model_diagram',''),
     service_decomposition_diagram=session.get('service_decomposition_diagram',''),
+    system_interaction_notes=session.get('system_interaction_notes',''),
         decisions=session.get('architectural_decisions', ''),
         rationale_tradeoffs=session.get('rationale_tradeoffs',''),
         blueprint_references=session.get('blueprint_references',''),

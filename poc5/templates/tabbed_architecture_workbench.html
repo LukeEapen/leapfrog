@@ -352,6 +352,20 @@
                                 <input type="text" name="compliance_standards" class="form-control form-control-sm" value="{{ compliance_standards }}" {% if lock_tab1 %}readonly{% endif %}>
                             </div>
                 </div>
+                <script>
+                    (function(){
+                        function setVal(id, val){ var el = document.getElementById(id); if(el && val){ el.value = val; } }
+                        setVal('cloud_provider', '{{ cloud_provider|default("")|e }}');
+                        setVal('region_strategy', '{{ region_strategy|default("")|e }}');
+                        setVal('deployment_model', '{{ deployment_model|default("")|e }}');
+                        setVal('database_family', '{{ database_family|default("")|e }}');
+                        setVal('messaging_backbone', '{{ messaging_backbone|default("")|e }}');
+                        setVal('identity_provider', '{{ identity_provider|default("")|e }}');
+                        setVal('api_style', '{{ api_style|default("")|e }}');
+                        setVal('caching_strategy', '{{ caching_strategy|default("")|e }}');
+                        setVal('observability_stack', '{{ observability_stack|default("")|e }}');
+                    })();
+                </script>
             </div>
 
             <div class="section-card">
@@ -412,6 +426,13 @@
                         <input type="text" name="kms" class="form-control form-control-sm" value="{{ kms }}"/>
                     </div>
                 </div>
+                <script>
+                    (function(){
+                        function setVal(id, val){ var el = document.getElementById(id); if(el && val){ el.value = val; } }
+                        setVal('encryption_at_rest', '{{ encryption_at_rest|default("")|e }}');
+                        setVal('encryption_in_transit', '{{ encryption_in_transit|default("")|e }}');
+                    })();
+                </script>
                 <div class="row g-3 mt-1">
                     <div class="col-md-4">
                         <label>API Gateway Type</label>
@@ -600,6 +621,10 @@
             <div class="small text-muted mb-2">Using PRD: {{ prd_file_name or 'N/A' }}{% if prd_len %} • parsed {{ prd_len }} chars{% endif %}</div>
             {% endif %}
             <label>High-level Architecture Diagram (Mermaid/PlantUML):</label><br>
+            <div class="d-flex gap-2 mb-2">
+                <button type="submit" name="action" value="generate_initial_blueprint" class="btn btn-sm btn-primary">Regenerate</button>
+                <button type="submit" name="action" value="generate_initial_blueprint" class="btn btn-sm btn-outline-secondary" title="Simplify/clarify the graph layout">Simplify</button>
+            </div>
                         <textarea name="architecture_diagram">{{ blueprint }}</textarea><br>
                         <div class="mb-2">
                             <button type="button" id="previewMermaidBtn" class="btn btn-sm btn-danger" title="Render the current Mermaid diagram locally without posting to the server.">Preview Diagram</button>
@@ -795,6 +820,12 @@
             return;
         }
         initMermaid();
+        // Nudge mermaid font size for readability in previews
+        try {
+            var style = document.createElement('style');
+            style.innerHTML = '.mermaid svg { font-size: 12px; } .mermaid .label foreignObject { font-size: 12px; }';
+            document.head.appendChild(style);
+        } catch(e) {}
         out.innerHTML = '<div class="text-secondary">Rendering…</div>';
         const id = 'mmd-' + Date.now();
         try {
