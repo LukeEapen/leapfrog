@@ -63,11 +63,16 @@
 
     body {
       background: linear-gradient(135deg, #38393a 0%, #403f41 100%);
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
-      align-items: center;
+      align-items: flex-start; /* start at top instead of vertical center */
       justify-content: center;
       font-family: 'Segoe UI', sans-serif;
+      padding-top: 2.5rem; /* space below the banner */
+    }
+
+    @media (max-width: 576px) {
+      body { padding-top: 1.25rem; }
     }
 
     .login-card {

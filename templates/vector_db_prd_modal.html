@@ -41,10 +41,41 @@ function showVectorDbPrdModal() {
 }
 
 function selectVectorDbPrd(url) {
-  // Set the selected PRD URL in the upload form (or handle as needed)
-  document.getElementById('prd-file').value = '';
-  document.getElementById('selected-vector-db-prd').value = url;
-  document.getElementById('vectorDbPrdModal').classList.remove('show');
+  // Store the selected PRD URL in hidden input (if present)
+  const hidden = document.getElementById('selected-vector-db-prd');
+  if (hidden) hidden.value = url;
+
+  // Immediately reflect selection on pages that expose a link container (e.g., Page 4)
+  const linkContainer = document.getElementById('vectorDbLinkContainer');
+  const linkEl = document.getElementById('vectorDbPrdLink');
+  if (linkContainer && linkEl && typeof url === 'string' && url.length > 0) {
+    linkContainer.style.display = 'block';
+    linkEl.href = url;
+    linkEl.textContent = url;
+  }
+
+  // Optionally enable/update a "Use Selected" button if present
+  const useBtn = document.getElementById('useSelectedVectorDbBtn');
+  if (useBtn) {
+    useBtn.disabled = false;
+    useBtn.textContent = 'Use Selected';
+  }
+
+  // Properly close the Bootstrap modal
+  const modalEl = document.getElementById('vectorDbPrdModal');
+  if (modalEl) {
+    if (window.bootstrap && typeof bootstrap.Modal === 'function') {
+      const instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      instance.hide();
+    } else {
+      // Fallback if Bootstrap JS not yet available
+      modalEl.classList.remove('show');
+      modalEl.style.display = 'none';
+      document.body.classList.remove('modal-open');
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) backdrop.remove();
+    }
+  }
 }
 </script>
 

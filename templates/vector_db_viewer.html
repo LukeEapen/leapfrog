@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vector DB Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+  <style>
+    body { background-color: #343a40; min-height:100vh; }
+    .container { max-width: 900px; }
+    .card { border-radius: 0.75rem; }
+    .list-group-item { display:flex; justify-content:space-between; align-items:center; }
+  </style>
+</head>
+<body>
+  {% include 'partials/banner.html' %}
+  <div class="container mt-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="m-0">Vector DB – PRD Browser</h4>
+          <a href="/page4" class="btn btn-outline-secondary">Back</a>
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">Search</span>
+          <input type="text" id="searchInput" class="form-control" placeholder="Type to filter by name...">
+        </div>
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th style="width: 45%;">File Name</th>
+                <th>Link to Document</th>
+              </tr>
+            </thead>
+            <tbody id="prdTableBody"></tbody>
+          </table>
+        </div>
+        <div class="text-muted small mt-2" id="emptyState" style="display:none;">No PRDs found.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    async function loadPRDs() {
+      try {
+        const res = await fetch('/api/vector-db-prds');
+        const data = await res.json();
+        const prds = data.prds || [];
+        renderTable(prds);
+        setupSearch(prds);
+      } catch (e) {
+        console.error('Failed to load PRDs', e);
+      }
+    }
+
+    function renderTable(prds) {
+      const tbody = document.getElementById('prdTableBody');
+      const empty = document.getElementById('emptyState');
+      tbody.innerHTML = '';
+      if (!prds.length) { empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+      prds.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.name}</td>
+          <td><a href="${p.url}" target="_blank">${p.url}</a></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+  function setupSearch(prds) {
+      const input = document.getElementById('searchInput');
+      input.addEventListener('input', () => {
+        const term = input.value.toLowerCase();
+    const filtered = prds.filter(p => (p.name||'').toLowerCase().includes(term));
+    renderTable(filtered);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', loadPRDs);
+  </script>
+</body>
+</html>
