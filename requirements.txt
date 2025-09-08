@@ -7,9 +7,12 @@ Werkzeug>=3.0.1         # Flask dependency for security features
 # AI and Language Processing - Deployment optimized
 openai>=1.10.0,<2.0.0
 tiktoken>=0.5.1        # For token counting - relaxed pinning for compatibility
-# langgraph>=0.0.55      # Updated to newer compatible version - commented out for deployment
-# langchain-core>=0.1.45 # Updated to newer compatible version - commented out for deployment
-# langchain-openai>=0.1.0 # Updated to newer compatible version - commented out for deployment
+# LangGraph Orchestration Stack
+langgraph>=0.2.0
+langchain>=0.2.0       # Core LangChain package (needed by some LangGraph examples)
+langchain-core>=0.2.0
+langchain-community>=0.2.0  # Tool & integration collection
+langchain-openai>=0.1.7
 
 # Vector Database & RAG - Optimized for deployment
 # chromadb>=0.4.0         # Vector database - commented out for deployment
