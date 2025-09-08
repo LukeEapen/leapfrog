@@ -115,9 +115,27 @@
       .card-header { font-size: 1rem; }
       .response, .markdown-content { font-size: 0.95rem; }
     }
+    /* Change highlight styles */
+    .business-breakdown-font mark[data-change] {
+      background:#fff3bf;
+      padding:0 .2em;
+      border-radius:4px;
+      box-shadow:0 0 0 1px #ffe58f inset;
+    }
+    .business-breakdown-font mark[data-change='replace'] { background:#ffd8d8; box-shadow:0 0 0 1px #ffb3b3 inset; }
+    .business-breakdown-font mark[data-change='add'] { background:#d4f8d4; box-shadow:0 0 0 1px #9be89b inset; }
+    .change-legend {font-size:.75rem; color:#555; display:flex; gap:.75rem; flex-wrap:wrap; margin-top:.25rem;}
+    .change-legend span {display:inline-flex; align-items:center; gap:.25rem;}
+    .change-legend i {width:14px;height:14px;display:inline-block;border-radius:3px;}
+    .legend-replace i {background:#ffd8d8; border:1px solid #ffb3b3;}
+    .legend-add i {background:#d4f8d4; border:1px solid #9be89b;}
+  /* Marked section styles (shared across POC 3b pages) */
+  .marked-section{position:relative;border:2px dashed #d32f2f;border-radius:12px;padding:.4rem .7rem;background:rgba(211,47,47,.05);margin:0 0 .85rem 0;display:none}
+  .marked-section .marked-label{position:absolute;top:-12px;left:14px;background:#d32f2f;color:#fff;border-radius:8px;padding:2px 10px;font-weight:800;font-size:.78rem;letter-spacing:.02em;box-shadow:0 2px 6px rgba(0,0,0,.08)}
   </style>
 </head>
 <body>
+    {% include 'banner.html' %}
     <header style="background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color: #fff; padding: 1.2rem 0 1rem 0; border-radius: 0 0 1.2rem 1.2rem; box-shadow: 0 4px 32px rgba(44,44,44,0.22); margin-bottom: 2.5rem; position:relative; overflow:hidden; border: 4px solid #fff; min-height:unset;">
       <!-- Attribution: absolutely positioned top right -->
       <div style="position:absolute; top:10px; right:32px; z-index:10;">
@@ -152,6 +170,7 @@
     </header>
 
     <div class="main-app-container">
+      <div class="marked-section" style="display:none;"><span class="marked-label">Marked</span></div>
       <div class="row justify-content-center align-items-stretch h-100" style="height:100%;">
         <div class="col-12 h-100">
           <div class="card shadow-lg border-0 mb-4 h-100 d-flex flex-column">
@@ -213,6 +232,7 @@
                     <div class="card-header bg-success text-white fw-bold">Section 2: Business Breakdown</div>
                     <div class="card-body flex-grow-1 p-2" style="min-height:0;">
                       <div id="agentResponse" class="response markdown-content p-2 rounded" style="height:100%; background:#fff; border-radius:1rem; box-shadow:0 2px 8px rgba(44,44,44,0.08); color:#23272b; font-size:18px;"></div>
+                      <div class="change-legend"><span class="legend-replace"><i></i>Replaced</span><span class="legend-add"><i></i>Added</span></div>
                     </div>
                   </div>
                 </div>
@@ -223,6 +243,21 @@
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      /* Chat panel styles */
+      #chatPanel{position:fixed;bottom:24px;right:24px;width:380px;max-height:70vh;background:#ffffff;border:1px solid #d0d5da;border-radius:18px;box-shadow:0 8px 28px -6px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden;z-index:9999;font-size:.9rem;}
+      #chatPanel.collapsed{height:54px;max-height:54px;}
+      #chatHeader{background:#23272b;color:#fff;padding:.65rem .9rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-weight:600;}
+      #chatMessages{flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:.6rem;background:#f5f7f9;}
+      .chat-msg{padding:.55rem .7rem;border-radius:10px;line-height:1.25;max-width:88%;word-break:break-word;}
+      .chat-user{background:#d32f2f;color:#fff;align-self:flex-end;}
+      .chat-assistant{background:#ffffff;border:1px solid #d0d5da;align-self:flex-start;}
+      #chatForm{border-top:1px solid #e1e5e8;display:flex;gap:.5rem;padding:.55rem .6rem;background:#fff;}
+      #chatForm textarea{flex:1;resize:none;border:1px solid #c9d0d6;border-radius:8px;padding:.45rem .6rem;font-size:.85rem;max-height:110px;}
+      #applyResponseBtn{margin-left:.35rem;}
+      .apply-indicator{font-size:.65rem;color:#13803b;font-weight:600;display:none;margin-left:6px;}
+      @media (max-width:700px){#chatPanel{right:8px;left:8px;width:auto;}}
+    </style>
     <!-- Bootstrap Icons fallback check -->
     <script>
       window.addEventListener('DOMContentLoaded', function() {
@@ -236,6 +271,145 @@
         }
         document.body.removeChild(testIcon);
       });
+    </script>
+    <script>
+      // Chat panel construction
+      document.addEventListener('DOMContentLoaded',()=>{
+        const panel=document.createElement('div');
+        panel.id='chatPanel';
+        panel.innerHTML=`<div id="chatHeader">Chat Refinement <div style="font-size:.75rem;font-weight:500;opacity:.8;">(click to toggle)</div></div>
+          <div id="chatMessages"></div>
+          <form id="chatForm">
+            <textarea id="chatInput" rows="2" placeholder="Ask or refine business breakdown..."></textarea>
+            <div class="d-flex flex-column gap-1">
+              <button type="submit" class="btn btn-danger btn-sm" style="font-size:.7rem;padding:.45rem .65rem;">Send</button>
+              <button type="button" id="applyResponseBtn" class="btn btn-primary btn-sm" style="font-size:.7rem;padding:.45rem .65rem;" disabled>Apply</button>
+            </div>
+          </form>`;
+        document.body.appendChild(panel);
+        const header=document.getElementById('chatHeader');
+        header.addEventListener('click',()=>panel.classList.toggle('collapsed'));
+        const msgs=document.getElementById('chatMessages');
+        const chatForm=document.getElementById('chatForm');
+        const input=document.getElementById('chatInput');
+        const applyBtn=document.getElementById('applyResponseBtn');
+        let lastAssistantHTML='';
+        function addMsg(role,content){
+          const div=document.createElement('div');
+          div.className='chat-msg '+(role==='user'?'chat-user':'chat-assistant');
+          div.innerHTML=content;
+          msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+        }
+        const CHAT_BASE=(document.body.getAttribute('data-chat-base')||window.location.origin).replace(/\/$/,'');
+        chatForm.addEventListener('submit',async(e)=>{
+          e.preventDefault();
+          const text=input.value.trim();
+          if(!text)return;
+            addMsg('user',text);
+            input.value='';
+            applyBtn.disabled=true;
+          try{
+            // Capture current Section 2 HTML to allow backend to mutate it
+            const currentHTML=document.getElementById('agentResponse')?.innerHTML||'';
+            const r=await fetch(`${CHAT_BASE}/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,current_html:currentHTML})});
+            const ct=r.headers.get('content-type')||'';
+            let data;
+            if(!ct.includes('application/json')){
+              const raw=await r.text();
+              addMsg('assistant',`<span style='color:#d32f2f'>Non-JSON response (status ${r.status}). First chars: ${raw.slice(0,120).replace(/</g,'&lt;')}</span>`);
+              console.error('Chat endpoint returned non-JSON', {status:r.status, raw});
+              return;
+            }
+            data=await r.json();
+    if(data.response){
+              // Prefer updated_html for immediate application preview
+              if(data.updated_html){
+                const target=document.getElementById('agentResponse');
+                if(target){
+                  target.innerHTML = data.updated_html;
+                  lastAssistantHTML = data.updated_html;
+      if(window.updateMarkedBox){ try{ window.updateMarkedBox(); }catch(_){} }
+                }
+              } else {
+                lastAssistantHTML=data.response.replace(/\n/g,'<br>');
+              }
+              addMsg('assistant', (data.applied_rules && data.applied_rules.length)?`<strong>Updated:</strong> ${data.applied_rules.join('; ')}`: lastAssistantHTML);
+              applyBtn.disabled= !data.updated_html; // if we already applied, keep disabled
+            }else if(data.error){
+              addMsg('assistant',`<span style='color:#d32f2f'>${data.error}</span>`);
+            }
+          }catch(err){addMsg('assistant',`<span style='color:#d32f2f'>${err.message}</span>`);}
+        });
+    applyBtn.addEventListener('click',async()=>{
+          if(!lastAssistantHTML)return;
+          try{
+      const r=await fetch(`${CHAT_BASE}/apply-business-breakdown`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:lastAssistantHTML})});
+            const data=await r.json();
+            if(data.status==='ok'){
+              // Replace Section 2 display
+              const target=document.getElementById('agentResponse');
+              if(target){
+                target.innerHTML=`<div class='modern-section-card card mb-3' style='background:#fff; border:none; box-shadow:0 2px 8px rgba(44,44,44,0.10);'><div class='card-body business-breakdown-font'>${lastAssistantHTML}</div></div>`;
+                if(window.updateMarkedBox){ try{ window.updateMarkedBox(); }catch(_){} }
+              }
+              addMsg('assistant',"<em style='color:#13803b'>Applied to Business Breakdown section.</em>");
+              applyBtn.disabled=true;
+            }
+          }catch(err){addMsg('assistant',`<span style='color:#d32f2f'>${err.message}</span>`);}
+        });
+      });
+    </script>
+    <!-- Marked summary manager: populate or hide the banner based on highlights -->
+    <script>
+      (function(){
+        function updateMarkedBox(){
+          var box = document.querySelector('.marked-section');
+          if(!box) return;
+          var content = box.querySelector('.marked-content');
+          if(!content){
+            content = document.createElement('div');
+            content.className = 'marked-content';
+            content.style.marginTop = '.4rem';
+            content.style.fontSize = '.95rem';
+            content.style.color = '#23272b';
+            box.appendChild(content);
+          }
+          // Only count highlights inside Section 2 container
+          var marks = document.querySelectorAll('#agentResponse mark[data-change]');
+          var added = 0, replaced = 0;
+          marks.forEach(function(m){
+            var t = m.getAttribute('data-change');
+            if(t==='add') added++; else if(t==='replace') replaced++;
+          });
+          if(marks.length === 0){
+            box.style.display = 'none';
+            content.innerHTML = '';
+            return;
+          }
+          box.style.display = '';
+          var html = '<span style="font-weight:800;color:#d32f2f;">Change summary:</span> ';
+          if(added) html += '<span style="margin-right:.8rem;"><i style="display:inline-block;width:10px;height:10px;background:#d4f8d4;border:1px solid #9be89b;border-radius:2px;margin-right:.35rem;"></i>'+added+' added</span>';
+          if(replaced) html += '<span><i style="display:inline-block;width:10px;height:10px;background:#ffd8d8;border:1px solid #ffb3b3;border-radius:2px;margin-right:.35rem;"></i>'+replaced+' replaced</span>';
+          // Jump link
+          var first = marks[0];
+          if(first){
+            html += '<a href="#" id="jumpFirstChange" style="margin-left:1rem;font-weight:700;">Jump to first change</a>';
+          }
+          content.innerHTML = html;
+          var a = document.getElementById('jumpFirstChange');
+          if(a && first){
+            a.onclick = function(e){ e.preventDefault(); try{ first.scrollIntoView({behavior:'smooth', block:'center'}); }catch(_){} };
+          }
+        }
+        // Observe updates to business breakdown area
+        var target = document.getElementById('agentResponse') || document.body;
+        try{
+          var mo = new MutationObserver(function(){ updateMarkedBox(); });
+          mo.observe(target,{subtree:true, childList:true, attributes:true, characterData:true});
+        }catch(_){ /* ignore */ }
+        document.addEventListener('DOMContentLoaded', updateMarkedBox);
+        window.updateMarkedBox = updateMarkedBox;
+      })();
     </script>
     <script>
         // Extract just the "Section 2: Business Breakdown" portion from plain text (Markdown)

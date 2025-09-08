@@ -176,9 +176,13 @@
       box-shadow: 0 4px 18px rgba(44,44,44,0.13), 0 0 0 2px #d32f2f33;
       outline: none;
     }
+  /* Marked section styles (shared across POC 3b pages) */
+  .marked-section{position:relative;border:2px dashed #d32f2f;border-radius:12px;padding:.4rem .7rem;background:rgba(211,47,47,.05);margin:.25rem 0 .85rem 0}
+  .marked-section .marked-label{position:absolute;top:-12px;left:14px;background:#d32f2f;color:#fff;border-radius:8px;padding:2px 10px;font-weight:800;font-size:.78rem;letter-spacing:.02em;box-shadow:0 2px 6px rgba(0,0,0,.08)}
   </style>
 </head>
 <body>
+  {% include 'partials/banner.html' %}
   <!-- Modern Banner Start -->
   <header style="background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color: #fff; padding: 1.2rem 0 0.7rem 0; border-radius: 0 0 1.2rem 1.2rem; box-shadow: 0 4px 32px rgba(44,44,44,0.22); margin-bottom: 1.1rem; position:relative; overflow:hidden; border: 4px solid #fff; min-height:unset;">
     <div style="position:absolute; top:-40px; right:-60px; opacity:0.12; pointer-events:none;">
@@ -213,6 +217,7 @@
   </div>
   <div class="container-fluid d-flex justify-content-center align-items-start" style="padding:0; min-height:80vh;">
     <div class="agent-card text-center shadow-lg" style="margin-top:2.5rem; margin-bottom:2.5rem; margin-left:auto; margin-right:auto; max-width:2200px; min-width:1200px; width:98vw; background:rgba(255,255,255,0.98); border-radius:2rem; box-shadow:0 8px 32px rgba(44,44,44,0.13); padding:2.5rem 3.5rem 2.5rem 3.5rem; display:flex; flex-direction:column; align-items:center;">
+  <div class="marked-section"><span class="marked-label">Marked</span></div>
       <!-- Unified action row: Back, Textarea, Run Design Synthesis, Run Builder -->
       <form id="synthesisForm" class="w-100" autocomplete="off" style="margin-bottom:0;">
         <div class="d-flex align-items-center w-100 mb-1" id="actionButtonsRow" style="gap:1.1rem; display:flex; justify-content:space-between; margin-top:0.1rem;">
@@ -639,5 +644,42 @@
 </script>
   <!-- Bootstrap 5 JS bundle for collapse/accordion -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function(){
+      function updateMarkedBox(){
+        var box = document.querySelector('.marked-section');
+        if(!box) return;
+        var marks = document.querySelectorAll('mark[data-change]');
+        var added=0, replaced=0, removed=0;
+        marks.forEach(function(m){
+          var t=(m.getAttribute('data-change')||'').toLowerCase();
+          if(t==='add'||t==='added') added++;
+          else if(t==='replace'||t==='replaced'||t==='update'||t==='updated') replaced++;
+          else if(t==='remove'||t==='removed'||t==='del'||t==='deleted') removed++;
+        });
+        var total = marks.length;
+        if(total===0){ box.style.display='none'; return; }
+        box.style.display='';
+        var label = box.querySelector('.marked-label');
+        Array.from(box.childNodes).forEach(function(n){ if(n!==label) box.removeChild(n); });
+        var summary = document.createElement('div');
+        summary.className = 'small';
+        summary.style.marginLeft = '0.25rem';
+        summary.innerHTML = 'Changes: '+total + (added? ' • added: '+added:'') + (replaced? ' • updated: '+replaced:'') + (removed? ' • removed: '+removed:'') + ' <a href="#" id="jumpFirstChange" style="margin-left:.5rem;">Jump to first</a>';
+        box.appendChild(summary);
+        var link = summary.querySelector('#jumpFirstChange');
+        if(link){
+          link.onclick = function(e){ e.preventDefault(); var first = marks[0]; if(first){ first.scrollIntoView({behavior:'smooth', block:'center'}); first.classList.add('marked-pulse'); setTimeout(function(){ first.classList.remove('marked-pulse'); }, 1200); } };
+        }
+      }
+      var style = document.createElement('style');
+      style.textContent = 'mark[data-change].marked-pulse{ outline:2px solid #d32f2f; transition: outline 1.2s; }';
+      document.head.appendChild(style);
+      if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', updateMarkedBox); } else { updateMarkedBox(); }
+      var obs = new MutationObserver(function(){ updateMarkedBox(); });
+      obs.observe(document.body, { childList:true, subtree:true });
+      window.updateMarkedBox = updateMarkedBox;
+    })();
+  </script>
 </body>
 </html>

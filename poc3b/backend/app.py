@@ -1501,6 +1501,120 @@ for route, html_file in ROUTES:
 def start():
     return redirect(url_for('legacy_code_parser_agent.html'))
 
+# ---------------- Chat Refinement Endpoints (added to avoid 404 HTML responses) ----------------
+CHAT_HISTORY = []  # simple in-memory store; resets on restart
+
+@app.route('/chat', methods=['POST'])
+def chat_refine():
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        data = request.get_json(silent=True) or {}
+        user_msg = (data.get('message') or '').strip()
+        current_html = (data.get('current_html') or '').strip()
+        if not user_msg:
+            return jsonify({'error': 'Empty message'}), 400
+
+        # --- Simple rule-based refinement engine ---
+        updated_html = current_html or ''
+        import re, html
+        # Remove previous highlights to avoid nesting
+        if updated_html:
+            updated_html = re.sub(r'</?mark[^>]*>', '', updated_html, flags=re.IGNORECASE)
+        applied_rules = []
+
+        # 1. Replace pattern: replace "X" with "Y"
+        repl_match = re.search(r'replace\s+"([^"]{1,200})"\s+with\s+"([^"]{1,200})"', user_msg, re.IGNORECASE)
+        if repl_match and updated_html:
+            old, new = repl_match.group(1), repl_match.group(2)
+            pattern = re.compile(re.escape(old), re.IGNORECASE)
+            def _do_replace(m):
+                return f"<mark data-change='replace' title='Replaced from &quot;{html.escape(old)}&quot;'>{html.escape(new)}</mark>"
+            new_html_candidate = pattern.sub(_do_replace, updated_html)
+            if new_html_candidate != updated_html:
+                updated_html = new_html_candidate
+                applied_rules.append(f'replaced "{old}" with "{new}"')
+
+        # 2. Remove bullet / line containing quoted phrase: remove "PHRASE"
+        rem_match = re.search(r'(remove|delete)\s+"([^"]{1,200})"', user_msg, re.IGNORECASE)
+        if rem_match and updated_html:
+            phrase = rem_match.group(2)
+            # Remove any <li> that contains phrase (case-insensitive)
+            updated_html_before = updated_html
+            updated_html = re.sub(r'<li[^>]*>[^<]*?' + re.escape(phrase) + r'[^<]*?</li>', '', updated_html, flags=re.IGNORECASE)
+            if updated_html != updated_html_before:
+                applied_rules.append(f'removed bullet containing "{phrase}"')
+
+        # 3. Add bullet: add bullet: Some text OR add line: Some text / append: Some text
+        add_match = re.search(r'(add bullet|add line|append)\s*:?\s+"?([^"].+?)"?$', user_msg, re.IGNORECASE)
+        if add_match:
+            bullet_text = add_match.group(2).strip()
+            if bullet_text:
+                # If a UL exists, append inside first; else create new UL at end
+                if '<ul' in updated_html.lower():
+                    # Insert before closing </ul> of first list
+                    safe_bt = html.escape(bullet_text)
+                    updated_html = re.sub(r'</ul>', f"<li><mark data-change='add' title='Added bullet'>{safe_bt}</mark></li></ul>", updated_html, count=1, flags=re.IGNORECASE)
+                else:
+                    safe_bt = html.escape(bullet_text)
+                    updated_html += ('' if updated_html.endswith('\n') else '\n') + f"<ul><li><mark data-change='add' title='Added bullet'>{safe_bt}</mark></li></ul>"
+                applied_rules.append(f'added bullet "{bullet_text}"')
+
+        # 4. If no rules applied, just append a note at end if current_html exists
+        if not applied_rules and updated_html:
+            # Append a comment marker (invisible to user unless they view source)
+            updated_html += f"\n<!-- no structural rule matched for instruction: {user_msg[:120]} -->"
+
+        # Fallback: if no current_html provided, echo back instruction inside minimal wrapper
+        if not updated_html:
+            updated_html = f"<div><p>{user_msg}</p></div>"
+
+        timestamp = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+        assistant_summary = (
+            ('Applied: ' + '; '.join(applied_rules)) if applied_rules else 'No structured rule matched; appended note.'
+        ) + f" ({timestamp})"
+
+        CHAT_HISTORY.append({'role': 'user', 'content': user_msg})
+        CHAT_HISTORY.append({'role': 'assistant', 'content': assistant_summary})
+        del CHAT_HISTORY[:-40]
+
+        return jsonify({
+            'response': assistant_summary,
+            'updated_html': updated_html,
+            'applied_rules': applied_rules,
+            'history': CHAT_HISTORY
+        })
+    except Exception as e:
+        logging.error(f"/chat error: {e}\n{traceback.format_exc()}")
+        return jsonify({'error': 'Server error'}), 500
+
+@app.route('/apply-business-breakdown', methods=['POST'])
+def apply_business_breakdown():
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'Content-Type must be application/json'}), 415
+        data = request.get_json(silent=True) or {}
+        new_html = (data.get('html') or '').strip()
+        if not new_html:
+            return jsonify({'error': 'No html provided'}), 400
+        # Placeholder: could persist or version this later
+        return jsonify({'status': 'ok', 'applied': True})
+    except Exception as e:
+        logging.error(f"/apply-business-breakdown error: {e}\n{traceback.format_exc()}")
+        return jsonify({'error': 'Server error'}), 500
+
+@app.errorhandler(404)
+def handle_404(e):
+    if request.path.startswith('/chat') or request.path.startswith('/apply-business-breakdown'):
+        return jsonify({'error': 'Endpoint not found'}), 404
+    return e
+
+@app.errorhandler(405)
+def handle_405(e):
+    if request.path.startswith('/chat') or request.path.startswith('/apply-business-breakdown'):
+        return jsonify({'error': 'Method not allowed'}), 405
+    return e
+
 
 # Assistant IDs
 assistant_id_agent_1 = "asst_P2HdYTBuZtBZqHGZizbsii1P"

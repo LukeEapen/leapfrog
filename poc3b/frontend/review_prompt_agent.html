@@ -20,11 +20,16 @@
     .agent-desc { font-size: 1.1rem; margin-bottom: 1.5rem; }
     .btn-next { background: #e74c3c; color: #fff; border: none; border-radius: 8px; padding: 0.75rem 2rem; font-size: 1.1rem; }
     .btn-next:hover { background: #ff7675; }
+  /* Marked section styles (shared across POC 3b pages) */
+  .marked-section{position:relative;border:2px dashed #d32f2f;border-radius:12px;padding:.4rem .7rem;background:rgba(211,47,47,.05);margin:0 0 .85rem 0}
+  .marked-section .marked-label{position:absolute;top:-12px;left:14px;background:#d32f2f;color:#fff;border-radius:8px;padding:2px 10px;font-weight:800;font-size:.78rem;letter-spacing:.02em;box-shadow:0 2px 6px rgba(0,0,0,.08)}
   </style>
 </head>
 <body>
+  {% include 'partials/banner.html' %}
   <div class="container">
     <div class="agent-card text-center">
+  <div class="marked-section"><span class="marked-label">Marked</span></div>
       <div class="agent-title">Review Prompt Agent</div>
       <div class="agent-desc">Review decomposed design elements and prompt for approval or changes. (GPT-3.5, instructions from file)</div>
       <form id="reviewForm">
@@ -45,6 +50,33 @@
         document.getElementById('result').innerHTML = `<div class='alert alert-success'><b>Output:</b><br><pre>{\n  "reviewStatus": "approved",\n  "comments": "Design elements meet all requirements."\n}</pre></div>`;
       }, 1200);
     };
+  </script>
+  <script>
+    (function(){
+      function updateMarkedBox(){
+        var box = document.querySelector('.marked-section');
+        if(!box) return;
+        var marks = document.querySelectorAll('mark[data-change]');
+        var total = marks.length;
+        if(total===0){ box.style.display='none'; return; }
+        box.style.display='';
+        var label = box.querySelector('.marked-label');
+        Array.from(box.childNodes).forEach(function(n){ if(n!==label) box.removeChild(n); });
+        var summary = document.createElement('div');
+        summary.className = 'small';
+        summary.style.marginLeft = '0.25rem';
+        summary.innerHTML = 'Changes: '+total + ' <a href="#" id="jumpFirstChange" style="margin-left:.5rem;">Jump to first</a>';
+        box.appendChild(summary);
+        var link = summary.querySelector('#jumpFirstChange');
+        if(link){
+          link.onclick = function(e){ e.preventDefault(); var first = marks[0]; if(first){ first.scrollIntoView({behavior:'smooth', block:'center'}); } };
+        }
+      }
+      if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', updateMarkedBox); } else { updateMarkedBox(); }
+      var obs = new MutationObserver(function(){ updateMarkedBox(); });
+      obs.observe(document.body, { childList:true, subtree:true });
+      window.updateMarkedBox = updateMarkedBox;
+    })();
   </script>
 </body>
 </html>
