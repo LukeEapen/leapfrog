@@ -103,6 +103,18 @@ def tabbed_layout():
 def health():
     return jsonify({"status":"healthy","timestamp":datetime.now().isoformat(),"openai_configured":bool(os.getenv('OPENAI_API_KEY'))})
 
+@app.route('/orchestrator-overview')
+def orchestrator_overview():
+    """Static overview page showing all POCs / agents with phase mapping.
+    Template: templates/orchestrator_overview.html
+    Added as part of orchestration visualization request.
+    """
+    try:
+        return render_template('orchestrator_overview.html')
+    except Exception as e:
+        logger.error(f"Error rendering orchestrator overview: {e}")
+        return f"Error: {e}", 500
+
 @app.route('/debug-info')
 def debug_info():
     d = app.config['SESSION_FILE_DIR']

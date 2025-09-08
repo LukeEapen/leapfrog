@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width,initial-scale=1" />
+   <title>Modernization Orchestrator Overview</title>
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+   <style>
+   :root {
+         --planning:#1a4765; /* header color planning */
+         --discovery:#0d4a32; /* discovery & design */
+         --development:#1d3f2f; /* development & testing */
+         --migration:#6d1d54; /* migration */
+         --panel-bg:#ffffff;
+         --divider:#d1d5db;
+         --muted:#555f6b;
+      }
+      body{font-family:'Inter',system-ui,Arial,sans-serif;background:linear-gradient(135deg,#f8f9fa,#e9edf0);color:#1a1f26;margin:0;}
+      .top-title-bar{background:#070808;color:#fff;padding:.55rem 1rem .45rem;border-bottom:3px solid #0f1316;display:flex;align-items:center;justify-content:center;position:sticky;top:0;z-index:30;}
+      .top-title-bar h1{font-size:1.05rem;font-weight:600;letter-spacing:.5px;margin:0;}
+      .orchestrator-wrapper{max-width:1500px;margin:0 auto;padding:1.5rem 1.25rem 4rem;position:relative;}
+      .top-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem;}
+      .top-actions a{font-size:.85rem;font-weight:600;text-decoration:none;padding:.55rem 1rem;border-radius:2rem;border:1px solid #d0d5da;background:#fff;color:#1f2933;display:inline-flex;align-items:center;gap:.4rem;transition:.25s;}
+      .top-actions a:hover{background:#f1f5f9;color:#111;}
+   /* Phase header now integrated inside matrix */
+   /* Removed vertical side label */
+      .phase-head{padding:.55rem .9rem;color:#fff;font-weight:600;font-size:.9rem;letter-spacing:.4px;display:flex;align-items:center;gap:.5rem;}
+      .phase-head i{font-size:1rem;opacity:.85;}
+      .phase-head.planning{background:var(--planning);}    
+      .phase-head.discovery{background:var(--discovery);}  
+      .phase-head.development{background:var(--development);} 
+      .phase-head.migration{background:var(--migration);}   
+   .matrix{display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border:1px solid var(--divider);border-top:none;position:relative;}
+   .matrix .phase-head{border-right:1px solid var(--divider);border-bottom:1px solid var(--divider);display:flex;align-items:center;justify-content:flex-start;font-size:.72rem;padding:.38rem .55rem;font-weight:600;letter-spacing:.4px;line-height:1.05;}
+   /* Header placement: Planning over column1, Discovery over columns 2-3, Development over 4-5 */
+   .matrix .phase-head.planning{grid-column:1;}
+   .matrix .phase-head.discovery{grid-column:2 / span 2;}
+   .matrix .phase-head.development{grid-column:4;}
+   .matrix .phase-head.migration{grid-column:5;display:flex;}
+   .matrix .phase-head:last-child{border-right:none;}
+   .cell-group{position:relative;padding:2.0rem .9rem 1rem .9rem;border-right:1px solid var(--divider);border-top:1px solid var(--divider);display:flex;flex-direction:column;justify-content:flex-start;grid-row:2;}
+      .cell-group:last-child{border-right:none;}
+   .process-block{padding:.6rem .65rem .85rem;margin:.3rem 0 .8rem;border:1px solid #e3e6e9;border-radius:6px;position:relative;background:#fff;display:flex;flex-direction:column;min-height:130px;}
+   /* Deterministic row heights for alignment */
+   .process-block.row-1{min-height:210px;}
+   .process-block.row-2{min-height:195px;}
+   .process-block.row-3{min-height:195px;}
+   .process-block:last-child{margin-bottom:.2rem;}
+   .process-block.completed{border:2px solid #13803b;box-shadow:0 0 0 2px rgba(19,128,59,.08);}
+   .process-block.coming-soon{border:2px solid #d27f11;box-shadow:0 0 0 2px rgba(210,127,17,.08);}
+   .process-badge{position:static;align-self:flex-start;font-size:.55rem;font-weight:700;letter-spacing:.5px;padding:3px 6px;border-radius:3px;text-transform:uppercase;margin:.2rem 0 .45rem;}
+   .process-block.completed .process-badge{background:#13803b;color:#fff;}
+   .process-block.coming-soon .process-badge{background:#d27f11;color:#fff;}
+      .process-title{font-size:.95rem;font-weight:700;margin:0 0 .4rem;color:#1e2931;}
+      .activity-title{font-size:.83rem;font-weight:600;margin:0 0 .25rem;color:#1f313d;}
+      ul.activity-list{list-style:disc;margin:0 0 .25rem 1.05rem;padding:0;font-size:.72rem;line-height:1.15;color:var(--muted);}
+      ul.activity-list li{margin:0 0 .25rem;}
+      ul.activity-list li:last-child{margin-bottom:.15rem;}
+   .num-badge{position:absolute;top:2px;left:4px;font-size:1.45rem;font-weight:700;line-height:1;margin:0;color:#1f313d;letter-spacing:.5px;}
+   .cell-group .process-block:first-of-type{margin-top:.05rem;}
+      .num-1{color:var(--planning);} .num-2{color:var(--discovery);} .num-3{color:var(--development);} .num-4{color:var(--development);} .num-5{color:var(--migration);} 
+      .legend-bar{display:flex;gap:2rem;align-items:center;font-size:.6rem;color:#37424d;margin-top:.75rem;padding:.5rem .75rem 0 .75rem;}
+      .legend-bar span.label{font-weight:600;}
+      .footer-page{position:absolute;bottom:10px;right:16px;font-size:.65rem;color:#5a646e;font-weight:500;}
+      /* Agent ribbons */
+      .agent-ribbon{position:relative;background:#1c1e21;color:#fff;font-size:.62rem;font-weight:600;letter-spacing:.4px;padding:.35rem .55rem .3rem;border-radius:3px;display:inline-flex;align-items:center;gap:.35rem;margin:0 0 .45rem;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.25);}
+      .agent-ribbon:after{content:"\f054";font-family:'Font Awesome 6 Free';font-weight:900;font-size:.55rem;opacity:.55;transition:.2s;margin-left:.2rem;}
+      .agent-ribbon:hover:after{transform:translateX(3px);opacity:.9;}
+      .agent-ribbon.agent-1{background:#24354a;} /* PRD generator */
+      .agent-ribbon.agent-2{background:#36304d;} /* Requirements insights */
+      .agent-ribbon.agent-3{background:#3a2d45;} /* Backlog manager */
+      .agent-ribbon.agent-4{background:#2c3d3a;} /* Architecture workbench */
+      .agent-ribbon.agent-5{background:#2e3d2f;} /* Delivery workbench */
+      .agent-ribbon.agent-6{background:#4d2f4a;} /* Data migration */
+      .agent-ribbon span.badge-small{background:rgba(255,255,255,.18);padding:2px 5px;border-radius:2px;font-size:.55rem;font-weight:500;}
+      /* Drawer */
+      .drawer{position:fixed;top:0;right:-460px;width:440px;height:100vh;background:#101317;color:#e6eaed;box-shadow:-8px 0 22px -10px rgba(0,0,0,.55);transition:.35s cubic-bezier(.4,0,.2,1);z-index:120;display:flex;flex-direction:column;border-left:1px solid #1f2830;}
+      .drawer.open{right:0;}
+      .drawer-header{padding:.9rem 1rem .75rem;background:#161b20;border-bottom:1px solid #242d35;display:flex;align-items:center;justify-content:space-between;}
+      .drawer-header h3{font-size:.85rem;font-weight:600;margin:0;letter-spacing:.5px;}
+      .drawer-body{padding:1rem 1rem 1.5rem;font-size:.72rem;line-height:1.35;overflow:auto;}
+      .drawer-body p{margin:0 0 .85rem;}
+      .drawer-close{background:#232c34;border:1px solid #313d47;color:#fff;font-size:.6rem;font-weight:600;padding:.35rem .7rem;border-radius:4px;}
+      .drawer-close:hover{background:#2f3a44;}
+      .info-meta{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.65rem;}
+      .info-tag{background:#23313d;color:#c6d2dc;font-size:.5rem;padding:3px 6px;border-radius:3px;letter-spacing:.6px;font-weight:600;}
+      @media (max-width:1200px){
+         .header-grid,.matrix{grid-template-columns:40px repeat(5,1fr);} .side-label{font-size:.7rem;}
+      }
+      @media (max-width:900px){
+         .matrix,.header-grid{display:block;} .side-label{display:none;} .phase-head{border-radius:6px;margin-top:1rem;} .cell-group{border:1px solid var(--divider);border-radius:8px;margin-top:.5rem;} .num-badge{font-size:2.2rem;}
+      }
+   </style>
+</head>
+<body>
+      <div class="top-title-bar"><h1>Bain Leapfrog ® AI workbench orchestrator</h1></div>
+      <div class="orchestrator-wrapper">
+      <div class="top-actions">
+         <a href="/"><i class="fa fa-house"></i> Home</a>
+         <a href="/tabbed-layout"><i class="fa fa-layer-group"></i> Workbench</a>
+         <a href="javascript:window.print()"><i class="fa fa-print"></i> Print</a>
+      </div>
+   <div class="matrix">
+      <!-- Phase Headers Row (Planning now over first column) -->
+         <div class="phase-head planning">Planning</div>
+         <div class="phase-head discovery">Discovery and design</div>
+         <div class="phase-head development">Development and testing</div>
+         <div class="phase-head migration">Migration/ops readiness</div>
+         <!-- Column 1 -->
+         <div class="cell-group">
+            <div class="num-badge num-1">1</div>
+            <div class="process-block coming-soon">
+               <h4 class="process-title">Strategy, planning and program mgmt.</h4>
+               <div class="process-badge">Coming Soon</div>
+               <h5 class="activity-title">Initiative prioritization</h5>
+               <ul class="activity-list">
+                  <li>Market & competitive analysis</li>
+                  <li>Business case development</li>
+                  <li>Automated data analysis</li>
+                  <li>…</li>
+               </ul>
+            </div>
+            <div class="process-block coming-soon">
+               <h4 class="process-title">Knowledge management</h4>
+               <div class="process-badge">Coming Soon</div>
+               <ul class="activity-list">
+                  <li>Improved data search, access & knowledge gathering</li>
+                  <li>Document generation</li>
+                  <li>…</li>
+               </ul>
+            </div>
+            <div class="process-block coming-soon">
+               <h4 class="process-title">Performance monitoring</h4>
+               <div class="process-badge">Coming Soon</div>
+                  <ul class="activity-list">
+                     <li>Project metrics identification</li>
+                     <li>Velocity monitoring</li>
+                     <li>Dependency monitoring</li>
+                     <li>…</li>
+                  </ul>
+            </div>
+         </div>
+         <!-- Column 2 -->
+         <div class="cell-group">
+            <div class="num-badge num-2">2</div>
+            <div class="process-block completed">
+               <h4 class="process-title">Product management</h4>
+               <div class="process-badge">Completed</div>
+               <div class="agent-ribbon agent-2" data-agent="poc3b"><span class="badge-small">Agentic 2</span> Requirements insights</div>
+               <h5 class="activity-title">Requirements insights</h5>
+               <ul class="activity-list">
+                  <li>Reverse engineer legacy code</li>
+                  <li>User research insights</li>
+                  <li>Research recall & analysis</li>
+                  <li>…</li>
+               </ul>
+            </div>
+            <div class="process-block completed">
+               <h4 class="process-title">Requirements definition</h4>
+               <div class="process-badge">Completed</div>
+               <div class="agent-ribbon agent-1" data-agent="poc1"><span class="badge-small">Agentic 1</span> PRD generator</div>
+               <ul class="activity-list">
+                  <li>AI-Generated PRDs</li>
+                  <li>Automated PRD checks/validation</li>
+                  <li>…</li>
+               </ul>
+            </div>
+            <div class="process-block completed">
+               <h4 class="process-title">Backlog management</h4>
+               <div class="process-badge">Completed</div>
+               <div class="agent-ribbon agent-3" data-agent="poc2"><span class="badge-small">Agentic 3</span> Backlog manager</div>
+               <ul class="activity-list">
+                  <li>User story creation</li>
+                  <li>Story enrichment</li>
+                  <li>…</li>
+               </ul>
+            </div>
+         </div>
+         <!-- Column 3 -->
+         <div class="cell-group">
+            <div class="num-badge num-3">3</div>
+            <div class="process-block completed">
+               <h4 class="process-title">Architecture design</h4>
+               <div class="process-badge">Completed</div>
+               <div class="agent-ribbon agent-4" data-agent="poc5"><span class="badge-small">Agentic 4</span> Architecture workbench</div>
+               <h5 class="activity-title">Solution architecture</h5>
+               <ul class="activity-list">
+                  <li>Build architecture diagrams</li>
+                  <li>Integration architecture engine</li>
+                  <li>Design review & refactoring</li>
+                  <li>…</li>
+               </ul>
+            </div>
+            <div class="process-block coming-soon">
+               <h4 class="process-title">Implementation specifications</h4>
+               <div class="process-badge">Coming Soon</div>
+               <ul class="activity-list">
+                  <li>Convert reqs to tech specs</li>
+                  <li>Generate design specifications</li>
+                  <li>API specification</li>
+                  <li>…</li>
+               </ul>
+            </div>
+            <div class="process-block coming-soon">
+               <h4 class="process-title">Architecture quality</h4>
+               <div class="process-badge">Coming Soon</div>
+               <ul class="activity-list">
+                  <li>Automated data cataloging</li>
+                  <li>Generate logical data models</li>
+                  <li>Data pipeline updates</li>
+                  <li>…</li>
+               </ul>
+            </div>
+         </div>
+         <!-- Column 4 -->
+         <div class="cell-group">
+            <div class="num-badge num-4">4</div>
+            <div class="process-block completed">
+               <h4 class="process-title">Software development</h4>
+               <div class="process-badge">Completed</div>
+               <div class="agent-ribbon agent-5" data-agent="poc3"><span class="badge-small">Agentic 5</span> Delivery workbench</div>
+               <h5 class="activity-title">End-to-end code development</h5>
+               <ul class="activity-list">
+                  <li>Translate code language</li>
+                  <li>Coding copilot</li>
+                  <li>Log-informed code reviews</li>
+                  <li>…</li>
+               </ul>
+            </div>
+            <div class="process-block coming-soon">
+               <h4 class="process-title">Testing & improvement</h4>
+               <div class="process-badge">Coming Soon</div>
+               <ul class="activity-list">
+                  <li>Create testing strategy</li>
+                  <li>Test planning and execution</li>
+                  <li>Synthetic test data generator</li>
+                  <li>…</li>
+               </ul>
+            </div>
+            <div class="process-block coming-soon">
+               <h4 class="process-title">Code review & bug resolution</h4>
+               <div class="process-badge">Coming Soon</div>
+               <ul class="activity-list">
+                  <li>Code review & refactoring</li>
+                  <li>Tech debt updates</li>
+                  <li>Bug detection & triage</li>
+                  <li>…</li>
+               </ul>
+            </div>
+         </div>
+         <!-- Column 5 -->
+         <div class="cell-group">
+            <div class="num-badge num-5">5</div>
+            <div class="process-block coming-soon">
+               <h4 class="process-title">Migration and ops. readiness</h4>
+               <div class="process-badge">Coming Soon</div>
+               <h5 class="activity-title">Migration planning</h5>
+               <ul class="activity-list">
+                  <li>Dependency mapping</li>
+                  <li>Cutover scenario planning</li>
+                  <li>…</li>
+               </ul>
+            </div>
+            <div class="process-block completed">
+               <h4 class="process-title">Data migration & reconciliation</h4>
+               <div class="process-badge">Completed</div>
+               <div class="agent-ribbon agent-6" data-agent="poc4"><span class="badge-small">Agentic 6</span> Data migration</div>
+               <ul class="activity-list">
+                  <li>Canonical data mapping</li>
+                  <li>Real-time event stream analysis</li>
+                  <li>Detect & resolve migration issues</li>
+                  <li>…</li>
+               </ul>
+            </div>
+            <div class="process-block coming-soon">
+               <h4 class="process-title">Operational readiness</h4>
+               <div class="process-badge">Coming Soon</div>
+               <ul class="activity-list">
+                  <li>Training content development</li>
+                  <li>Seam period support</li>
+                  <li>Ops copilot</li>
+                  <li>…</li>
+               </ul>
+            </div>
+         </div>
+         <!-- Lifecycle notes column removed -->
+      </div>
+      <div class="legend-bar">
+         <span class="label">Legend</span>
+         <span><strong>Bold</strong> = process</span>
+         <span><em>Italics</em> = activities</span>
+         <span>Ellipsis (…) indicates further scoped items</span>
+      </div>
+      <div class="footer-page">4</div>
+   </div>
+      <!-- Drawer component -->
+      <div class="drawer" id="drawer">
+         <div class="drawer-header">
+            <h3 id="drawerTitle">Agent Detail</h3>
+            <button class="drawer-close" onclick="closeDrawer()">Close</button>
+         </div>
+         <div class="drawer-body" id="drawerBody"></div>
+      </div>
+      <script>
+         const AGENT_INFO = {
+            poc1: `POC 1 — PRD Generator: Converts business objectives or legacy code into an exportable PRD via agent-led refinement.`,
+            poc2: `POC 2 — Backlog Manager: Translates the PRD into JIRA-ready epics, user stories, and effort estimates.`,
+            poc3: `POC 3 — Delivery Workbench: Generates modular services and pseudocode aligned to legacy systems; scaffolds modernized code.`,
+            poc3b:`POC 3b — Requirement Insights: Maps legacy code to user stories, highlights redundancies, and builds a clean backlog.`,
+            poc4: `POC 4 — Data Migration Engine: Automates schema mapping, reconciliation, and target-state modeling.`,
+            poc5: `POC 5 — Architecture Workbench: Extracts architecture artifacts from PRDs and system maps; supports traceable, exportable bundles.`
+         };
+         const drawer = document.getElementById('drawer');
+         function openDrawer(agent){
+            document.getElementById('drawerTitle').innerText = (AGENT_INFO[agent]||'').split(':')[0];
+            const body = document.getElementById('drawerBody');
+            body.innerHTML = `<p>${AGENT_INFO[agent]||'Information not available.'}</p>`;
+            drawer.classList.add('open');
+         }
+         function closeDrawer(){drawer.classList.remove('open');}
+         document.querySelectorAll('.agent-ribbon').forEach(r=>{r.addEventListener('click',()=>openDrawer(r.dataset.agent));});
+         // Close drawer on ESC
+         document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+         // Assign row-* classes for consistent height styling
+         function tagRows(){
+            document.querySelectorAll('.cell-group').forEach(col=>{
+               col.querySelectorAll('.process-block').forEach((b,i)=>{
+                  b.classList.add('row-'+(i+1));
+               });
+            });
+         }
+         window.addEventListener('DOMContentLoaded',tagRows);
+      </script>
+</body>
+</html>

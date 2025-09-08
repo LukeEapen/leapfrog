@@ -54,6 +54,25 @@
             margin-bottom: 2rem;
         }
 
+        .hero-actions {
+            display:flex;
+            flex-wrap:wrap;
+            gap:1rem;
+            justify-content:center;
+        }
+        .btn-outline-light-red {
+            background:rgba(255,255,255,0.12);
+            color:#fff;
+            padding:.9rem 1.6rem;
+            border-radius: 2rem;
+            font-weight:600;
+            text-decoration:none;
+            transition:.25s;            
+            border:1px solid rgba(255,255,255,0.35);
+            backdrop-filter: blur(4px);
+        }
+        .btn-outline-light-red:hover {background:rgba(255,255,255,0.22);color:#fff;box-shadow:0 4px 18px -4px rgba(0,0,0,0.4);}        
+
         .workflow-container {
             padding: 4rem 0;
             max-width: 1400px;
@@ -310,6 +329,10 @@
         <div class="container">
             <h1 class="hero-title">AI-Powered Product Development</h1>
             <p class="hero-subtitle">From Strategy to Deployment - Streamline Your Entire Product Lifecycle</p>
+            <div class="hero-actions">
+                <a href="/product-management" class="btn-outline-light-red"><i class="fas fa-play me-1"></i> Launch Workbench</a>
+                <a href="/orchestrator-overview" class="btn-outline-light-red"><i class="fas fa-diagram-project me-1"></i> Orchestrator Overview</a>
+            </div>
         </div>
     </section>
 
@@ -437,6 +460,11 @@
                 <i class="fas fa-arrow-right me-2"></i>
                 Start with Product Management
             </a>
+            <div class="mt-3">
+                <a href="/orchestrator-overview" class="btn-outline-light-red" style="text-decoration:none;">
+                    <i class="fas fa-diagram-project me-1"></i> View Orchestrator Overview
+                </a>
+            </div>
             <script>
                 // Override the CTA button to point to the intermediate page
                 document.addEventListener('DOMContentLoaded', function() {
