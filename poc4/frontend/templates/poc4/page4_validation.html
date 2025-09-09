@@ -2,7 +2,7 @@
 {% block content %}
 <!-- Banner -->
 <div class="bg-danger text-white py-3 mb-4 rounded shadow-sm text-center">
-  <h2 class="mb-0">POC4 Data Migration & Reconciliation</h2>
+  <h2 class="mb-0">Data Modelling, Migration & Reconciliation</h2>
   <small>Modern Data Migration Workflow</small>
 </div>
 
@@ -10,7 +10,10 @@
 {% include 'poc4/_steps.j2' %}
 
 <!-- Top action bar just below tabs -->
-<div class="d-flex justify-content-end align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="text-muted small">
+    Validate the migration plan, run it when ready, and inspect results. Use the Target Model Designer to fine-tune your destination schema.
+  </div>
   <form method="post" class="d-inline me-2">
     <input type="hidden" name="action" value="validate">
     <button type="submit" class="btn btn-outline-warning btn-sm">Validate</button>
@@ -21,9 +24,17 @@
   </form>
   
 </div>
+<style>
+  /* Page 4 polish */
+  .helper-text { font-size:.85rem; color:#6b7280; }
+  .designer-frame { width:100%; height:72vh; border:1px solid #eef2f7; border-radius:.375rem; background:#fff; }
+  @media (max-width: 991.98px){ .designer-frame{ height:50vh; } }
+</style>
+
 <!-- 3 Column Layout -->
 <div class="row g-4">
-  <div class="col-md-4">
+  <!-- Column 1: DB selection -->
+  <div class="col-lg-4">
     <div class="card h-100 shadow-sm">
       <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
         <span>Select Databases</span>
@@ -33,6 +44,9 @@
         </form>
       </div>
       <div class="card-body">
+        <p class="helper-text mb-3">
+          Pick the active schemas for each origin and your target. These choices drive the data preview, validation, and execution steps shown to the right.
+        </p>
         <!-- existing select form -->
         <form method="post" id="db-select-form">
           <div class="mb-3">
@@ -90,13 +104,17 @@
       </div>
     </div>
   </div>
-  <div class="col-md-4">
+  <!-- Column 2: Validate / Execute / Query -->
+  <div class="col-lg-4">
     <div class="card h-100 shadow-sm">
       <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
         <span>Migration Execution & Query</span>
-        <a href="{{ url_for('poc4.target_model') }}" class="btn btn-sm btn-outline-danger">Open Target Model Designer</a>
+        <span class="text-muted small">Plan ➜ Execute ➜ Inspect</span>
       </div>
       <div class="card-body">
+        <div class="helper-text mb-3">
+          Validate runs a dry-run to compute impacted tables, field mappings, and estimated row counts. Execute performs the migration; detailed logs will be available on the Reconciliation page.
+        </div>
         {% if not migration_preview %}
           <pre class="small text-muted">No migration executed yet. Click Validate to see the plan before execution.</pre>
           <form method="post" id="migration-form" class="mt-3">
@@ -182,6 +200,7 @@
           </form>
         {% endif %}
         <hr>
+        <div class="helper-text mb-2">Quickly inspect the migrated data using a one-off SQL query. This runs against the selected target database.</div>
         <form method="post" id="query-form" class="mt-2">
           <label class="form-label">Run SQL Query on Migrated Data</label>
           <input type="text" name="query" class="form-control mb-2" placeholder="SELECT * FROM some_table" />
@@ -213,54 +232,43 @@
       </div>
     </div>
   </div>
-  <!-- Chat Column (unchanged) -->
-  <div class="col-md-4">
-    <!-- ...existing code... -->
-    <div class="card h-100 shadow-sm d-flex flex-column">
-      <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center">
-        <span>Chatbot Assistant</span>
-        <button class="btn btn-sm btn-light py-0 px-1 d-flex align-items-center justify-content-center" id="chat-min-btn" type="button" aria-label="Minimize chat"><i class="bi bi-chevron-down" id="chat-min-icon"></i></button>
+  <!-- Column 3: Target Model Designer (embedded) -->
+  <div class="col-lg-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
+        <span>Target Model Designer</span>
+        <a href="{{ url_for('poc4.target_model') }}" class="btn btn-sm btn-outline-danger" target="_blank" rel="noopener">Open Fullscreen</a>
       </div>
-      <div class="card-body flex-grow-1 d-flex flex-column p-0" id="chat-body">
-        <div class="flex-grow-1 p-3" style="overflow-y:auto; min-height: 400px;" id="chat-messages">
-          <div class="text-muted small">Ask me about validation results and data quality checks...</div>
-        </div>
-      </div>
-      <div class="card-footer" id="chat-footer">
-        <form id="chat-form" onsubmit="return sendMessage(event);">
-          <div class="input-group">
-            <input type="text" class="form-control" id="chat-input" placeholder="Type your question..." required>
-            <button class="btn btn-danger" type="submit">Send</button>
-          </div>
-        </form>
+      <div class="card-body">
+        <p class="helper-text">Explore and refine your destination schema. Adjust tables and fields; changes here guide the mapping and validation stages.</p>
+        <iframe src="{{ url_for('poc4.target_model') }}" class="designer-frame" id="designer-frame" title="Target Model Designer"></iframe>
+        <div class="form-text small text-muted mt-2">If the embed doesn’t load in your browser, use the Fullscreen button above.</div>
       </div>
     </div>
   </div>
 </div>
 <script>
-  async function sendMessage(e) {
-    e.preventDefault();
-    const input = document.getElementById('chat-input');
-    const msg = input.value; if (!msg) return false;
-    appendMessage('You', msg); input.value='';
-    const res = await fetch('/poc4/chat', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'message=' + encodeURIComponent(msg)});
-    const data = await res.json(); appendMessage('Bot', data.response); return false;
-  }
-  function appendMessage(sender, text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
-  // Minimize / expand chat and start minimized
-  function toggleChat(){ const body=document.getElementById('chat-body'); const footer=document.getElementById('chat-footer'); const icon=document.getElementById('chat-min-icon'); const hidden=body.style.display==='none'; body.style.display= hidden? 'block':'none'; footer.style.display= hidden? 'block':'none'; if(icon){ icon.classList.toggle('bi-chevron-down', !hidden); icon.classList.toggle('bi-chevron-up', hidden);} }
-  document.getElementById('chat-min-btn')?.addEventListener('click', toggleChat);
-  // Start minimized
-  toggleChat();
-  // Simple chat commands and start minimized
-  (function(){
-    const valEl = document.getElementById('chat-input');
-    document.getElementById('chat-form')?.addEventListener('submit', (e)=>{
-      const val = valEl?.value?.toLowerCase() || '';
-      if(val.includes('validate')){ e.preventDefault(); document.querySelector('form#migration-form button[type="submit"]')?.click(); return false; }
-      if(val.includes('execute')){ e.preventDefault(); document.querySelector('form input[name="action"][value="execute"]')?.form?.submit(); return false; }
-    }, {capture:true});
-  })();
+  // Page-specific ChatPanel commands (Validation page)
+    window.handleChatCommand = function(cmd, api){
+      const t = (cmd||'').trim().toLowerCase();
+      if(t.includes('validate')){
+        api.append('assistant','Will validate migration plan');
+        api.setLastAction(()=> document.querySelector('form#migration-form button[type="submit"]')?.click());
+        return true;
+      }
+      if(t.includes('execute') || t.includes('run migration')){
+        api.append('assistant','Will execute migration');
+        api.setLastAction(()=> document.querySelector('form input[name="action"][value="execute"]')?.form?.submit());
+        return true;
+      }
+      if(t.startsWith('query ')){
+        const q = cmd.slice(6);
+        api.append('assistant','Will run provided SQL against migrated DB');
+        api.setLastAction(()=>{ const inp=document.querySelector('#query-form input[name="query"]'); const f=document.getElementById('query-form'); if(inp&&f){ inp.value=q; f.submit(); } });
+        return true;
+      }
+      return false;
+    };
 
   // Target Model design flow is now a separate page; no auto-submit here.
 </script>
@@ -269,4 +277,5 @@
 <script>
   try { mermaid.initialize({ startOnLoad: true, theme: 'default' }); } catch(e){}
 </script>
+{% include 'poc4/_chatpanel.j2' %}
 {% endblock %}

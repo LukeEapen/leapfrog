@@ -2,7 +2,7 @@
 {% block content %}
 <!-- Banner -->
 <div class="bg-danger text-white py-3 mb-4 rounded shadow-sm text-center">
-  <h2 class="mb-0">POC4 Data Migration & Reconciliation</h2>
+  <h2 class="mb-0">Data Modelling, Migration & Reconciliation</h2>
   <small>Modern Data Migration Workflow</small>
 </div>
 
@@ -13,7 +13,8 @@
   .nav-pills .nav-link {border-radius:2rem;margin:0 .25rem;font-weight:500;color:#d32f2f;background:#fff;border:1px solid #d32f2f;transition:.2s}
   .nav-pills .nav-link.active,.nav-pills .show>.nav-link{background:linear-gradient(90deg,#d32f2f 60%,#b71c1c);color:#fff !important;font-weight:700;box-shadow:0 2px 8px rgba(211,47,47,.1)}
   .map-row{border-bottom:1px solid #eee;padding:.35rem .5rem;white-space:normal;align-items:flex-start}
-  .map-header{background:#fafafa;font-weight:600;border-bottom:2px solid #e3e3e3;}
+  .map-header{background:#fafafa;font-weight:600;border-bottom:2px solid #e3e3e3;position:sticky;top:0;z-index:1}
+  .map-row:hover{background:#fffdfd}
   /* Allow full source/legacy field names to wrap instead of being cut */
   .map-row strong{flex:0 0 auto; min-width:170px; max-width:300px; white-space:normal; word-break:break-word}
   .map-row strong.text-truncate{overflow:visible!important; text-overflow:unset!important; white-space:normal!important}
@@ -22,11 +23,16 @@
   .map-row .justification{flex:1 1 auto;max-width:none;white-space:normal}
   .mapping-section .card-body{max-height:70vh;overflow:auto}
   .map-row .meta{font-size:.65rem;color:#555}
-  /* Reposition chat to top-right to prevent overlap with navigation/Next buttons */
-  .chat-float{position:fixed;right:1.25rem;top:6.5rem;z-index:1050;width:340px;box-shadow:0 4px 18px rgba(0,0,0,.15)}
-  .chat-float .card-body{height:300px;overflow-y:auto}
+  /* Chat is handled by shared ChatPanel partial */
   @media (max-width:1200px){.justification{max-width:260px}}
   @media (max-width:992px){.justification{display:none}}
+  /* Graph column */
+  .graph-card .card-body{max-height:70vh;overflow:auto}
+  .graph-card .mermaid svg{max-width:100%}
+  .graph-card .mermaid{min-height:240px}
+  .legend-pill{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .5rem;border-radius:999px;border:1px solid #e5e7eb;background:#fff;font-size:.8rem}
+  .legend-swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .node-click-hint{color:#6b7280}
 </style>
 
 <form method="post" id="mapping-form">
@@ -66,7 +72,7 @@
   </div>
 
   <div class="row g-4 mapping-section">
-    <div class="col-12">
+    <div class="col-lg-7">
       <div class="card h-100 shadow-sm">
         <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
@@ -128,43 +134,97 @@
         </div>
       </div>
     </div>
+    <div class="col-lg-5">
+      <div class="card h-100 shadow-sm graph-card">
+        <div class="card-header bg-light text-danger fw-bold">
+          <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+            <span>Mapping Graph</span>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <div id="graph-filters" class="d-flex align-items-center gap-2"></div>
+              <select class="form-select form-select-sm" id="detail-table-select" title="Show detail for a specific target table">
+                <option value="">Overview</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card-body p-2">
+          <div class="small text-muted mb-2">Use Overview to see flow from origins to target tables. Pick a table to view field-level links. Click rows or nodes to focus; click nodes to see details.</div>
+          <div class="small mb-2" id="graph-legend"></div>
+          <div id="graph-overview" class="mermaid small"></div>
+          <div id="graph-detail" class="mermaid small" style="display:none"></div>
+          <div class="small text-muted mt-2" id="graph-note"></div>
+          <div id="graph-info" class="small mt-2 border rounded p-2" style="display:none"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </form>
 
-<!-- Floating Chat Panel -->
-<div class="card chat-float border-0" id="chat-widget">
-  <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center">
-    <span class="small fw-semibold d-flex align-items-center gap-1"><i class="bi bi-robot"></i> Chatbot Assistant</span>
-    <button class="btn btn-sm btn-light py-0 px-1 d-flex align-items-center justify-content-center" id="chat-min-btn" type="button" aria-label="Minimize chat"><i class="bi bi-chevron-down" id="chat-min-icon"></i></button>
-  </div>
-  <div class="card-body p-2" id="chat-body">
-    <div class="text-muted small" id="chat-messages">Ask about mapping decisions, lineage, or transformation logic...</div>
-  </div>
-  <div class="card-footer p-2" id="chat-footer">
-    <form onsubmit="return sendMessage(event)" class="d-flex gap-1">
-      <input type="text" class="form-control form-control-sm" id="chat-input" placeholder="Type question..." required>
-      <button class="btn btn-danger btn-sm" type="submit">Send</button>
-    </form>
-    <button type="button" class="btn btn-outline-danger w-100 btn-sm mt-2" id="regenerate-btn">Regenerate Mapping</button>
-  </div>
-</div>
+{% include 'poc4/_chatpanel.j2' %}
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 <script id="target-types-json" type="application/json">{{ target_types | tojson | safe }}</script>
+<script id="mapping-json" type="application/json">{{ mapping | tojson | safe }}</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>
 // Load target type map for client-side updates
 try {
   const el = document.getElementById('target-types-json');
   window.__poc4TargetTypes = el ? JSON.parse(el.textContent) : {};
 } catch(e){ window.__poc4TargetTypes = {}; }
-async function sendMessage(e){ e.preventDefault(); const input=document.getElementById('chat-input'); const msg=input.value.trim(); if(!msg)return false; appendMessage('You',msg); input.value=''; try{ const res=await fetch('/poc4/chat',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'message='+encodeURIComponent(msg)}); const data=await res.json(); appendMessage('Bot',data.response);}catch(err){ appendMessage('Bot','(error)'); } return false; }
-function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.className='mb-1'; div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
-const regenBtn=document.getElementById('regenerate-btn');
-if(regenBtn){ regenBtn.addEventListener('click', async ()=>{ try{ const res=await fetch('/poc4/auto_mapping'); if(!res.ok){ throw new Error('Failed'); } await res.json(); appendMessage('Bot','Regenerated mapping suggestions. Reload page to view.'); }catch(e){ appendMessage('Bot','Failed to regenerate mapping.'); } }); }
-// Minimize / expand logic
-function toggleChat(){ const body=document.getElementById('chat-body'); const footer=document.getElementById('chat-footer'); const icon=document.getElementById('chat-min-icon'); const hidden=body.style.display==='none'; body.style.display= hidden? 'block':'none'; footer.style.display= hidden? 'block':'none'; icon.classList.toggle('bi-chevron-down', !hidden); icon.classList.toggle('bi-chevron-up', hidden);} 
-document.getElementById('chat-min-btn').addEventListener('click', toggleChat);
+
+// Page-specific ChatPanel commands for Mapping page
+window.handleChatCommand = function(cmd, api){
+  const t = (cmd||'').trim().toLowerCase();
+  // Filters
+  if(t.includes('filter source')){
+    const on = !(t.includes('off')||t.includes('false')||t.includes('disable'));
+    api.append('assistant',`Turning SOURCE ${on?'on':'off'}`);
+    api.setLastAction(()=>{ const cb=document.getElementById('filter-source'); if(cb){ cb.checked=on; cb.dispatchEvent(new Event('change')); } });
+    return true;
+  }
+  if(t.includes('filter legacy')){
+    const on = !(t.includes('off')||t.includes('false')||t.includes('disable'));
+    api.append('assistant',`Turning LEGACY ${on?'on':'off'}`);
+    api.setLastAction(()=>{ const cb=document.getElementById('filter-legacy'); if(cb){ cb.checked=on; cb.dispatchEvent(new Event('change')); } });
+    return true;
+  }
+  if(t.match(/filter\s+ds\d+/)){
+    const m = t.match(/ds(\d+)/); const idx = m? m[1] : null; const on = !(t.includes('off')||t.includes('false')||t.includes('disable'));
+    if(idx){ api.append('assistant',`Turning DS${idx} ${on?'on':'off'}`); api.setLastAction(()=>{ const cb=document.getElementById('filter-ds'+idx); if(cb){ cb.checked=on; cb.dispatchEvent(new Event('change')); } }); return true; }
+  }
+  // Minimize
+  if(t.includes('minimize source')){ api.append('assistant','Will minimize SOURCE rows'); api.setLastAction(()=> document.querySelector('.minimize-origin[data-origin="source"]')?.click()); return true; }
+  if(t.includes('minimize legacy')){ api.append('assistant','Will minimize LEGACY rows'); api.setLastAction(()=> document.querySelector('.minimize-origin[data-origin="legacy"]')?.click()); return true; }
+  // Sort commands
+  if(t.startsWith('sort by ')){
+    const key = t.replace('sort by ','').trim().replace(' ','_');
+    api.append('assistant',`Sorting by ${key}`);
+    api.setLastAction(()=> sortRows(key));
+    return true;
+  }
+  // Focus table in graph
+  if(t.startsWith('focus table ')){
+    const table = t.replace('focus table ','').trim();
+    api.append('assistant',`Focusing table ${table}`);
+    api.setLastAction(()=>{ const sel=document.getElementById('detail-table-select'); if(sel){ sel.value=table; sel.dispatchEvent(new Event('change')); } });
+    return true;
+  }
+  // Regenerate mapping
+  if(t.includes('regenerate')){
+    api.append('assistant','Will regenerate mapping suggestions');
+    api.setLastAction(async ()=>{ try{ const r=await fetch('/poc4/auto_mapping'); if(!r.ok) throw new Error('Failed'); await r.json(); }catch(_){ } });
+    return true;
+  }
+  // Next
+  if(['next','go next','continue'].includes(t)){
+    api.append('assistant','Proceeding to next step…');
+    api.setLastAction(()=> document.getElementById('next-btn')?.click());
+    return true;
+  }
+  return false;
+};
 
 // --- Collapse logic for Combined section ---
 document.querySelectorAll('.collapse-btn').forEach(btn=>{
@@ -320,6 +380,219 @@ document.querySelectorAll('.map-row').forEach(row=>{
     const t = typeMap[sel.value] || '';
     if (hiddenType) hiddenType.value = t;
   });
+  // Click-to-focus: clicking a row will select the detail graph for its target table
+  row.addEventListener('click', (e)=>{
+    // avoid when clicking a control
+    if(e.target.closest('select,button,input,label')) return;
+    const t = row.getAttribute('data-target_table') || '';
+    const selEl = document.getElementById('detail-table-select');
+    if(selEl){ selEl.value = t; selEl.dispatchEvent(new Event('change')); }
+  });
 });
+
+// --- Mapping Graph (Mermaid) ---
+function getRowsFromDOM(){
+  const rows=[];
+  document.querySelectorAll('#map-body .map-row[data-origin]').forEach(r=>{
+    rows.push({
+      origin: r.getAttribute('data-origin')||'source',
+      source_label: (r.querySelector('strong')?.textContent||'').trim(),
+      target_table: r.getAttribute('data-target_table')||'',
+      target: r.getAttribute('data-target')||''
+    });
+  });
+  return rows;
+}
+function loadMapping(){
+  const domRows = getRowsFromDOM();
+  if(domRows && domRows.length) return domRows;
+  try{ const el=document.getElementById('mapping-json'); return el? JSON.parse(el.textContent): []; }catch(e){ return []; }
+}
+function safeId(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9_]/g,'_'); }
+function labelForOrigin(o){
+  const k=(o||'').toLowerCase();
+  if(k==='source') return 'SOURCE';
+  if(k==='legacy') return 'LEGACY';
+  if(k.startsWith('ds')) return `DATA_SOURCE_${k.slice(2)}`;
+  return (o||'').toUpperCase();
+}
+function buildOverviewDef(rows){
+  // Group by origin -> target_table counts; respect overview filter state
+  const counts = new Map();
+  const targets = new Set();
+  const origins = new Set();
+  const filter = window.__graphFilter||{};
+  rows.forEach(r=>{
+    const o = labelForOrigin(r.origin||'source');
+    const t = r.target_table || '(none)';
+    if(filter && Object.keys(filter).length){
+      const ok = !!filter[o];
+      if(!ok) return;
+    }
+    const key = o+'||'+t;
+    counts.set(key, (counts.get(key)||0)+1);
+    targets.add(t); origins.add(o);
+  });
+  let def = 'flowchart LR\n';
+  origins.forEach(o=>{ def += `${safeId(o)}([${o}]):::origin\n`; });
+  targets.forEach(t=>{ def += `${safeId('t_'+t)}([${t}]):::target\n`; });
+  counts.forEach((n,key)=>{
+    const [o,t] = key.split('||');
+    def += `${safeId(o)} -->|${n}| ${safeId('t_'+t)}\n`;
+  });
+  def += 'classDef origin fill:#ffe8e6,stroke:#d32f2f,color:#b71c1c,stroke-width:1px;\n';
+  def += 'classDef target fill:#eef2ff,stroke:#4f46e5,color:#1f2937,stroke-width:1px;\n';
+  return def;
+}
+function buildDetailDef(rows, table){
+  const filtered = rows.filter(r=> (r.target_table||'')===table);
+  const limit = 15;
+  let trimmed = false;
+  let def = 'flowchart LR\n';
+  def += `subgraph ${table}\n${safeId('t_'+table)}([${table}]):::target\nend\n`;
+  const seenFields = new Set();
+  const fieldCounts = new Map();
+  filtered.forEach(r=>{
+    const tf = r.target || '';
+    if(tf){ fieldCounts.set(tf, (fieldCounts.get(tf)||0)+1); }
+  });
+  filtered.forEach((r,idx)=>{
+    if(idx>=limit){ trimmed=true; return; }
+    const o = labelForOrigin(r.origin||'source');
+  const srcField = r.source_label || '';
+    const tf = r.target || '';
+    const ofId = safeId(o+'_'+srcField);
+    const tfId = safeId('tf_'+tf);
+    if(!seenFields.has(ofId)){
+      def += `${ofId}([${o}: ${srcField}]):::origin\n`;
+      seenFields.add(ofId);
+    }
+    if(tf){
+      if(!seenFields.has(tfId)){
+        const c = fieldCounts.get(tf)||0;
+        def += `${tfId}([${tf} (${c})]):::field\n`;
+        seenFields.add(tfId);
+      }
+      def += `${ofId} --> ${tfId}\n`;
+    } else {
+      def += `${ofId} --> ${safeId('t_'+table)}\n`;
+    }
+  });
+  def += 'classDef origin fill:#ffe8e6,stroke:#d32f2f,color:#b71c1c,stroke-width:1px;\n';
+  def += 'classDef target fill:#eef2ff,stroke:#4f46e5,color:#1f2937,stroke-width:1px;\n';
+  def += 'classDef field fill:#f1f5f9,stroke:#64748b,color:#111827,stroke-width:1px;\n';
+  return {def, trimmed};
+}
+function renderMermaidOnce(el, def){ if(!window.mermaid||!el) return; el.textContent = def; try{ mermaid.initialize({startOnLoad:false, securityLevel:'loose'}); mermaid.init(undefined, el);}catch(e){} }
+function initGraph(){
+  const rows = loadMapping();
+  const overviewEl = document.getElementById('graph-overview');
+  const detailEl = document.getElementById('graph-detail');
+  const noteEl = document.getElementById('graph-note');
+  const legendEl = document.getElementById('graph-legend');
+  const infoEl = document.getElementById('graph-info');
+  const sel = document.getElementById('detail-table-select');
+  const chips = document.getElementById('graph-filters');
+  // Populate tables
+  const tables = Array.from(new Set(rows.map(r=> r.target_table || '').filter(Boolean))).sort();
+  tables.forEach(t=>{ const opt=document.createElement('option'); opt.value=t; opt.textContent=t; sel.appendChild(opt); });
+  // Legend
+  legendEl.innerHTML = `
+    <span class="legend-pill"><span class="legend-swatch" style="background:#ffe8e6;border:1px solid #d32f2f"></span> Origin</span>
+    <span class="legend-pill"><span class="legend-swatch" style="background:#eef2ff;border:1px solid #4f46e5"></span> Target Table</span>
+    <span class="legend-pill"><span class="legend-swatch" style="background:#f1f5f9;border:1px solid #64748b"></span> Target Field (count)</span>
+    <span class="node-click-hint ms-2">Tip: Click list rows or graph nodes to focus</span>
+  `;
+  // Build origin chips mirrored from left filters
+  const origins = Array.from(new Set(rows.map(r=> labelForOrigin(r.origin||'source')))).sort();
+  window.__graphFilter = {};
+  origins.forEach(o=>{
+    const id = `chip_${safeId(o)}`;
+    const div = document.createElement('div');
+    div.className = 'form-check form-check-inline align-items-center d-flex gap-1';
+    div.innerHTML = `<input class="form-check-input graph-chip" type="checkbox" id="${id}" data-origin="${o}">
+                     <label class="form-check-label" for="${id}"><span class="badge ${o==='SOURCE'?'bg-danger':(o==='LEGACY'?'bg-dark':'bg-secondary')}">${o}</span></label>`;
+    chips.appendChild(div);
+  });
+  function currentChipState(){ const s={}; document.querySelectorAll('.graph-chip').forEach(cb=>{ const o=cb.dataset.origin; s[o]=!!cb.checked; }); return s; }
+  function syncChipsFromLeft(){
+    const map = {}; // build map from left toolbar
+    map['SOURCE'] = !!document.getElementById('filter-source')?.checked;
+    map['LEGACY'] = !!document.getElementById('filter-legacy')?.checked;
+    document.querySelectorAll('.filter-extra').forEach(cb=>{ const o=(cb.dataset.origin||'').toUpperCase(); if(o) map[o.startsWith('DS')? `DATA_SOURCE_${o.slice(2)}` : o] = !!cb.checked; });
+    document.querySelectorAll('.graph-chip').forEach(cb=>{ const o=cb.dataset.origin; cb.checked = !!map[o]; });
+    window.__graphFilter = map;
+  }
+  function applyChipFilter(){ window.__graphFilter = currentChipState(); rerender(overviewEl, buildOverviewDef(rows)); updateOverviewNote(); }
+  syncChipsFromLeft();
+  document.getElementById('filter-source')?.addEventListener('change', ()=>{ syncChipsFromLeft(); applyChipFilter(); });
+  document.getElementById('filter-legacy')?.addEventListener('change', ()=>{ syncChipsFromLeft(); applyChipFilter(); });
+  document.querySelectorAll('.filter-extra').forEach(cb=> cb.addEventListener('change', ()=>{ syncChipsFromLeft(); applyChipFilter(); }));
+  document.querySelectorAll('.graph-chip').forEach(cb=> cb.addEventListener('change', applyChipFilter));
+  // helper to re-render and wire clicks
+  function rerender(el, def){ renderMermaidOnce(el, def); wireGraphClicks(); }
+  // Summary helpers
+  function updateOverviewNote(){
+    const filter = window.__graphFilter||{};
+    const activeOrigins = Object.keys(filter).filter(k=> filter[k]);
+    const total = rows.length;
+    const tablesCount = tables.length;
+    const originsText = activeOrigins.length? activeOrigins.join(', ') : 'All origins';
+    noteEl.innerHTML = `<span class="text-muted">Overview · ${tablesCount} tables · ${total} mappings · Origins: ${originsText}</span>`;
+  }
+  function updateDetailNote(t){
+    const subset = rows.filter(r=> (r.target_table||'')===t);
+    const uniques = new Set(subset.map(r=> r.target).filter(Boolean)).size;
+    const origins = new Set(subset.map(r=> labelForOrigin(r.origin||'source'))).size;
+    noteEl.innerHTML = `<span class="text-muted">Detail · Table: <strong>${t}</strong> · ${subset.length} mappings · ${uniques} target fields · ${origins} origins</span>`;
+  }
+  // Initial overview
+  rerender(overviewEl, buildOverviewDef(rows));
+  updateOverviewNote();
+  sel.addEventListener('change', ()=>{
+    const t = sel.value;
+  if(!t){ overviewEl.style.display='block'; detailEl.style.display='none'; updateOverviewNote(); rerender(overviewEl, buildOverviewDef(rows)); return; }
+  const d = buildDetailDef(rows, t);
+  overviewEl.style.display='none'; detailEl.style.display='block';
+  rerender(detailEl, d.def);
+  updateDetailNote(t);
+  if(d.trimmed){ noteEl.innerHTML += ' · <em>Showing first 15 mappings (trimmed)</em>'; }
+    infoEl.style.display='none';
+  });
+  // Clickable graph nodes -> focus
+  function wireGraphClicks(){
+    // Mermaid renders SVGs; wait a tick
+    setTimeout(()=>{
+      const svg = detailEl.style.display==='block' ? detailEl.querySelector('svg') : overviewEl.querySelector('svg');
+      if(!svg) return;
+      svg.querySelectorAll('g.node').forEach(g=>{
+        g.style.cursor='pointer';
+        g.addEventListener('click', ()=>{
+          const label = (g.querySelector('text')?.textContent || '').trim();
+          // If clicking target field label (ends with ) count), select its table in dropdown
+          const tableFromField = sel.value || '';
+          if(tableFromField){
+            // Find a few matching rows for context
+            const matches = rows.filter(r=> (r.target_table||'')===tableFromField && ((r.target||'') && label.startsWith(r.target)) ).slice(0,6);
+            const list = matches.map(r=>`<li>${labelForOrigin(r.origin)}: ${r.source_table? r.source_table+'.':''}${r.source} ➜ ${r.target}</li>`).join('');
+            infoEl.style.display='block';
+            infoEl.innerHTML = `<div class="fw-semibold">${label}</div><ul class="mb-0 ps-3">${list || '<li>No direct rows found (trimmed or unmapped edge).</li>'}</ul>`;
+          } else {
+            // In overview, clicking a target table should select detail
+            const tableset = new Set(tables);
+            if(tableset.has(label)){
+              sel.value=label; sel.dispatchEvent(new Event('change'));
+            }
+          }
+        });
+      });
+    }, 100);
+  }
+  // Initial wire
+  wireGraphClicks();
+}
+document.addEventListener('DOMContentLoaded', initGraph);
 </script>
+<!-- Ensure Bootstrap Icons for header robot icon -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 {% endblock %}

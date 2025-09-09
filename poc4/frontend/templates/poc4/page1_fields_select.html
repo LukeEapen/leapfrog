@@ -1,26 +1,62 @@
 {% extends 'poc4/base.html' %}
 {% block content %}
-<div class="bg-danger text-white py-3 mb-4 rounded shadow-sm text-center">
-  <h2 class="mb-0">Select Critical Fields</h2>
-  <small>Choose key fields from Legacy, Source, and Target schemas</small>
-</div>
+<div class="container-xxl content-wrap">
+  <!-- Banner -->
+  <div class="bg-danger text-white py-3 mb-4 rounded shadow-sm text-center">
+    <h2 class="mb-0">POC4 Data Migration &amp; Reconciliation</h2>
+    <small>Modern Data Migration Workflow</small>
+  </div>
 
-{% include 'poc4/_subnav.j2' %}
-{% include 'poc4/_steps.j2' %}
-<form method="post" id="field-select-form">
+  {% include 'poc4/_subnav.j2' %}
+  {% include 'poc4/_steps.j2' %}
+  <!-- Subheading -->
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <div>
+      <h5 class="mb-0">Select Critical Fields</h5>
+      <div class="text-muted small">Choose key fields from available origins and the target schema</div>
+    </div>
+  </div>
+  <style>
+    /* Modern polish for this page */
+    .card-header{letter-spacing:.2px}
+  .origin-block{background:#fff; border:1px solid #f0f2f4; border-radius:.5rem; padding:.75rem 1rem}
+    .origin-block + .origin-block{margin-top:1rem}
+    .origin-accent-source{border-left:4px solid #d32f2f}
+    .origin-accent-legacy{border-left:4px solid #212529}
+    .origin-accent-extra{border-left:4px solid #0d6efd}
+  .origin-accent-target{border-left:4px solid #6f42c1}
+    .form-check.small{padding:.2rem .25rem; border-bottom:1px dashed #f1f3f5}
+    .form-check.small:last-child{border-bottom:none}
+    .badge-counter{font-weight:600}
+    .sticky-header{position:sticky; top:0; z-index:1}
+  /* Header row layout to avoid overlap */
+  .origin-row{display:flex; justify-content:space-between; align-items:center; gap:.75rem; flex-wrap:wrap}
+  .origin-title{flex:1 1 auto; min-width:180px}
+  .origin-controls{display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:flex-end}
+  .origin-controls .form-check{white-space:nowrap; display:flex; align-items:center; margin-left:.25rem}
+  .origin-controls .btn{white-space:nowrap}
+  .origin-controls{padding-right:1rem}
+  .card-header.sticky-header{padding-right:1.25rem}
+  /* Extra left gutter inside bordered blocks so checkboxes clear the accent stripe */
+  .origin-block .form-check.small{padding:.2rem .25rem .2rem .75rem}
+  .origin-block .form-check .form-check-input{margin-left:0; margin-right:.5rem}
+  .origin-block .form-check .form-check-label{margin-left:.05rem}
+  .text-purple{color:#6f42c1}
+  </style>
+  <form method="post" id="field-select-form">
   <!-- Top action bar -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <a href="{{ url_for('poc4.page1') }}" class="btn btn-outline-secondary">Back</a>
-  <button type="submit" class="btn btn-danger" id="next-btn">Next</button>
+    <button type="submit" class="btn btn-next" id="next-btn">Next</button>
   </div>
   <div class="row g-4">
-    <div class="col-md-8">
+    <div class="col-lg-7">
       <div class="card h-100 shadow-sm">
-        <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
+        <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center sticky-header">
           <div class="d-flex align-items-center gap-3">
             <span>Origin Fields</span>
-            <span class="badge bg-light text-dark border">Source: {{ source_schema_file }}</span>
-            <span class="badge bg-light text-dark border">Legacy: {{ legacy_schema_file }}</span>
+            <span class="badge bg-light text-dark border" title="Selected/Total Source fields">S <span id="src-count" class="badge-counter">0/0</span></span>
+            <span class="badge bg-light text-dark border" title="Selected/Total Legacy fields">L <span id="leg-count" class="badge-counter">0/0</span></span>
           </div>
           <div class="d-flex align-items-center gap-3">
             <div class="form-check form-check-inline m-0 small">
@@ -35,10 +71,10 @@
         </div>
         <div class="card-body" style="max-height:60vh;overflow:auto;">
           <!-- Source section -->
-      <div id="source-section" style="display:none;">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-  <span class="fw-semibold text-danger">Source ({{ source_schema_file }})</span>
-              <div class="d-flex align-items-center gap-2">
+      <div id="source-section" class="origin-block origin-accent-source" style="display:none;">
+            <div class="origin-row mb-2">
+              <span class="fw-semibold text-danger origin-title">Source ({{ source_schema_file }})</span>
+              <div class="origin-controls">
                 <button class="btn btn-outline-secondary btn-sm" id="p1b-min-source" type="button">Minimize</button>
                 <div class="form-check m-0 small">
                   <input class="form-check-input" type="checkbox" id="select_all_source">
@@ -58,10 +94,10 @@
             </div>
           </div>
           <!-- Legacy section -->
-      <div id="legacy-section" style="display:none;">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-  <span class="fw-semibold text-dark">Legacy ({{ legacy_schema_file }})</span>
-              <div class="d-flex align-items-center gap-2">
+      <div id="legacy-section" class="origin-block origin-accent-legacy" style="display:none;">
+            <div class="origin-row mb-2">
+              <span class="fw-semibold text-dark origin-title">Legacy ({{ legacy_schema_file }})</span>
+              <div class="origin-controls">
                 <button class="btn btn-outline-secondary btn-sm" id="p1b-min-legacy" type="button">Minimize</button>
                 <div class="form-check m-0 small">
                   <input class="form-check-input" type="checkbox" id="select_all_legacy">
@@ -83,10 +119,10 @@
           <!-- Extra Data Sources (DS3+) -->
           {% if extra_sources and extra_sources_fields %}
             {% for extra in extra_sources_fields %}
-            <div id="extra-section-{{ extra.index }}" class="mb-3" style="display:none;">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-semibold text-danger">Data Source {{ extra.index + 3 }} ({{ extra.file }})</span>
-                <div class="d-flex align-items-center gap-2">
+            <div id="extra-section-{{ extra.index }}" class="mb-3 origin-block origin-accent-extra" style="display:none;">
+              <div class="origin-row mb-2">
+                <span class="fw-semibold text-danger origin-title">Data Source {{ extra.index + 3 }} ({{ extra.file }})</span>
+                <div class="origin-controls">
                   <button class="btn btn-outline-secondary btn-sm" id="p1b-min-extra-{{ extra.index }}" type="button">Minimize</button>
                   <div class="form-check m-0 small">
                     <input class="form-check-input" type="checkbox" id="select_all_extra_{{ extra.index }}">
@@ -110,22 +146,34 @@
           </div>
         </div>
       </div>
-    <div class="col-md-4">
+  <div class="col-lg-5">
       <div class="card h-100 shadow-sm">
-        <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
-          <span>Target ({{ target_schema_file }})</span>
-          <div class="form-check m-0 small">
-            <input class="form-check-input" type="checkbox" id="select_all_target">
-            <label class="form-check-label" for="select_all_target">All</label>
+        <div class="card-header bg-light sticky-header">
+          <div class="origin-row">
+            <div class="origin-title">
+              <span class="fw-semibold text-danger">Target ({{ target_schema_file }})</span>
+              <span class="badge bg-light text-dark border ms-2" title="Selected/Total Target fields">T <span id="tgt-count" class="badge-counter">0/0</span></span>
+            </div>
+            <div class="origin-controls">
+              <button class="btn btn-outline-secondary btn-sm" id="p1b-min-target" type="button">Minimize</button>
+              <div class="form-check m-0 small">
+                <input class="form-check-input" type="checkbox" id="select_all_target">
+                <label class="form-check-label" for="select_all_target">Select All</label>
+              </div>
+            </div>
           </div>
         </div>
         <div class="card-body" style="max-height:60vh;overflow:auto;">
-          {% for f in target_fields %}
-          <div class="form-check small">
-            <input class="form-check-input target-box" type="checkbox" name="target_field" value="{{ f.name }}" id="tgt_{{ loop.index }}">
-            <label class="form-check-label" for="tgt_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
+          <div class="origin-block origin-accent-target">
+            <div id="p1b-body-target">
+            {% for f in target_fields %}
+            <div class="form-check small">
+              <input class="form-check-input target-box" type="checkbox" name="target_field" value="{{ f.name }}" id="tgt_{{ loop.index }}">
+              <label class="form-check-label" for="tgt_{{ loop.index }}">{{ f.table }}.{{ f.name }} <span class="badge bg-secondary">{{ f.type }}</span></label>
+            </div>
+            {% endfor %}
+            </div>
           </div>
-          {% endfor %}
         </div>
       </div>
     </div>
@@ -137,15 +185,13 @@
         <div class="card-header bg-danger text-white py-2">Source ER Diagram</div>
         <div class="card-body p-2 small">
           <svg viewBox="0 0 320 200" class="w-100" style="max-height:190px">
-            <style>.ent{fill:#fff;stroke:#d32f2f;stroke-width:1.2}.rel{stroke:#555;stroke-width:1.1;marker-end:url(#arrow)}</style>
-            <defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" fill="#555"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
-            <rect class="ent" x="10" y="10" width="90" height="40" rx="4"/><text x="55" y="35" font-size="10" text-anchor="middle">customer</text>
-            <rect class="ent" x="120" y="10" width="90" height="40" rx="4"/><text x="165" y="35" font-size="10" text-anchor="middle">account</text>
-            <rect class="ent" x="230" y="10" width="80" height="40" rx="4"/><text x="270" y="35" font-size="10" text-anchor="middle">transaction</text>
-            <rect class="ent" x="120" y="80" width="90" height="40" rx="4"/><text x="165" y="105" font-size="10" text-anchor="middle">product</text>
-            <line class="rel" x1="100" y1="30" x2="120" y2="30"/>
-            <line class="rel" x1="210" y1="30" x2="230" y2="30"/>
-            <line class="rel" x1="165" y1="50" x2="165" y2="80"/>
+            <style>.ent{fill:#fff;stroke:#d32f2f;stroke-width:1.2}.rel{stroke:#555;stroke-width:1.1;marker-end:url(#arrow1)}</style>
+            <defs><marker id="arrow1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" fill="#555"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
+            <rect class="ent" x="20" y="20" width="90" height="40" rx="4"/><text x="65" y="45" font-size="10" text-anchor="middle">source_customer</text>
+            <rect class="ent" x="130" y="20" width="90" height="40" rx="4"/><text x="175" y="45" font-size="10" text-anchor="middle">source_account</text>
+            <rect class="ent" x="240" y="20" width="70" height="40" rx="4"/><text x="275" y="45" font-size="10" text-anchor="middle">txn</text>
+            <line class="rel" x1="110" y1="40" x2="130" y2="40"/>
+            <line class="rel" x1="220" y1="40" x2="240" y2="40"/>
           </svg>
         </div>
       </div>
@@ -181,45 +227,12 @@
       </div>
     </div>
   </div>
-</form>
+  </form>
+</div>
 
-<!-- Floating Chat Widget -->
-<style>
-  .floating-chat{position:fixed; top:90px; right:20px; width:340px; max-height:520px; z-index:1050; box-shadow:0 4px 18px rgba(0,0,0,.15)}
-  .floating-chat .card-body{overflow-y:auto}
-  @media (max-width: 992px){ .floating-chat{position:static; width:100%; max-height:none; margin-top:1rem} }
-  .cmd-hint{font-size:.75rem; color:#6c757d}
-  .cmd-hint code{background:#f8f9fa; padding:0 .2rem; border-radius:.2rem}
-  .chat-min-btn{width:26px; height:26px}
-  .chat-min-btn i{line-height:1}
-  .chat-body-area{min-height:220px; max-height:340px}
-  .small-muted{font-size:.85em; color:#6c757d}
-</style>
 <!-- Flags from server for pre-checking origin filters -->
 <div id="p1b-flags" data-has-source="{% if source_fields|length > 0 %}1{% else %}0{% endif %}" data-has-legacy="{% if legacy_fields|length > 0 %}1{% else %}0{% endif %}" data-extra-count="{{ extra_sources|length if extra_sources else 0 }}" hidden></div>
-<div class="card floating-chat" id="chat-widget">
-  <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center" style="cursor:move;">
-    <span class="fw-semibold small d-flex align-items-center gap-1"><i class="bi bi-robot"></i> Assistant</span>
-    <div class="d-flex align-items-center gap-1">
-      <button class="btn btn-sm btn-light d-flex align-items-center justify-content-center chat-min-btn" id="chat-min-btn" type="button" aria-label="Minimize chat">
-        <i class="bi bi-chevron-down" id="chat-min-icon"></i>
-      </button>
-    </div>
-  </div>
-  <div class="card-body p-2 chat-body-area" id="chat-body">
-    <div id="chat-messages" class="small-muted">Commands: <code>select all source</code>, <code>deselect all legacy</code>, <code>select all target</code>, <code>next</code></div>
-  </div>
-  <div class="card-footer p-2" id="chat-footer">
-    <form id="chat-form" onsubmit="return sendMessage(event);">
-      <div class="input-group input-group-sm">
-        <input type="text" class="form-control" id="chat-input" placeholder="Type command or question..." required>
-        <button class="btn btn-danger" type="submit">Send</button>
-      </div>
-    </form>
-  </div>
-  <div class="px-2 pb-2 cmd-hint">Try <code>select all source</code> or <code>deselect all target</code></div>
-  
-</div>
+{% include 'poc4/_chatpanel.j2' %}
 
 <script>
 // Select all handlers
@@ -243,19 +256,35 @@ try{
   }
 }catch(e){}
 
-// Chat helpers
-function toggleChatBody(){
-  const body=document.getElementById('chat-body');
-  const footer=document.getElementById('chat-footer');
-  const icon=document.getElementById('chat-min-icon');
-  const hidden = body.style.display==='none';
-  body.style.display = hidden ? 'block':'none';
-  footer.style.display = hidden ? 'block':'none';
-  if(icon){ icon.classList.toggle('bi-chevron-down', hidden===false); icon.classList.toggle('bi-chevron-up', hidden===true); }
-}
-document.getElementById('chat-min-btn')?.addEventListener('click', toggleChatBody);
-// Start minimized
-toggleChatBody();
+// Page-specific ChatPanel commands
+window.handleChatCommand = function(cmd, api){
+  const t = (cmd||'').trim().toLowerCase();
+  function setAll(masterId, cls, val){
+    const master=document.getElementById(masterId);
+    if(master){ master.checked = val; master.dispatchEvent(new Event('change')); }
+    document.querySelectorAll(cls).forEach(cb=> cb.checked = val);
+    try{ updateCounts(); }catch(_){ }
+  }
+  if(t.startsWith('select all ')){
+    if(t.endsWith('source')){ api.append('assistant','Will select all Source fields'); api.setLastAction(()=> setAll('select_all_source','.source-box',true)); return true; }
+    if(t.endsWith('legacy')){ api.append('assistant','Will select all Legacy fields'); api.setLastAction(()=> setAll('select_all_legacy','.legacy-box',true)); return true; }
+    if(t.endsWith('target')){ api.append('assistant','Will select all Target fields'); api.setLastAction(()=> setAll('select_all_target','.target-box',true)); return true; }
+  }
+  if(t.startsWith('deselect all ') || t.startsWith('unselect all ')){
+    if(t.endsWith('source')){ api.append('assistant','Will deselect all Source fields'); api.setLastAction(()=> setAll('select_all_source','.source-box',false)); return true; }
+    if(t.endsWith('legacy')){ api.append('assistant','Will deselect all Legacy fields'); api.setLastAction(()=> setAll('select_all_legacy','.legacy-box',false)); return true; }
+    if(t.endsWith('target')){ api.append('assistant','Will deselect all Target fields'); api.setLastAction(()=> setAll('select_all_target','.target-box',false)); return true; }
+  }
+  if(['next','go next','continue'].includes(t)){
+    api.append('assistant','Submitting selected fields…');
+    api.setLastAction(()=> document.getElementById('field-select-form')?.submit());
+    return true;
+  }
+  if(t.includes('minimize source')){ api.append('assistant','Will minimize Source'); api.setLastAction(()=> document.getElementById('p1b-min-source')?.click()); return true; }
+  if(t.includes('minimize legacy')){ api.append('assistant','Will minimize Legacy'); api.setLastAction(()=> document.getElementById('p1b-min-legacy')?.click()); return true; }
+  if(t.includes('minimize target')){ api.append('assistant','Will minimize Target'); api.setLastAction(()=> document.getElementById('p1b-min-target')?.click()); return true; }
+  return false;
+};
 
 // Origin filter toggles (no defaults)
 const filterSource = document.getElementById('filter-source');
@@ -301,6 +330,10 @@ function applyMinState(key, bodyEl, btn){ const s=getMinState(); const minimized
   const lBtn = document.getElementById('p1b-min-legacy');
   const lBody = document.getElementById('p1b-body-legacy');
   if(lBtn && lBody){ applyMinState('legacy', lBody, lBtn); lBtn.addEventListener('click', ()=>{ const s=getMinState(); const cur=!!s['legacy']; setMinState('legacy', !cur); applyMinState('legacy', lBody, lBtn); }); }
+  // Target minimize
+  const tBtn = document.getElementById('p1b-min-target');
+  const tBody = document.getElementById('p1b-body-target');
+  if(tBtn && tBody){ applyMinState('target', tBody, tBtn); tBtn.addEventListener('click', ()=>{ const s=getMinState(); const cur=!!s['target']; setMinState('target', !cur); applyMinState('target', tBody, tBtn); }); }
   try{
     const extraCount = parseInt(document.getElementById('p1b-flags')?.dataset.extraCount || '0');
     for(let i=0;i<extraCount;i++){
@@ -345,5 +378,28 @@ async function sendMessage(e){
   return false;
 }
 function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
+
+// --- Dynamic selection counters (S/L/T) ---
+function updateCounts(){
+  const srcBoxes = Array.from(document.querySelectorAll('.source-box'));
+  const legBoxes = Array.from(document.querySelectorAll('.legacy-box'));
+  const tgtBoxes = Array.from(document.querySelectorAll('.target-box'));
+  const srcSel = srcBoxes.filter(b=>b.checked).length; const srcTot = srcBoxes.length;
+  const legSel = legBoxes.filter(b=>b.checked).length; const legTot = legBoxes.length;
+  const tgtSel = tgtBoxes.filter(b=>b.checked).length; const tgtTot = tgtBoxes.length;
+  const s = document.getElementById('src-count'); if(s) s.textContent = `${srcSel}/${srcTot}`;
+  const l = document.getElementById('leg-count'); if(l) l.textContent = `${legSel}/${legTot}`;
+  const t = document.getElementById('tgt-count'); if(t) t.textContent = `${tgtSel}/${tgtTot}`;
+}
+document.addEventListener('change', (e)=>{
+  if(e.target && (e.target.classList?.contains('source-box') || e.target.classList?.contains('legacy-box') || e.target.classList?.contains('target-box'))){
+    updateCounts();
+  }
+});
+document.getElementById('select_all_source')?.addEventListener('change', updateCounts);
+document.getElementById('select_all_legacy')?.addEventListener('change', updateCounts);
+document.getElementById('select_all_target')?.addEventListener('change', updateCounts);
+// Initial counts
+updateCounts();
 </script>
 {% endblock %}

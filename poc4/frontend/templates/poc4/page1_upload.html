@@ -2,7 +2,7 @@
 {% block content %}
 <!-- Banner -->
 <div class="bg-danger text-white py-3 mb-4 rounded shadow-sm text-center">
-  <h2 class="mb-0">POC4 Data Migration & Reconciliation</h2>
+  <h2 class="mb-0">Data Modelling, Migration & Reconciliation</h2>
   <small>Modern Data Migration Workflow</small>
 </div>
 
@@ -21,13 +21,46 @@
   .floating-chat{position:fixed; top:90px; right:20px; width:340px; max-height:520px; z-index:1050; box-shadow:0 4px 18px rgba(0,0,0,.15)}
   .floating-chat .card-body{overflow-y:auto}
   @media (max-width: 992px){ .floating-chat{position:static; width:100%; max-height:none; margin-top:1rem} }
+  /* Target column visual separation */
+  .target-col .section-box{border:1px solid #e9ecef; border-left:4px solid #d32f2f; border-radius:.5rem; padding:.75rem; background:#fafafa}
+  .target-col .section-box + .section-box{margin-top: .75rem}
+  .target-col .section-box .form-text{margin-top:.25rem}
+  /* Schema preview tables */
+  .schema-preview-table{font-size:.85rem}
+  .schema-preview-table th{position:sticky; top:0; background:#f8f9fa}
+  .schema-preview-table td, .schema-preview-table th{padding:.35rem .5rem}
+  .schema-preview-table{table-layout:auto; width:auto; max-width:100%}
+  .schema-preview-table th:nth-child(2), .schema-preview-table td:nth-child(2){white-space:nowrap; width:1%}
+  .schema-preview-wrap{max-height:260px; overflow:auto; max-width:760px}
+  /* Allow full width in Column 1 */
+  .origins-col .schema-preview-wrap{max-width:100%}
+  .schema-preview-wrap .table-responsive{display:inline-block; width:auto; max-width:100%}
+  /* Column 1 schema mini-containers */
+  .origins-col .schema-card{border:1px solid #eee; border-left:4px solid #adb5bd; border-radius:.5rem; background:#fff}
+  .origins-col .schema-card + .schema-card{margin-top:.5rem}
+  .origins-col .schema-card-header{padding:.4rem .6rem; border-bottom:1px solid #f1f3f5}
+  .origins-col .schema-card-body{padding:.5rem .6rem}
+  .origins-col .accent-source{border-left-color:#d32f2f; background:#fff8f8}
+  .origins-col .accent-legacy{border-left-color:#212529; background:#f8f9fa}
+  .origins-col .accent-ds{border-left-color:#0d6efd; background:#f7faff}
+  /* ER diagram container */
+  .er-diagram-wrap{max-height:320px; overflow:auto; background:#fff; border:1px dashed #e9ecef; border-radius:.5rem; padding:.5rem}
+  .schema-card .er-help{font-size:.8rem; color:#6c757d}
+  /* Grid layout: compact left (tables), flexible right (ER) */
+  .schema-grid{display:grid; grid-template-columns: minmax(240px, 340px) 1fr; gap:.5rem; align-items:start}
+  .schema-grid-left{min-width:0}
+  .schema-grid-right{min-width:0}
+  @media (max-width: 992px){ .schema-grid{grid-template-columns:1fr} }
+  /* Make ER diagram scale to available width */
+  .er-diagram-wrap .mermaid{width:100%;}
+  .er-diagram-wrap svg{max-width:100% !important; height:auto !important;}
 </style>
 {% include 'poc4/_steps.j2' %}
 
 <form method="post" enctype="multipart/form-data" id="upload-form">
   <div class="row g-4">
     <!-- Combined Origins Column (Source + Legacy) -->
-    <div class="col-md-8">
+  <div class="col-lg-7 col-md-7 origins-col">
       <div class="card h-100 shadow-sm">
   <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
   <span>Origin Systems</span>
@@ -69,7 +102,7 @@
             </div>
               <input type="file" class="d-none" id="source-schema-upload" accept="application/json" aria-label="Upload custom Source schema JSON">
               <div class="form-text" id="source-upload-hint">Use Add to upload and register a JSON schema.</div>
-            <div class="mt-2" id="source-schema-fields"></div>
+            <div class="mt-2 schema-preview-wrap" id="source-schema-fields" data-origin="source"></div>
             </div>
           </div>
           <!-- Legacy selector (shown when checked) -->
@@ -89,7 +122,7 @@
             </div>
               <input type="file" class="d-none" id="legacy-schema-upload" accept="application/json" aria-label="Upload custom Legacy schema JSON">
               <div class="form-text" id="legacy-upload-hint">Use Add to upload and register a JSON schema.</div>
-            <div class="mt-2" id="legacy-schema-fields"></div>
+            <div class="mt-2 schema-preview-wrap" id="legacy-schema-fields" data-origin="legacy"></div>
             </div>
           </div>
 
@@ -99,32 +132,65 @@
       </div>
     </div>
     <!-- Target Column -->
-    <div class="col-md-4">
+    <div class="col-lg-5 col-md-5 target-col">
       <div class="card h-100 shadow-sm">
   <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">Target</div>
         <div class="card-body">
-          <!-- Broad yellow action just below Target header -->
-          <button type="button" id="design-model-btn" class="btn btn-warning w-100 mb-3">Design Target Model</button>
-          <div class="mb-3">
-            <label class="form-label">Existing Target Schema</label>
-            <div class="input-group mb-2">
-              <select class="form-select" id="target-schema-select" name="target_schema" required>
-                <option value="" selected disabled>Loading…</option>
-              </select>
-              <button class="btn btn-outline-secondary" type="button" id="target-rename-btn" title="Rename selected schema">Rename</button>
-              <button class="btn btn-outline-danger" type="button" id="target-delete-btn" title="Delete selected schema">Delete</button>
-              <!-- Move Next: Mapping into the same row -->
-              <button type="submit" class="btn btn-danger ms-2" id="next-btn" title="Proceed to Mapping">Next: Mapping</button>
+          <!-- Target mode selection -->
+          <div class="mb-3 section-box target-mode-container">
+            <label class="form-label mb-1">Target Mapping Mode</label>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="target_mode" id="target-mode-existing" value="existing">
+              <label class="form-check-label" for="target-mode-existing">Map to Existing Target Schema</label>
             </div>
-            <div class="input-group mt-2">
-              <input type="file" class="form-control" id="target-schema-upload" accept="application/json" aria-label="Upload custom Target schema JSON">
-              <button class="btn btn-outline-danger" type="button" id="target-add-btn" title="Add this schema to the list">Add to list</button>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="target_mode" id="target-mode-create" value="create">
+              <label class="form-check-label" for="target-mode-create">Create Target Schema and Map</label>
             </div>
-            <div class="form-text" id="target-upload-hint">Upload a JSON schema file, then click Add to register it.</div>
+            <div class="small text-muted mt-1">Choose how you want to proceed: use an existing target schema, or design a new one and we’ll map for you.</div>
           </div>
-          <div id="target-schema-fields"></div>
+          <!-- Distinct Section: Create Target Schema and Map -->
+          <div id="create-target-container" class="mb-3 section-box">
+            <fieldset id="create-target-fieldset" disabled>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label m-0">Create Target Schema and Map</label>
+                  <span class="badge bg-warning text-dark">Design New</span>
+                </div>
+                <div class="small text-muted mb-2">Design a new target model tailored to your selected origin schemas, then proceed to mapping automatically.</div>
+                <button type="button" id="design-model-btn" class="btn btn-warning w-100">Design Target Model</button>
+                <div class="form-text small mt-2">Saves selections, then opens the Target Model page and auto-generates a draft.</div>
+              </div>
+            </fieldset>
+          </div>
+          <!-- Distinct Section: Map to Existing Target Schema -->
+      <div id="existing-target-container" class="mb-3 section-box">
+            <fieldset id="existing-target-fieldset" disabled>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label m-0">Map to Existing Target Schema</label>
+                  <span class="badge bg-secondary">Use Existing</span>
+                </div>
+                <div class="small text-muted mb-2">Pick an existing target schema JSON, then continue to the Mapping step.</div>
+                <div class="input-group mb-2">
+                  <select class="form-select" id="target-schema-select" name="target_schema" required>
+                    <option value="" selected disabled>Loading…</option>
+                  </select>
+                  <button class="btn btn-outline-secondary" type="button" id="target-rename-btn" title="Rename selected schema">Rename</button>
+                  <button class="btn btn-outline-danger" type="button" id="target-delete-btn" title="Delete selected schema">Delete</button>
+                  <!-- Move Next: Mapping into the same row -->
+                  <button type="submit" class="btn btn-danger ms-2" id="next-btn" title="Proceed to Mapping">Next: Mapping</button>
+                </div>
+                <div class="input-group mt-2">
+                  <input type="file" class="form-control" id="target-schema-upload" accept="application/json" aria-label="Upload custom Target schema JSON">
+                  <button class="btn btn-outline-danger" type="button" id="target-add-btn" title="Add this schema to the list">Add to list</button>
+                </div>
+                <div class="form-text" id="target-upload-hint">Upload a JSON schema file, then click Add to register it.</div>
+              </div>
+        <div id="target-schema-fields" class="schema-preview-wrap"></div>
+            </fieldset>
+          </div>
           <hr>
-          <div class="form-text small">Saves selections, then opens the Target Model page and auto-generates the draft.</div>
         </div>
       </div>
     </div>
@@ -133,55 +199,151 @@
 </form>
 
 <!-- Floating Chat Widget -->
+  <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    try { mermaid.initialize({ startOnLoad: false, theme: 'default' }); } catch(e){}
+    // Optional: re-render on theme changes could go here
+  </script>
 <script id="extra-sources-json" type="application/json">{{ (extra_sources or []) | tojson | safe }}</script>
-<div class="card floating-chat" id="chat-widget">
-  <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center" style="cursor:move;">
-    <span class="fw-semibold small d-flex align-items-center gap-1"><i class="bi bi-robot"></i> Assistant</span>
-    <div class="d-flex align-items-center gap-1">
-      <button class="btn btn-sm btn-light d-flex align-items-center justify-content-center" id="chat-min-btn" type="button" aria-label="Minimize chat" style="width:26px;height:26px;">
-        <i class="bi bi-chevron-down" id="chat-min-icon"></i>
-      </button>
-    </div>
-  </div>
-  <div class="card-body p-2" id="chat-body" style="min-height:250px; max-height:360px;">
-    <div id="chat-messages" class="small text-muted">Ask about the migration workflow...</div>
-  </div>
-  <div class="card-footer p-2" id="chat-footer">
-    <form id="chat-form" onsubmit="return sendMessage(event);">
-      <div class="input-group input-group-sm">
-        <input type="text" class="form-control" id="chat-input" placeholder="Type..." required>
-        <button class="btn btn-danger" type="submit">Send</button>
-      </div>
-    </form>
-  </div>
-</div>
+{% include 'poc4/_chatpanel.j2' %}
 
 <script>
-function toggleChatBody(){
-  const body=document.getElementById('chat-body');
-  const footer=document.getElementById('chat-footer');
-  const icon=document.getElementById('chat-min-icon');
-  const hidden = body.style.display==='none';
-  body.style.display = hidden ? 'block':'none';
-  footer.style.display = hidden ? 'block':'none';
-  icon.classList.toggle('bi-chevron-down', hidden===false);
-  icon.classList.toggle('bi-chevron-up', hidden===true);
-}
-document.getElementById('chat-min-btn').addEventListener('click', toggleChatBody);
-// Start chat minimized on load
-toggleChatBody();
-async function sendMessage(e){ e.preventDefault(); const input=document.getElementById('chat-input'); const msg=input.value.trim(); if(!msg) return false; appendMessage('You', msg); input.value='';
-  // Simple commands
-  const lower = msg.toLowerCase();
-  if(lower==='next' || lower==='go next' || lower==='continue'){
-    document.getElementById('next-btn')?.click();
-    return false;
+// Page-specific ChatPanel command handler
+window.handleChatCommand = function(cmd, api){
+  const t = (cmd||'').trim().toLowerCase();
+  const by = {
+    source: {master:'select_all_source', cls:'.source-box'},
+    legacy: {master:'select_all_legacy', cls:'.legacy-box'},
+    target: {master:'select_all_target', cls:'.target-box'}
+  };
+  function setAll(kind, checked){
+    const m = by[kind]; if(!m) return;
+    const master = document.getElementById(m.master);
+    if(master){ master.checked = checked; master.dispatchEvent(new Event('change')); }
+    else { document.querySelectorAll(m.cls).forEach(cb=> cb.checked = checked); }
   }
-  try{ const res= await fetch('/poc4/chat',{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'message='+encodeURIComponent(msg)}); const data= await res.json(); appendMessage('Bot', data.response);}catch(err){ appendMessage('Bot','(error)'); } return false; }
-function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
+  // Navigation
+  if(['next','go next','continue'].includes(t)){
+    api.append('assistant','Proceeding to Mapping…');
+    api.setLastAction(()=> document.getElementById('next-btn')?.click());
+    return true;
+  }
+  if(['design','design target','design model'].includes(t)){
+    api.append('assistant','Opening Target Model designer…');
+    api.setLastAction(()=> document.getElementById('design-model-btn')?.click());
+    return true;
+  }
+  // Mode toggle
+  if(t.includes('map to existing')){
+    api.append('assistant','Switching to "Map to Existing Target Schema"');
+    api.setLastAction(()=>{ const r=document.getElementById('target-mode-existing'); if(r){ r.checked=true; r.dispatchEvent(new Event('change')); } });
+    return true;
+  }
+  if(t.includes('create target')){
+    api.append('assistant','Switching to "Create Target Schema and Map"');
+    api.setLastAction(()=>{ const r=document.getElementById('target-mode-create'); if(r){ r.checked=true; r.dispatchEvent(new Event('change')); } });
+    return true;
+  }
+  // Selections
+  if(t.startsWith('select all ')){
+    if(t.endsWith('source')){ api.append('assistant','Will select all Source fields'); api.setLastAction(()=> setAll('source', true)); return true; }
+    if(t.endsWith('legacy')){ api.append('assistant','Will select all Legacy fields'); api.setLastAction(()=> setAll('legacy', true)); return true; }
+    if(t.endsWith('target')){ api.append('assistant','Will select all Target fields'); api.setLastAction(()=> setAll('target', true)); return true; }
+  }
+  if(t.startsWith('deselect all ') || t.startsWith('unselect all ')){
+    if(t.endsWith('source')){ api.append('assistant','Will deselect all Source fields'); api.setLastAction(()=> setAll('source', false)); return true; }
+    if(t.endsWith('legacy')){ api.append('assistant','Will deselect all Legacy fields'); api.setLastAction(()=> setAll('legacy', false)); return true; }
+    if(t.endsWith('target')){ api.append('assistant','Will deselect all Target fields'); api.setLastAction(()=> setAll('target', false)); return true; }
+  }
+  // Show/hide sections
+  if(t.includes('minimize source')){ api.append('assistant','Will minimize Source section'); api.setLastAction(()=> document.getElementById('source-min-btn')?.click()); return true; }
+  if(t.includes('minimize legacy')){ api.append('assistant','Will minimize Legacy section'); api.setLastAction(()=> document.getElementById('legacy-min-btn')?.click()); return true; }
+  if(t.includes('expand source')){ api.append('assistant','Will expand Source section'); api.setLastAction(()=>{ const b=document.getElementById('source-min-btn'); const s=localStorage.getItem('poc4_p1_min')||'{}'; if(b && JSON.parse(s).source){ b.click(); } }); return true; }
+  if(t.includes('expand legacy')){ api.append('assistant','Will expand Legacy section'); api.setLastAction(()=>{ const b=document.getElementById('legacy-min-btn'); const s=localStorage.getItem('poc4_p1_min')||'{}'; if(b && JSON.parse(s).legacy){ b.click(); } }); return true; }
+  return false;
+};
 
 async function loadSchema(file,target){ try{ const res= await fetch(`/poc4/static_schema/schemas/${file}`); const schema= await res.json(); renderSchemaFields(schema,target);}catch(e){ document.getElementById(target).innerHTML='<div class="text-danger">Failed to load schema.</div>'; }}
-function renderSchemaFields(schema,target){ let html=''; if(schema.tables){ schema.tables.forEach(t=>{ html+=`<div class=\"card mb-2\"><div class=\"card-header bg-light fw-bold\">${t.name}</div><div class=\"card-body p-2\"><ul class=\"list-group\">`; t.fields.forEach(f=>{ html+=`<li class=\"list-group-item d-flex justify-content-between align-items-center\"><span>${f.name}</span><span class=\"badge bg-danger\">${f.type}</span></li>`; }); html+='</ul></div></div>'; }); } document.getElementById(target).innerHTML=html; }
+function renderSchemaFields(schema,target){
+  const el = document.getElementById(target);
+  if(!el){ return; }
+  const origin = (el.getAttribute('data-origin')||'').toLowerCase();
+  const accentClass = origin==='source' ? 'accent-source' : (origin==='legacy' ? 'accent-legacy' : (origin==='ds' ? 'accent-ds' : ''));
+  let tablesHtml='';
+  if(schema.tables && Array.isArray(schema.tables)){
+    schema.tables.forEach(t=>{
+      const fieldCount = (t.fields||[]).length;
+      tablesHtml += `
+        <div class="schema-card ${accentClass}">
+          <div class="schema-card-header d-flex justify-content-between align-items-center">
+            <div class="fw-semibold small text-uppercase">${t.name}</div>
+            <span class="badge bg-light text-secondary border">${fieldCount} fields</span>
+          </div>
+          <div class="schema-card-body">
+            <div class="small text-muted mb-2">Fields defined for ${t.name}. Review types before proceeding.</div>
+            <div class="table-responsive">
+              <table class="table table-sm table-striped schema-preview-table mb-0">
+                <thead><tr><th>Field</th><th>Type</th></tr></thead>
+                <tbody>
+                  ${(t.fields||[]).map(f=>`<tr><td class="text-wrap">${f.name}</td><td><span class="badge bg-danger">${f.type}</span></td></tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+  const er = schemaToMermaidER(schema);
+  const erCard = `
+    <div class="schema-card ${accentClass}">
+      <div class="schema-card-header d-flex justify-content-between align-items-center">
+        <div class="fw-semibold small text-uppercase">ER Diagram</div>
+        <span class="er-help">Auto-generated from schema tables</span>
+      </div>
+      <div class="schema-card-body">
+        <div class="er-diagram-wrap"><div class="mermaid">${er}</div></div>
+      </div>
+    </div>`;
+  const html = `
+    <div class="schema-grid">
+      <div class="schema-grid-left">${tablesHtml || '<div class="text-muted small">No tables found in schema.</div>'}</div>
+      <div class="schema-grid-right">${erCard}</div>
+    </div>`;
+  el.innerHTML = html;
+  // Try rendering Mermaid diagrams if available
+  try{
+    if(window.mermaid && typeof window.mermaid.init === 'function'){
+      window.mermaid.init(undefined, el.querySelectorAll('.mermaid'));
+    }
+  }catch(e){}
+}
+
+// Build a Mermaid ER diagram from schema JSON
+function schemaToMermaidER(schema){
+  const lines = ['erDiagram'];
+  const tables = Array.isArray(schema?.tables) ? schema.tables : [];
+  tables.forEach(t=>{
+    lines.push(`  ${safeIdent(t.name)} {`);
+    (t.fields||[]).forEach(f=>{
+      lines.push(`    ${mapType(f.type)} ${safeIdent(f.name)}`);
+    });
+    lines.push('  }');
+  });
+  // Relationships not present in schema; omitted
+  return lines.join('\n');
+}
+function safeIdent(name){
+  return String(name||'UNKNOWN').replace(/[^A-Za-z0-9_]/g,'_');
+}
+function mapType(t){
+  const s = String(t||'string').toLowerCase();
+  if(s.includes('int')) return 'int';
+  if(s.includes('char')||s.includes('text')||s.includes('string')) return 'string';
+  if(s.includes('date')||s.includes('time')) return 'datetime';
+  if(s.includes('bool')) return 'boolean';
+  if(s.includes('dec')||s.includes('num')||s.includes('float')||s.includes('double')) return 'float';
+  return 'string';
+}
 
 // Toggle Source/Legacy sections via checkboxes
 const sourceEnable = document.getElementById('source-enable');
@@ -364,8 +526,8 @@ function createExtraDsSection(n){
       </select>
     </div>
     <input type="file" class="d-none" id="${id}-upload" accept="application/json" aria-label="Upload custom schema JSON">
-    <div class="form-text" id="${id}-hint">Use Add to upload and register a JSON schema for this Data Source.</div>
-    <div class="mt-2" id="${id}-fields"></div>
+  <div class="form-text" id="${id}-hint">Use Add to upload and register a JSON schema for this Data Source.</div>
+  <div class="mt-2 schema-preview-wrap" id="${id}-fields" data-origin="ds"></div>
     </div>
     <hr>
   `;
@@ -506,5 +668,26 @@ document.getElementById('design-model-btn')?.addEventListener('click', async ()=
   window.location.href = '/poc4/target_model?auto=1';
   }catch(e){ alert('Failed to save selections.'); }
 });
+
+// --- Target mode toggle (enable/disable sections) ---
+(function(){
+  const modeExisting = document.getElementById('target-mode-existing');
+  const modeCreate = document.getElementById('target-mode-create');
+  const designBtn = document.getElementById('design-model-btn');
+  const existingFieldset = document.getElementById('existing-target-fieldset');
+  const createFieldset = document.getElementById('create-target-fieldset');
+  function applyTargetMode(){
+    const useExisting = !!modeExisting?.checked;
+    const createNew = !!modeCreate?.checked;
+    if(createFieldset){ createFieldset.disabled = !createNew; }
+    if(existingFieldset){ existingFieldset.disabled = !useExisting; }
+    // Keep button in sync in case fieldset is not supported
+    if(designBtn){ designBtn.disabled = !createNew; }
+  }
+  modeExisting?.addEventListener('change', applyTargetMode);
+  modeCreate?.addEventListener('change', applyTargetMode);
+  // Start with everything disabled until a choice is made
+  applyTargetMode();
+})();
 </script>
 {% endblock %}

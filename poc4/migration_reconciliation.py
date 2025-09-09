@@ -10,7 +10,7 @@ app.register_blueprint(poc4_bp)
 
 @app.route('/')
 def index():
-    return '<h2>POC4 Data Migration & Reconciliation</h2><a href="/poc4/page1">Start Workflow</a>'
+    return '<h2 class="mb-0">Data Modelling, Migration & Reconciliation</h2><a href="/poc4/page1">Start Workflow</a>'
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

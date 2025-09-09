@@ -10,22 +10,15 @@
 <!-- Meta flags for JS -->
 <div id="tmodel-meta" data-has-draft="{{ '1' if target_model_draft else '0' }}" hidden></div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<!-- Hidden form to allow auto-generation via ?auto=1 without showing a button -->
+<form method="post" class="m-0" id="design-form" style="display:none;">
+  <input type="hidden" name="action" value="design_target_model">
+  <!-- button removed intentionally -->
+  <!-- This hidden form is submitted by JS when ?auto=1 and no draft exists -->
+  </form>
+
+<div class="d-flex align-items-center mb-3">
   <div class="text-muted small">This page is independent of Validation; it won’t trigger migration.</div>
-  <div class="d-flex gap-2">
-    <form method="post" class="m-0" id="design-form">
-      <input type="hidden" name="action" value="design_target_model">
-      <button type="submit" class="btn btn-outline-danger btn-sm">Generate Draft</button>
-    </form>
-    {% if target_model_draft %}
-    <form method="post" class="m-0">
-      <input type="hidden" name="action" value="approve_target_model">
-      <button type="submit" class="btn btn-success btn-sm">Approve</button>
-    </form>
-    <a href="{{ url_for('poc4.download_target_model') }}" class="btn btn-outline-secondary btn-sm">Download JSON</a>
-    {% endif %}
-  <a href="{{ url_for('poc4.page2') }}" class="btn btn-danger btn-sm">Next: Mapping</a>
-  </div>
 </div>
 
 <div class="row g-4">

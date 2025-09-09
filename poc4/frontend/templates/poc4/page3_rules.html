@@ -3,7 +3,7 @@
 {% block content %}
 <!-- Banner -->
 <div class="bg-danger text-white py-3 mb-4 rounded shadow-sm text-center">
-  <h2 class="mb-0">POC4 Data Migration & Reconciliation</h2>
+  <h2 class="mb-0">Data Modelling, Migration & Reconciliation</h2>
   <small>Modern Data Migration Workflow</small>
 </div>
 
@@ -13,18 +13,32 @@
 <style>
   /* Two-column rules layout */
   .rules-table th, .rules-table td { vertical-align: middle; }
+  .rules-table thead th { padding: .45rem .55rem; font-weight: 600; }
+  .rules-table td { padding: .35rem .5rem; }
   .rules-table td input { font-size: .8rem; padding: .25rem .4rem; }
-  .rule-row { font-size: .75rem; }
-  .rules-wrapper .card-body { max-height: 70vh; overflow: auto; }
+  .rule-row { font-size: .78rem; }
+  .rules-wrapper .card-body { max-height: 72vh; overflow: auto; }
   /* Stacked target field + table name */
   .field-stack strong { display:block; font-size:.8rem; line-height:1.15; }
   .field-stack .tbl { display:block; font-size:.55rem; text-transform:uppercase; letter-spacing:.5px; color:#6c757d; line-height:1; margin-top:2px; }
   .rules-table tbody tr:hover .field-stack strong { color:#b71c1c; }
-  /* Floating chat (like page2) */
-  .chat-float{position:fixed;right:1.25rem;top:6.5rem;z-index:1050;width:340px;box-shadow:0 4px 18px rgba(0,0,0,.15)}
-  .chat-float .card-body{height:300px;overflow-y:auto}
-  @media (max-width:1200px){ .chat-float{top:8rem;width:300px} }
-  @media (max-width:992px){ .chat-float{position:static;width:100%;margin-top:1rem} }
+  /* Example/Variants modern chips */
+  .ex-box{background:#f8fafc;border:1px solid #eef2f7;border-left:3px solid #d32f2f;border-radius:.375rem;padding:.3rem .45rem}
+  .ex-row{display:flex;align-items:center;gap:.4rem;margin:.1rem 0}
+  .ex-line{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+  .ex-seg{display:flex;align-items:center;gap:.35rem}
+  .ex-label{font-size:.68rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.4px}
+  .ex-code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:.78rem; background:#fff; border:1px solid #e5e7eb; border-radius:.25rem; padding:.15rem .35rem; color:#111827}
+  .variant-list{display:flex;gap:.45rem;flex-wrap:wrap;align-items:center}
+  .variant-link{color:#0d6efd;cursor:pointer;font-size:.75rem;white-space:nowrap}
+  .variant-link:hover{text-decoration:underline}
+  .variant-sep{color:#9ca3af}
+  .variant-toggle{color:#0d6efd;cursor:pointer;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  .variant-toggle:hover{text-decoration:underline}
+  /* Small Column 2: Mapping graph */
+  .graph-card .mermaid svg{max-width:100%}
+  .graph-card .mermaid{min-height:220px}
+  /* Mermaid graph sizing handled above; no pre-hide to ensure render */
 </style>
 
 <form method="post" id="rules-form">
@@ -40,7 +54,7 @@
     </div>
   </div>
   <div class="row g-4 rules-wrapper">
-    <div class="col-12">
+    <div class="col-12 col-lg-9">
       <div class="card h-100 shadow-sm">
         <div class="card-header bg-light text-danger fw-bold d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-3">
@@ -127,15 +141,28 @@
                   </div>
                 </td>
                 <td class="text-muted">
-                  <div>{{ rule.example }}</div>
-                  {% if rule.variants %}
-                  {% set _row_index = loop.index0 %}
-                  <div class="small text-secondary mt-1">Variants:
-                    <ul class="mb-0 ps-3 mt-1">
-                      {% for v in rule.variants %}<li>{{ v }}</li>{% endfor %}
-                    </ul>
+                  {# Format example as Expression/Result to make syntax obvious #}
+                  {% set ex_raw = (rule.example or '') %}
+                  {% set ex_txt = ex_raw.replace('Example:','').strip() %}
+                  {% set parts = ex_txt.split('=>') %}
+                  <div class="ex-box">
+                    <div class="ex-line">
+                      <div class="ex-seg"><span class="ex-label">Expr</span><span class="ex-code">{{ (parts[0] if parts|length>0 else ex_txt)|trim }}</span></div>
+                      {% if parts|length>1 %}
+                        <div class="ex-seg"><span class="ex-label">Result</span><span class="ex-code">{{ parts[1]|trim }}</span></div>
+                      {% endif %}
+                      {% if rule.variants %}
+                        <div class="ex-seg flex-grow-1">
+                          <span class="variant-toggle" role="button" tabindex="0" title="Show variants">VARIANT</span>
+                          <div class="variant-list d-none" title="Click a variant to use it">
+                            {% for v in rule.variants %}
+                              <span class="variant-link" title="{{ v }}">{{ v }}</span>{% if not loop.last %}<span class="variant-sep">•</span>{% endif %}
+                            {% endfor %}
+                          </div>
+                        </div>
+                      {% endif %}
+                    </div>
                   </div>
-                  {% endif %}
                 </td>
                 <td><button type="button" class="btn btn-outline-danger btn-sm edit-rule-btn" data-index="{{ loop.index0 }}">Edit</button></td>
               </tr>
@@ -145,30 +172,43 @@
         </div>
       </div>
     </div>
+    <div class="col-12 col-lg-3">
+      <div class="card h-100 shadow-sm graph-card">
+        <div class="card-header bg-light text-danger fw-bold">Rules Mapping</div>
+        <div class="card-body">
+          <div id="rules-graph" class="mermaid small"></div>
+          <div id="rules-graph-note" class="small text-muted mt-2"></div>
+        </div>
+      </div>
+    </div>
   </div>
   
 </form>
 
-<!-- Floating Chat Panel -->
-<div class="card chat-float border-0" id="chat-widget">
-  <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center">
-    <span class="small fw-semibold d-flex align-items-center gap-1"><i class="bi bi-robot"></i> Chatbot Assistant</span>
-    <button class="btn btn-sm btn-light py-0 px-1 d-flex align-items-center justify-content-center" id="chat-min-btn" type="button" aria-label="Minimize chat"><i class="bi bi-chevron-down" id="chat-min-icon"></i></button>
-  </div>
-  <div class="card-body p-2" id="chat-body">
-    <div class="text-muted small" id="chat-messages">Ask about transformation rules, lineage, or validation logic...</div>
-  </div>
-  <div class="card-footer p-2" id="chat-footer">
-    <form id="chat-form" onsubmit="return sendMessage(event);" class="d-flex gap-1">
-      <input type="text" class="form-control form-control-sm" id="chat-input" placeholder="Type question..." required>
-      <button class="btn btn-danger btn-sm" type="submit">Send</button>
-    </form>
-  </div>
-</div>
+{% include 'poc4/_chatpanel.j2' %}
+
+<!-- Mermaid for rules mapping diagram -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 
 <script>
-  async function sendMessage(e){ e.preventDefault(); const input=document.getElementById('chat-input'); const msg=input.value.trim(); if(!msg) return false; appendMessage('You', msg); input.value=''; try{ const res= await fetch('/poc4/chat',{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'message='+encodeURIComponent(msg)}); const data= await res.json(); appendMessage('Bot', data.response);}catch(err){ appendMessage('Bot','(error)'); } return false; }
-  function appendMessage(sender,text){ const chat=document.getElementById('chat-messages'); const div=document.createElement('div'); div.className='mb-1'; div.innerHTML=`<strong>${sender}:</strong> ${text}`; chat.appendChild(div); chat.scrollTop=chat.scrollHeight; }
+  // Page-specific ChatPanel commands (Rules page)
+  window.handleChatCommand = function(cmd, api){
+    const t = (cmd||'').trim().toLowerCase();
+    if(t.startsWith('apply rule ')){
+      const i = parseInt(t.replace('apply rule ','').trim());
+      api.append('assistant', `Will apply rule ${i}`);
+      api.setLastAction(()=>{ const btn=document.querySelector(`.apply-selected[data-index='${i}']`); btn?.click(); });
+      return true;
+    }
+    if(['validate','run validate','simulate','validate & simulate'].includes(t)){
+      api.append('assistant','Will validate & simulate');
+      api.setLastAction(()=> document.getElementById('validate-btn')?.click());
+      return true;
+    }
+    if(t.startsWith('minimize ds1') || t.includes('minimize source')){ api.append('assistant','Will minimize DS1'); api.setLastAction(()=> document.getElementById('minimize-source')?.click()); return true; }
+    if(t.startsWith('minimize ds2') || t.includes('minimize legacy')){ api.append('assistant','Will minimize DS2'); api.setLastAction(()=> document.getElementById('minimize-legacy')?.click()); return true; }
+    return false;
+  };
   function editRule(i){ const inp=document.querySelector(`input[name='rule_${i}']`); if(!inp) return; const val=prompt('Edit rule:', inp.value); if(val!==null){ inp.value=val; } }
   document.querySelectorAll('.edit-rule-btn').forEach(btn=>{ btn.addEventListener('click', ()=> editRule(parseInt(btn.dataset.index))); });
   // Apply selected variant (single button per row)
@@ -182,11 +222,7 @@
       if (val) { inp.value = val; inp.focus(); }
     });
   });
-  // Minimize chat
-  function toggleChat(){ const body=document.getElementById('chat-body'); const footer=document.getElementById('chat-footer'); const icon=document.getElementById('chat-min-icon'); const hidden=body.style.display==='none'; body.style.display= hidden? 'block':'none'; footer.style.display= hidden? 'block':'none'; icon.classList.toggle('bi-chevron-down', !hidden); icon.classList.toggle('bi-chevron-up', hidden);} 
-  document.getElementById('chat-min-btn').addEventListener('click', toggleChat);
-  // Start minimized
-  toggleChat();
+  // ChatPanel starts collapsed by default
 
   // Filter origin toggles with persistence (DS1/DS2 default OFF, DS3+ default ON)
   const filterSource = document.getElementById('filter-source');
@@ -230,6 +266,8 @@
   extraFilters.forEach(cb=> cb.addEventListener('change', applyFilters));
   applyStoredPrefs();
   applyFilters();
+  // After applying filters, update the mapping diagram
+  try{ renderRulesGraph(); }catch(e){}
 
   // Minimize per origin (collapse rows but keep filter state)
   function getMin(){ try{ return JSON.parse(localStorage.getItem(ORIGIN_MIN_KEY)||'{}')||{}; }catch(e){ return {}; } }
@@ -250,6 +288,8 @@
     btn.addEventListener('click', ()=>{ const o=(btn.dataset.origin||'').toLowerCase(); const s=getMin(); setMin(o, !s[o]); applyMin(); });
   });
   applyMin();
+  // Update graph after minimize actions
+  try{ renderRulesGraph(); }catch(e){}
 
   // Toggle qualified/unqualified
   const toggle = document.getElementById('toggleQualified');
@@ -281,11 +321,135 @@
       }
     }
   });
-  // Simple chat commands
-  document.getElementById('chat-form')?.addEventListener('submit', (e)=>{
-    // The sendMessage already posts; here we add quick actions before network
-    const val = document.getElementById('chat-input')?.value?.toLowerCase() || '';
-    if(val==='next' || val.includes('validate')){ e.preventDefault(); document.getElementById('validate-btn')?.click(); return false; }
-  }, {capture:true});
+  // Keep quick actions synced via ChatPanel handler
+
+  // --- Rules Mapping Graph (Mermaid) ---
+  function safeId(s){ return (String(s||'').replace(/[^a-zA-Z0-9_]/g,'_')); }
+  function labelForOrigin(o){
+    const x = (o||'').toLowerCase();
+    if(x==='source') return 'DATA SOURCE 1';
+    if(x==='legacy') return 'DATA SOURCE 2';
+    if(x.startsWith('ds')){ const n=parseInt(x.slice(2))||''; return `DATA SOURCE ${n}`; }
+    return (o||'').toString().toUpperCase();
+  }
+  function collectVisibleRules(){
+    const rows = [];
+    document.querySelectorAll('tr.rule-row').forEach(tr=>{
+  const cs = getComputedStyle(tr);
+  const st = cs.display;
+  const vis = cs.visibility;
+  if(st !== 'table-row') return; // filtered out
+  if(vis === 'collapse') return; // minimized origin
+      const origin = tr.getAttribute('data-origin')||'';
+      const originLabel = labelForOrigin(origin);
+      // find target table label
+      const fs = tr.querySelector('.field-stack');
+      let table = '';
+      if(fs){
+        table = (fs.querySelector('.tbl')?.textContent||'').trim();
+        if(!table){
+          const full = fs.getAttribute('data-field-full')||'';
+          table = full.includes('.')? full.split('.')[0] : '';
+        }
+      }
+      rows.push({ origin: originLabel, table });
+    });
+    return rows;
+  }
+  function buildRulesGraphDef(rows){
+    const counts = new Map();
+    const origins = new Set();
+    const tables = new Set();
+    rows.forEach(r=>{
+      const o = r.origin||''; const t = r.table||'';
+      if(!o || !t) return;
+      const key = o+'||'+t;
+      counts.set(key, (counts.get(key)||0)+1);
+      origins.add(o); tables.add(t);
+    });
+  let def = 'flowchart LR\n';
+  origins.forEach(o=>{ def += `${safeId(o)}([${o}]):::origin\n`; });
+  tables.forEach(t=>{ def += `${safeId('t_'+t)}([${t}]):::target\n`; });
+    counts.forEach((n,key)=>{
+      const [o,t] = key.split('||');
+      def += `${safeId(o)} -->|${n}| ${safeId('t_'+t)}\n`;
+    });
+    def += 'classDef origin fill:#ffe8e6,stroke:#d32f2f,color:#b71c1c,stroke-width:1px;\n';
+    def += 'classDef target fill:#eef2ff,stroke:#4f46e5,color:#1f2937,stroke-width:1px;\n';
+    return def;
+  }
+  function renderMermaidOnce(el, def){
+    if(!window.mermaid || !el) return;
+    el.classList.remove('is-rendered');
+    try{ mermaid.initialize({ startOnLoad:false, securityLevel:'loose' }); }catch(e){}
+    try{
+      // Prefer rendering to SVG and injecting it
+      if(typeof mermaid.render === 'function'){
+        const uid = 'm_'+Math.random().toString(36).slice(2);
+        mermaid.render(uid, def).then(({svg, bindFunctions})=>{
+          el.innerHTML = svg;
+          if(typeof bindFunctions === 'function'){ bindFunctions(el); }
+          el.classList.add('is-rendered');
+        }).catch(()=>{ el.textContent = def; });
+      } else if(typeof mermaid.run === 'function'){
+        el.textContent = def;
+        mermaid.run({ nodes: [el] }).then(()=>{ el.classList.add('is-rendered'); }).catch(()=>{});
+      } else if(typeof mermaid.init === 'function'){
+        el.textContent = def;
+        mermaid.init(undefined, [el]);
+        el.classList.add('is-rendered');
+      } else {
+        el.textContent = def;
+      }
+    }catch(e){ el.textContent = def; }
+  }
+  function mermaidReady(){ return typeof window.mermaid !== 'undefined'; }
+  function renderRulesGraph(){
+    const el = document.getElementById('rules-graph');
+    const note = document.getElementById('rules-graph-note');
+    if(!el) return;
+    const rows = collectVisibleRules();
+    const tables = Array.from(new Set(rows.map(r=> r.table).filter(Boolean)));
+    const origins = Array.from(new Set(rows.map(r=> r.origin).filter(Boolean)));
+    const total = rows.length;
+  const def = buildRulesGraphDef(rows);
+  setTimeout(()=> renderMermaidOnce(el, def), 0);
+    if(note){ note.innerHTML = `Tables: <strong>${tables.length}</strong> · Rules: <strong>${total}</strong> · Origins: ${origins.join(', ')||'—'}`; }
+  }
+  // Initial render (after Mermaid is ready)
+  function tryRenderInitial(){ if(mermaidReady()) { try{ renderRulesGraph(); }catch(e){} return true; } return false; }
+  if(!tryRenderInitial()){
+    let tries = 0; const t = setInterval(()=>{ if(tryRenderInitial()){ clearInterval(t); } if(++tries>20){ clearInterval(t); } }, 200);
+  }
+  window.addEventListener('load', ()=>{ try{ renderRulesGraph(); }catch(e){} });
+
+  // Toggle variant list per row via the VARIANT label
+  document.querySelectorAll('.variant-toggle').forEach(tg =>{
+    tg.addEventListener('click', ()=>{
+      const row = tg.closest('tr.rule-row');
+      const list = row?.querySelector('.variant-list');
+      if(list){ list.classList.toggle('d-none'); }
+    });
+    tg.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); tg.click(); }
+    });
+  });
+
+  // Clicking a variant text fills the rule input and syncs Preferred dropdown (if present)
+  document.querySelectorAll('.variant-link').forEach(el => {
+    el.addEventListener('click', () => {
+      const tr = el.closest('tr.rule-row');
+      if (!tr) return;
+      const text = el.textContent.trim();
+      const input = tr.querySelector('input[name^="rule_"]');
+      if (input) { input.value = text; input.focus(); }
+      const sel = tr.querySelector('select[name^="preferred_"]');
+      if (sel) {
+        for (const opt of sel.options) {
+          if (opt.value === text) { opt.selected = true; break; }
+        }
+      }
+    });
+  });
 </script>
 {% endblock %}
