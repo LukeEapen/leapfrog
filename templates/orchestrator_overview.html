@@ -33,7 +33,7 @@
       .phase-head.development{background:var(--development);} 
       .phase-head.migration{background:var(--migration);}   
    .matrix{display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border:1px solid var(--divider);border-top:none;position:relative;}
-   .matrix .phase-head{border-right:1px solid var(--divider);border-bottom:1px solid var(--divider);display:flex;align-items:center;justify-content:flex-start;font-size:.72rem;padding:.38rem .55rem;font-weight:600;letter-spacing:.4px;line-height:1.05;}
+   .matrix .phase-head{border-right:1px solid var(--divider);border-bottom:1px solid var(--divider);display:flex;align-items:center;justify-content:flex-start;font-size:.95rem;padding:.8rem .9rem;font-weight:600;letter-spacing:.4px;line-height:1.2;min-height:52px;}
    /* Header placement: Planning over column1, Discovery over columns 2-3, Development over 4-5 */
    .matrix .phase-head.planning{grid-column:1;}
    .matrix .phase-head.discovery{grid-column:2 / span 2;}
@@ -86,6 +86,15 @@
       .drawer-close:hover{background:#2f3a44;}
       .info-meta{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.65rem;}
       .info-tag{background:#23313d;color:#c6d2dc;font-size:.5rem;padding:3px 6px;border-radius:3px;letter-spacing:.6px;font-weight:600;}
+   /* Drawer body image styling for agent details */
+   .drawer-body .info-image{width:100%;height:auto;border:1px solid #24313b;border-radius:8px;margin:0 0 .75rem;cursor:zoom-in;}
+   /* Lightbox for zooming images */
+   .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.86);display:none;align-items:center;justify-content:center;z-index:200;}
+   .lightbox.open{display:flex;}
+   .lightbox img{max-width:95vw;max-height:92vh;border:1px solid #2b3640;border-radius:10px;box-shadow:0 14px 36px rgba(0,0,0,.6);transition:transform .2s ease;}
+   .lightbox img.zoomed{transform:scale(1.6);cursor:zoom-out;}
+   .lightbox .lightbox-close{position:absolute;top:14px;right:18px;color:#e6eaed;font-size:28px;font-weight:800;cursor:pointer;line-height:1;}
+   .lightbox .caption{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:#cbd5df;font-size:.8rem;max-width:92vw;text-align:center;}
       @media (max-width:1200px){
          .header-grid,.matrix{grid-template-columns:40px repeat(5,1fr);} .side-label{font-size:.7rem;}
       }
@@ -303,26 +312,240 @@
          </div>
          <div class="drawer-body" id="drawerBody"></div>
       </div>
+      <!-- Global lightbox for zooming images from the drawer -->
+      <div class="lightbox" id="lightbox" aria-hidden="true">
+         <span class="lightbox-close" id="lightboxClose" title="Close">×</span>
+         <img id="lightboxImg" alt="Expanded view" />
+         <div class="caption" id="lightboxCaption"></div>
+      </div>
       <script>
          const AGENT_INFO = {
-            poc1: `POC 1 — PRD Generator: Converts business objectives or legacy code into an exportable PRD via agent-led refinement.`,
-            poc2: `POC 2 — Backlog Manager: Translates the PRD into JIRA-ready epics, user stories, and effort estimates.`,
-            poc3: `POC 3 — Delivery Workbench: Generates modular services and pseudocode aligned to legacy systems; scaffolds modernized code.`,
-            poc3b:`POC 3b — Requirement Insights: Maps legacy code to user stories, highlights redundancies, and builds a clean backlog.`,
-            poc4: `POC 4 — Data Migration Engine: Automates schema mapping, reconciliation, and target-state modeling.`,
-            poc5: `POC 5 — Architecture Workbench: Extracts architecture artifacts from PRDs and system maps; supports traceable, exportable bundles.`
+                  poc1: `POC 1 — PRD Generator: <div>
+                      <img class="info-image"
+                              src="/static/img/poc1_prd_flow.png"
+                              alt="POC 1 — PRD Generator flow"
+                              onerror="this.onerror=null;this.src='https://via.placeholder.com/960x540?text=POC+1+PRD+Generator';">
+                      <p><strong>POC 1 — PRD Generator (Agentic 1)</strong> converts business intent, feature inputs, and legacy context into a clean, exportable PRD. Users can review, refine, and re-run specific sections.</p>
+                      <div class="info-meta"><span class="info-tag">Agentic features</span></div>
+                      <ul>
+                         <li>Multi-agent flow: <code>agent_1_1</code> + <code>agent_2</code> seed downstream generators <code>agent_4_1..4_5</code>; <code>agent_4_6</code> reviews.</li>
+                         <li>Prompt budgeting via <code>build_capped_combined_input</code> to cap tokens per section.</li>
+                         <li>Parallel section generation with <code>call_agents_parallel</code> (semaphore-limited).</li>
+                         <li>Resilient calls with cache/retry using <code>call_agent_with_retry</code> and related helpers.</li>
+                         <li>Traceable DOCX export using <code>generate_word_doc</code> with deduped references.</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Agents</span></div>
+                      <ul>
+                         <li><code>agent_1_1</code> – Product Overview Synthesizer (Page 1, chat, edits)</li>
+                         <li><code>agent_2</code> – Feature Overview Generator (Page 1, edits)</li>
+                         <li><code>agent_4_1</code> – Product Requirements / User Stories (Page 2 batch)</li>
+                         <li><code>agent_4_2</code> – Operational Business Requirements (Page 2 batch/export)</li>
+                         <li><code>agent_4_3</code> – Non-Functional Requirements (Page 2 batch/export)</li>
+                         <li><code>agent_4_4</code> – Data Attribute Requirements (Page 2 batch/export)</li>
+                         <li><code>agent_4_5</code> – Legal/Regulatory/Compliance (Page 2 batch/export)</li>
+                         <li><code>agent_4_6</code> – PRD Review & QA (/review_prd)</li>
+                         <li><code>LEGACY_AGENT_ID</code> – Optional legacy description summarizer</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Top internal functions</span></div>
+                      <ul>
+                         <li><code>build_capped_combined_input</code> – Assemble inputs into bounded prompt.</li>
+                         <li><code>call_agent</code> – Core synchronous Assistants call with session reuse.</li>
+                         <li><code>call_agent_with_retry</code> – Async retries and non-blocking polling.</li>
+                         <li><code>call_agents_parallel</code> – Concurrent orchestration of multiple agents.</li>
+                         <li><code>generate_word_doc</code> – Styled DOCX with references.</li>
+                      </ul>
+                  </div>`,
+                  poc2: `POC 2 — Backlog Manager: <div>
+                      <img class="info-image"
+                              src="/static/img/poc2_backlog_flow.png"
+                              alt="POC 2 — Backlog Manager flow"
+                              onerror="this.onerror=null;this.src='https://via.placeholder.com/960x540?text=POC+2+Backlog+Manager';">
+                      <p><strong>Agentic 3 — Backlog Manager</strong> converts PRD sections into JIRA-ready Epics, User Stories, and Acceptance Criteria with optional estimates and priorities. It maintains traceability back to the PRD and supports iterative refinement.</p>
+                      <div class="info-meta"><span class="info-tag">Agentic features</span></div>
+                      <ul>
+                         <li>PRD ➜ Backlog mapping: sections feed Epics ➜ Stories ➜ AC.</li>
+                         <li>Parallel story generation across Epics using <code>call_agents_parallel</code>.</li>
+                         <li>Resilient calls with retry/cache via <code>call_agent_with_retry</code>.</li>
+                         <li>Optional effort sizing and priority mapping; export-ready payloads.</li>
+                         <li>Traceability: stable IDs link PRD → Epic → Story → AC.</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Agents</span></div>
+                      <ul>
+                         <li><code>agent_1_1</code> – Product Overview (seeds backlog context)</li>
+                         <li><code>agent_2</code> – Feature Overview (seeds epic scope)</li>
+                         <li><code>agent_4_1</code> – User Stories generation (core backlog items)</li>
+                         <li><code>agent_4_2</code>/<code>4_3</code>/<code>4_4</code>/<code>4_5</code> – Enrich functional/NFR/data/compliance aspects</li>
+                         <li><code>agent_4_6</code> – Backlog review & quality pass</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Top internal functions</span></div>
+                      <ul>
+                         <li><code>build_capped_combined_input</code> – Assemble inputs with per-section budgets.</li>
+                         <li><code>call_agent</code> – Core synchronous Assistant call with session reuse.</li>
+                         <li><code>call_agent_with_retry</code> – Async retries/non-blocking polling.</li>
+                         <li><code>call_agents_parallel</code> – Concurrent orchestration for multi-epic generation.</li>
+                         <li><code>generate_word_doc</code> – Styled export when PRD/backlog needs document output.</li>
+                      </ul>
+                  </div>`,
+                        poc3: `POC 3 — Delivery Workbench: <div>
+                      <img class="info-image"
+                              src="/static/img/poc3_delivery_flow.png"
+                              alt="POC 3 — Delivery Workbench flow"
+                              onerror="this.onerror=null;this.src='https://via.placeholder.com/960x540?text=POC+3+Delivery+Workbench';">
+                      <p><strong>POC 3 — Delivery Workbench</strong> accelerates implementation by generating modular service scaffolds and pseudocode that align with legacy systems and the approved PRD/backlog. It supports iterative edits and traceable outputs.</p>
+                      <div class="info-meta"><span class="info-tag">Agentic features</span></div>
+                      <ul>
+                         <li>Context-driven code scaffolds seeded from PRD sections and user stories.</li>
+                         <li>Parallel generation of modules/components with safe concurrency controls.</li>
+                         <li>Retry/caching for resilient model calls; streaming feedback in the UI.</li>
+                         <li>Legacy-aware adapters and interface stubs to ease integration/migration.</li>
+                         <li>Traceability: embeds references to originating PRD/story items in outputs.</li>
+                      </ul>
+                            <div class="info-meta"><span class="info-tag">Agents</span></div>
+                            <ul>
+                               <li><strong>Legacy Code Parser Agent</strong> — Parses legacy code to extract business intent and technical signals.</li>
+                               <li><strong>User Story Decomposer Agent</strong> — Breaks high‑level stories into smaller tasks/functions and acceptance criteria.</li>
+                               <li><strong>Function Synthesizer Agent</strong> — Proposes function signatures and pseudocode from stories + legacy context.</li>
+                               <li><strong>Design Decomposer Agent</strong> — Derives service design (endpoints, models) from functions/standards.</li>
+                               <li><strong>Review Prompt Agent</strong> — Reviews/refines prompts/specs before generation.</li>
+                               <li><strong>Service Builder Agent</strong> — Generates service scaffolds (routes/models/configs) from Swagger/business logic.</li>
+                               <li><strong>Modernization Validator Agent</strong> — Checks outputs for standards alignment, gaps, and modernization fitness.</li>
+                               <li><strong>Assistants configured (IDs)</strong> — In <code>cobol_interpreter.py</code>: <code>assistant_id_agent_1</code>, <code>assistant_id_agent_3</code> (sequential analysis pipeline).</li>
+                            </ul>
+                            <div class="info-meta"><span class="info-tag">Top internal functions</span></div>
+                            <ul>
+                               <li><code>generate_complete_microservice_project</code> (in <code>app.py</code>) — Orchestrates per‑file code generation using Swagger + business logic + pseudocode; ensures non‑stub outputs and returns file map and status.</li>
+                               <li><code>call_llm_for_file</code> (in <code>app.py</code>) — Builds context and calls the LLM to produce a single file; strips code fences, retries via chunking if output looks stubby.</li>
+                               <li><code>build_file_prompt</code> (in <code>app.py</code>) — Assembles system instructions + Swagger + business logic; adds HTML/backend hints based on file type.</li>
+                               <li><code>walk_project_structure</code> (in <code>app.py</code>) — Flattens a nested <code>project_structure</code> tree into a list of file paths to generate.</li>
+                               <li><code>is_stub_or_empty</code> (in <code>app.py</code>) — Quick guard to detect empty or placeholder code so regeneration can be triggered.</li>
+                            </ul>
+                            <div class="info-meta"><span class="info-tag">Bonus</span></div>
+                            <ul>
+                               <li><code>call_agent</code> (in <code>cobol_interpreter.py</code>) — Full OpenAI Assistants thread/run loop with polling and logging for a single assistant call.</li>
+                            </ul>
+                  </div>`,
+            poc3b:`POC 3b — Requirements Insights: <div>
+                      <img class="info-image"
+                              src="/static/img/poc3b_requirements_flow.png"
+                              alt="POC 3b — Requirements Insights flow"
+                              onerror="this.onerror=null;this.src='https://via.placeholder.com/960x540?text=POC+3b+Requirements+Insights';">
+                      <p><strong>Agentic 2 — Requirements Insights</strong> reverse‑engineers legacy behavior, clarifies business definitions, decomposes work into user stories, and aligns legacy vs. target to build a clean, actionable backlog.</p>
+                      <div class="info-meta"><span class="info-tag">Agentic features</span></div>
+                      <ul>
+                         <li>Chained multi‑agent reasoning: Parser → Business Definition → Decomposer → Comparator → Story Handler.</li>
+                         <li>Parallel file/section analysis with safe batching; targeted re‑runs for changed inputs.</li>
+                         <li>Gap detection and semantic diffing between legacy outcomes and target behavior.</li>
+                         <li>Traceability from source artifacts to stories/AC for auditability.</li>
+                         <li>Deterministic prompting defaults (low temperature, capped tokens) for repeatability.</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Agents</span></div>
+                      <ul>
+                         <li><strong>Legacy Code Parser Agent</strong> — Parses legacy code to extract business intent and technical signals.</li>
+                         <li><strong>Business Definition Agent</strong> — Captures and refines business definitions/requirements before decomposition.</li>
+                         <li><strong>User Story Decomposer Agent</strong> — Breaks high‑level items into user stories, tasks, and acceptance criteria.</li>
+                         <li><strong>Functional Comparator Agent</strong> — Compares legacy vs. target behavior to spot gaps and alignments.</li>
+                         <li><strong>Story Handler Agent</strong> — Creates/updates user stories (and sub‑tasks) based on decomposition and comparisons.</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Supporting agents</span></div>
+                      <ul>
+                         <li><strong>Domain Ontology Agent</strong> — Injects domain terms/constraints for consistent outputs.</li>
+                         <li><strong>Observability Agent</strong> — Adds monitoring/logging requirements and quality checks.</li>
+                         <li><strong>Compliance Evaluator Agent</strong> — Flags regulatory/PII/compliance constraints and required controls.</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Assistants configured (in code)</span></div>
+                      <ul>
+                         <li><code>assistant_id_agent_1</code> and <code>assistant_id_agent_3</code> — Used in the COBOL pipeline for sequential analysis (see <code>cobol_interpreter.py</code>).</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Top internal functions</span></div>
+                      <ul>
+                         <li><code>generate_complete_microservice_project</code> — Orchestrates per‑file generation from Swagger + business logic + pseudocode; ensures non‑stub outputs and returns files/status.</li>
+                         <li><code>call_llm_for_file</code> — Builds context and calls the LLM for one file; strips code fences and supports fallback chunking when results look stubby.</li>
+                         <li><code>build_file_prompt</code> — Composes system instructions + Swagger + business logic; adds HTML/backend hints depending on file type.</li>
+                         <li><code>walk_project_structure</code> — Flattens a nested <code>project_structure</code> into a list of target file paths to generate.</li>
+                         <li><code>is_stub_or_empty</code> — Detects empty/placeholder code so regeneration can be triggered.</li>
+                      </ul>
+                  </div>`,
+            poc4: `POC 4 — Data Migration & Reconciliation: <div>
+                      <img class="info-image"
+                              src="/static/img/poc4_data_migration_flow.png"
+                              alt="POC 4 — Data Migration & Reconciliation flow"
+                              onerror="this.onerror=null;this.src='https://via.placeholder.com/960x540?text=POC+4+Data+Migration+%26+Reconciliation';">
+                      <p><strong>Agentic 6 — Data Migration & Reconciliation</strong> guides schema mapping, rule definition, validation/simulation, execution, and post‑migration reconciliation with chat‑assisted guidance and auditability.</p>
+                      <div class="info-meta"><span class="info-tag">Agentic features</span></div>
+                      <ul>
+                         <li>Interactive chatbot guidance across all pages; explains errors and next steps.</li>
+                         <li>Auto‑mapping with learning from user corrections; confidence scoring.</li>
+                         <li>Rule suggestions and validation for types, formats, value mappings, and cleansing.</li>
+                         <li>Dry‑run simulation to surface constraint/type issues before execution.</li>
+                         <li>Entity‑aware execution with progress logs and rollback support; end‑to‑end traceability and reconciliation reports.</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Agents</span></div>
+                      <ul>
+                         <li><strong>Chatbot Agent</strong> — Guides each step; explains errors, answers questions, and suggests next actions.</li>
+                         <li><strong>Schema Mapping Agent</strong> — Auto‑maps fields between source/target; learns from corrections.</li>
+                         <li><strong>Transformation Rule Agent</strong> — Proposes and validates cleansing/conversion rules (types, formats, value maps).</li>
+                         <li><strong>Validation Agent</strong> — Detects schema mismatches, null/type issues; simulates migration outcomes.</li>
+                         <li><strong>Migration Execution Agent</strong> — Runs data transfer, monitors progress, supports rollbacks.</li>
+                         <li><strong>Reconciliation Agent</strong> — Compares pre/post data sets; highlights mismatches; produces reconciled reports.</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Top internal functions</span></div>
+                      <ul>
+                         <li><code>discover_and_ingest_schemas()</code> — Loads source/target metadata (CSV/Excel/DB), profiles columns, and prepares for mapping.</li>
+                         <li><code>generate_schema_mappings()</code> — Produces initial field mappings (name/type/semantics) with confidence scores and editability.</li>
+                         <li><code>build_transformation_rules()</code> — Suggests and validates transformation/cleansing rules (casts, trims, value maps, lookups).</li>
+                         <li><code>validate_and_simulate_migration()</code> — Dry‑runs the pipeline to surface constraint/type issues and row‑level deltas before execution.</li>
+                         <li><code>reconcile_and_report()</code> — Compares migrated vs. source records, computes match/unmatched/quality metrics, and generates reports.</li>
+                      </ul>
+                  </div>`,
+            poc5: `POC 5 — Architecture Workbench: <div>
+                      <img class="info-image"
+                              src="/static/img/poc5_architecture_workbench_flow.png"
+                              alt="POC 5 — Architecture Workbench flow"
+                              onerror="this.onerror=null;this.src='https://via.placeholder.com/960x540?text=POC+5+Architecture+Workbench';">
+                      <p><strong>Agentic 4 — Architecture Workbench</strong> turns PRD + system mapping into versioned architecture artifacts: initial blueprint, system interaction, database design, and service decomposition, all editable via chat and exportable to DOCX.</p>
+                      <div class="info-meta"><span class="info-tag">Agentic features</span></div>
+                      <ul>
+                         <li>Tab‑routed prompts (Context → Blueprint → Interaction → DB → Services → Decisions → Docs) with role execution and Assistants API calls.</li>
+                         <li>Context grounding from PRD/system maps; controlled field updates with synonyms and safe session setters.</li>
+                         <li>Diagram iteration history and quick rollback for Mermaid diagrams.</li>
+                         <li>Parallelizable agent calls with retry/cache patterns for reliability.</li>
+                         <li>One‑click DOCX export compiling decisions, diagrams, and guardrails.</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Agents</span></div>
+                      <ul>
+                         <li><code>agent_1_1</code> – Product Overview Synthesizer; Page 1 chat/edits.</li>
+                         <li><code>agent_2</code> – Feature Overview Generator; Page 1 and edits.</li>
+                         <li><code>agent_4_1</code> – Product Requirements / User Stories; Page 2 batch.</li>
+                         <li><code>agent_4_2</code> – Operational Business Requirements; Page 2 batch/export.</li>
+                         <li><code>agent_4_3</code> – Non‑Functional Requirements; Page 2 batch/export.</li>
+                         <li><code>agent_4_4</code> – Data Attribute Requirements; Page 2 batch/export.</li>
+                         <li><code>agent_4_5</code> – Legal/Regulatory/Compliance; Page 2 batch/export.</li>
+                         <li><code>agent_4_6</code> – PRD Review & QA; used by <code>/review_prd</code>.</li>
+                         <li><code>LEGACY_AGENT_ID</code> – Optional legacy description summarizer.</li>
+                      </ul>
+                      <div class="info-meta"><span class="info-tag">Top internal functions</span></div>
+                      <ul>
+                         <li><code>build_capped_combined_input</code> – Assembles user/product/feature/legacy text into a bounded prompt with per‑section budgets.</li>
+                         <li><code>call_agent</code> – Core synchronous Assistants call with per‑session thread reuse and timing logs.</li>
+                         <li><code>call_agent_with_retry</code> – Async agent call with retries and non‑blocking polling; integrates with caching.</li>
+                         <li><code>call_agents_parallel</code> – Orchestrates multiple agent calls concurrently (awaits cached/retried calls).</li>
+                         <li><code>generate_word_doc</code> – Builds styled DOCX with sections and references; dedupes “Source: Legacy Code.”</li>
+                      </ul>
+                  </div>`
          };
          const drawer = document.getElementById('drawer');
          function openDrawer(agent){
             document.getElementById('drawerTitle').innerText = (AGENT_INFO[agent]||'').split(':')[0];
             const body = document.getElementById('drawerBody');
-            body.innerHTML = `<p>${AGENT_INFO[agent]||'Information not available.'}</p>`;
+                  body.innerHTML = AGENT_INFO[agent] || '<p>Information not available.</p>';
             drawer.classList.add('open');
+            // Enable click-to-zoom on images inside the drawer body
+            enableDrawerImageZoom();
          }
          function closeDrawer(){drawer.classList.remove('open');}
          document.querySelectorAll('.agent-ribbon').forEach(r=>{r.addEventListener('click',()=>openDrawer(r.dataset.agent));});
          // Close drawer on ESC
-         document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+         document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeLightbox();}});
          // Assign row-* classes for consistent height styling
          function tagRows(){
             document.querySelectorAll('.cell-group').forEach(col=>{
@@ -332,6 +555,35 @@
             });
          }
          window.addEventListener('DOMContentLoaded',tagRows);
+
+         // Lightbox logic
+         const lb = document.getElementById('lightbox');
+         const lbImg = document.getElementById('lightboxImg');
+         const lbCap = document.getElementById('lightboxCaption');
+         const lbClose = document.getElementById('lightboxClose');
+
+         function openLightbox(src, alt){
+            lbImg.src = src; lbImg.alt = alt || 'Expanded view';
+            lbCap.textContent = alt || '';
+            lb.classList.add('open');
+            lb.setAttribute('aria-hidden','false');
+            lbImg.classList.remove('zoomed');
+         }
+         function closeLightbox(){
+            lb.classList.remove('open');
+            lb.setAttribute('aria-hidden','true');
+            lbImg.src = ''; lbCap.textContent='';
+            lbImg.classList.remove('zoomed');
+         }
+         lbClose.addEventListener('click', closeLightbox);
+         lb.addEventListener('click', (e)=>{ if(e.target===lb) closeLightbox(); });
+         lbImg.addEventListener('click', ()=>{ lbImg.classList.toggle('zoomed'); });
+
+         function enableDrawerImageZoom(){
+            document.querySelectorAll('#drawerBody img.info-image').forEach(img=>{
+               img.addEventListener('click',()=> openLightbox(img.src, img.alt));
+            });
+         }
       </script>
 </body>
 </html>

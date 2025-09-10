@@ -1,0 +1,69 @@
+<!-- POC 2 header and navigation row replicated for POC 1 parity -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+  /* Ensure the banner spans full width and stacks as a block at the top even when body is flex */
+  body { flex-wrap: wrap; }
+  .poc-banner-wrapper { width: 100%; display: flex; flex-direction: column; flex: 0 0 100%; align-self: stretch; }
+  .header-bar {
+    background: #dc3545;
+    color: white;
+    padding: 20px 40px;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 85px;
+  }
+  .header-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .back-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+  .back-button:hover { background: rgba(255, 255, 255, 0.3); color: white; text-decoration: none; }
+  /* Avoid unintended overlap with centered content cards */
+  .navigation-row { width: 100%; }
+</style>
+<div class="poc-banner-wrapper">
+  <div class="header-bar">
+  <div class="header-title">📋 Product Management Workbench</div>
+  <a href="/" class="back-button">
+    <i class="fas fa-arrow-left"></i>
+    Back to Home
+  </a>
+  </div>
+  <div class="navigation-row" style="background: linear-gradient(135deg, #b71c1c 0%, #8e0000 100%); border-bottom: 3px solid #6d0000; padding: 2rem 2.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(183, 28, 28, 0.4);">
+  <div class="navigation-info">
+    <span style="color: #ffffff; font-size: 1.1rem; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+      <i class="fas fa-puzzle-piece" style="color: #ffffff; margin-right: 0.75rem; font-size: 1.2rem;"></i>
+      This workbench integrates with other POCs for a complete workflow
+    </span>
+  </div>
+  <div class="navigation-actions" style="display: flex; gap: 0.75rem;">
+    <button class="btn btn-light" onclick="window.open('http://127.0.0.1:5051','_blank')" title="Reverse engineer legacy code and mine internal docs and research to identify high-level requirements
+" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"><i class="fas fa-file-alt" style="margin-right: 0.5rem;"></i>Requirements insights</button>
+    <button class="btn btn-light" onclick="window.open('http://127.0.0.1:5001/page1','_blank')" title="Translate research & human input into structured requirements  
+(data, functional, non-functional, legal, etc.) " style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"><i class="fas fa-download" style="margin-right: 0.5rem;"></i>Requirements definition</button>
+    <button class="btn btn-light" onclick="window.open('http://127.0.0.1:5002/tabbed-layout','_blank')" title="Convert business objectives and detailed requirements into user stories with clear acceptance criteria
+" style="background: #ffffff; color: #dc3545; border: 2px solid #ffffff; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#f8f9fa'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#ffffff'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"><i class="fas fa-cogs" style="margin-right: 0.5rem;"></i>Backlog management</button>
+  </div>
+</div>
+</div>
