@@ -57,6 +57,14 @@
 </style>
 {% include 'poc4/_steps.j2' %}
 
+<!-- Top-right Help -->
+<div class="d-flex justify-content-end mb-2">
+  <button type="button" class="btn btn-help btn-sm" data-bs-toggle="modal" data-bs-target="#helpModalP1" aria-label="Help about Upload & Enablement">
+    <i class="bi bi-question-circle-fill"></i>
+    Help
+  </button>
+</div>
+
 <form method="post" enctype="multipart/form-data" id="upload-form">
   <div class="row g-4">
     <!-- Combined Origins Column (Source + Legacy) -->
@@ -690,4 +698,30 @@ document.getElementById('design-model-btn')?.addEventListener('click', async ()=
   applyTargetMode();
 })();
 </script>
+<!-- Help Modal (Page 1: Upload & Enablement) -->
+<div class="modal fade" id="helpModalP1" tabindex="-1" aria-labelledby="helpModalP1Label" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="helpModalP1Label">Help — Page 1: Upload & Enablement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>What this page does</strong></p>
+        <p>Enable and load your Source and Legacy schemas. This prepares inputs for designing the target model and mapping. It parallels POC 3b’s “collect and structure” step, but focused on data schemas.</p>
+        <p><strong>What you need to do</strong></p>
+        <ul class="help-list">
+          <li>Toggle Source/Legacy on if you plan to include them.</li>
+          <li>Select a schema (from samples) or upload JSON. Repeat for each origin.</li>
+          <li>Optionally add extra data sources (DS3+).</li>
+          <li>Proceed to Target Model to generate a canonical design.</li>
+        </ul>
+        <p class="text-muted small">The chat panel can help explain fields, advise on structure, or suggest sample schemas.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

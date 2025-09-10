@@ -1534,6 +1534,19 @@
         "raw": "```json\n[\n    {\n        \"element\": \"readTransactionCategoryBalanceRecord\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"1. Retrieve customer account information from the database.\\n2. Query the transaction category balance record associated with the customer account.\\n3. Return the transaction category balance record.\"\n    },\n    {\n        \"element\": \"retrieveAccountData\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": \"1. Identify the customer account for which account data needs to be retrieved.\\n2. Access the account data service within the banking system.\\n3. Retrieve the account data including balance, transactions, and other relevant information.\\n4. Return the account data.\"\n    },\n    {\n        \"element\": \"getInterestRate\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": \"1. Identify the disclosure group associated with the interest rate.\\n2. Access the disclosure group record containing the interest rate information.\\n3. Retrieve the interest rate from the disclosure group record.\\n4. Return the interest rate.\"\n    }\n]\n```"
       },
       "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "readTransactionData",
+            "pseudocode": "1. Retrieve account information for each account\n    - Call the API endpoint to fetch account details\n    - Handle response to ensure successful retrieval\n2. Retrieve transaction data for each account\n    - For each account, call the API endpoint to fetch transaction data\n    - Handle response to ensure successful retrieval\n3. Filter transaction details required for interest calculations\n    - For each transaction data retrieved, filter out the necessary details for interest calculations\n    - Consider transaction type, amount, date, etc. for filtering",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"readTransactionData\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": 1,\n                \"description\": \"Retrieve account information for each account\",\n                \"actions\": [\n                    \"Call the API endpoint to fetch account details\",\n                    \"Handle response to ensure successful retrieval\"\n                ]\n            },\n            {\n                \"step\": 2,\n                \"description\": \"Retrieve transaction data for each account\",\n                \"actions\": [\n                    \"For each account, call the API endpoint to fetch transaction data\",\n                    \"Handle response to ensure successful retrieval\"\n                ]\n            },\n            {\n                \"step\": 3,\n                \"description\": \"Filter transaction details required for interest calculations\",\n                \"actions\": [\n                    \"For each transaction data retrieved, filter out the necessary details for interest calculations\",\n                    \"Consider transaction type, amount, date, etc. for filtering\"\n                ]\n            }\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
     }
   ]
 }

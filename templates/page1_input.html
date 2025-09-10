@@ -341,6 +341,21 @@
       border-radius: 999px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
+    /* Distinct Help pill (match POC4) */
+    .btn-help {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      border-radius: 999px;
+      border: 1px solid #d32f2f;
+      background: linear-gradient(90deg,#d32f2f 60%,#b71c1c);
+      color: #fff !important;
+      font-weight: 700;
+      padding: .45rem .9rem;
+      box-shadow: 0 4px 12px rgba(211,47,47,.18);
+    }
+    .btn-help:hover { filter: brightness(1.05); box-shadow: 0 6px 16px rgba(211,47,47,.24); }
+    .btn-help:focus { outline: 3px solid rgba(211,47,47,.14); outline-offset: 2px; }
   </style>
 
 </head>
@@ -468,8 +483,9 @@
   </div>
 
   <!-- How To: Floating Help and Offcanvas Guide -->
-  <button type="button" class="btn btn-danger howto-fab" data-bs-toggle="offcanvas" data-bs-target="#howToPanel" aria-controls="howToPanel" title="How To (Shift + ?)">
-    <i class="bi bi-question-circle-fill"></i>
+  <button type="button" class="btn btn-help howto-fab" data-bs-toggle="offcanvas" data-bs-target="#howToPanel" aria-controls="howToPanel" title="Help (Shift + ?)">
+    <i class="bi bi-life-preserver"></i>
+    <span>Help</span>
   </button>
 
   <div class="offcanvas offcanvas-end" tabindex="-1" id="howToPanel" aria-labelledby="howToLabel">
@@ -713,8 +729,9 @@
       box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     }
   </style>
-  <button type="button" class="btn btn-danger howto-fab" data-bs-toggle="offcanvas" data-bs-target="#howToPanel" aria-controls="howToPanel" title="How To (Shift + ?)">
-    <i class="bi bi-question-circle-fill"></i>
+  <button type="button" class="btn btn-help howto-fab" data-bs-toggle="offcanvas" data-bs-target="#howToPanel" aria-controls="howToPanel" title="Help (Shift + ?)">
+    <i class="bi bi-life-preserver"></i>
+    <span>Help</span>
   </button>
   <div class="offcanvas offcanvas-end" tabindex="-1" id="howToPanel" aria-labelledby="howToLabel">
     <div class="offcanvas-header">

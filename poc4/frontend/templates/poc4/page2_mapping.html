@@ -68,7 +68,13 @@
       </div>
       {% endfor %}
     </div>
-    <button type="submit" class="btn btn-danger px-4" id="next-btn">Next</button>
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="btn btn-help btn-sm" data-bs-toggle="modal" data-bs-target="#helpModalP2" aria-label="Help about Mapping">
+        <i class="bi bi-question-circle-fill"></i>
+        Help
+      </button>
+      <button type="submit" class="btn btn-danger px-4" id="next-btn">Next</button>
+    </div>
   </div>
 
   <div class="row g-4 mapping-section">
@@ -595,4 +601,29 @@ document.addEventListener('DOMContentLoaded', initGraph);
 </script>
 <!-- Ensure Bootstrap Icons for header robot icon -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<!-- Help Modal (Page 2: Mapping) -->
+<div class="modal fade" id="helpModalP2" tabindex="-1" aria-labelledby="helpModalP2Label" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="helpModalP2Label">Help — Mapping</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>What this page does</strong></p>
+        <p>Connect origin fields to your target schema. Review suggestions, adjust targets, and see a live graph of coverage. This turns structured inputs (from POC 3b and the Target Model) into concrete mappings.</p>
+        <p><strong>What you need to do</strong></p>
+        <ul class="help-list">
+          <li>Use filters to focus on specific origins; minimize rows for clarity.</li>
+          <li>Pick target fields for unmapped items; review type and justification.</li>
+          <li>Use the graph to explore coverage by target table and origin.</li>
+          <li>Click Next to proceed to Rules.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

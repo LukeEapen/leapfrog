@@ -47,7 +47,11 @@
       <input class="form-check-input" type="checkbox" id="toggleQualified" checked>
       <label class="form-check-label" for="toggleQualified">Show table names</label>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 align-items-center">
+      <button type="button" class="btn btn-help btn-sm" data-bs-toggle="modal" data-bs-target="#helpModalP3" aria-label="Help about Rules">
+        <i class="bi bi-question-circle-fill"></i>
+        Help
+      </button>
       <button name="action" value="apply_all" class="btn btn-danger btn-sm" type="submit" title="Apply recommended variant to all rules">Apply All recommended</button>
       <button name="action" value="regenerate" class="btn btn-outline-secondary btn-sm" type="submit" formnovalidate title="Rebuild rules from current mapping">Regenerate Rules</button>
       <button name="action" value="next" class="btn btn-danger btn-sm" id="validate-btn">Validate & Simulate</button>
@@ -452,4 +456,29 @@
     });
   });
 </script>
+<!-- Help Modal (Page 3: Rules) -->
+<div class="modal fade" id="helpModalP3" tabindex="-1" aria-labelledby="helpModalP3Label" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="helpModalP3Label">Help — Transformation Rules</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>What this page does</strong></p>
+        <p>Define the transformation logic to convert origin fields into your target model. Suggestions come from mappings and semantics extracted earlier (akin to POC 3b’s clarifications).</p>
+        <p><strong>What you need to do</strong></p>
+        <ul class="help-list">
+          <li>Review recommended rules and pick a preferred variant when available.</li>
+          <li>Use Apply All to quickly set recommended rules per origin.</li>
+          <li>Adjust expressions and examples as needed for your domain.</li>
+          <li>Validate & Simulate to see results before running migration.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

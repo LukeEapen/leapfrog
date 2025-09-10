@@ -1,7 +1,7 @@
 /* Reusable Help widget styles for POC 3b */
-#helpFab{position:fixed;left:24px;bottom:24px;z-index:9998;background:#23272b;color:#fff;border:none;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.25);width:46px;height:46px;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer;transition:transform .12s ease, box-shadow .12s ease;}
-#helpFab:hover{transform:translateY(-1px);box-shadow:0 12px 34px rgba(0,0,0,.3)}
-#helpFab:focus{outline:3px solid #b3d4fc}
+#helpFab{position:fixed;left:24px;bottom:24px;z-index:9998;background:linear-gradient(90deg,#d32f2f 60%,#b71c1c);color:#fff;border:1px solid #d32f2f;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.25);min-width:86px;height:46px;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer;transition:transform .12s ease, box-shadow .12s ease;gap:.4rem;padding:0 .9rem}
+#helpFab:hover{transform:translateY(-1px);box-shadow:0 12px 34px rgba(211,47,47,.35)}
+#helpFab:focus{outline:3px solid rgba(211,47,47,.2);outline-offset:2px}
 #helpPanel{position:fixed;left:24px;bottom:84px;z-index:9998;width:min(520px, 86vw);max-height:min(70vh, 680px);background:#fff;border:1px solid #d0d5da;border-radius:16px;box-shadow:0 18px 44px -10px rgba(0,0,0,.35);display:none;overflow:hidden}
 #helpPanel.visible{display:flex;flex-direction:column}
 #helpHeader{display:flex;align-items:center;justify-content:space-between;background:#d32f2f;color:#fff;padding:.7rem .9rem;font-weight:700}

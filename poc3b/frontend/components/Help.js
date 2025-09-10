@@ -5,7 +5,7 @@
 
   function h(html){ const tpl=document.createElement('template'); tpl.innerHTML=html.trim(); return tpl.content.firstChild; }
 
-  const fab = h(`<button id="helpFab" title="Help" aria-label="Help"><span style="font-size:18px">?</span></button>`);
+  const fab = h(`<button id="helpFab" title="Help" aria-label="Help"><span class="bi bi-life-preserver" aria-hidden="true"></span><span>Help</span></button>`);
   const panel = h(`
     <section id="helpPanel" role="dialog" aria-modal="false" aria-labelledby="helpTitle">
       <div id="helpHeader">

@@ -22,7 +22,10 @@
     <input type="hidden" name="action" value="execute">
     <button type="submit" class="btn btn-danger btn-sm">Execute</button>
   </form>
-  
+  <button type="button" class="btn btn-help btn-sm" data-bs-toggle="modal" data-bs-target="#helpModalP4" aria-label="Help about Validation">
+    <i class="bi bi-question-circle-fill"></i>
+    Help
+  </button>
 </div>
 <style>
   /* Page 4 polish */
@@ -277,5 +280,30 @@
 <script>
   try { mermaid.initialize({ startOnLoad: true, theme: 'default' }); } catch(e){}
 </script>
+<!-- Help Modal (Page 4: Validation & Execution) -->
+<div class="modal fade" id="helpModalP4" tabindex="-1" aria-labelledby="helpModalP4Label" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="helpModalP4Label">Help — Validation & Execution</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>What this page does</strong></p>
+        <p>Preview the migration plan, then execute it. This stage validates mappings and rules together and estimates impact before running.</p>
+        <p><strong>What you need to do</strong></p>
+        <ul class="help-list">
+          <li>Pick databases for each origin and the target.</li>
+          <li>Validate to see table pairs, field mappings, and row counts.</li>
+          <li>Execute to perform migration; detailed logs show on the next page.</li>
+          <li>Optionally run ad-hoc SQL against the migrated target for spot checks.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% include 'poc4/_chatpanel.j2' %}
 {% endblock %}

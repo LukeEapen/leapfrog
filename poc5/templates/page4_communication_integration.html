@@ -5,8 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>POC 5 - Communication & Integration Mapping</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+        <!-- Floating Help (POC3b-style) -->
+            <style>
+                .btn-help { position: fixed; inset: auto 1rem 1rem auto; z-index: 10002; background: linear-gradient(120deg,#d32f2f 60%,#23272b 100%); color:#fff; border:none; border-radius:999px; padding:.6rem 1rem; font-weight:700; box-shadow:0 6px 24px rgba(44,44,44,.18); display:flex; align-items:center; gap:.5rem; min-height:44px; }
+            .btn-help .bi { font-size:1.1rem; }
+            .btn-help:focus { outline: none; box-shadow: 0 0 0 3px rgba(211,47,47,.3); }
+            @media (max-width: 768px){ .btn-help{ inset:auto .75rem .75rem auto; padding:.55rem .9rem; } }
+        </style>
+        <button type="button" class="btn-help" id="helpBtn-p5-4" aria-label="Help" title="Help">
+            <i class="bi bi-life-preserver"></i>
+            <span>Help</span>
+        </button>
+        <div class="modal fade" id="helpModal-p5-4" tabindex="-1" aria-labelledby="helpModalLabel-p5-4" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header" style="border-bottom:1px solid #eee;">
+                        <h5 class="modal-title" id="helpModalLabel-p5-4"><i class="bi bi-life-preserver me-2 text-danger"></i>Communication & Integration – What is this page?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2">Outline how systems interact and integrate, including protocols and dependencies.</p>
+                        <ul class="mb-3">
+                            <li><b>Business goal:</b> Ensure a clear map of interfaces and touchpoints.</li>
+                            <li><b>What it does:</b> Presents the interaction and integration plan for review.</li>
+                        </ul>
+                        <p class="mb-2"><b>What you need to do</b></p>
+                        <ol class="mb-0">
+                            <li>Validate the listed integrations and flows.</li>
+                            <li>Use the chat to adjust protocols or add missing systems.</li>
+                            <li>Click <b>Next</b> to proceed.</li>
+                        </ol>
+                    </div>
+                    <div class="modal-footer" style="border-top:1px solid #eee;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     <!-- Product-style banner -->
     <nav class="navbar navbar-dark" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
         <div class="container">
@@ -46,8 +84,42 @@
         </div>
     </div>
 
-    {% set chat_active_tab = 3 %}
-    {% set chat_pending = pending_tab3 if pending_tab3 is defined else false %}
-    {% include 'partials/chat_panel.html' with context %}
+        {% set chat_active_tab = 3 %}
+        {% set chat_pending = pending_tab3 if pending_tab3 is defined else false %}
+        {% include 'partials/chat_panel.html' with context %}
+        <!-- Bootstrap JS for modals -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                (function(){
+                    const btn=document.getElementById('helpBtn-p5-4');
+                    const modalEl=document.getElementById('helpModal-p5-4');
+                    if(btn && modalEl && window.bootstrap){
+                        const modal=new bootstrap.Modal(modalEl);
+                        btn.addEventListener('click',()=>modal.show());
+                    }
+                    const panel=document.getElementById('chatPanel'); const dock=document.getElementById('chatDock');
+                    function updateHelpPos(){
+                        if(!btn) return;
+                        const vpW = window.innerWidth; const vpH = window.innerHeight;
+                        let bottomPx = 24; let rightPx = 16;
+                        const panelVisible = panel && getComputedStyle(panel).display !== 'none';
+                        if (panelVisible){
+                            const rect = panel.getBoundingClientRect();
+                            const desiredRight = Math.max(16, vpW - rect.left + 16);
+                            if (desiredRight > vpW - 80){ rightPx = 16; bottomPx = Math.max(24, vpH - rect.top + 16); }
+                            else { rightPx = desiredRight; bottomPx = 24; }
+                        } else if (dock) {
+                            const drect = dock.getBoundingClientRect();
+                            rightPx = Math.max(16, vpW - drect.left + 16);
+                            if (rightPx > vpW - 80){ rightPx = 16; bottomPx = 88; }
+                        }
+                        btn.style.right = rightPx + 'px';
+                        btn.style.bottom = bottomPx + 'px';
+                    }
+                    updateHelpPos();
+                    window.addEventListener('resize', updateHelpPos);
+                    window.addEventListener('scroll', updateHelpPos);
+                })();
+            </script>
 </body>
 </html>

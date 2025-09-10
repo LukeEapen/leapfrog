@@ -170,6 +170,36 @@
     /* Utility: balanced readable widths */
     .content-wrap { padding-left: .75rem; padding-right: .75rem; }
     @media (min-width: 992px){ .content-wrap { padding-left: 1rem; padding-right: 1rem; } }
+  /* Ensure modals overlay the floating chat panel across all pages */
+  .modal { z-index: 1080; }
+  .modal-backdrop { z-index: 1070; }
+  /* Shared small spacing for Help list items */
+  .help-list { margin-left: 1rem; }
+  .help-list li { margin-bottom: .35rem; }
+
+    /* Distinct Help buttons across the app */
+    .btn-help,
+    button[data-bs-target*="helpModal"],
+    button[aria-label^="Help"] {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      border-radius: 999px;
+      border: 1px solid var(--brand);
+      background: linear-gradient(90deg,var(--brand) 60%,var(--brand-dark));
+      color: #fff !important;
+      font-weight: 700;
+      padding: .4rem .8rem;
+      box-shadow: 0 4px 12px rgba(211,47,47,.18);
+    }
+    .btn-help .bi,
+    button[data-bs-target*="helpModal"] .bi {
+      font-size: 1rem;
+    }
+    .btn-help:hover,
+    button[data-bs-target*="helpModal"]:hover { filter: brightness(1.05); box-shadow: 0 6px 16px rgba(211,47,47,.24); }
+    .btn-help:focus,
+    button[data-bs-target*="helpModal"]:focus { outline: 3px solid var(--ring); outline-offset: 2px; }
   </style>
 </head>
 <body>

@@ -9,6 +9,13 @@
 {% include 'poc4/_subnav.j2' %}
 {% include 'poc4/_steps.j2' %}
 
+<div class="d-flex justify-content-end mb-2">
+  <button type="button" class="btn btn-help btn-sm" data-bs-toggle="modal" data-bs-target="#helpModalP5" aria-label="Help about Reconciliation">
+    <i class="bi bi-question-circle-fill"></i>
+    Help
+  </button>
+</div>
+
 {% if migration_result %}
   <div class="alert alert-success shadow-sm">
     <strong>Migration Complete:</strong> {{ migration_result.summary }}
@@ -132,4 +139,29 @@
 </script>
 
 {% include 'poc4/_chatpanel.j2' %}
+<!-- Help Modal (Page 5: Reconciliation) -->
+<div class="modal fade" id="helpModalP5" tabindex="-1" aria-labelledby="helpModalP5Label" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="helpModalP5Label">Help — Reconciliation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>What this page does</strong></p>
+        <p>Review migration outcomes, approve or rollback, and inspect detailed steps. This finalizes the data migration cycle.</p>
+        <p><strong>What you need to do</strong></p>
+        <ul class="help-list">
+          <li>Check Summary metrics and unmatched fields.</li>
+          <li>Use DB Browser for deeper inspection if needed.</li>
+          <li>Approve & Export to lock results, or Rollback from backup.</li>
+          <li>Open Detailed Steps to see the execution log.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

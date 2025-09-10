@@ -17,7 +17,7 @@
   <!-- This hidden form is submitted by JS when ?auto=1 and no draft exists -->
   </form>
 
-<!-- Action bar: Generate, Approve, Download, Next -->
+<!-- Action bar: Generate, Approve, Download, Next + Help -->
 <div class="d-flex flex-wrap gap-2 justify-content-end align-items-center mb-3">
   <form method="post" class="d-inline">
     <input type="hidden" name="action" value="design_target_model">
@@ -29,6 +29,10 @@
   </form>
   <a href="{{ url_for('poc4.download_target_model') }}" class="btn btn-outline-secondary btn-sm" {% if not (target_model_final or target_model_draft) %}aria-disabled="true" tabindex="-1" class="disabled"{% endif %}>Download JSON</a>
   <a href="{{ url_for('poc4.page2') }}" class="btn btn-danger btn-sm">Next: Mapping</a>
+  <button type="button" class="btn btn-help btn-sm" data-bs-toggle="modal" data-bs-target="#helpModalTargetModel" aria-label="Help about Target Model">
+    <i class="bi bi-question-circle-fill"></i>
+    Help
+  </button>
 </div>
 
 <div class="d-flex align-items-center mb-3">
@@ -220,4 +224,44 @@
     }catch(e){}
   })();
 </script>
+
+<!-- Help Modal (Target Model) -->
+<style>
+  /* Ensure help modal sits above floating chat panel */
+  .modal { z-index: 1080; }
+  .modal-backdrop { z-index: 1070; }
+  .help-list { margin-left: 1rem; }
+  .help-list li { margin-bottom: .35rem; }
+  .small-muted { font-size:.9rem; color:#6b7280; }
+</style>
+<div class="modal fade" id="helpModalTargetModel" tabindex="-1" aria-labelledby="helpModalTargetModelLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="helpModalTargetModelLabel">Help — Target Model Designer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>What this page does</strong></p>
+        <p>This designer turns your selected sources into a target‑state schema. It generates an initial ER diagram and table/field list you can review and approve. This mirrors the “clarify and structure” step from Requirements Insights (POC 3b), but focused on data modeling.</p>
+        <p><strong>When to use it</strong></p>
+        <ul class="help-list">
+          <li>After selecting and preparing your Source/Legacy schemas on Page 1.</li>
+          <li>Before mapping fields on Page 2 and defining transformation rules on Page 3.</li>
+        </ul>
+        <p><strong>What you need to do</strong></p>
+        <ul class="help-list">
+          <li>Click <em>Generate Draft</em> to create a canonical target model from your inputs.</li>
+          <li>Review the ER diagram and tables/fields. Iterate as needed.</li>
+          <li><em>Approve</em> to lock a version for mapping, or <em>Download JSON</em> for external review.</li>
+          <li>Proceed to <em>Next: Mapping</em> to connect sources to target fields.</li>
+        </ul>
+        <p class="small-muted">Tip: You can reopen this page later to regenerate/compare drafts. The chat panel can answer “why” a table/field exists and suggest adjustments.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+ </div>
 {% endblock %}

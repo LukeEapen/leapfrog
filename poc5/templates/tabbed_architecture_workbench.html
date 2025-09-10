@@ -6,6 +6,7 @@
     <title>POC 5 - Architecture Workbench</title>
     <!-- Bootstrap + Custom Theme -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
     <!-- Mermaid for local diagram rendering -->
     <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
@@ -90,6 +91,44 @@
     </style>
 </head>
 <body>
+        <!-- Floating Help (POC3b-style) -->
+        <style>
+            .btn-help { position: fixed; inset: auto 1rem 1rem auto; z-index: 1080; background: linear-gradient(120deg,#d32f2f 60%,#23272b 100%); color:#fff; border:none; border-radius:999px; padding:.6rem 1rem; font-weight:700; box-shadow:0 6px 24px rgba(44,44,44,.18); display:flex; align-items:center; gap:.5rem; min-height:44px; }
+            .btn-help .bi { font-size:1.1rem; }
+            .btn-help:focus { outline: none; box-shadow: 0 0 0 3px rgba(211,47,47,.3); }
+            @media (max-width: 768px){ .btn-help{ inset:auto .75rem .75rem auto; padding:.55rem .9rem; } }
+        </style>
+        <button type="button" class="btn-help" id="helpBtn-p5-workbench" aria-label="Help" title="Help">
+            <i class="bi bi-life-preserver"></i>
+            <span>Help</span>
+        </button>
+        <div class="modal fade" id="helpModal-p5-workbench" tabindex="-1" aria-labelledby="helpModalLabel-p5-workbench" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header" style="border-bottom:1px solid #eee;">
+                        <h5 class="modal-title" id="helpModalLabel-p5-workbench"><i class="bi bi-life-preserver me-2 text-danger"></i>Architecture Workbench – What is this page?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2">This is the full multi-tab workbench where you assemble your architecture.</p>
+                        <ul class="mb-3">
+                            <li><b>Business goal:</b> Guide you from PRD to a coherent target design.</li>
+                            <li><b>What it does:</b> Each tab captures a slice: context, diagrams, interactions, data, services, decisions, and docs.</li>
+                        </ul>
+                        <p class="mb-2"><b>What you need to do</b></p>
+                        <ol class="mb-0">
+                            <li>Upload PRD and System Mapping on Tab 1, then click <b>Generate Arch Context</b>.</li>
+                            <li>Iterate across tabs, using <b>Preview</b> to render diagrams locally.</li>
+                            <li>Use the Chat panel to extract, refine, and apply updates.</li>
+                            <li>Mark tabs <b>Approved</b> as you converge, then export on the final tab.</li>
+                        </ol>
+                    </div>
+                    <div class="modal-footer" style="border-top:1px solid #eee;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     <!-- Banner (POC2-style) -->
     <nav class="navbar navbar-dark" style="background: var(--gradient-red, linear-gradient(135deg, #dc3545 0%, #c82333 100%));">
         <div class="container-fluid">
@@ -1359,5 +1398,31 @@
     {% if chat_active_tab == 1 %}{% set chat_diagram_target = chat_target_tab1 or 'architecture_diagram' %}{% endif %}
     {% include 'partials/chat_panel.html' with context %}
 <!-- Overlay root created dynamically by script -->
+        <script>
+            (function(){
+                const btn=document.getElementById('helpBtn-p5-workbench');
+                const modalEl=document.getElementById('helpModal-p5-workbench');
+                if(btn && modalEl && window.bootstrap){
+                    const modal=new bootstrap.Modal(modalEl);
+                    btn.addEventListener('click',()=>modal.show());
+                }
+                const helpBtn=btn; const chat=document.querySelector('.chat-panel, [data-chat-panel], #chatPanel');
+                function updateHelpPos(){
+                    if(!helpBtn) return;
+                    let bottom=16;
+                    if(chat){
+                        const rect=chat.getBoundingClientRect();
+                        const vpH=window.innerHeight;
+                        const spaceBelow = vpH - rect.bottom;
+                        if(spaceBelow < 96){ bottom = 16 + (96 - spaceBelow); }
+                    }
+                    helpBtn.style.bottom = bottom + 'px';
+                    helpBtn.style.right = '16px';
+                }
+                updateHelpPos();
+                window.addEventListener('resize', updateHelpPos);
+                window.addEventListener('scroll', updateHelpPos);
+            })();
+        </script>
     </body>
 </html>
