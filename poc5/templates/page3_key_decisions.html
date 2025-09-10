@@ -1,9 +1,53 @@
 <!DOCTYPE html>
 <html>
-<head><title>POC 5 - Key Decisions Extraction</title></head>
-<body>
-    <h2>Page 3: Key Decisions Extraction</h2>
-    <pre>{{ decisions }}</pre>
-    <form method="post"><button type="submit">Next</button></form>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>POC 5 - Key Decisions Extraction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- Product-style banner -->
+    <nav class="navbar navbar-dark" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#" onclick="return false;">
+                <img src="/static/processflow.png" alt="logo" width="28" height="28" class="me-2"/>
+                <span>
+                    <div class="fw-bold">Architecture Workbench</div>
+                    <small class="text-light">POC 5 • Key Decisions</small>
+                </span>
+            </a>
+        </div>
+    </nav>
+    <div class="container py-4">
+        <div class="d-flex align-items-baseline justify-content-between mb-3">
+            <div>
+                <h2 class="mb-1">Key Decisions Extraction</h2>
+                <div class="text-muted small">Step 3 of 6</div>
+            </div>
+            <span class="badge rounded-pill text-bg-primary">POC 5</span>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header bg-white border-0 border-start border-4 border-primary">
+                <div class="fw-semibold">Extracted Decisions</div>
+                <div class="small text-muted">Derived from the blueprint and context.</div>
+            </div>
+            <div class="card-body" style="background-color:#f8f9fa;">
+                {% if decisions %}
+                    <pre class="mb-3" style="background:#fff;border:1px solid #e9ecef;border-radius:.5rem;padding:1rem;">{{ decisions }}</pre>
+                {% else %}
+                    <div class="text-muted">No decisions yet. Generate a blueprint first or ask the Assistant to summarize key decisions.</div>
+                {% endif %}
+                <form method="post" class="text-end mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm px-3">Next</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% set chat_active_tab = 3 %}
+    {% set chat_pending = pending_tab3 if pending_tab3 is defined else false %}
+    {% include 'partials/chat_panel.html' with context %}
 </body>
 </html>

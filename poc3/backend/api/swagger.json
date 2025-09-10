@@ -1483,6 +1483,57 @@
         "raw": "```json\n[\n    {\n        \"element\": \"readTransactionCategoryBalanceRecords\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            {\n                \"step\": \"Retrieve necessary files for input\",\n                \"actions\": [\n                    \"Open the file containing transaction category balance records\",\n                    \"Read the data from the file\"\n                ]\n            },\n            {\n                \"step\": \"Process transaction category balance records\",\n                \"actions\": [\n                    \"Parse the data to extract transaction category balances\",\n                    \"Store the balances in a data structure for further processing\"\n                ]\n            },\n            {\n                \"step\": \"Return the transaction category balance records\",\n                \"actions\": [\n                    \"Provide the extracted balances to the calling function\"\n                ]\n            }\n        ]\n    },\n    {\n        \"element\": \"updateAccountBalancesWithInterest\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            {\n                \"step\": \"Retrieve transaction data for interest calculation\",\n                \"actions\": [\n                    \"Fetch transaction data related to account balances and interest rates\"\n                ]\n            },\n            {\n                \"step\": \"Calculate interest for each account\",\n                \"actions\": [\n                    \"For each account, calculate interest based on the transaction data and interest rates\",\n                    \"Update the account balance with the calculated interest\"\n                ]\n            },\n            {\n                \"step\": \"Update account balances\",\n                \"actions\": [\n                    \"Store the updated account balances in the system\"\n                ]\n            }\n        ]\n    }\n]\n```  "
       },
       "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "readTransactionData",
+            "pseudocode": "Open TCATBAL-FILE for reading transaction data\nRead transaction data fields such as transaction amount, date, and type\nStore transaction data in memory for interest calculation",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "retrieveCustomerAccountInfo",
+            "pseudocode": "Access ACCOUNT-FILE using account ID provided\nRetrieve customer account information fields like account balance, type, and status\nStore account information in memory for interest calculation",
+            "standard": "BIAN"
+          },
+          {
+            "element": "determineDiscountGroup",
+            "pseudocode": "Access DISCGRP-FILE to retrieve discount group information\nDetermine the appropriate discount group based on account details\nFactor in the discount group for interest calculation",
+            "standard": "ISO"
+          },
+          {
+            "element": "calculateInterest",
+            "pseudocode": "Calculate interest based on transaction data, account information, and discount group\nApply interest calculation formula considering transaction type, account type, and discount group\nUpdate the interest amount in the customer's account",
+            "standard": "OpenAPI"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"readTransactionData\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Open TCATBAL-FILE for reading transaction data\",\n            \"Read transaction data fields such as transaction amount, date, and type\",\n            \"Store transaction data in memory for interest calculation\"\n        ]\n    },\n    {\n        \"element\": \"retrieveCustomerAccountInfo\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": [\n            \"Access ACCOUNT-FILE using account ID provided\",\n            \"Retrieve customer account information fields like account balance, type, and status\",\n            \"Store account information in memory for interest calculation\"\n        ]\n    },\n    {\n        \"element\": \"determineDiscountGroup\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": [\n            \"Access DISCGRP-FILE to retrieve discount group information\",\n            \"Determine the appropriate discount group based on account details\",\n            \"Factor in the discount group for interest calculation\"\n        ]\n    },\n    {\n        \"element\": \"calculateInterest\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": [\n            \"Calculate interest based on transaction data, account information, and discount group\",\n            \"Apply interest calculation formula considering transaction type, account type, and discount group\",\n            \"Update the interest amount in the customer's account\"\n        ]\n    }\n]\n```"
+      },
+      "pseudocode": ""
+    },
+    {
+      "businessLogic": {
+        "design": [
+          {
+            "element": "readTransactionCategoryBalanceRecord",
+            "pseudocode": "1. Retrieve customer account information from the database.\n2. Query the transaction category balance record associated with the customer account.\n3. Return the transaction category balance record.",
+            "standard": "OpenAPI"
+          },
+          {
+            "element": "retrieveAccountData",
+            "pseudocode": "1. Identify the customer account for which account data needs to be retrieved.\n2. Access the account data service within the banking system.\n3. Retrieve the account data including balance, transactions, and other relevant information.\n4. Return the account data.",
+            "standard": "BIAN"
+          },
+          {
+            "element": "getInterestRate",
+            "pseudocode": "1. Identify the disclosure group associated with the interest rate.\n2. Access the disclosure group record containing the interest rate information.\n3. Retrieve the interest rate from the disclosure group record.\n4. Return the interest rate.",
+            "standard": "ISO"
+          }
+        ],
+        "raw": "```json\n[\n    {\n        \"element\": \"readTransactionCategoryBalanceRecord\",\n        \"standard\": \"Open API\",\n        \"pseudocode\": \"1. Retrieve customer account information from the database.\\n2. Query the transaction category balance record associated with the customer account.\\n3. Return the transaction category balance record.\"\n    },\n    {\n        \"element\": \"retrieveAccountData\",\n        \"standard\": \"Bian\",\n        \"pseudocode\": \"1. Identify the customer account for which account data needs to be retrieved.\\n2. Access the account data service within the banking system.\\n3. Retrieve the account data including balance, transactions, and other relevant information.\\n4. Return the account data.\"\n    },\n    {\n        \"element\": \"getInterestRate\",\n        \"standard\": \"ISO\",\n        \"pseudocode\": \"1. Identify the disclosure group associated with the interest rate.\\n2. Access the disclosure group record containing the interest rate information.\\n3. Retrieve the interest rate from the disclosure group record.\\n4. Return the interest rate.\"\n    }\n]\n```"
+      },
+      "pseudocode": ""
     }
   ]
 }

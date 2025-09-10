@@ -26,6 +26,19 @@
   </style>
 </head>
 <body>
+  <script>
+    window.HelpContent = {
+      intro: '<div class="alert alert-light border">Validate modernization output for readiness.</div>',
+      business: 'Runs checks against the generated service artifacts to ensure compliance and quality.',
+      purpose: 'Let you paste output or artifacts and run a validator to get recommendations.',
+      actions: [
+        'Paste service output into the form',
+        'Click Run Validator',
+        'Review structured results and recommendations'
+      ],
+      chips: ['Validation', 'Quality']
+    };
+  </script>
   {% include 'partials/banner.html' %}
   <div class="container">
     <div class="agent-card text-center">
@@ -78,5 +91,8 @@
       window.updateMarkedBox = updateMarkedBox;
     })();
   </script>
+  <!-- Help widget include -->
+  <link rel="stylesheet" href="/static/components/Help.css">
+  <script src="/static/components/Help.js"></script>
 </body>
 </html>

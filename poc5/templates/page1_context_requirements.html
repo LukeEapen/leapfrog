@@ -1,18 +1,117 @@
 <!DOCTYPE html>
 <html>
-<head><title>POC 5 - Context & Requirements</title></head>
-<body>
-    <h2>Page 1: Provide Context & Requirements</h2>
-    <form method="post">
-        <label>Business Goals:</label><br>
-        <textarea name="business_goals"></textarea><br>
-        <label>Legacy System Description:</label><br>
-        <textarea name="legacy_system"></textarea><br>
-        <label>Constraints:</label><br>
-        <textarea name="constraints"></textarea><br>
-        <label>Desired Architecture Style:</label><br>
-        <input name="architecture_style"><br>
-        <button type="submit">Next</button>
-    </form>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>POC 5 - Context & Requirements</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#0d6efd" />
+    
+</head>
+<body class="bg-light">
+    <!-- Product-style banner -->
+    <nav class="navbar navbar-dark" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#" onclick="return false;">
+                <img src="/static/processflow.png" alt="logo" width="28" height="28" class="me-2"/>
+                <span>
+                    <div class="fw-bold">Architecture Workbench</div>
+                    <small class="text-light">POC 5 • Context & Requirements</small>
+                </span>
+            </a>
+        </div>
+    </nav>
+    <div class="container py-4">
+        <!-- Page header -->
+        <div class="d-flex align-items-baseline justify-content-between mb-3">
+            <div>
+                <h2 class="mb-1">Provide Context & Requirements</h2>
+                <div class="text-muted small">Step 1 of 6</div>
+            </div>
+            <span class="badge rounded-pill text-bg-primary">POC 5</span>
+        </div>
+
+        <div class="row g-3">
+            <!-- Main form column -->
+            <div class="col-12 col-lg-8">
+                <form method="post" novalidate>
+                    <!-- Core Context -->
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-header bg-white border-0 border-start border-4 border-primary">
+                            <div class="fw-semibold">Core Context</div>
+                            <div class="small text-muted">Set the baseline for goals, current state, and constraints.</div>
+                        </div>
+                        <div class="card-body pt-3" style="background-color:#f8f9fa;">
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">Business Goals <span class="text-danger">*</span></label>
+                                <textarea class="form-control form-control-sm" name="business_goals" rows="3" placeholder="What outcomes are you aiming for (e.g., reduce cycle time by 30%, improve reliability, cut costs)?"></textarea>
+                                <div class="form-text">Examples: reduce processing time, increase deployment frequency, improve SLA/uptime, lower TCO.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">Legacy System Description</label>
+                                <textarea class="form-control form-control-sm" name="legacy_system" rows="3" placeholder="Current system landscape, integrations, pain points"></textarea>
+                                <div class="form-text">Include high-level modules, tech stack, and key operational issues.</div>
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label fw-medium">Constraints</label>
+                                <textarea class="form-control form-control-sm" name="constraints" rows="3" placeholder="Tech stack preferences, compliance, deadlines, budget, team skills"></textarea>
+                                <div class="form-text">Constraints drive trade-offs and architecture choices later.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Initial Selections -->
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-header bg-white border-0 border-start border-4 border-primary">
+                            <div class="fw-semibold">Initial Selections</div>
+                            <div class="small text-muted">Pick a starting direction (you can refine later).</div>
+                        </div>
+                        <div class="card-body" style="background-color:#f3f4f6;">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-sm-7">
+                                    <label class="form-label">Desired Architecture Style</label>
+                                    <input class="form-control form-control-sm" name="architecture_style" list="archStyles" placeholder="Choose or type…" />
+                                    <datalist id="archStyles">
+                                        <option value="Monolith" />
+                                        <option value="Modular Monolith" />
+                                        <option value="Microservices" />
+                                        <option value="Event-Driven" />
+                                        <option value="Serverless" />
+                                        <option value="SOA" />
+                                    </datalist>
+                                    <div class="form-text">Suggested options are provided—free text is also accepted.</div>
+                                </div>
+                                <div class="col-sm-5 d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-primary btn-sm px-3">Next</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tips / side column -->
+            <div class="col-12 col-lg-4">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-header bg-white border-0 border-start border-4 border-info">Tips</div>
+                    <div class="card-body small text-muted" style="background-color:#f6f7f9;">
+                        <ul class="ps-3 mb-0">
+                            <li>Be concise; you can refine with the Assistant.</li>
+                            <li>Constraints influence scope, cost, and timelines.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% set chat_active_tab = 0 %}
+    {% set chat_pending = false %}
+    {% include 'partials/chat_panel.html' with context %}
 </body>
 </html>

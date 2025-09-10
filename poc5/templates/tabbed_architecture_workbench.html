@@ -79,6 +79,14 @@
         .diagram-zoom-stage { position:absolute; inset:0; top:56px; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:24px; }
         .diagram-zoom-canvas { transform-origin: 0 0; display:inline-block; background:#ffffff; padding:16px; border-radius:8px; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
         .diagram-zoom-close { position:absolute; top:12px; left:12px; }
+    /* Bookmark toolbar under the 4 buttons (modern chip links) */
+    .bookmark-toolbar { background: transparent; border: 0; padding: .25rem 0 .5rem; box-shadow: none; }
+    .bookmark-scroll { display:flex; flex-wrap: wrap; gap:.35rem; overflow-x: auto; white-space: normal; }
+    .bookmark-toolbar .bm-link { display:inline-block; padding:.35rem .65rem; border:1px solid #e5e7eb; border-radius:9999px; background:#f8f9fa; color:#495057; text-decoration:none; font-size:.85rem; line-height:1; transition: all .15s ease; }
+    .bookmark-toolbar .bm-link:hover { background:#ffffff; border-color:#dc3545; color:#dc3545; text-decoration:none; }
+    .bookmark-toolbar .bm-link:focus-visible { outline:2px solid #dc3545; outline-offset:2px; }
+    /* Ensure anchored sections don't hide under sticky bars */
+    .section-card, .tab-pane h2, [id^="t"] { scroll-margin-top: 96px; }
     </style>
 </head>
 <body>
@@ -99,11 +107,12 @@
     </nav>
 
     <div class="container-fluid my-4">
+    <a id="top"></a>
     <!-- server-provided last action timing -->
     <span id="server_timing" class="d-none" data-last-action="{{ last_action or '' }}" data-last-elapsed="{{ last_elapsed_ms or 0 }}"></span>
     <div class="row g-3">
-            <!-- Main content left -->
-            <div class="col-xl-9 col-lg-8">
+            <!-- Main content (full width; chat moved to dock-style panel) -->
+            <div class="col-12">
                 <div class="card">
                     <div class="card-header section-hero">
                         <div class="d-flex align-items-center justify-content-between">
@@ -178,11 +187,64 @@
                         <!-- Download full Word export of all tabs -->
                         <button type="submit" class="btn btn-warning action-btn" name="action" value="download_share" title="Download a Word document containing all tabs">Download/Share</button>
                     </div>
+                    <!-- Bookmark toolbar (changes per tab) -->
+                    <div id="bookmark_toolbar" class="bookmark-toolbar mb-3">
+                        <div class="bookmark-scroll">
+                            <!-- Tab 1 bookmarks -->
+                            <div class="bm" data-index="0">
+                                <a class="bm-link" href="#t1-inputs">Source Material & Inputs</a>
+                                <a class="bm-link" href="#t1-core-context">Business Context & Requirements</a>
+                                <a class="bm-link" href="#t1-guardrails">Architecture Guardrails & Platform</a>
+                                <a class="bm-link" href="#t1-advanced">Cross‑Cutting Concerns & NFRs</a>
+                                <a class="bm-link" href="#t1-context-gen">Generated Architecture Context</a>
+                                <a class="bm-link" href="#t1-questions">Architectural Questions</a>
+                            </div>
+                            <!-- Tab 2 bookmarks -->
+                            <div class="bm d-none" data-index="1">
+                                <a class="bm-link" href="#t2-diagram">Diagram Text</a>
+                                <a class="bm-link" href="#t2-preview">Diagram Preview</a>
+                                <a class="bm-link" href="#t2-components">Components & Services</a>
+                                <a class="bm-link" href="#t2-interfaces">Interfaces & Contracts</a>
+                                <a class="bm-link" href="#t2-patterns">Reusable Patterns</a>
+                            </div>
+                            <!-- Tab 3 bookmarks -->
+                            <div class="bm d-none" data-index="2">
+                                <a class="bm-link" href="#t3-diagram">Sequence Diagram</a>
+                                <a class="bm-link" href="#t3-notes">Interaction Notes</a>
+                            </div>
+                            <!-- Tab 4 bookmarks (data) -->
+                            <div class="bm d-none" data-index="5">
+                                <a class="bm-link" href="#t4-erdiagram">ER Diagram</a>
+                                <a class="bm-link" href="#t4-schemas">Data Schemas</a>
+                            </div>
+                            <!-- Tab 5 bookmarks (service) -->
+                            <div class="bm d-none" data-index="6">
+                                <a class="bm-link" href="#t5-servicediagram">Service Decomposition</a>
+                                <a class="bm-link" href="#t5-components">Service Components</a>
+                                <a class="bm-link" href="#t5-interfaces">Service Interfaces</a>
+                                <a class="bm-link" href="#t5-patterns">Service Patterns</a>
+                            </div>
+                            <!-- Tab 6 bookmarks -->
+                            <div class="bm d-none" data-index="3">
+                                <a class="bm-link" href="#t6-decisions">Architecture Decisions (ADRs)</a>
+                                <a class="bm-link" href="#t6-protocols">Communication Protocols</a>
+                                <a class="bm-link" href="#t6-dataflows">Data Flows</a>
+                                <a class="bm-link" href="#t6-integration">Integration Points</a>
+                                <a class="bm-link" href="#t6-swot">Trade‑offs & SWOT</a>
+                                <a class="bm-link" href="#t6-risks">Risks & Mitigations</a>
+                            </div>
+                            <!-- Tab 7 bookmarks -->
+                            <div class="bm d-none" data-index="4">
+                                <a class="bm-link" href="#t7-compiled-doc">Compiled Architecture Document</a>
+                                <a class="bm-link" href="#t7-checklist">Stakeholder Checklist</a>
+                            </div>
+                        </div>
+                    </div>
         <!-- Tab 1 -->
     <div class="tab-pane section" id="tab1" data-index="0">
             <h2>Context & Requirements</h2>
-            <div class="section-card">
-                <div class="section-title">Inputs</div>
+            <div id="t1-inputs" class="section-card" style="background-color:#f8f9fa;">
+                <div class="section-title d-flex justify-content-between align-items-center"><span>Inputs</span><a href="#top" class="bm-link">Top</a></div>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label>Upload PRD Document (PDF/TXT/MD preferred)</label>
@@ -207,8 +269,8 @@
                 </div>
             </div>
 
-            <div class="section-card">
-                <div class="section-title">Core Context</div>
+            <div id="t1-core-context" class="section-card" style="background-color:#f3f4f6;">
+                <div class="section-title d-flex justify-content-between align-items-center"><span>Core Context</span><a href="#top" class="bm-link">Top</a></div>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label>Business Goals</label>
@@ -249,8 +311,8 @@
                 </div>
             </div>
 
-            <div class="section-card">
-                <div class="section-title">Guardrails & Platform Selections</div>
+            <div id="t1-guardrails" class="section-card" style="background-color:#f6f7f9;">
+                <div class="section-title d-flex justify-content-between align-items-center"><span>Guardrails & Platform Selections</span><a href="#top" class="bm-link">Top</a></div>
                 <div class="row g-3">
                             <div class="col-md-4">
                                 <label>Cloud Provider</label>
@@ -368,8 +430,8 @@
                 </script>
             </div>
 
-            <div class="section-card">
-                <div class="section-title">Advanced Architecture Details</div>
+            <div id="t1-advanced" class="section-card" style="background-color:#f8f9fa;">
+                <div class="section-title d-flex justify-content-between align-items-center"><span>Advanced Architecture Details</span><a href="#top" class="bm-link">Top</a></div>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label>Availability / SLA</label>
@@ -483,10 +545,11 @@
                 </div>
             </div>
 
-            <div class="section-card">
+            <div id="t1-context-gen" class="section-card" style="background-color:#f3f4f6;">
                 <div class="section-title d-flex justify-content-between align-items-center">
                     <span>Architecture Context (Generated)</span>
-                    <span class="d-flex gap-2">
+                    <span class="d-flex gap-2 align-items-center">
+                        <a href="#top" class="bm-link">Top</a>
                         <button type="button" id="copyContextBtn" class="btn btn-sm btn-outline-secondary" title="Copy markdown to clipboard">Copy</button>
                         <button type="button" id="downloadContextBtn" class="btn btn-sm btn-outline-danger" title="Download markdown as .md">Download .md</button>
                         <span id="contextCopyStatus" class="small text-muted" style="display:none;">Copied</span>
@@ -594,8 +657,9 @@
 
 
                         <hr>
-                        <h3>DecisionExtractorAgent Questions</h3>
-                        <div class="section">
+                        <h3>Architectural Questions</h3>
+                        <div id="t1-questions" class="section-card" style="background-color:#f6f7f9;">
+                            <div class="d-flex justify-content-end mb-2"><a href="#top" class="bm-link">Top</a></div>
                             <label>High-Level Architecture Decision Points</label><br>
                             <textarea name="high_level_decision_points" placeholder="List key decision points here">{{ high_level_decision_points }}</textarea><br>
                             <label>List of One-way Door Decisions</label><br>
@@ -611,6 +675,8 @@
     <!-- Tab 2: Initial Blueprint (diagram only) -->
     <div class="tab-pane section" id="tab2" data-index="1">
             <h2>Initial Blueprint</h2>
+            <div class="section-card" style="background-color:#f3f4f6;">
+            <div class="d-flex justify-content-end mb-2"><a href="#top" class="bm-link">Top</a></div>
             {% if decomposition_writeup %}
             <div class="alert alert-info" role="alert" style="white-space:pre-wrap">
                 <div class="fw-semibold mb-1">PRD Decomposition Summary</div>
@@ -625,171 +691,128 @@
                 <button type="submit" name="action" value="generate_initial_blueprint" class="btn btn-sm btn-primary">Regenerate</button>
                 <button type="submit" name="action" value="generate_initial_blueprint" class="btn btn-sm btn-outline-secondary" title="Simplify/clarify the graph layout">Simplify</button>
             </div>
+                        <div id="t2-diagram"></div>
                         <textarea name="architecture_diagram">{{ blueprint }}</textarea><br>
                         <div class="mb-2">
                             <button type="button" id="previewMermaidBtn" class="btn btn-sm btn-danger" title="Render the current Mermaid diagram locally without posting to the server.">Preview Diagram</button>
                         </div>
+                        <div id="t2-preview"></div>
                         <div id="mermaidPreview" style="margin-top:1rem; background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; padding:12px;"></div>
             <!-- Removed System Interaction, Data Model, and Service Decomposition from Initial -->
             <label>Major Components/Services:</label><br>
+                        <div id="t2-components"></div>
                         <textarea name="major_components">{{ major_components }}</textarea><br>
             <label>Interface Definitions:</label><br>
+                        <div id="t2-interfaces"></div>
                         <textarea name="interface_definitions">{{ interface_definitions }}</textarea><br>
             <label>Reusable Patterns:</label><br>
+                        <div id="t2-patterns"></div>
                         <textarea name="reusable_patterns">{{ reusable_patterns }}</textarea><br>
+            </div>
     </div>
     <!-- Tab 3: System Interaction -->
     <div class="tab-pane section" id="tab3" data-index="2">
             <h2>System Interaction</h2>
+            <div class="section-card" style="background-color:#f8f9fa;">
+            <div class="d-flex justify-content-end mb-2"><a href="#top" class="bm-link">Top</a></div>
             <label>System Interaction Diagram (Mermaid sequenceDiagram):</label><br>
+            <div id="t3-diagram"></div>
             <textarea name="system_interaction_diagram">{{ system_interaction_diagram }}</textarea><br>
             <div class="mb-2">
                 <button type="button" id="previewSystemBtn" class="btn btn-sm btn-outline-danger" title="Render the System Interaction diagram.">Preview System Interaction</button>
             </div>
             <div id="mermaidPreviewSystem" style="margin-top:1rem; background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; padding:12px;"></div>
             <label class="mt-3">System Interaction Notes:</label><br>
+            <div id="t3-notes"></div>
             <textarea name="system_interaction_notes">{{ system_interaction_notes }}</textarea><br>
+            </div>
         </div>
     <!-- Tab 4: Database Solution Design -->
     <div class="tab-pane section" id="tab4" data-index="5">
             <h2>Database Solution Design</h2>
+            <div class="section-card" style="background-color:#f3f4f6;">
+            <div class="d-flex justify-content-end mb-2"><a href="#top" class="bm-link">Top</a></div>
             <label>Data Model / ER Diagram (Mermaid erDiagram):</label><br>
+            <div id="t4-erdiagram"></div>
             <textarea name="data_model_diagram">{{ data_model_diagram }}</textarea><br>
             <div class="mb-2">
                 <button type="button" id="previewDataModelBtn2" class="btn btn-sm btn-outline-danger" title="Render the Data Model / ER diagram.">Preview Data Model</button>
             </div>
             <div id="mermaidPreviewData2" style="margin-top:1rem; background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; padding:12px;"></div>
             <label class="mt-3">Data Schemas:</label><br>
+            <div id="t4-schemas"></div>
             <textarea name="data_schemas">{{ data_schemas }}</textarea><br>
+            </div>
         </div>
     <!-- Tab 5: Service Solution Design -->
     <div class="tab-pane section" id="tab5" data-index="6">
             <h2>Service Solution Design</h2>
+            <div class="section-card" style="background-color:#f8f9fa;">
+            <div class="d-flex justify-content-end mb-2"><a href="#top" class="bm-link">Top</a></div>
             <label>Service Decomposition (Mermaid flowchart):</label><br>
+            <div id="t5-servicediagram"></div>
             <textarea name="service_decomposition_diagram">{{ service_decomposition_diagram }}</textarea><br>
             <div class="mb-2">
                 <button type="button" id="previewServiceDecompBtn2" class="btn btn-sm btn-outline-danger" title="Render the Service Decomposition flowchart.">Preview Service Decomposition</button>
             </div>
             <div id="mermaidPreviewServiceDecomp2" style="margin-top:1rem; background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; padding:12px;"></div>
             <label class="mt-3">Major Components/Services:</label><br>
+            <div id="t5-components"></div>
             <textarea name="major_components">{{ major_components }}</textarea><br>
             <label>Interface Definitions:</label><br>
+            <div id="t5-interfaces"></div>
             <textarea name="interface_definitions">{{ interface_definitions }}</textarea><br>
             <label>Reusable Patterns:</label><br>
+            <div id="t5-patterns"></div>
             <textarea name="reusable_patterns">{{ reusable_patterns }}</textarea><br>
+            </div>
         </div>
     <!-- Tab 6: Decisions, Integration & Pros/Cons (combined) -->
     <div class="tab-pane section" id="tab6" data-index="3">
             <h2>Decisions, Integration & Pros/Cons</h2>
+            <div class="section-card" style="background-color:#f3f4f6;">
+            <div class="d-flex justify-content-end mb-2"><a href="#top" class="bm-link">Top</a></div>
             <label>Architectural Decisions:</label><br>
+            <div id="t6-decisions"></div>
             <textarea name="architectural_decisions">{{ decisions }}</textarea><br>
             <label>Rationale & Trade-offs:</label><br>
             <textarea name="rationale_tradeoffs">{{ rationale_tradeoffs }}</textarea><br>
             <hr>
             <label>Communication Protocols (gRPC, REST, Kafka, etc.):</label><br>
+            <div id="t6-protocols"></div>
             <textarea name="communication_protocols">{{ communication }}</textarea><br>
             <label>Data Flow Diagrams:</label><br>
+            <div id="t6-dataflows"></div>
             <textarea name="data_flow_diagrams">{{ data_flow_diagrams }}</textarea><br>
             <label>Integration Points:</label><br>
+            <div id="t6-integration"></div>
             <textarea name="integration_points">{{ integration_points }}</textarea><br>
             <hr>
             <label>SWOT Analysis (Strengths, Weaknesses, Opportunities, Threats):</label><br>
+            <div id="t6-swot"></div>
             <textarea name="swot_analysis">{{ pros_cons }}</textarea><br>
             <label>Risks & Mitigation Strategies:</label><br>
+            <div id="t6-risks"></div>
             <textarea name="risks_mitigation">{{ risks_mitigation }}</textarea><br>
+            </div>
         </div>
     <!-- Tab 7: Documentation & Review -->
     <div class="tab-pane section" id="tab7" data-index="4">
             <h2>Documentation & Review</h2>
+            <div class="section-card" style="background-color:#f6f7f9;">
+            <div class="d-flex justify-content-end mb-2"><a href="#top" class="bm-link">Top</a></div>
             <label>Compiled Architecture Document:</label><br>
+            <div id="t7-compiled-doc"></div>
             <textarea name="compiled_document">{{ doc }}</textarea><br>
             <label>Stakeholder Checklist:</label><br>
+            <div id="t7-checklist"></div>
             <textarea name="stakeholder_checklist">{{ stakeholder_checklist }}</textarea><br>
+            </div>
         </div>
                 </form>
                     </div>
                 </div>
             </div>
-            <!-- Chat sidebar right -->
-            <div class="col-xl-3 col-lg-4">
-                <div class="section-card sidebar-chat">
-                    <div class="section-title d-flex align-items-center justify-content-between">
-                        <span>Assistant Chat</span>
-                        <span class="badge badge-light">Tab <span id="chat_tab_label"></span></span>
-                    </div>
-              <span id="pending_flags" class="d-none"
-                  data-t0="{{ '1' if pending_tab0 else '0' }}"
-                  data-t1="{{ '1' if pending_tab1 else '0' }}"
-                  data-t2="{{ '1' if pending_tab2 else '0' }}"
-                  data-t3="{{ '1' if pending_tab3 else '0' }}"
-                  data-t4="{{ '1' if pending_tab4 else '0' }}"
-                  data-t5="{{ '1' if pending_tab5 else '0' }}"
-                  data-t6="{{ '1' if pending_tab6 else '0' }}"
-                  data-t7="{{ '1' if pending_tab7 else '0' }}"></span>
-            <!-- Hidden element to store pending updates JSON per tab for preview modal -->
-            <span id="pending_updates_json" class="d-none"
-                data-tab0="{{ session['pending_updates_tab0']|default('') }}"
-                data-tab1="{{ session['pending_updates_tab1']|default('') }}"
-                data-tab2="{{ session['pending_updates_tab2']|default('') }}"
-                data-tab3="{{ session['pending_updates_tab3']|default('') }}"
-                data-tab4="{{ session['pending_updates_tab4']|default('') }}"
-                data-tab5="{{ session['pending_updates_tab5']|default('') }}"
-                data-tab6="{{ session['pending_updates_tab6']|default('') }}"
-                data-tab7="{{ session['pending_updates_tab7']|default('') }}"
-                data-tab8="{{ session['pending_updates_tab8']|default('') }}"></span>
-                    <div class="text-muted small mb-2" id="chat_scope_label">Context & Requirements</div>
-                    <!-- histories per tab -->
-                    <div class="mb-2">
-                        <textarea class="form-control form-control-sm chat-history" data-tab="0" readonly>{{ chat_tab0 }}</textarea>
-                        <textarea class="form-control form-control-sm chat-history" data-tab="1" readonly>{{ chat_tab1 }}</textarea>
-                        <textarea class="form-control form-control-sm chat-history" data-tab="2" readonly>{{ chat_tab2 }}</textarea>
-                        <textarea class="form-control form-control-sm chat-history" data-tab="3" readonly>{{ chat_tab3 }}</textarea>
-                        <textarea class="form-control form-control-sm chat-history" data-tab="4" readonly>{{ chat_tab4 }}</textarea>
-                        <textarea class="form-control form-control-sm chat-history" data-tab="5" readonly>{{ chat_tab5 }}</textarea>
-                        <textarea class="form-control form-control-sm chat-history" data-tab="6" readonly>{{ chat_tab6 }}</textarea>
-                        <textarea class="form-control form-control-sm chat-history" data-tab="7" readonly>{{ chat_tab7 }}</textarea>
-                    </div>
-            <form method="post" onsubmit="return prepareChatSubmit(this);">
-                        <input type="hidden" name="active_tab" id="chat_active_tab_input" value="{{ active_tab }}"/>
-                        <input type="hidden" name="action" id="chat_action_input" />
-                        <input type="hidden" name="client_start_ts" id="chat_client_start_ts" />
-                        <!-- Target diagram selector (only relevant on Initial Blueprint tab) -->
-                        <div class="input-group input-group-sm mb-2" id="chat_target_row" style="display:none">
-                            <span class="input-group-text">Target</span>
-                            <select class="form-select" id="chat_diagram_target" name="chat_diagram_target">
-                                <option value="architecture_diagram">Architecture</option>
-                                <option value="system_interaction_diagram">System Interaction</option>
-                                <option value="data_model_diagram">Data Model</option>
-                                <option value="service_decomposition_diagram">Service Decomposition</option>
-                            </select>
-                        </div>
-                        <div class="input-group input-group-sm mb-2">
-                            <input type="text" id="chat_message_input" class="form-control" placeholder="Message..."/>
-                            <input type="hidden" id="chat_message_named" name="chat_message_0" />
-                        </div>
-                        <div class="d-flex gap-2 align-items-center">
-                            <span id="chat_spinner" class="spinner-border spinner-border-sm text-danger d-none" role="status" aria-hidden="true"></span>
-                            <span id="chat_status" class="text-muted small d-none"></span>
-                <button type="submit" class="btn btn-sm btn-outline-danger chat-action" name="action" value="chat_send" title="Ask the agent; updates apply only to fields allowed for this tab.">Send</button>
-                            <button type="submit" class="btn btn-sm btn-danger chat-action" id="chat_apply_btn" name="action" value="chat_apply" title="Apply structured updates from the last agent response to this tab's fields">Apply</button>
-                            <a href="#" id="view_changes_link" class="ms-1 small text-decoration-underline" style="display:none" data-bs-toggle="modal" data-bs-target="#pendingUpdatesModal">View Changes</a>
-                            <!-- Modal for previewing pending chat updates -->
-                            <div class="modal fade" id="pendingUpdatesModal" tabindex="-1" aria-labelledby="pendingUpdatesModalLabel" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="pendingUpdatesModalLabel">Pending Changes</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div id="pendingUpdatesPreview" class="small"></div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 <script>
     // Initialize Mermaid safely once per page
     function initMermaid(){
@@ -962,6 +985,13 @@
                 out.innerHTML = html;
             });
         }
+        function updateBookmarkBar(idx){
+            try {
+                document.querySelectorAll('#bookmark_toolbar .bm').forEach(function(el){
+                    el.classList.toggle('d-none', String(el.dataset.index) !== String(idx));
+                });
+            } catch(e) {}
+        }
         window.showTab = function(idx){
             var tabs = document.querySelectorAll('.nav-tabs .nav-link');
             var panes = document.querySelectorAll('.tab-pane');
@@ -969,6 +999,7 @@
             panes.forEach((p) => p.classList.toggle('active', String(p.dataset.index) === String(idx)));
             if (input) input.value = idx;
             updateChatUI(idx);
+            updateBookmarkBar(idx);
             if ((idx === 1 || idx === 2 || idx === 5 || idx === 6) && typeof window.triggerMermaidPreview === 'function') {
                 setTimeout(function(){
                     previewBySelector('architecture_diagram','mermaidPreview');
@@ -985,6 +1016,8 @@
         if (typeof window.showTab === 'function') {
             window.showTab(initialTab);
         }
+        // Initialize bookmark bar visibility on first paint (in case showTab not called)
+        updateBookmarkBar(initialTab);
         // prepare chat submit
         window.prepareChatSubmit = function(form){
             if (chatNamed && chatMsg){ chatNamed.value = chatMsg.value || ''; }
@@ -1321,6 +1354,10 @@
     </script>
     <!-- Bootstrap JS (for modal, dropdowns, etc.) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% set chat_active_tab = active_tab or 0 %}
+    {% set chat_pending = (pending_tab0 if chat_active_tab==0 else (pending_tab1 if chat_active_tab==1 else (pending_tab2 if chat_active_tab==2 else (pending_tab5 if chat_active_tab==5 else (pending_tab6 if chat_active_tab==6 else (pending_tab3 if chat_active_tab==3 else (pending_tab4 if chat_active_tab==4 else false))))))) %}
+    {% if chat_active_tab == 1 %}{% set chat_diagram_target = chat_target_tab1 or 'architecture_diagram' %}{% endif %}
+    {% include 'partials/chat_panel.html' with context %}
 <!-- Overlay root created dynamically by script -->
     </body>
 </html>

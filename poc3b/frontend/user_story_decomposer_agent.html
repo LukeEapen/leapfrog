@@ -166,6 +166,21 @@
   </style>
 </head>
 <body>
+  <script>
+    window.HelpContent = {
+      intro: '<div class="alert alert-light border">This step connects JIRA stories with legacy breakdown.</div>',
+      business: 'Pulls JIRA user stories and aligns them with the Business Breakdown from Step 1 to prepare for function synthesis.',
+      purpose: 'Let you select relevant stories, preview details, and decompose legacy requirements into story-ready content.',
+      actions: [
+        'Wait for JIRA stories to load (spinner shows progress)',
+        'Select one or more stories from the middle column',
+        'Review story details on the right',
+        'Optionally decompose legacy breakdown into story groups',
+        'Click Next to synthesize functions'
+      ],
+      chips: ['Step 2', 'JIRA', 'Selection']
+    };
+  </script>
   {% include 'partials/banner.html' %}
   <header style="background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color: #fff; padding: 1.2rem 0 1rem 0; border-radius: 0 0 1.2rem 1.2rem; box-shadow: 0 4px 32px rgba(44,44,44,0.22); margin-bottom: 2.5rem; position:relative; overflow:hidden; border: 4px solid #fff; min-height:unset;">
     <div style="position:absolute; top:-40px; right:-60px; opacity:0.12; pointer-events:none;">
@@ -1028,5 +1043,8 @@
       window.updateMarkedBox = updateMarkedBox;
     })();
   </script>
+  <!-- Help widget include -->
+  <link rel="stylesheet" href="/static/components/Help.css">
+  <script src="/static/components/Help.js"></script>
 </body>
 </html>

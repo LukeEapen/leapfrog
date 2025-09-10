@@ -1,0 +1,88 @@
+<!-- Reusable floating ChatPanel (POC3b-inspired) -->
+
+<!-- Dock button (visible when collapsed) -->
+<button id="chatDock" type="button" title="Assistant — click to expand/collapse" aria-controls="chatPanel" style="position:fixed;right:24px;bottom:24px;background:#23272b;color:#fff;border:1px solid #1f2328;border-radius:9999px;padding:.55rem .9rem;box-shadow:0 8px 28px -6px rgba(0,0,0,.25);z-index:10000;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;max-width:unset;white-space:nowrap;width:auto">
+  <span aria-hidden="true" style="width:8px;height:8px;border-radius:50%;background:#d32f2f;display:inline-block"></span>
+  Assistant
+  <small class="mx-2 text-muted">click to expand/collapse</small>
+  {% if chat_pending %}<span class="apply-indicator" style="display:inline">Pending</span>{% endif %}
+  <span style="margin-left:.25rem;opacity:.85">▴</span>
+</button>
+
+<div id="chatPanel" class="collapsed" aria-live="polite" style="position:fixed;bottom:24px;right:24px;width:380px;max-height:70vh;background:#ffffff;border:1px solid #d0d5da;border-radius:18px;box-shadow:0 8px 28px -6px rgba(0,0,0,.25);display:none;flex-direction:column;overflow:hidden;z-index:9999;font-size:.9rem">
+  <div id="chatHeader" role="button" aria-expanded="false" title="Toggle chat" style="background:#23272b;color:#fff;padding:.65rem .9rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-weight:600">
+    <div class="title" style="display:flex;align-items:center;gap:.5rem">
+      <span>Chat</span>
+      <span class="badge" style="background:#d32f2f">Tab {{ chat_active_tab or 0 }}</span>
+      {% if chat_pending %}<span class="apply-indicator" style="display:inline;font-size:.65rem;color:#13803b;font-weight:600;margin-left:6px">Pending Apply</span>{% endif %}
+    </div>
+    <div id="chatChevron" style="transition:transform .2s;">▾</div>
+  </div>
+
+  <div id="chatMessages" style="flex:1;overflow-y:auto;padding:.75rem;display:none;flex-direction:column;gap:.6rem;background:#f5f7f9">
+    {% set idx = chat_active_tab or 0 %}
+    {% set chat_hist = session.get('chat_tab' ~ idx, '') if session else '' %}
+    {% if chat_hist %}
+      {% for block in chat_hist.split('\n\n') %}
+        {% set b = block.strip() %}
+        {% if b %}
+          {% set is_user = b.startswith('User:') %}
+          <div style="padding:.55rem .7rem;border-radius:10px;line-height:1.25;max-width:88%;word-break:break-word;{{ 'background:#d32f2f;color:#fff;align-self:flex-end' if is_user else 'background:#ffffff;border:1px solid #d0d5da;align-self:flex-start' }}">{{ b[5:] if is_user else (b[6:] if b.startswith('Agent:') else b) }}</div>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <div class="text-muted" style="font-size:.85rem">No messages yet. Ask for improvements or changes, then Apply to update the page.</div>
+    {% endif %}
+  </div>
+
+  <form id="chatForm" method="post" style="border-top:1px solid #e1e5e8;display:none;gap:.5rem;padding:.55rem .6rem;background:#fff;align-items:center">
+    <input type="hidden" name="active_tab" value="{{ chat_active_tab or 0 }}" />
+    <input type="hidden" name="client_start_ts" id="chatClientStartTs" value="0" />
+    {% if chat_diagram_target %}
+      <input type="hidden" name="chat_diagram_target" value="{{ chat_diagram_target }}" />
+    {% endif %}
+    <!-- Name must match chat_message_{idx} for backend routing -->
+    <textarea id="chatInput" name="chat_message_{{ chat_active_tab or 0 }}" rows="2" placeholder="Message..." style="flex:1;resize:none;border:1px solid #c9d0d6;border-radius:8px;padding:.45rem .6rem;font-size:.85rem;max-height:110px"></textarea>
+    <button type="submit" id="chatSendBtn" class="btn btn-sm btn-outline-danger" name="action" value="chat_send" style="white-space:nowrap">Send</button>
+    <button type="submit" id="chatApplyBtn" class="btn btn-sm btn-danger" name="action" value="chat_apply" style="white-space:nowrap">Apply</button>
+  </form>
+</div>
+
+<script>
+  (function(){
+    const panel = document.getElementById('chatPanel');
+    const dock = document.getElementById('chatDock');
+    const header = document.getElementById('chatHeader');
+    const msgBox = document.getElementById('chatMessages');
+    const form = document.getElementById('chatForm');
+    const ts = document.getElementById('chatClientStartTs');
+    const chev = document.getElementById('chatChevron');
+    if(!panel || !form) return;
+    function expand(){
+      panel.style.display = 'flex';
+      panel.classList.remove('collapsed');
+      if (header){ header.setAttribute('aria-expanded','true'); }
+      if (msgBox){ msgBox.style.display = 'flex'; }
+      form.style.display = 'flex';
+      if (chev) chev.style.transform = 'rotate(180deg)';
+      if (dock) dock.style.display = 'none';
+    }
+    function collapse(){
+      panel.classList.add('collapsed');
+      if (header){ header.setAttribute('aria-expanded','false'); }
+      if (msgBox){ msgBox.style.display = 'none'; }
+      form.style.display = 'none';
+      panel.style.display = 'none';
+      if (chev) chev.style.transform = 'rotate(0deg)';
+      if (dock) dock.style.display = 'inline-flex';
+    }
+    // Start collapsed: show dock only
+    collapse();
+  // Header collapses when expanded
+  if (header){ header.addEventListener('click', ()=> collapse()); }
+    if (dock){ dock.addEventListener('click', ()=> expand()); }
+    // Optional: clicking outside panel could collapse (not capturing here to avoid interfering with forms)
+    function stamp(){ try{ ts.value = String(Date.now()); }catch(e){} }
+    form.addEventListener('submit', stamp);
+  })();
+</script>

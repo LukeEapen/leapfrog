@@ -47,6 +47,19 @@ def serve_swagger_json():
 # --- Multi-Agent Orchestration for Complete Microservice Project ---
 from flask import jsonify, request
 
+# Ensure component assets (Help widget, etc.) are served even if default static routing fails
+FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend'))
+
+@app.route('/static/components/<path:filename>')
+def serve_static_components(filename):
+    components_dir = os.path.join(FRONTEND_DIR, 'components')
+    return send_from_directory(components_dir, filename)
+
+@app.route('/components/<path:filename>')
+def serve_components(filename):
+    components_dir = os.path.join(FRONTEND_DIR, 'components')
+    return send_from_directory(components_dir, filename)
+
 def generate_complete_microservice_project(project_structure, context):
     files = {}
     swagger = context.get('swagger', {})

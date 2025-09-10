@@ -182,6 +182,19 @@
   </style>
 </head>
 <body>
+  <script>
+    window.HelpContent = {
+      intro: '<div class="alert alert-light border">Generate Swagger and preview the service.</div>',
+      business: 'Transforms selected functions and business rules into API endpoints and implementation stubs.',
+      purpose: 'Shows an editor and preview for the OpenAPI spec and lets you build a runnable microservice.',
+      actions: [
+        'Review or edit generated Swagger',
+        'Preview endpoints and schema',
+        'Generate project and test in the viewer'
+      ],
+      chips: ['Step 5', 'Swagger', 'Build']
+    };
+  </script>
   {% include 'partials/banner.html' %}
   <!-- Modern Banner Start -->
   <header style="background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color: #fff; padding: 1.2rem 0 0.7rem 0; border-radius: 0 0 1.2rem 1.2rem; box-shadow: 0 4px 32px rgba(44,44,44,0.22); margin-bottom: 1.1rem; position:relative; overflow:hidden; border: 4px solid #fff; min-height:unset;">
@@ -681,5 +694,8 @@
       window.updateMarkedBox = updateMarkedBox;
     })();
   </script>
+  <!-- Help widget include -->
+  <link rel="stylesheet" href="/static/components/Help.css">
+  <script src="/static/components/Help.js"></script>
 </body>
 </html>

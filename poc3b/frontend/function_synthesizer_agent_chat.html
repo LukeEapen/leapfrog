@@ -26,6 +26,19 @@
   </style>
 </head>
 <body>
+  <script>
+    window.HelpContent = {
+      intro: '<div class="alert alert-light border">Chat to refine the function breakdown.</div>',
+      business: 'Lets you iteratively edit the synthesized function output through a conversational UI.',
+      purpose: 'Preview, tweak, and apply changes to the functional breakdown stored in your session.',
+      actions: [
+        'Click inside chat box to send a prompt',
+        'Edit the breakdown in the textarea',
+        'Apply to persist changes back to the session'
+      ],
+      chips: ['Chat', 'Refine']
+    };
+  </script>
   {% include 'partials/banner.html' %}
   <div class="chat-layout">
     <div class="agent-card text-center">
@@ -123,5 +136,8 @@
       window.updateMarkedBox = updateMarkedBox;
     })();
   </script>
+  <!-- Help widget include -->
+  <link rel="stylesheet" href="/static/components/Help.css">
+  <script src="/static/components/Help.js"></script>
 </body>
 </html>

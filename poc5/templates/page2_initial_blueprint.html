@@ -1,9 +1,54 @@
 <!DOCTYPE html>
 <html>
-<head><title>POC 5 - Initial Blueprint</title></head>
-<body>
-    <h2>Page 2: Generate Initial Blueprint</h2>
-    <pre>{{ blueprint }}</pre>
-    <form method="post"><button type="submit">Next</button></form>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>POC 5 - Initial Blueprint</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- Product-style banner -->
+    <nav class="navbar navbar-dark" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#" onclick="return false;">
+                <img src="/static/processflow.png" alt="logo" width="28" height="28" class="me-2"/>
+                <span>
+                    <div class="fw-bold">Architecture Workbench</div>
+                    <small class="text-light">POC 5 • Initial Blueprint</small>
+                </span>
+            </a>
+        </div>
+    </nav>
+    <div class="container py-4">
+        <div class="d-flex align-items-baseline justify-content-between mb-3">
+            <div>
+                <h2 class="mb-1">Generate Initial Blueprint</h2>
+                <div class="text-muted small">Step 2 of 6</div>
+            </div>
+            <span class="badge rounded-pill text-bg-primary">POC 5</span>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header bg-white border-0 border-start border-4 border-primary">
+                <div class="fw-semibold">Initial Blueprint (Mermaid)</div>
+                <div class="small text-muted">Auto-generated from your context. You can refine via the Assistant.</div>
+            </div>
+            <div class="card-body" style="background-color:#f3f4f6;">
+                {% if blueprint %}
+                    <pre class="mb-3" style="background:#fff;border:1px solid #e9ecef;border-radius:.5rem;padding:1rem;">{{ blueprint }}</pre>
+                {% else %}
+                    <div class="text-muted">No blueprint yet. Use the combined page or workbench to generate, or ask the Assistant.</div>
+                {% endif %}
+                <form method="post" class="text-end mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm px-3">Next</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% set chat_active_tab = 1 %}
+    {% set chat_diagram_target = 'architecture_diagram' %}
+    {% set chat_pending = pending_tab1 if pending_tab1 is defined else false %}
+    {% include 'partials/chat_panel.html' with context %}
 </body>
 </html>

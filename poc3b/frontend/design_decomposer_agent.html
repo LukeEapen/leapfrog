@@ -152,6 +152,19 @@
   </style>
 </head>
 <body>
+  <script>
+    window.HelpContent = {
+      intro: '<div class="alert alert-light border">Pick design elements and view generated business logic.</div>',
+      business: 'This step decomposes selected design elements into concrete business logic blocks to guide implementation.',
+      purpose: 'Click a design element card to fetch and display related business logic in the panel below.',
+      actions: [
+        'Review synthesized functions from previous step',
+        'Click element cards to expand business logic',
+        'Copy or export logic as needed'
+      ],
+      chips: ['Step 4', 'Design', 'Business Logic']
+    };
+  </script>
   {% include 'partials/banner.html' %}
   <header style="background: linear-gradient(120deg, #d32f2f 60%, #23272b 100%); color: #fff; padding: 1.2rem 0 1rem 0; border-radius: 0 0 1.2rem 1.2rem; box-shadow: 0 4px 32px rgba(44,44,44,0.22); margin-bottom: 2.5rem; position:relative; overflow:hidden; border: 4px solid #fff; min-height:unset;">
     <div style="position:absolute; top:-40px; right:-60px; opacity:0.12; pointer-events:none;">
@@ -743,5 +756,8 @@
       window.updateMarkedBox = updateMarkedBox;
     })();
   </script>
+  <!-- Help widget include -->
+  <link rel="stylesheet" href="/static/components/Help.css">
+  <script src="/static/components/Help.js"></script>
 </body>
 </html>

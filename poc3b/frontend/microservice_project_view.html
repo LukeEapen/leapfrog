@@ -190,6 +190,19 @@
   </style>
 </head>
 <body>
+  <script>
+    window.HelpContent = {
+      intro: '<div class="alert alert-light border">Browse and test the generated project.</div>',
+      business: 'Provides a project tree, file viewer, and quick testing panel to validate the generated microservice.',
+      purpose: 'Lets you inspect files, download a ZIP, start the app, and test endpoints from the UI.',
+      actions: [
+        'Click files in the tree to view code',
+        'Download ZIP of the project',
+        'Start the app and send test requests from the right panel'
+      ],
+      chips: ['Step 6', 'Viewer', 'Test']
+    };
+  </script>
   {% include 'partials/banner.html' %}
   <div class="container-fluid">
     <!-- Modern Banner Start -->
@@ -562,5 +575,8 @@
       window.updateMarkedBox = updateMarkedBox;
     })();
   </script>
+  <!-- Help widget include -->
+  <link rel="stylesheet" href="/static/components/Help.css">
+  <script src="/static/components/Help.js"></script>
 </body>
 </html>

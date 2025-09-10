@@ -4044,24 +4044,195 @@ def combined_step1_step2():
 
     This leaves the main tabbed workbench ("/") unchanged; use this as a simple flow.
     """
-    # Persist submitted fields
+    # Persist submitted fields or process chat actions
     if request.method == 'POST':
-        for key in (
-            'business_goals', 'legacy_system', 'constraints',
-            'architecture_style', 'desired_architecture_style',
-        ):
-            session[key] = request.form.get(key, '')
-        # Ensure dropdown-style defaults so diagrams have sensible values even without PRD
+        action = request.form.get('action', '').strip()
         try:
-            _ensure_default_dropdowns()
+            client_start_ts = int(request.form.get('client_start_ts', '0') or 0)
         except Exception:
-            pass
-        # Generate blueprint; if PRD not provided, allow non-strict fallbacks to populate services
+            client_start_ts = 0
+        # If no explicit action, treat as form submit for context
+        if action not in ('chat_send','chat_apply','chat_clear'):
+            for key in (
+                'business_goals', 'legacy_system', 'constraints',
+                'architecture_style', 'desired_architecture_style',
+            ):
+                session[key] = request.form.get(key, '')
+            # Ensure dropdown-style defaults so diagrams have sensible values even without PRD
+            try:
+                _ensure_default_dropdowns()
+            except Exception:
+                pass
+            # Generate blueprint; if PRD not provided, allow non-strict fallbacks to populate services
+            try:
+                strict = True if session.get('prd_text') else False
+                session['architecture_diagram'] = generate_blueprint_from_session(strict_prd_only=strict)
+            except Exception:
+                # Keep any prior value if generation fails
+                pass
+        else:
+            # Chat actions (default to Initial Blueprint tab index 1)
+            try:
+                idx = int(request.form.get('active_tab', '1') or 1)
+            except Exception:
+                idx = 1
+            if action == 'chat_send':
+                msg = request.form.get(f'chat_message_{idx}', '') or request.form.get('chat_message','')
+                if idx == 1:
+                    target = request.form.get('chat_diagram_target') or session.get('chat_target_tab1') or 'architecture_diagram'
+                    if target not in ('architecture_diagram','system_interaction_diagram','data_model_diagram','service_decomposition_diagram'):
+                        target = 'architecture_diagram'
+                    session['chat_target_tab1'] = target
+                if msg:
+                    _append_chat(idx, 'user', msg)
+                    try:
+                        ctx = _get_tab_context_payload(idx)
+                    except Exception:
+                        ctx = {}
+                    # Route diagrams to Mermaid agent with explicit target/kind
+                    if idx == 1:
+                        agent_key = 'agent_mermaid'
+                        ctx = {
+                            'target': session.get('chat_target_tab1','architecture_diagram'),
+                            'current': session.get(session.get('chat_target_tab1','architecture_diagram'), ''),
+                            'kind': 'sequence' if session.get('chat_target_tab1') == 'system_interaction_diagram' else ('er' if session.get('chat_target_tab1') == 'data_model_diagram' else 'flowchart')
+                        }
+                    elif idx in (2, 5, 6):
+                        agent_key = 'agent_mermaid'
+                        if idx == 2:
+                            tgt, kind = 'system_interaction_diagram', 'sequence'
+                        elif idx == 5:
+                            tgt, kind = 'data_model_diagram', 'er'
+                        else:
+                            tgt, kind = 'service_decomposition_diagram', 'flowchart'
+                        ctx = { 'target': tgt, 'current': session.get(tgt, ''), 'kind': kind }
+                    else:
+                        agent_key = AGENT_BY_TAB.get(idx, 'agent_5_1')
+                    try:
+                        payload = json.dumps({'tab': idx, 'context': ctx, 'message': msg}, ensure_ascii=False)
+                    except Exception:
+                        payload = (str(ctx) + "\n\nUser: " + msg)
+                    reply = call_agent(agent_key, payload)
+                    session[f'last_agent_reply_tab{idx}'] = reply
+                    parsed_updates = _parse_updates_from_text(reply)
+                    # Wrap Mermaid-like text as set to the current target
+                    def looks_like_mermaid(t: str) -> bool:
+                        if not t: return False
+                        try:
+                            first = t.strip().splitlines()[0].strip().lower()
+                        except Exception:
+                            return False
+                        return first.startswith(('graph','flowchart','sequencediagram','erdiagram','classdiagram','statediagram','gantt','pie','journey','mindmap','timeline','gitgraph'))
+                    if idx == 1 and not parsed_updates and looks_like_mermaid(reply):
+                        tgt = session.get('chat_target_tab1','architecture_diagram')
+                        parsed_updates = {'set': {tgt: reply.strip()}}
+                    if idx in (2,5,6) and not parsed_updates and looks_like_mermaid(reply):
+                        tgt = 'system_interaction_diagram' if idx == 2 else ('data_model_diagram' if idx == 5 else 'service_decomposition_diagram')
+                        parsed_updates = {'set': {tgt: reply.strip()}}
+                    # Auto-apply for diagram tabs (1/2/5/6); else store for Apply
+                    if idx in (1,2,5,6):
+                        tgt = (
+                            session.get('chat_target_tab1','architecture_diagram') if idx == 1 else (
+                                'system_interaction_diagram' if idx == 2 else (
+                                    'data_model_diagram' if idx == 5 else 'service_decomposition_diagram'
+                                )
+                            )
+                        )
+                        kind = 'sequence' if tgt == 'system_interaction_diagram' else ('er' if tgt == 'data_model_diagram' else 'flowchart')
+                        applied = False
+                        if parsed_updates and isinstance(parsed_updates.get('set'), dict):
+                            sets = parsed_updates['set']
+                            diagram_keys = {'architecture_diagram','system_interaction_diagram','data_model_diagram','service_decomposition_diagram'}
+                            targets_present = [k for k in sets.keys() if k in diagram_keys]
+                            if targets_present:
+                                for dk in targets_present:
+                                    _push_diagram_history(dk)
+                                    session[dk] = str(sets[dk])
+                                applied = True
+                            elif len(sets) == 1:
+                                only_key = next(iter(sets.keys()))
+                                _push_diagram_history(tgt)
+                                session[tgt] = str(sets[only_key])
+                                applied = True
+                        if not applied and parsed_updates and isinstance(parsed_updates.get('set'), dict) and tgt in parsed_updates['set']:
+                            _push_diagram_history(tgt)
+                            session[tgt] = str(parsed_updates['set'][tgt])
+                            applied = True
+                        if not applied:
+                            _push_diagram_history(tgt)
+                            _apply_prompt_to_mermaid(tgt, kind, msg)
+                            applied = True
+                        session[f'pending_updates_tab{idx}'] = ''
+                    else:
+                        session[f'pending_updates_tab{idx}'] = json.dumps(parsed_updates) if parsed_updates else ''
+                    _append_chat(idx, 'agent', reply)
+            elif action == 'chat_apply':
+                updates_raw = session.get(f'pending_updates_tab{idx}', '')
+                updates = None
+                if updates_raw:
+                    try:
+                        updates = json.loads(updates_raw)
+                    except Exception:
+                        updates = None
+                if not updates:
+                    reply = session.get(f'last_agent_reply_tab{idx}', '')
+                    if reply:
+                        updates = _parse_updates_from_text(reply)
+                if not updates:
+                    chat_hist = session.get(f'chat_tab{idx}', '')
+                    last_user = ''
+                    for part in reversed(chat_hist.split('\n\n')):
+                        if part.strip().startswith('User:'):
+                            last_user = part.split('User:',1)[-1].strip()
+                            break
+                    if last_user:
+                        updates = _heuristic_updates_from_user(idx, last_user)
+                if updates:
+                    if idx in (1,2,5,6) and isinstance(updates, dict) and not (updates.get('set') and any(k in updates['set'] for k in ('architecture_diagram','system_interaction_diagram','data_model_diagram','service_decomposition_diagram'))):
+                        tgt = (
+                            session.get('chat_target_tab1','architecture_diagram') if idx == 1 else (
+                                'system_interaction_diagram' if idx == 2 else (
+                                    'data_model_diagram' if idx == 5 else 'service_decomposition_diagram'
+                                )
+                            )
+                        )
+                        if 'set' in updates and isinstance(updates['set'], dict) and len(updates['set']) == 1:
+                            only_key = next(iter(updates['set'].keys()))
+                            val = updates['set'][only_key]
+                            updates = {'set': {tgt: val}}
+                    try:
+                        s = updates.get('set') or {}
+                        if 'architecture_diagram' in s: _push_diagram_history('architecture_diagram')
+                        if 'system_interaction_diagram' in s: _push_diagram_history('system_interaction_diagram')
+                        if 'data_model_diagram' in s: _push_diagram_history('data_model_diagram')
+                        if 'service_decomposition_diagram' in s: _push_diagram_history('service_decomposition_diagram')
+                    except Exception:
+                        pass
+                    _apply_agent_updates(idx, updates)
+                    try:
+                        session['compiled_document'] = _build_compiled_document_markdown()
+                    except Exception:
+                        pass
+                    try:
+                        _normalize_context_doc()
+                    except Exception:
+                        pass
+                    try:
+                        _final_fill_all_fields()
+                    except Exception:
+                        pass
+                    session[f'pending_updates_tab{idx}'] = ''
+            elif action == 'chat_clear':
+                session[f'chat_tab{idx}'] = ''
+                session[f'last_agent_reply_tab{idx}'] = ''
+                session[f'pending_updates_tab{idx}'] = ''
+        # Record elapsed
         try:
-            strict = True if session.get('prd_text') else False
-            session['architecture_diagram'] = generate_blueprint_from_session(strict_prd_only=strict)
+            if client_start_ts and client_start_ts > 0:
+                now_ms = int(time.time() * 1000)
+                session['last_action'] = action or 'save'
+                session['last_elapsed_ms'] = max(0, now_ms - client_start_ts)
         except Exception:
-            # Keep any prior value if generation fails
             pass
 
     return render_template(
@@ -4072,6 +4243,7 @@ def combined_step1_step2():
         architecture_style=session.get('architecture_style', ''),
         desired_architecture_style=session.get('desired_architecture_style', ''),
         blueprint=session.get('architecture_diagram', ''),
+        pending_tab1=bool(session.get('pending_updates_tab1')),
     )
 
 

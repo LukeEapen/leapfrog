@@ -154,6 +154,19 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
+        <script>
+            window.HelpContent = {
+                intro: '<div class="alert alert-light border">Upload legacy code and compare agent outputs.</div>',
+                business: 'Transforms legacy code into business-readable content to kick off modernization.',
+                purpose: 'Shows file content, Agent 1 breakdown, and Agent 3 analysis side-by-side.',
+                actions: [
+                    'Select and upload a file',
+                    'Review Agent 1 business breakdown',
+                    'Review Agent 3 complementary analysis'
+                ],
+                chips: ['Upload', 'Agents']
+            };
+        </script>
     {% include 'partials/banner.html' %}
     <header>
         <h1 class="page-title">⚙️ GPT Multi-Agent Response UI</h1>
@@ -252,5 +265,8 @@
                 window.updateMarkedBox = updateMarkedBox;
             })();
         </script>
+    <!-- Help widget include -->
+    <link rel="stylesheet" href="/static/components/Help.css">
+    <script src="/static/components/Help.js"></script>
 </body>
 </html>

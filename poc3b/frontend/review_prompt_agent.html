@@ -26,6 +26,19 @@
   </style>
 </head>
 <body>
+  <script>
+    window.HelpContent = {
+      intro: '<div class="alert alert-light border">Review design elements before approval.</div>',
+      business: 'Provides a simple prompt-driven review of decomposed design elements.',
+      purpose: 'Paste the elements and run a review to get an approval status and comments.',
+      actions: [
+        'Paste design elements',
+        'Run review to simulate validation',
+        'Use results to adjust inputs in previous steps'
+      ],
+      chips: ['Review']
+    };
+  </script>
   {% include 'partials/banner.html' %}
   <div class="container">
     <div class="agent-card text-center">
@@ -78,5 +91,8 @@
       window.updateMarkedBox = updateMarkedBox;
     })();
   </script>
+  <!-- Help widget include -->
+  <link rel="stylesheet" href="/static/components/Help.css">
+  <script src="/static/components/Help.js"></script>
 </body>
 </html>

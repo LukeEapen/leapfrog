@@ -5,9 +5,6 @@
   "legacy_schema_a633ce.json": {
     "kind": "legacy"
   },
-  "target_schema_future_9b40ea.json": {
-    "kind": "source"
-  },
   "target_model.json": {
     "kind": "target"
   },
