@@ -17,6 +17,21 @@
     align-items: center;
     min-height: 85px;
   }
+  /* Tiny Home link at the very top-left */
+  .tiny-home-link {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    opacity: 0.95;
+    padding: 2px 8px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.18);
+  }
+  .tiny-home-link:hover { text-decoration: underline; opacity: 1; }
   .header-title {
     font-size: 1.5rem;
     font-weight: 700;
@@ -44,6 +59,7 @@
 </style>
 <div class="poc-banner-wrapper">
   <div class="header-bar">
+  <a href="http://127.0.0.1:5002/" class="tiny-home-link" title="Home">Home</a>
   <div class="header-title">📋 Product Management Workbench</div>
   <a href="/" class="back-button">
     <i class="fas fa-arrow-left"></i>

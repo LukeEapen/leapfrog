@@ -154,6 +154,22 @@ function applyStoryDetailsChatChanges(newContent) {
       min-height: 85px;
       box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
     }
+    /* Tiny fixed Home link (top-left) */
+    .tiny-home-link {
+      position: fixed;
+      top: 8px;
+      left: 12px;
+      z-index: 1050;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      opacity: 0.95;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.18);
+    }
+    .tiny-home-link:hover { text-decoration: underline; opacity: 1; }
 
     .header-bar::before {
       content: '';
@@ -923,6 +939,7 @@ function applyStoryDetailsChatChanges(newContent) {
   </style>
 </head>
 <body>
+  <a href="http://127.0.0.1:5002/" class="tiny-home-link" title="Home">Home</a>
             <div class="form-group mb-4">
               <label for="prd-file" class="form-label">
                 <strong>📄 Primary Requirements Document (PRD)</strong>
