@@ -1,0 +1,57 @@
+x-base: &base
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment:
+    PYTHONDONTWRITEBYTECODE: "1"
+    PYTHONUNBUFFERED: "1"
+  volumes:
+    - ./:/app
+  restart: unless-stopped
+
+services:
+  poc1:
+    <<: *base
+    image: "openai-assistant-clean/poc1:local"
+    command: python product_workbench_requirement_definition.py
+    ports:
+      - "5001:5001"
+
+  poc2:
+    <<: *base
+    image: "openai-assistant-clean/poc2:local"
+    command: python product_workbench_backlog_management.py
+    ports:
+      - "5002:5001"
+
+  poc3:
+    <<: *base
+    image: "openai-assistant-clean/poc3:local"
+    working_dir: /app/poc3/backend
+    command: python app.py
+    ports:
+      - "5050:5001"
+
+  poc3b:
+    <<: *base
+    image: "openai-assistant-clean/poc3b:local"
+    working_dir: /app/poc3b/backend
+    command: python app.py
+    ports:
+      - "5051:5001"
+
+  poc4:
+    <<: *base
+    image: "openai-assistant-clean/poc4:local"
+    working_dir: /app/poc4
+    command: python migration_reconciliation.py
+    ports:
+      - "5000:5001"
+
+  poc5:
+    <<: *base
+    image: "openai-assistant-clean/poc5:local"
+    working_dir: /app/poc5
+    command: python product_architecture_definition.py
+    ports:
+      - "6060:5001"

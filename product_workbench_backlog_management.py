@@ -193,7 +193,7 @@ def main():
     # Get configuration
     port = int(os.environ.get("PORT", 5002))  # Different port from three-section
     debug = os.environ.get("FLASK_ENV", "development").lower() != "production"
-    host = "0.0.0.0" if os.environ.get("FLASK_ENV") == "production" else "127.0.0.1"
+    host = os.environ.get("HOST", "0.0.0.0")
     
     print(f"📊 Configuration:")
     print(f"   Port: {port}")

@@ -121,9 +121,8 @@ def main():
         print("\n📝 Logs are saved to: three_section_debug.log")
         print("⏹️  Press Ctrl+C to stop the server")
         print("=" * 40)
-        
         backend.app.run(host=host, port=port, debug=debug)
-        
+
     except KeyboardInterrupt:
         logger.info("Server stopped by user (Ctrl+C)")
         print("\n⏹️  Server stopped by user")

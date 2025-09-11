@@ -13,4 +13,7 @@ def index():
     return '<h2 class="mb-0">Data Modelling, Migration & Reconciliation</h2><a href="/poc4/page1">Start Workflow</a>'
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    import os
+    host = os.environ.get('HOST', '0.0.0.0')
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host=host, debug=True, port=port)

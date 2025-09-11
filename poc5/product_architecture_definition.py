@@ -4248,4 +4248,8 @@ def combined_step1_step2():
 
 
 if __name__ == "__main__":
-    app.run(port=6001, debug=True)
+    import os
+    host = os.environ.get('HOST', '0.0.0.0')
+    # Use 6060 instead of 6000 to avoid Chrome's ERR_UNSAFE_PORT block
+    port = int(os.environ.get('PORT', 6060))
+    app.run(host=host, port=port, debug=True)

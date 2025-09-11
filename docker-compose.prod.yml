@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  poc1:
+    image: ${ECR_URI:-example.com/leapfrog}:latest
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5001
+    ports:
+      - "5001:5001"
+  poc2:
+    image: ${ECR_URI:-example.com/leapfrog}:latest
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5002
+    ports:
+      - "5002:5002"
+  poc3:
+    image: ${ECR_URI:-example.com/leapfrog}:latest
+    working_dir: /app/poc3/backend
+    command: python app.py
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5050
+    ports:
+      - "5050:5050"
+  poc3b:
+    image: ${ECR_URI:-example.com/leapfrog}:latest
+    working_dir: /app/poc3b/backend
+    command: python app.py
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5051
+    ports:
+      - "5051:5051"
+  poc4:
+    image: ${ECR_URI:-example.com/leapfrog}:latest
+    working_dir: /app/poc4
+    command: python migration_reconciliation.py
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5000
+    ports:
+      - "5000:5000"
+  poc5:
+    image: ${ECR_URI:-example.com/leapfrog}:latest
+    working_dir: /app/poc5
+    command: python product_architecture_definition.py
+    environment:
+      HOST: 0.0.0.0
+      PORT: 6060
+    ports:
+      - "6060:6060"

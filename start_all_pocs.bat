@@ -27,6 +27,6 @@ echo   POC2: http://127.0.0.1:5002/tabbed-layout
 echo   POC3: http://127.0.0.1:5050
 echo   POC3b:http://127.0.0.1:5051
 echo   POC4: http://127.0.0.1:5000
-echo   POC5: http://127.0.0.1:6000
+echo   POC5: http://127.0.0.1:6060
 echo.
 pause
